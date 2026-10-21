@@ -31,6 +31,14 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
    */
   boolean rejectDuplicateSourceId(String sourceId, MethodChannel.Result result);
 
+  /**
+   * Answers LAYER_ALREADY_EXISTS when the style already holds a layer with {@code layerId}. {@link
+   * MapHostApi} asks it before every call that adds a layer.
+   *
+   * @return true when {@code result} has been answered.
+   */
+  boolean rejectDuplicateLayerId(String layerId, MethodChannel.Result result);
+
   // Map
 
   void mapWaitForMap(MethodChannel.Result result);
@@ -196,4 +204,154 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
   void styleGetSourceIds(MethodChannel.Result result);
 
   void styleGetSourceProperties(String sourceId, MethodChannel.Result result);
+
+  // Layers
+
+  void symbolLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void lineLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void fillLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void fillExtrusionLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void circleLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void rasterLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void hillshadeLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void colorReliefLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void backgroundLayerAdd(
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void heatmapLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      Map<String, Object> properties,
+      MethodChannel.Result result);
+
+  void layerSetProperties(
+      String layerId, Map<String, Object> properties, MethodChannel.Result result);
+
+  void layerSetVisibility(String layerId, boolean visible, MethodChannel.Result result);
+
+  void layerSetVisibilityBatch(
+      List<String> layerIds, boolean visible, MethodChannel.Result result);
+
+  void layerSetZoomRange(
+      String layerId, double minzoom, double maxzoom, MethodChannel.Result result);
+
+  void layerGetVisibility(String layerId, MethodChannel.Result result);
+
+  void styleAddLayer(
+      String imageLayerId,
+      String imageSourceId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      MethodChannel.Result result);
+
+  void styleAddLayerBelow(
+      String imageLayerId,
+      String imageSourceId,
+      String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      MethodChannel.Result result);
+
+  void styleRemoveLayer(String layerId, MethodChannel.Result result);
+
+  void styleMoveLayer(String layerId, @Nullable String belowLayerId, MethodChannel.Result result);
+
+  void styleSetFilter(String layerId, String filter, MethodChannel.Result result);
+
+  void styleGetFilter(String layerId, MethodChannel.Result result);
+
+  void mapSetLayerFilter(String id, String filter, MethodChannel.Result result);
+
+  void styleGetLayerIds(MethodChannel.Result result);
+
+  void styleGetLayerProperties(String layerId, MethodChannel.Result result);
 }

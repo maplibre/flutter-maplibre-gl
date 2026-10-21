@@ -1807,32 +1807,22 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers SOURCE_ALREADY_EXISTS or LAYER_ALREADY_EXISTS, as iOS and web do, for every call that
-   * adds a source or layer under an id the style already holds. The SDK would otherwise throw
-   * (reaching Dart with a generic code) or, for sources, the add was skipped and reported as a
-   * success. Either way the original stays untouched.
+   * Answers LAYER_ALREADY_EXISTS, as iOS and web do, when the style already holds a layer with the
+   * id a call adds. The SDK would otherwise throw, reaching Dart with a generic code. Either way the
+   * original stays untouched.
    *
    * @return true when the call has been answered with an error.
    */
-  private boolean rejectDuplicateStyleId(MethodCall call, MethodChannel.Result result) {
-    if (style == null || !style.isFullyLoaded()) {
+  @Override
+  public boolean rejectDuplicateLayerId(String layerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded() || style.getLayer(layerId) == null) {
       return false;
     }
-    final String method = call.method;
-    String layerId = null;
-    if (method.endsWith("Layer#add")) {
-      layerId = call.argument("layerId");
-    } else if (method.equals("style#addLayer") || method.equals("style#addLayerBelow")) {
-      layerId = call.argument("imageLayerId");
-    }
-    if (layerId != null && style.getLayer(layerId) != null) {
-      result.error(
-          "LAYER_ALREADY_EXISTS",
-          "Layer already exists",
-          "Layer with id " + layerId + " already exists.");
-      return true;
-    }
-    return false;
+    result.error(
+        "LAYER_ALREADY_EXISTS",
+        "Layer already exists",
+        "Layer with id " + layerId + " already exists.");
+    return true;
   }
 
   /**
@@ -2886,6 +2876,707 @@ final class MapLibreMapController
     result.success(getSourceProperties(sourceId));
   }
 
+  // -- Layers -----------------------------------------------------------------
+
+  @Override
+  public void symbolLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretSymbolLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addSymbolLayer(
+        layerId,
+        sourceId,
+        belowLayerId,
+        sourceLayer,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        propertyValues,
+        enableInteraction,
+        filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void lineLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretLineLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addLineLayer(
+        layerId,
+        sourceId,
+        belowLayerId,
+        sourceLayer,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        propertyValues,
+        enableInteraction,
+        filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void fillLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretFillLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addFillLayer(
+        layerId,
+        sourceId,
+        belowLayerId,
+        sourceLayer,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        propertyValues,
+        enableInteraction,
+        filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void fillExtrusionLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addFillExtrusionLayer(
+            layerId,
+            sourceId,
+            belowLayerId,
+            sourceLayer,
+            minzoom != null ? minzoom.floatValue() : null,
+            maxzoom != null ? maxzoom.floatValue() : null,
+            propertyValues,
+            enableInteraction,
+            filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void circleLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      boolean enableInteraction,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretCircleLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addCircleLayer(
+        layerId,
+        sourceId,
+        belowLayerId,
+        sourceLayer,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        propertyValues,
+        enableInteraction,
+        filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void rasterLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretRasterLayerProperties(properties);
+    if (!addRasterLayer(
+        layerId,
+        sourceId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        propertyValues,
+        null)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void hillshadeLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
+    if (!addHillshadeLayer(
+        layerId,
+        sourceId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        propertyValues,
+        null)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void colorReliefLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
+    if (!addColorReliefLayer(
+        layerId,
+        sourceId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        propertyValues,
+        null)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void backgroundLayerAdd(
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
+    if (!addBackgroundLayer(
+        layerId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        propertyValues)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void heatmapLayerAdd(
+      String sourceId,
+      String layerId,
+      @Nullable String belowLayerId,
+      @Nullable String sourceLayer,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      String filter,
+      Map<String, Object> properties,
+      MethodChannel.Result result) {
+    final PropertyValue[] propertyValues =
+        LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
+
+    Expression filterExpression = parseFilter(filter);
+
+    if (!addHeatmapLayer(
+        layerId,
+        sourceId,
+        sourceLayer,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        propertyValues,
+        filterExpression)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    updateLocationComponentLayer();
+
+    result.success(null);
+  }
+
+  @Override
+  public void layerSetProperties(
+      String layerId, Map<String, Object> properties, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+
+    Layer layer = style.getLayer(layerId);
+
+    if (layer != null) {
+      final PropertyValue[] propertyValues;
+
+      if (layer instanceof LineLayer) {
+        propertyValues = LayerPropertyConverter.interpretLineLayerProperties(properties);
+      } else if (layer instanceof FillLayer) {
+        propertyValues = LayerPropertyConverter.interpretFillLayerProperties(properties);
+      } else if (layer instanceof CircleLayer) {
+        propertyValues = LayerPropertyConverter.interpretCircleLayerProperties(properties);
+      } else if (layer instanceof SymbolLayer) {
+        propertyValues = LayerPropertyConverter.interpretSymbolLayerProperties(properties);
+      } else if (layer instanceof RasterLayer) {
+        propertyValues = LayerPropertyConverter.interpretRasterLayerProperties(properties);
+      } else if (layer instanceof FillExtrusionLayer) {
+        propertyValues = LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
+      } else if (layer instanceof HeatmapLayer) {
+        propertyValues = LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
+      } else if (layer instanceof HillshadeLayer) {
+        propertyValues = LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
+      } else if (layer instanceof ColorReliefLayer) {
+        propertyValues = LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
+      } else if (layer instanceof BackgroundLayer) {
+        propertyValues = LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
+      } else {
+        result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
+        return;
+      }
+      layer.setProperties(propertyValues);
+      result.success(null);
+    } else {
+      replyLayerNotFound(result, layerId);
+    }
+  }
+
+  @Override
+  public void layerSetVisibility(String layerId, boolean visible, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      replyLayerNotFound(result, layerId);
+      return;
+    }
+
+    layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
+    result.success(null);
+  }
+
+  @Override
+  public void layerSetVisibilityBatch(
+      List<String> layerIds, boolean visible, MethodChannel.Result result) {
+    if (layerIds.isEmpty()) {
+      result.success(new ArrayList<String>());
+      return;
+    }
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    // Unknown ids are skipped and returned, as on iOS and web.
+    final String visibility = visible ? Property.VISIBLE : Property.NONE;
+    final List<String> missingLayerIds = new ArrayList<>();
+    for (String layerId : layerIds) {
+      final Layer layer = style.getLayer(layerId);
+      if (layer == null) {
+        if (!missingLayerIds.contains(layerId)) {
+          missingLayerIds.add(layerId);
+        }
+        continue;
+      }
+      layer.setProperties(PropertyFactory.visibility(visibility));
+    }
+    result.success(missingLayerIds);
+  }
+
+  @Override
+  public void layerSetZoomRange(
+      String layerId, double minzoom, double maxzoom, MethodChannel.Result result) {
+    // Checked here because MapLibre takes any range, and iOS and web
+    // reject the same values.
+    if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
+      result.error(
+          "INVALID_ARGUMENT",
+          "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
+              + "with minzoom not above maxzoom.",
+          null);
+      return;
+    }
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    final Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      replyLayerNotFound(result, layerId);
+      return;
+    }
+    layer.setMinZoom((float) minzoom);
+    layer.setMaxZoom((float) maxzoom);
+    result.success(null);
+  }
+
+  @Override
+  public void layerGetVisibility(String layerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      // Documented contract: null tells the caller there is no such layer.
+      result.success(null);
+      return;
+    }
+    result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
+  }
+
+  @Override
+  public void styleAddLayer(
+      String imageLayerId,
+      String imageSourceId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      MethodChannel.Result result) {
+    if (!addRasterLayer(
+        imageLayerId,
+        imageSourceId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        null,
+        new PropertyValue[] {},
+        null)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleAddLayerBelow(
+      String imageLayerId,
+      String imageSourceId,
+      String belowLayerId,
+      @Nullable Double minzoom,
+      @Nullable Double maxzoom,
+      MethodChannel.Result result) {
+    if (!addRasterLayer(
+        imageLayerId,
+        imageSourceId,
+        minzoom != null ? minzoom.floatValue() : null,
+        maxzoom != null ? maxzoom.floatValue() : null,
+        belowLayerId,
+        new PropertyValue[] {},
+        null)) {
+      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      return;
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleRemoveLayer(String layerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    if (style.getLayer(layerId) == null) {
+      replyLayerNotFound(result, layerId);
+      return;
+    }
+    style.removeLayer(layerId);
+    interactiveFeatureLayerIds.remove(layerId);
+
+    result.success(null);
+  }
+
+  @Override
+  public void styleMoveLayer(
+      String layerId, @Nullable String belowLayerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    Layer layer = style.getLayer(layerId);
+    // Both layers are checked before anything moves: a missing anchor found
+    // after the removal would lose the layer.
+    if (layer == null) {
+      result.error(
+          "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
+      return;
+    }
+    if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
+      result.error(
+          "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
+      return;
+    }
+    if (layerId.equals(belowLayerId)) {
+      result.success(null);
+      return;
+    }
+    style.removeLayer(layer);
+    if (belowLayerId != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleSetFilter(String layerId, String filter, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      result.error(
+          "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
+      return;
+    }
+
+    if (!isFilterable(layer)) {
+      result.error(
+          "INVALID_LAYER_TYPE",
+          "Invalid layer type",
+          String.format("Layer '%s' does not support filtering.", layerId));
+      return;
+    }
+
+    Expression parsed;
+    try {
+      parsed = parseFilter(filter);
+    } catch (RuntimeException e) {
+      result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
+      return;
+    }
+    // The SDK takes no null filter, so a null filter becomes the
+    // always-true one, which is what an unfiltered layer has.
+    final Expression expression = parsed != null ? parsed : Expression.literal(true);
+
+    String error = captureFilterError(() -> setLayerFilter(layer, expression));
+    if (error != null) {
+      result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
+      return;
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleGetFilter(String layerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+              "STYLE_NOT_READY",
+              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+              null);
+      return;
+    }
+    Map<String, Object> reply = new HashMap<>();
+    Layer layer = style.getLayer(layerId);
+    if (layer == null) {
+      result.error(
+          "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
+      return;
+    }
+
+    if (!isFilterable(layer)) {
+      result.error(
+              "INVALID_LAYER_TYPE",
+              "Invalid layer type",
+              String.format("Layer '%s' does not support filtering.", layerId));
+      return;
+    }
+
+    JsonElement filter;
+    try {
+      filter = getRawFilter(layer);
+    } catch (ReflectiveOperationException e) {
+      result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
+      return;
+    }
+    reply.put("filter", filter == null ? null : new Gson().toJson(filter));
+    result.success(reply);
+  }
+
+  @Override
+  public void mapSetLayerFilter(String id, String filter, MethodChannel.Result result) {
+    boolean ret = false;
+    if (mapLibreMap != null) {
+      Style style = mapLibreMap.getStyle();
+      if (style != null) {
+          try {
+              Layer layer = style.getLayer(id);
+              if (layer != null) {
+                  Expression expression = Expression.raw(filter);
+                  if (expression != null) {
+                    if (layer instanceof LineLayer) {
+                      ((LineLayer)layer).setFilter(expression);
+                      ret = true;
+                    } else if (layer instanceof FillLayer) {
+                      ((FillLayer)layer).setFilter(expression);
+                      ret = true;
+                    } else if (layer instanceof SymbolLayer) {
+                      ((SymbolLayer)layer).setFilter(expression);
+                      ret = true;
+                    }
+                  }
+              }
+          } catch (Exception e) {
+              e.printStackTrace();
+          }
+      }
+    }
+    Map<String, Boolean> reply = new HashMap<>();
+    reply.put("result", ret);
+    result.success(reply);
+  }
+
+  @Override
+  public void styleGetLayerIds(MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+              "STYLE_NOT_READY",
+              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+              null);
+      return;
+    }
+    Map<String, Object> reply = new HashMap<>();
+
+    List<String> layerIds = new ArrayList<>();
+    for (Layer layer : style.getLayers()) {
+      layerIds.add(layer.getId());
+    }
+
+    reply.put("layers", layerIds);
+    result.success(reply);
+  }
+
+  @Override
+  public void styleGetLayerProperties(String layerId, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+              "STYLE_NOT_READY",
+              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+              null);
+      return;
+    }
+    result.success(getLayerProperties(layerId));
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -2896,46 +3587,7 @@ final class MapLibreMapController
   }
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
-    if (rejectDuplicateStyleId(call, result)) {
-      return;
-    }
     switch (call.method) {
-      case "map#setLayerFilter":
-        {
-          boolean ret = false;
-          if (mapLibreMap != null) {
-            Style style = mapLibreMap.getStyle();
-            if (style != null) {
-                try {
-                    Layer layer = style.getLayer(call.argument("id"));
-                    if (layer != null) {
-                        String filter = call.argument("filter");
-                        if (filter != null) {
-                            Expression expression = Expression.raw(filter);
-                            if (expression != null) {
-                              if (layer instanceof LineLayer) {
-                                ((LineLayer)layer).setFilter(expression);
-                                ret = true;
-                              } else if (layer instanceof FillLayer) {
-                                ((FillLayer)layer).setFilter(expression);
-                                ret = true;
-                              } else if (layer instanceof SymbolLayer) {
-                                ((SymbolLayer)layer).setFilter(expression);
-                                ret = true;
-                              }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-          }
-          Map<String, Boolean> reply = new HashMap<>();
-          reply.put("result", ret);
-          result.success(reply);
-          break;
-        }
       case "map#getStyle":
         {
           Map<String, Object> reply = new HashMap<>();
@@ -2952,327 +3604,6 @@ final class MapLibreMapController
           }
           reply.put("result", ret);
           result.success(reply);
-          break;
-        }
-      case "symbolLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretSymbolLayerProperties(call.argument("properties"));
-
-          Expression filterExpression = parseFilter(filter);
-
-          if (!addSymbolLayer(
-              layerId,
-              sourceId,
-              belowLayerId,
-              sourceLayer,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              properties,
-              enableInteraction,
-              filterExpression)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "lineLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretLineLayerProperties(call.argument("properties"));
-
-          Expression filterExpression = parseFilter(filter);
-
-          if (!addLineLayer(
-              layerId,
-              sourceId,
-              belowLayerId,
-              sourceLayer,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              properties,
-              enableInteraction,
-              filterExpression)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-        case "layer#setProperties": {
-          final String layerId = call.argument("layerId");
-
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-
-          Layer layer = style.getLayer(layerId);
-
-          if (layer != null) {
-            final PropertyValue[] properties;
-
-            if (layer instanceof LineLayer) {
-              properties = LayerPropertyConverter
-                  .interpretLineLayerProperties(call.argument("properties"));
-            } else if (layer instanceof FillLayer) {
-              properties = LayerPropertyConverter
-                  .interpretFillLayerProperties(call.argument("properties"));
-            } else if (layer instanceof CircleLayer) {
-              properties = LayerPropertyConverter
-                  .interpretCircleLayerProperties(call.argument("properties"));
-            } else if (layer instanceof SymbolLayer) {
-              properties = LayerPropertyConverter
-                  .interpretSymbolLayerProperties(call.argument("properties"));
-            } else if (layer instanceof RasterLayer) {
-              properties = LayerPropertyConverter
-                  .interpretRasterLayerProperties(call.argument("properties"));
-            } else if (layer instanceof FillExtrusionLayer) {
-              properties = LayerPropertyConverter
-                  .interpretFillExtrusionLayerProperties(call.argument("properties"));
-            } else if (layer instanceof HeatmapLayer) {
-              properties = LayerPropertyConverter
-                  .interpretHeatmapLayerProperties(call.argument("properties"));
-            } else if (layer instanceof HillshadeLayer) {
-              properties = LayerPropertyConverter
-                  .interpretHillshadeLayerProperties(call.argument("properties"));
-            } else if (layer instanceof ColorReliefLayer) {
-              properties = LayerPropertyConverter
-                  .interpretColorReliefLayerProperties(call.argument("properties"));
-            } else if (layer instanceof BackgroundLayer) {
-              properties = LayerPropertyConverter
-                  .interpretBackgroundLayerProperties(call.argument("properties"));
-            } else {
-              result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
-              return;
-            }
-            layer.setProperties(properties);
-            result.success(null);
-          } else {
-            replyLayerNotFound(result, layerId);
-          }
-
-          break;
-        }
-      case "fillLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretFillLayerProperties(call.argument("properties"));
-
-          Expression filterExpression = parseFilter(filter);
-
-          if (!addFillLayer(
-              layerId,
-              sourceId,
-              belowLayerId,
-              sourceLayer,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              properties,
-              enableInteraction,
-              filterExpression)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "fillExtrusionLayer#add":
-      {
-        final String sourceId = call.argument("sourceId");
-        final String layerId = call.argument("layerId");
-        final String belowLayerId = call.argument("belowLayerId");
-        final String sourceLayer = call.argument("sourceLayer");
-        final Double minzoom = call.argument("minzoom");
-        final Double maxzoom = call.argument("maxzoom");
-        final String filter = call.argument("filter");
-        final boolean enableInteraction = call.argument("enableInteraction");
-        final PropertyValue[] properties =
-                LayerPropertyConverter.interpretFillExtrusionLayerProperties(
-                        call.argument("properties"));
-
-        Expression filterExpression = parseFilter(filter);
-
-        if (!addFillExtrusionLayer(
-                layerId,
-                sourceId,
-                belowLayerId,
-                sourceLayer,
-                minzoom != null ? minzoom.floatValue() : null,
-                maxzoom != null ? maxzoom.floatValue() : null,
-                properties,
-                enableInteraction,
-                filterExpression)) {
-          result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-          break;
-        }
-        updateLocationComponentLayer();
-
-        result.success(null);
-        break;
-      }
-      case "circleLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final String filter = call.argument("filter");
-          final boolean enableInteraction = call.argument("enableInteraction");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretCircleLayerProperties(call.argument("properties"));
-
-          Expression filterExpression = parseFilter(filter);
-
-          if (!addCircleLayer(
-              layerId,
-              sourceId,
-              belowLayerId,
-              sourceLayer,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              properties,
-              enableInteraction,
-              filterExpression)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "rasterLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretRasterLayerProperties(call.argument("properties"));
-          if (!addRasterLayer(
-              layerId,
-              sourceId,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              belowLayerId,
-              properties,
-              null)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "hillshadeLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretHillshadeLayerProperties(call.argument("properties"));
-          if (!addHillshadeLayer(
-              layerId,
-              sourceId,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              belowLayerId,
-              properties,
-              null)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "colorReliefLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretColorReliefLayerProperties(call.argument("properties"));
-          if (!addColorReliefLayer(
-              layerId,
-              sourceId,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              belowLayerId,
-              properties,
-              null)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
-      case "backgroundLayer#add":
-        {
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretBackgroundLayerProperties(call.argument("properties"));
-          if (!addBackgroundLayer(
-              layerId,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              belowLayerId,
-              properties)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
           break;
         }
       case "style#setLight":
@@ -3346,37 +3677,6 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
-      case "heatmapLayer#add":
-        {
-          final String sourceId = call.argument("sourceId");
-          final String layerId = call.argument("layerId");
-          final String belowLayerId = call.argument("belowLayerId");
-          final String sourceLayer = call.argument("sourceLayer");
-          final Double minzoom = call.argument("minzoom");
-          final Double maxzoom = call.argument("maxzoom");
-          final String filter = call.argument("filter");
-          final PropertyValue[] properties =
-              LayerPropertyConverter.interpretHeatmapLayerProperties(call.argument("properties"));
-
-          Expression filterExpression = parseFilter(filter);
-
-          if (!addHeatmapLayer(
-              layerId,
-              sourceId,
-              sourceLayer,
-              minzoom != null ? minzoom.floatValue() : null,
-              maxzoom != null ? maxzoom.floatValue() : null,
-              belowLayerId,
-              properties,
-              filterExpression)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          updateLocationComponentLayer();
-
-          result.success(null);
-          break;
-        }
       case "style#addImage":
         {
           if (style == null || !style.isFullyLoaded()) {
@@ -3407,347 +3707,6 @@ final class MapLibreMapController
           break;
         }
 
-      case "style#addLayer":
-        {
-          if (!addRasterLayer(
-              call.argument("imageLayerId"),
-              call.argument("imageSourceId"),
-              call.argument("minzoom") != null
-                  ? ((Double) call.argument("minzoom")).floatValue()
-                  : null,
-              call.argument("maxzoom") != null
-                  ? ((Double) call.argument("maxzoom")).floatValue()
-                  : null,
-              null,
-              new PropertyValue[] {},
-              null)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          result.success(null);
-          break;
-        }
-      case "style#addLayerBelow":
-        {
-          if (!addRasterLayer(
-              call.argument("imageLayerId"),
-              call.argument("imageSourceId"),
-              call.argument("minzoom") != null
-                  ? ((Double) call.argument("minzoom")).floatValue()
-                  : null,
-              call.argument("maxzoom") != null
-                  ? ((Double) call.argument("maxzoom")).floatValue()
-                  : null,
-              call.argument("belowLayerId"),
-              new PropertyValue[] {},
-              null)) {
-            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
-            break;
-          }
-          result.success(null);
-          break;
-        }
-      case "style#removeLayer":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          String layerId = call.argument("layerId");
-          if (style.getLayer(layerId) == null) {
-            replyLayerNotFound(result, layerId);
-            break;
-          }
-          style.removeLayer(layerId);
-          interactiveFeatureLayerIds.remove(layerId);
-
-          result.success(null);
-          break;
-        }
-      case "style#moveLayer":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          String layerId = call.argument("layerId");
-          String belowLayerId = call.argument("belowLayerId");
-          Layer layer = style.getLayer(layerId);
-          // Both layers are checked before anything moves: a missing anchor found
-          // after the removal would lose the layer.
-          if (layer == null) {
-            result.error(
-                "LAYER_NOT_FOUND_ERROR", "Layer with id " + layerId + " not found.", null);
-            break;
-          }
-          if (belowLayerId != null && style.getLayer(belowLayerId) == null) {
-            result.error(
-                "LAYER_NOT_FOUND_ERROR", "Layer with id " + belowLayerId + " not found.", null);
-            break;
-          }
-          if (layerId.equals(belowLayerId)) {
-            result.success(null);
-            break;
-          }
-          style.removeLayer(layer);
-          if (belowLayerId != null) {
-            style.addLayerBelow(layer, belowLayerId);
-          } else {
-            style.addLayer(layer);
-          }
-          result.success(null);
-          break;
-        }
-      case "style#setFilter":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          String layerId = call.argument("layerId");
-          String filter = call.argument("filter");
-
-          Layer layer = style.getLayer(layerId);
-          if (layer == null) {
-            result.error(
-                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
-            break;
-          }
-
-          if (!isFilterable(layer)) {
-            result.error(
-                "INVALID_LAYER_TYPE",
-                "Invalid layer type",
-                String.format("Layer '%s' does not support filtering.", layerId));
-            break;
-          }
-
-          Expression parsed;
-          try {
-            parsed = parseFilter(filter);
-          } catch (RuntimeException e) {
-            result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
-            break;
-          }
-          // The SDK takes no null filter, so a null filter becomes the
-          // always-true one, which is what an unfiltered layer has.
-          final Expression expression = parsed != null ? parsed : Expression.literal(true);
-
-          String error = captureFilterError(() -> setLayerFilter(layer, expression));
-          if (error != null) {
-            result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
-            break;
-          }
-          result.success(null);
-          break;
-        }
-        case "style#getFilter":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                    "STYLE_NOT_READY",
-                    "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    null);
-            break;
-          }
-          Map<String, Object> reply = new HashMap<>();
-          String layerId = call.argument("layerId");
-          Layer layer = style.getLayer(layerId);
-          if (layer == null) {
-            result.error(
-                "LAYER_NOT_FOUND_ERROR", "Layer not found", "Layer with id " + layerId + " not found.");
-            break;
-          }
-
-          if (!isFilterable(layer)) {
-            result.error(
-                    "INVALID_LAYER_TYPE",
-                    "Invalid layer type",
-                    String.format("Layer '%s' does not support filtering.", layerId));
-            break;
-          }
-
-          JsonElement filter;
-          try {
-            filter = getRawFilter(layer);
-          } catch (ReflectiveOperationException e) {
-            result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
-            break;
-          }
-          reply.put("filter", filter == null ? null : new Gson().toJson(filter));
-          result.success(reply);
-          break;
-        }
-        case "layer#setVisibility":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          String layerId = call.argument("layerId");
-          boolean visible = call.argument("visible");
-
-          Layer layer = style.getLayer(layerId);
-          if (layer == null) {
-            replyLayerNotFound(result, layerId);
-            break;
-          }
-
-          layer.setProperties(PropertyFactory.visibility(visible ? Property.VISIBLE : Property.NONE));
-          result.success(null);
-          break;
-
-        }
-        case "layer#setVisibilityBatch":
-        {
-          final Object layerIdsArgument = call.argument("layerIds");
-          final Object visibleArgument = call.argument("visible");
-          if (!(layerIdsArgument instanceof List) || !(visibleArgument instanceof Boolean)) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "setLayersVisibility requires 'layerIds' and 'visible'.",
-                null);
-            break;
-          }
-          final List<String> layerIds = new ArrayList<>();
-          for (Object layerId : (List<?>) layerIdsArgument) {
-            if (!(layerId instanceof String)) {
-              result.error(
-                  "INVALID_ARGUMENT", "setLayersVisibility requires string layer ids.", null);
-              return;
-            }
-            layerIds.add((String) layerId);
-          }
-          if (layerIds.isEmpty()) {
-            result.success(new ArrayList<String>());
-            break;
-          }
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          // Unknown ids are skipped and returned, as on iOS and web.
-          final String visibility =
-              Boolean.TRUE.equals(visibleArgument) ? Property.VISIBLE : Property.NONE;
-          final List<String> missingLayerIds = new ArrayList<>();
-          for (String layerId : layerIds) {
-            final Layer layer = style.getLayer(layerId);
-            if (layer == null) {
-              if (!missingLayerIds.contains(layerId)) {
-                missingLayerIds.add(layerId);
-              }
-              continue;
-            }
-            layer.setProperties(PropertyFactory.visibility(visibility));
-          }
-          result.success(missingLayerIds);
-          break;
-        }
-        case "layer#setZoomRange":
-        {
-          // Checked here because MapLibre takes any range, and iOS and web
-          // reject the same values.
-          final Object minzoomArgument = call.argument("minzoom");
-          final Object maxzoomArgument = call.argument("maxzoom");
-          if (!(minzoomArgument instanceof Number) || !(maxzoomArgument instanceof Number)) {
-            result.error(
-                "INVALID_ARGUMENT", "setLayerZoomRange requires 'minzoom' and 'maxzoom'.", null);
-            break;
-          }
-          final double minzoom = ((Number) minzoomArgument).doubleValue();
-          final double maxzoom = ((Number) maxzoomArgument).doubleValue();
-          if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
-                    + "with minzoom not above maxzoom.",
-                null);
-            break;
-          }
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          final String layerId = call.argument("layerId");
-          final Layer layer = style.getLayer(layerId);
-          if (layer == null) {
-            replyLayerNotFound(result, layerId);
-            break;
-          }
-          layer.setMinZoom((float) minzoom);
-          layer.setMaxZoom((float) maxzoom);
-          result.success(null);
-          break;
-        }
-        case "layer#getVisibility":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          Layer layer = style.getLayer((String) call.argument("layerId"));
-          if (layer == null) {
-            // Documented contract: null tells the caller there is no such layer.
-            result.success(null);
-            break;
-          }
-          result.success(!Property.NONE.equals(layer.getVisibility().getValue()));
-          break;
-        }
-        case "style#getLayerIds":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                    "STYLE_NOT_READY",
-                    "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                    null);
-            break;
-          }
-          Map<String, Object> reply = new HashMap<>();
-
-          List<String> layerIds = new ArrayList<>();
-          for (Layer layer : style.getLayers()) {
-            layerIds.add(layer.getId());
-          }
-
-          reply.put("layers", layerIds);
-          result.success(reply);
-          break;
-        }
-      case "style#getLayerProperties":
-      {
-        if (style == null || !style.isFullyLoaded()) {
-          result.error(
-                  "STYLE_NOT_READY",
-                  "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                  null);
-          break;
-        }
-        String layerId = call.argument("layerId");
-        result.success(getLayerProperties(layerId));
-        break;
-      }
       case "style#setStyle":
       {
         // Getting style json, url, path etc. from the flutter side

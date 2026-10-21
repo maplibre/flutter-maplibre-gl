@@ -96,7 +96,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any(callback) { map.mapEditGeoJsonUrl(id, url, it) }
 
     override fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit) =
-        any("map#setLayerFilter", hashMapOf("id" to id, "filter" to filter), callback)
+        any(callback) { map.mapSetLayerFilter(id, filter, it) }
 
     override fun mapGetStyle(callback: (Result<Any?>) -> Unit) = any("map#getStyle", null, callback)
 
@@ -222,16 +222,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         minzoom: Double?,
         maxzoom: Double?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addLayer",
-        hashMapOf(
-            "imageLayerId" to imageLayerId,
-            "imageSourceId" to imageSourceId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-        ),
-        callback,
-    )
+    ) = addLayer(imageLayerId, callback) {
+        map.styleAddLayer(imageLayerId, imageSourceId, minzoom, maxzoom, it)
+    }
 
     override fun styleAddLayerBelow(
         imageLayerId: String,
@@ -240,39 +233,24 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         minzoom: Double?,
         maxzoom: Double?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addLayerBelow",
-        hashMapOf(
-            "imageLayerId" to imageLayerId,
-            "imageSourceId" to imageSourceId,
-            "belowLayerId" to belowLayerId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-        ),
-        callback,
-    )
+    ) = addLayer(imageLayerId, callback) {
+        map.styleAddLayerBelow(imageLayerId, imageSourceId, belowLayerId, minzoom, maxzoom, it)
+    }
 
     override fun styleRemoveLayer(layerId: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#removeLayer", hashMapOf("layerId" to layerId), callback)
+        unit(callback) { map.styleRemoveLayer(layerId, it) }
 
     override fun styleMoveLayer(
         layerId: String,
         belowLayerId: String?,
         callback: (Result<Unit>) -> Unit,
-    ) {
-        val arguments = hashMapOf<String, Any?>("layerId" to layerId)
-        // Left out when null, as the legacy call did.
-        if (belowLayerId != null) {
-            arguments["belowLayerId"] = belowLayerId
-        }
-        unit("style#moveLayer", arguments, callback)
-    }
+    ) = unit(callback) { map.styleMoveLayer(layerId, belowLayerId, it) }
 
     override fun styleSetFilter(layerId: String, filter: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#setFilter", hashMapOf("layerId" to layerId, "filter" to filter), callback)
+        unit(callback) { map.styleSetFilter(layerId, filter, it) }
 
     override fun styleGetFilter(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getFilter", hashMapOf("layerId" to layerId), callback)
+        any(callback) { map.styleGetFilter(layerId, it) }
 
     override fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit) =
         any(callback) { map.mapToLatLng(x, y, it) }
@@ -314,13 +292,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "symbolLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.symbolLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun lineLayerAdd(
         sourceId: String,
@@ -333,23 +310,18 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "lineLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.lineLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun layerSetProperties(
         layerId: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setProperties",
-        hashMapOf("layerId" to layerId, "properties" to properties),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetProperties(layerId, properties, it) }
 
     override fun circleLayerAdd(
         sourceId: String,
@@ -362,13 +334,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "circleLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.circleLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun fillLayerAdd(
         sourceId: String,
@@ -381,13 +352,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "fillLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.fillLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun fillExtrusionLayerAdd(
         sourceId: String,
@@ -400,13 +370,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "fillExtrusionLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.fillExtrusionLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun styleAddSource(
         sourceId: String,
@@ -422,11 +391,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "rasterLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.rasterLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun hillshadeLayerAdd(
         sourceId: String,
@@ -436,11 +403,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "hillshadeLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.hillshadeLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun colorReliefLayerAdd(
         sourceId: String,
@@ -450,11 +415,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "colorReliefLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.colorReliefLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun backgroundLayerAdd(
         layerId: String,
@@ -463,17 +426,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "backgroundLayer#add",
-        hashMapOf(
-            "layerId" to layerId,
-            "belowLayerId" to belowLayerId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-            "properties" to properties,
-        ),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.backgroundLayerAdd(layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun heatmapLayerAdd(
         sourceId: String,
@@ -485,13 +440,11 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         filter: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "heatmapLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.heatmapLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties, it,
+        )
+    }
 
     override fun sourceSetFeature(
         sourceId: String,
@@ -531,36 +484,26 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         layerId: String,
         visible: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setVisibility",
-        hashMapOf("layerId" to layerId, "visible" to visible),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetVisibility(layerId, visible, it) }
 
-    // The handler answers an ArrayList of the ids that matched no layer.
+    // Answered with the ids that matched no layer.
     override fun layerSetVisibilityBatch(
         layerIds: List<String>,
         visible: Boolean,
         callback: (Result<List<String>?>) -> Unit,
-    ) = call(
-        "layer#setVisibilityBatch",
-        hashMapOf("layerIds" to layerIds, "visible" to visible),
-        callback,
-    ) { reply -> (reply as List<*>?)?.map { it as String } }
+    ) = call(callback, { reply -> (reply as List<*>?)?.map { it as String } }) {
+        map.layerSetVisibilityBatch(layerIds, visible, it)
+    }
 
     override fun layerSetZoomRange(
         layerId: String,
         minzoom: Double,
         maxzoom: Double,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setZoomRange",
-        hashMapOf("layerId" to layerId, "minzoom" to minzoom, "maxzoom" to maxzoom),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetZoomRange(layerId, minzoom, maxzoom, it) }
 
     override fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit) =
-        call("layer#getVisibility", hashMapOf("layerId" to layerId), callback) { it as Boolean? }
+        call(callback, { it as Boolean? }) { map.layerGetVisibility(layerId, it) }
 
     // Answered with the PNG bytes.
     override fun mapTakeSnapshot(
@@ -570,57 +513,19 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     ) = call(callback, { it as ByteArray? }) { map.mapTakeSnapshot(width, height, it) }
 
     override fun styleGetLayerIds(callback: (Result<Any?>) -> Unit) =
-        any("style#getLayerIds", null, callback)
+        any(callback) { map.styleGetLayerIds(it) }
 
     override fun styleGetSourceIds(callback: (Result<Any?>) -> Unit) =
         any(callback) { map.styleGetSourceIds(it) }
 
     override fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getLayerProperties", hashMapOf("layerId" to layerId), callback)
+        any(callback) { map.styleGetLayerProperties(layerId, it) }
 
     override fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit) =
         any(callback) { map.styleGetSourceProperties(sourceId, it) }
 
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
         unit("style#setStyle", hashMapOf("style" to style), callback)
-
-    /** The keys shared by the `*Layer#add` calls that take a source layer and a filter. */
-    private fun filteredLayerArguments(
-        sourceId: String,
-        layerId: String,
-        belowLayerId: String?,
-        sourceLayer: String?,
-        minzoom: Double?,
-        maxzoom: Double?,
-        filter: String,
-        properties: Map<String, Any?>,
-    ) = hashMapOf<String, Any?>(
-        "sourceId" to sourceId,
-        "layerId" to layerId,
-        "belowLayerId" to belowLayerId,
-        "sourceLayer" to sourceLayer,
-        "minzoom" to minzoom,
-        "maxzoom" to maxzoom,
-        "filter" to filter,
-        "properties" to properties,
-    )
-
-    /** The keys of the `*Layer#add` calls that take a source but no filter. */
-    private fun sourcedLayerArguments(
-        sourceId: String,
-        layerId: String,
-        belowLayerId: String?,
-        minzoom: Double?,
-        maxzoom: Double?,
-        properties: Map<String, Any?>,
-    ) = hashMapOf<String, Any?>(
-        "sourceId" to sourceId,
-        "layerId" to layerId,
-        "belowLayerId" to belowLayerId,
-        "minzoom" to minzoom,
-        "maxzoom" to maxzoom,
-        "properties" to properties,
-    )
 
     /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
     private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =
@@ -639,6 +544,20 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         convert: (Any?) -> T,
         body: (MethodChannel.Result) -> Unit,
     ) = withMap(PigeonMethodResult(callback, convert), body)
+
+    /**
+     * Runs [body], which adds a layer, unless the style already holds one
+     * with [layerId]: the map answers that call LAYER_ALREADY_EXISTS.
+     */
+    private fun addLayer(
+        layerId: String,
+        callback: (Result<Unit>) -> Unit,
+        body: (MethodChannel.Result) -> Unit,
+    ) = unit(callback) {
+        if (!map.rejectDuplicateLayerId(layerId, it)) {
+            body(it)
+        }
+    }
 
     /**
      * Runs [body], which adds a source, unless the style already holds one

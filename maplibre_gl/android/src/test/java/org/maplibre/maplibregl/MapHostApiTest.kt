@@ -39,7 +39,7 @@ class MapHostApiTest {
     ) { proxy, method, args ->
         when (method.name) {
             "isMapReady" -> mapReady
-            "rejectDuplicateSourceId" -> {
+            "rejectDuplicateLayerId", "rejectDuplicateSourceId" -> {
                 val id = args!![0] as String
                 checks.add(method.name to id)
                 val taken = id in takenIds
@@ -77,6 +77,18 @@ class MapHostApiTest {
         "sourceAddGeoJson" to ("rejectDuplicateSourceId" to 0),
         "styleAddSource" to ("rejectDuplicateSourceId" to 0),
         "styleAddImageSource" to ("rejectDuplicateSourceId" to 0),
+        "symbolLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "lineLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "fillLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "fillExtrusionLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "circleLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "rasterLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "hillshadeLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "colorReliefLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "heatmapLayerAdd" to ("rejectDuplicateLayerId" to 1),
+        "backgroundLayerAdd" to ("rejectDuplicateLayerId" to 0),
+        "styleAddLayer" to ("rejectDuplicateLayerId" to 0),
+        "styleAddLayerBelow" to ("rejectDuplicateLayerId" to 0),
     )
 
     /** An argument of [type] that tells position [index] apart from the others. */
@@ -300,6 +312,27 @@ class MapHostApiTest {
         answer = { _, result -> result.success(points) }
 
         assertSame(points, value<DoubleArray> { api.mapToScreenLocationBatch(doubleArrayOf(45.0, 9.0), it) })
+    }
+
+    @Test
+    fun answersTheListOfMissingLayerIds() {
+        answer = { _, result -> result.success(arrayListOf("gone")) }
+        assertEquals(
+            listOf("gone"),
+            value<List<String>?> { api.layerSetVisibilityBatch(listOf("a", "gone"), false, it) },
+        )
+
+        answer = { _, result -> result.success(null) }
+        assertNull(value<List<String>?> { api.layerSetVisibilityBatch(listOf("a"), true, it) })
+    }
+
+    @Test
+    fun answersTheVisibilityOfALayerOrNull() {
+        answer = { _, result -> result.success(true) }
+        assertEquals(true, value<Boolean?> { api.layerGetVisibility("a", it) })
+
+        answer = { _, result -> result.success(null) }
+        assertNull(value<Boolean?> { api.layerGetVisibility("missing", it) })
     }
 
     @Test
