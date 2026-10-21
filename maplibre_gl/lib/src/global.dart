@@ -177,9 +177,8 @@ Future<void> setOfflineTileCountLimit(int limit) =>
 /// (both platforms). Lowering these values can help avoid rate limiting from
 /// tile servers (e.g. Cloudflare).
 ///
-/// Both values must be >= 1 when provided, on Android and iOS alike, though
-/// iOS does not use [maxRequests]. A smaller value fails the call with a
-/// [PlatformException] with code `INVALID_ARGUMENT`.
+/// Throws a [PlatformException] with code `INVALID_ARGUMENT` if either value
+/// is below 1.
 Future<void> setOfflineMaxConcurrentRequests({
   int? maxRequests,
   int? maxRequestsPerHost,
@@ -207,10 +206,9 @@ Future<void> pauseOfflineRegionDownload(int id) =>
 
 /// Resumes a paused offline region download.
 ///
-/// A region that no [downloadOfflineRegion] call of this app session is
-/// following, for example one paused before the app restarted, resumes too.
-/// Nothing reports its progress then: follow it with
-/// [getOfflineRegionStatus]. A region that is already complete is left as it
+/// It also resumes a region no [downloadOfflineRegion] call of this app
+/// session follows, such as one paused before the app restarted; read its
+/// progress with [getOfflineRegionStatus]. A complete region is left as it
 /// is.
 ///
 /// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region

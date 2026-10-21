@@ -4,9 +4,8 @@ part of '../maplibre_gl.dart';
 /// native map through the messages generated from `pigeons/messages.dart`.
 ///
 /// The messages of each map travel on their own channels, told apart by the
-/// platform view id [initPlatform] receives. Their arguments and answers are
-/// typed: this class builds them from the values of the public API, and turns
-/// the answers into the values that API has always returned.
+/// platform view id [initPlatform] receives. This class turns the values of
+/// the public API into their typed arguments, and their answers back.
 class _MapLibreNativePlatform extends MapLibrePlatform
     implements MapLibreMapFlutterApi {
   _MapLibreNativePlatform([this._hostApiFactory]);
@@ -126,8 +125,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   /// The creation params of the platform view, from the map [MapLibreMap]
-  /// builds them in. Native decodes them with the codec of the messages, so
-  /// they cross as one typed object.
+  /// builds. Native decodes them with the generated codec.
   static PgCreationParams _creationParams(
     Map<String, dynamic> params, {
     required bool useHybridComposition,
@@ -437,9 +435,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// [update] as the subclass of [PgCameraUpdate] of its kind, read from
   /// `CameraUpdate.toJson`, the only way into its value.
   ///
-  /// Every constructor of [CameraUpdate] has its kind here. An update that
-  /// does not read as one, from a subclass that changed `toJson`, fails with
-  /// the INVALID_ARGUMENT native answered such an update with.
+  /// Throws INVALID_ARGUMENT for an update of no known kind, such as one from
+  /// a subclass that overrides `toJson`.
   static PgCameraUpdate _pgCameraUpdate(CameraUpdate update) {
     final json = update.toJson();
     try {
@@ -1545,7 +1542,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
-    // A growable list of its own, as before the answers were typed.
+    // A growable list of its own, which the caller may change.
     return <dynamic>[...await _api.styleGetLayerIds()];
   }
 
