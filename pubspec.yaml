@@ -27,7 +27,10 @@ melos:
 
     generate:pigeon:
       description: Generate the Dart, Kotlin and Swift messages from pigeons/messages.dart
-      exec: dart run pigeon --input pigeons/messages.dart && dart format lib/src/native
+      # Formatted twice: on the long argument lists of the layer messages, one
+      # pass of dart format leaves output that a second pass changes, which
+      # would fail format-all right after generation.
+      exec: dart run pigeon --input pigeons/messages.dart && dart format lib/src/native && dart format lib/src/native
       packageFilters:
         scope: maplibre_gl
 

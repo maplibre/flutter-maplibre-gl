@@ -8,7 +8,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     UIGestureRecognizerDelegate
 {
     private var registrar: FlutterPluginRegistrar
-    private var channel: FlutterMethodChannel?
+    /// The messenger and the suffix, the view id, of this map's Pigeon
+    /// channels, kept to unregister the Dart calls in `deinit`.
+    private let binaryMessenger: FlutterBinaryMessenger
+    private let channelSuffix: String
+    /// Takes this map's Dart calls. It holds the controller weakly.
+    private let hostApi = MapHostApi()
+    /// Sends this map's events to Dart.
+    private let flutterApi: MapLibreMapFlutterApi
 
     private var mapView: MLNMapView
     private var activeSnapshotter: MLNMapSnapshotter?
@@ -99,7 +106,22 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Drive the view out of its window and drop the remaining references so
         // the engine is reclaimed promptly when the platform view is removed.
         NotificationCenter.default.removeObserver(self)
-        channel?.setMethodCallHandler(nil)
+        // A map#waitForMap still waiting for the style would never be
+        // answered, leaving the Dart future pending for good. Android fails
+        // it the same way.
+        if let waitingResult = mapReadyResult {
+            mapReadyResult = nil
+            waitingResult(FlutterError(
+                code: "MAP_DISPOSED",
+                message: "The map was disposed before it finished being created",
+                details: nil
+            ))
+        }
+        MapLibreMapHostApiSetup.setUp(
+            binaryMessenger: binaryMessenger,
+            api: nil,
+            messageChannelSuffix: channelSuffix
+        )
         mapView.delegate = nil
         if let recognizers = mapView.gestureRecognizers {
             for recognizer in recognizers {
@@ -164,15 +186,20 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             styleIsJSON = Self.styleStringIsJSON(styleString)
         }
         self.registrar = registrar
+        let messenger = registrar.messenger()
+        let suffix = "\(viewId)"
+        binaryMessenger = messenger
+        channelSuffix = suffix
+        flutterApi = MapLibreMapFlutterApi(binaryMessenger: messenger, messageChannelSuffix: suffix)
 
         super.init()
 
-        channel = FlutterMethodChannel(
-            name: "plugins.flutter.io/maplibre_gl_\(viewId)",
-            binaryMessenger: registrar.messenger()
+        hostApi.controller = self
+        MapLibreMapHostApiSetup.setUp(
+            binaryMessenger: binaryMessenger,
+            api: hostApi,
+            messageChannelSuffix: channelSuffix
         )
-        channel!
-            .setMethodCallHandler { [weak self] in self?.onMethodCall(methodCall: $0, result: $1) }
 
         mapView.delegate = self
         (mapView as? LocationPuckMapView)?.onTintColorDidChange = { [weak self] in
@@ -340,12 +367,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 // only call map#onStyleLoaded here if isMapReady has happend and isFirstStyleLoad is true
                 if isFirstStyleLoad {
                     isFirstStyleLoad = false
-                    if let channel = channel {
-                        onStyleLoadedCalled = true
-                        // Defer the callback to the next run loop iteration to avoid race conditions
-                        DispatchQueue.main.async {
-                            channel.invokeMethod("map#onStyleLoaded", arguments: nil)
-                        }
+                    onStyleLoadedCalled = true
+                    // Defer the callback to the next run loop iteration to avoid race conditions
+                    let api = flutterApi
+                    DispatchQueue.main.async {
+                        api.mapOnStyleLoaded { _ in }
                     }
                 }
             } else {
@@ -2198,33 +2224,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let point = sender.location(in: mapView)
         let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
 
+        let screenPoint = PgScreenPoint(x: Double(point.x), y: Double(point.y))
+        let latLng = coordinate.toPigeon()
+
         let result = firstFeatureOnLayers(at: point)
         if let feature = result.feature {
-            channel?.invokeMethod("feature#onTap", arguments: [
-                        "id": feature.identifier,
-                        "x": point.x,
-                        "y": point.y,
-                        "lng": coordinate.longitude,
-                        "lat": coordinate.latitude,
-                        "layerId": result.layerId,
-            ])
+            flutterApi.featureOnTap(tap: PgFeatureTap(
+                id: feature.identifier,
+                point: screenPoint,
+                latLng: latLng,
+                layerId: result.layerId
+            )) { _ in }
             // Fire map#onMapClick only if featureTapsTriggersMapClick is true
             if featureTapsTriggersMapClick {
-                channel?.invokeMethod("map#onMapClick", arguments: [
-                    "x": point.x,
-                    "y": point.y,
-                    "lng": coordinate.longitude,
-                    "lat": coordinate.latitude,
-                ])
+                flutterApi.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
             }
         } else {
             // Always fire map#onMapClick when no feature is tapped
-            channel?.invokeMethod("map#onMapClick", arguments: [
-                "x": point.x,
-                "y": point.y,
-                "lng": coordinate.longitude,
-                "lat": coordinate.latitude,
-            ])
+            flutterApi.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
         }
     }
 
@@ -2238,18 +2255,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
            let previous = previousDragCoordinate,
            let origin = originDragCoordinate
         {
-            channel?.invokeMethod("feature#onDrag", arguments: [
-                "id": id,
-                "x": point.x,
-                "y": point.y,
-                "originLng": origin.longitude,
-                "originLat": origin.latitude,
-                "currentLng": coordinate.longitude,
-                "currentLat": coordinate.latitude,
-                "eventType": eventType,
-                "deltaLng": coordinate.longitude - previous.longitude,
-                "deltaLat": coordinate.latitude - previous.latitude,
-            ])
+            flutterApi.featureOnDrag(drag: PgFeatureDrag(
+                id: id,
+                point: PgScreenPoint(x: Double(point.x), y: Double(point.y)),
+                origin: origin.toPigeon(),
+                current: coordinate.toPigeon(),
+                delta: PgLatLng(
+                    latitude: coordinate.latitude - previous.latitude,
+                    longitude: coordinate.longitude - previous.longitude
+                ),
+                eventType: eventType
+            )) { _ in }
         }
     }
 
@@ -2335,12 +2351,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // Get the CGPoint where the user tapped.
             let point = sender.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
-            channel?.invokeMethod("map#onMapLongClick", arguments: [
-                "x": point.x,
-                "y": point.y,
-                "lng": coordinate.longitude,
-                "lat": coordinate.latitude,
-            ])
+            flutterApi.mapOnMapLongClick(
+                point: PgScreenPoint(x: Double(point.x), y: Double(point.y)),
+                latLng: coordinate.toPigeon()
+            ) { _ in }
         }
     }
 
@@ -2384,19 +2398,22 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         addedShapesByLayer.removeAll()
         interactiveFeatureLayerIds.removeAll()
 
-        mapReadyResult?(nil)
+        // A parked map#waitForMap is answered once: a later style load, after
+        // a setStyle, must not reply to the same message again.
+        let waitingResult = mapReadyResult
+        mapReadyResult = nil
+        waitingResult?(nil)
 
         // On first launch we only call map#onStyleLoaded if map#waitForMap has already been called
-        if !isFirstStyleLoad || mapReadyResult != nil {
+        if !isFirstStyleLoad || waitingResult != nil {
             isFirstStyleLoad = false
 
-            if let channel = channel {
-                onStyleLoadedCalled = true
-                // Defer the callback to the next run loop iteration to avoid race conditions
-                // where the map's internal state is not fully ready for operations like camera animations
-                DispatchQueue.main.async {
-                    channel.invokeMethod("map#onStyleLoaded", arguments: nil)
-                }
+            onStyleLoadedCalled = true
+            // Defer the callback to the next run loop iteration to avoid race conditions
+            // where the map's internal state is not fully ready for operations like camera animations
+            let api = flutterApi
+            DispatchQueue.main.async {
+                api.mapOnStyleLoaded { _ in }
             }
         }
     }
@@ -2439,23 +2456,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapView(_: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
         scheduleLocationPuckTint()
-        if let channel = channel, let userLocation = userLocation,
-           let location = userLocation.location
-        {
-            channel.invokeMethod("map#onUserLocationUpdated", arguments: [
-                "userLocation": location.toDict(),
-                "heading": userLocation.heading?.toDict(),
-            ])
+        if let userLocation = userLocation, let location = userLocation.location {
+            flutterApi.mapOnUserLocationUpdated(
+                userLocation: location.toPigeon(),
+                heading: userLocation.heading?.toPigeon()
+            ) { _ in }
         }
     }
 
     func mapView(_: MLNMapView, didChange mode: MLNUserTrackingMode, animated _: Bool) {
         scheduleLocationPuckTint()
-        if let channel = channel {
-            channel.invokeMethod("map#onCameraTrackingChanged", arguments: ["mode": mode.rawValue])
-            if mode == .none {
-                channel.invokeMethod("map#onCameraTrackingDismissed", arguments: [])
-            }
+        flutterApi.mapOnCameraTrackingChanged(mode: Int64(mode.rawValue)) { _ in }
+        if mode == .none {
+            flutterApi.mapOnCameraTrackingDismissed { _ in }
         }
     }
 
@@ -2971,24 +2984,18 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapViewDidBecomeIdle(_: MLNMapView) {
-        if let channel = channel {
-            channel.invokeMethod("map#onIdle", arguments: [])
-        }
+        flutterApi.mapOnIdle { _ in }
     }
 
     func mapView(_: MLNMapView, regionWillChangeAnimated _: Bool) {
-        if let channel = channel {
-            channel.invokeMethod("camera#onMoveStarted", arguments: [])
-        }
+        flutterApi.cameraOnMoveStarted { _ in }
     }
 
     func mapViewRegionIsChanging(_ mapView: MLNMapView) {
         if !trackCameraPosition { return }
-        if let channel = channel {
-            channel.invokeMethod("camera#onMove", arguments: [
-                "position": getCamera()?.toDict(mapView: mapView),
-            ])
-        }
+        // Never nil here: getCamera() answers whenever the position is tracked.
+        guard let camera = getCamera() else { return }
+        flutterApi.cameraOnMove(position: camera.toPigeon(mapView: mapView)) { _ in }
     }
 
     func mapView(_: MLNMapView, shouldChangeFrom _: MLNMapCamera, to _: MLNMapCamera) -> Bool {
@@ -3004,12 +3011,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         animated: Bool
     ) {
         cameraAnimations.regionDidChange(reason: reason, animated: animated)
-        let arguments = trackCameraPosition ? [
-            "position": getCamera()?.toDict(mapView: mapView)
-        ] : [:]
-        if let channel = channel {
-            channel.invokeMethod("camera#onIdle", arguments: arguments)
-        }
+        // Null when the map does not track the camera position: getCamera()
+        // answers only when it does.
+        flutterApi.cameraOnIdle(position: getCamera()?.toPigeon(mapView: mapView)) { _ in }
     }
 
     func addSourceGeojson(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {

@@ -2,6 +2,24 @@ import MapLibre
 
 extension MLNMapCamera {
     func toDict(mapView: MLNMapView) -> [String: Any] {
+        return ["bearing": heading,
+                "target": centerCoordinate.toArray(),
+                "tilt": pitch,
+                "zoom": finiteZoom(mapView: mapView)]
+    }
+
+    /// The camera as `camera#onMove` and `camera#onIdle` report it, with the
+    /// same values as `toDict(mapView:)`.
+    func toPigeon(mapView: MLNMapView) -> PgCameraPosition {
+        return PgCameraPosition(
+            bearing: heading,
+            target: centerCoordinate.toPigeon(),
+            tilt: Double(pitch),
+            zoom: finiteZoom(mapView: mapView)
+        )
+    }
+
+    private func finiteZoom(mapView: MLNMapView) -> Double {
         // MLNZoomLevelForAltitude derives the zoom from the view size, so a
         // camera event that arrives before the map view has a laid-out frame
         // divides by zero and yields a non-finite zoom. Sending that over the
@@ -15,11 +33,7 @@ extension MLNMapCamera {
             centerCoordinate.latitude,
             mapView.frame.size
         )
-        let zoom = computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
-        return ["bearing": heading,
-                "target": centerCoordinate.toArray(),
-                "tilt": pitch,
-                "zoom": zoom]
+        return computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
     }
 
     static func fromDict(_ dict: [String: Any], mapView: MLNMapView) -> MLNMapCamera? {
@@ -39,32 +53,44 @@ extension MLNMapCamera {
 }
 
 extension CLLocation {
-    func toDict() -> [String: Any]? {
-        return ["position": coordinate.toArray(),
-                "altitude": altitude,
-                "bearing": course,
-                "speed": speed,
-                "horizontalAccuracy": horizontalAccuracy,
-                "verticalAccuracy": verticalAccuracy,
-                "timestamp": Int(timestamp.timeIntervalSince1970 * 1000)]
+    /// The location as `map#onUserLocationUpdated` reports it, timestamp in
+    /// milliseconds since the epoch.
+    func toPigeon() -> PgUserLocation {
+        return PgUserLocation(
+            position: coordinate.toPigeon(),
+            altitude: altitude,
+            bearing: course,
+            speed: speed,
+            horizontalAccuracy: horizontalAccuracy,
+            verticalAccuracy: verticalAccuracy,
+            timestamp: Int64(timestamp.timeIntervalSince1970 * 1000)
+        )
     }
 }
 
 extension CLHeading {
-    func toDict() -> [String: Any]? {
-        return ["magneticHeading": magneticHeading,
-                "trueHeading": trueHeading,
-                "headingAccuracy": headingAccuracy,
-                "x": x,
-                "y": y,
-                "z": z,
-                "timestamp": Int(timestamp.timeIntervalSince1970 * 1000)]
+    /// The heading as `map#onUserLocationUpdated` reports it, timestamp in
+    /// milliseconds since the epoch.
+    func toPigeon() -> PgUserHeading {
+        return PgUserHeading(
+            magneticHeading: magneticHeading,
+            trueHeading: trueHeading,
+            headingAccuracy: headingAccuracy,
+            x: x,
+            y: y,
+            z: z,
+            timestamp: Int64(timestamp.timeIntervalSince1970 * 1000)
+        )
     }
 }
 
 extension CLLocationCoordinate2D {
     func toArray() -> [Double] {
         return [latitude, longitude]
+    }
+
+    func toPigeon() -> PgLatLng {
+        return PgLatLng(latitude: latitude, longitude: longitude)
     }
 
     static func fromArray(_ array: [Double]) -> CLLocationCoordinate2D {

@@ -225,15 +225,9 @@ class GlobalHostApi: MapLibreGlobalHostApi {
     }
 }
 
-/// Answers a Pigeon completion from code written against `FlutterResult`, so
-/// the offline helpers keep their signatures. Only the first answer is
-/// delivered: a second one would be a second reply to the same message.
-private func voidResult(_ completion: @escaping (Result<Void, Error>) -> Void) -> FlutterResult {
-    pigeonResult(completion) { _ in () }
-}
-
-/// Like `voidResult`, for the helpers that answer with a JSON string. Any
-/// other value fails the call with code `error`, as on Android.
+/// Like `voidResult` (PigeonResult.swift), for the offline helpers that
+/// answer with a JSON string. Any other value fails the call with code
+/// `error`, as on Android.
 private func stringResult(_ completion: @escaping (Result<String, Error>) -> Void) -> FlutterResult {
     pigeonResult(completion) { value in
         guard let json = value as? String else {
@@ -244,46 +238,5 @@ private func stringResult(_ completion: @escaping (Result<String, Error>) -> Voi
             )
         }
         return json
-    }
-}
-
-/// `convert` turns the success value into the type the Pigeon method
-/// returns; when it throws, the call fails with that error.
-private func pigeonResult<T>(
-    _ completion: @escaping (Result<T, Error>) -> Void,
-    convert: @escaping (Any?) throws -> T
-) -> FlutterResult {
-    var answered = false
-    return { value in
-        guard !answered else { return }
-        answered = true
-        if let error = value as? FlutterError {
-            completion(.failure(PigeonError(
-                code: error.code,
-                message: error.message,
-                details: error.details as? String
-            )))
-        } else if let object = value as? NSObject, object === FlutterMethodNotImplemented {
-            completion(.failure(PigeonError(
-                code: "notImplemented",
-                message: "Not implemented on iOS.",
-                details: nil
-            )))
-        } else {
-            // A value convert cannot read fails the call, as on Android,
-            // instead of reaching Dart as something it cannot parse.
-            let converted: T
-            do {
-                converted = try convert(value)
-            } catch {
-                completion(.failure(error as? PigeonError ?? PigeonError(
-                    code: "error",
-                    message: "\(error)",
-                    details: nil
-                )))
-                return
-            }
-            completion(.success(converted))
-        }
     }
 }

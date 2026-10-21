@@ -55,15 +55,23 @@ enum CameraAnimationInterpolation {
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibrePlatform {
+  // The deprecated class stays the default for a host where no
+  // implementation registered; the maplibre_gl plugin replaces it on Android,
+  // iOS and web.
+  // ignore: deprecated_member_use_from_same_package
   static MapLibreMethodChannel? _instance;
 
   /// The default instance of [MapLibrePlatform] to use.
   ///
-  /// Defaults to [MapLibreMethodChannel].
+  /// Defaults to the deprecated `MapLibreMethodChannel`, which native code no
+  /// longer answers: the `maplibre_gl` plugin replaces it with its own
+  /// implementation on Android, iOS and web.
   ///
   /// Platform-specific plugins should set this with their own platform-specific
   /// class that extends [MapLibrePlatform] when they register themselves.
   static MapLibrePlatform Function() createInstance =
+      // Same default as _instance above.
+      // ignore: deprecated_member_use_from_same_package
       () => _instance ?? MapLibreMethodChannel();
 
   final onInfoWindowTappedPlatform = ArgumentCallbacks<String>();

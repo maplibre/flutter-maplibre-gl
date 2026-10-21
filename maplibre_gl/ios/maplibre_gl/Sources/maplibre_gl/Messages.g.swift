@@ -271,6 +271,407 @@ struct PgOfflineDownloadEvent: Hashable, CustomStringConvertible {
   }
 }
 
+/// A geographical location, in degrees.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgLatLng: Hashable, CustomStringConvertible {
+  var latitude: Double
+  var longitude: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgLatLng? {
+    let latitude = pigeonVar_list[0] as! Double
+    let longitude = pigeonVar_list[1] as! Double
+
+    return PgLatLng(
+      latitude: latitude,
+      longitude: longitude
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      latitude,
+      longitude,
+    ]
+  }
+  static func == (lhs: PgLatLng, rhs: PgLatLng) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.latitude, rhs.latitude) && MessagesPigeonInternal.deepEquals(lhs.longitude, rhs.longitude)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgLatLng")
+    MessagesPigeonInternal.deepHash(value: latitude, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: longitude, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgLatLng(latitude: \(String(describing: latitude)), longitude: \(String(describing: longitude)))"
+  }
+}
+
+/// A point of the map view, in logical pixels from its top left corner.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgScreenPoint: Hashable, CustomStringConvertible {
+  var x: Double
+  var y: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgScreenPoint? {
+    let x = pigeonVar_list[0] as! Double
+    let y = pigeonVar_list[1] as! Double
+
+    return PgScreenPoint(
+      x: x,
+      y: y
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      x,
+      y,
+    ]
+  }
+  static func == (lhs: PgScreenPoint, rhs: PgScreenPoint) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.x, rhs.x) && MessagesPigeonInternal.deepEquals(lhs.y, rhs.y)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgScreenPoint")
+    MessagesPigeonInternal.deepHash(value: x, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: y, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgScreenPoint(x: \(String(describing: x)), y: \(String(describing: y)))"
+  }
+}
+
+/// The camera of a map: the `position` map of `camera#onMove` and
+/// `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraPosition: Hashable, CustomStringConvertible {
+  var bearing: Double
+  var target: PgLatLng
+  var tilt: Double
+  var zoom: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraPosition? {
+    let bearing = pigeonVar_list[0] as! Double
+    let target = pigeonVar_list[1] as! PgLatLng
+    let tilt = pigeonVar_list[2] as! Double
+    let zoom = pigeonVar_list[3] as! Double
+
+    return PgCameraPosition(
+      bearing: bearing,
+      target: target,
+      tilt: tilt,
+      zoom: zoom
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      bearing,
+      target,
+      tilt,
+      zoom,
+    ]
+  }
+  static func == (lhs: PgCameraPosition, rhs: PgCameraPosition) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.bearing, rhs.bearing) && MessagesPigeonInternal.deepEquals(lhs.target, rhs.target) && MessagesPigeonInternal.deepEquals(lhs.tilt, rhs.tilt) && MessagesPigeonInternal.deepEquals(lhs.zoom, rhs.zoom)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraPosition")
+    MessagesPigeonInternal.deepHash(value: bearing, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: target, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: tilt, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: zoom, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraPosition(bearing: \(String(describing: bearing)), target: \(String(describing: target)), tilt: \(String(describing: tilt)), zoom: \(String(describing: zoom)))"
+  }
+}
+
+/// The compass heading of a user location update: the `heading` map of
+/// `map#onUserLocationUpdated`. Only iOS sends one.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgUserHeading: Hashable, CustomStringConvertible {
+  var magneticHeading: Double? = nil
+  var trueHeading: Double? = nil
+  var headingAccuracy: Double? = nil
+  var x: Double? = nil
+  var y: Double? = nil
+  var z: Double? = nil
+  /// Milliseconds since the epoch.
+  var timestamp: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgUserHeading? {
+    let magneticHeading: Double? = nilOrValue(pigeonVar_list[0])
+    let trueHeading: Double? = nilOrValue(pigeonVar_list[1])
+    let headingAccuracy: Double? = nilOrValue(pigeonVar_list[2])
+    let x: Double? = nilOrValue(pigeonVar_list[3])
+    let y: Double? = nilOrValue(pigeonVar_list[4])
+    let z: Double? = nilOrValue(pigeonVar_list[5])
+    let timestamp = pigeonVar_list[6] as! Int64
+
+    return PgUserHeading(
+      magneticHeading: magneticHeading,
+      trueHeading: trueHeading,
+      headingAccuracy: headingAccuracy,
+      x: x,
+      y: y,
+      z: z,
+      timestamp: timestamp
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      magneticHeading,
+      trueHeading,
+      headingAccuracy,
+      x,
+      y,
+      z,
+      timestamp,
+    ]
+  }
+  static func == (lhs: PgUserHeading, rhs: PgUserHeading) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.magneticHeading, rhs.magneticHeading) && MessagesPigeonInternal.deepEquals(lhs.trueHeading, rhs.trueHeading) && MessagesPigeonInternal.deepEquals(lhs.headingAccuracy, rhs.headingAccuracy) && MessagesPigeonInternal.deepEquals(lhs.x, rhs.x) && MessagesPigeonInternal.deepEquals(lhs.y, rhs.y) && MessagesPigeonInternal.deepEquals(lhs.z, rhs.z) && MessagesPigeonInternal.deepEquals(lhs.timestamp, rhs.timestamp)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgUserHeading")
+    MessagesPigeonInternal.deepHash(value: magneticHeading, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: trueHeading, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: headingAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: x, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: y, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: z, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: timestamp, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgUserHeading(magneticHeading: \(String(describing: magneticHeading)), trueHeading: \(String(describing: trueHeading)), headingAccuracy: \(String(describing: headingAccuracy)), x: \(String(describing: x)), y: \(String(describing: y)), z: \(String(describing: z)), timestamp: \(String(describing: timestamp)))"
+  }
+}
+
+/// A user location update: the `userLocation` map of
+/// `map#onUserLocationUpdated`.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgUserLocation: Hashable, CustomStringConvertible {
+  /// The legacy `position` list, `[latitude, longitude]`.
+  var position: PgLatLng
+  var altitude: Double? = nil
+  var bearing: Double? = nil
+  var speed: Double? = nil
+  var horizontalAccuracy: Double? = nil
+  /// Absent on Android before API 26.
+  var verticalAccuracy: Double? = nil
+  /// Milliseconds since the epoch.
+  var timestamp: Int64
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgUserLocation? {
+    let position = pigeonVar_list[0] as! PgLatLng
+    let altitude: Double? = nilOrValue(pigeonVar_list[1])
+    let bearing: Double? = nilOrValue(pigeonVar_list[2])
+    let speed: Double? = nilOrValue(pigeonVar_list[3])
+    let horizontalAccuracy: Double? = nilOrValue(pigeonVar_list[4])
+    let verticalAccuracy: Double? = nilOrValue(pigeonVar_list[5])
+    let timestamp = pigeonVar_list[6] as! Int64
+
+    return PgUserLocation(
+      position: position,
+      altitude: altitude,
+      bearing: bearing,
+      speed: speed,
+      horizontalAccuracy: horizontalAccuracy,
+      verticalAccuracy: verticalAccuracy,
+      timestamp: timestamp
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      position,
+      altitude,
+      bearing,
+      speed,
+      horizontalAccuracy,
+      verticalAccuracy,
+      timestamp,
+    ]
+  }
+  static func == (lhs: PgUserLocation, rhs: PgUserLocation) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.position, rhs.position) && MessagesPigeonInternal.deepEquals(lhs.altitude, rhs.altitude) && MessagesPigeonInternal.deepEquals(lhs.bearing, rhs.bearing) && MessagesPigeonInternal.deepEquals(lhs.speed, rhs.speed) && MessagesPigeonInternal.deepEquals(lhs.horizontalAccuracy, rhs.horizontalAccuracy) && MessagesPigeonInternal.deepEquals(lhs.verticalAccuracy, rhs.verticalAccuracy) && MessagesPigeonInternal.deepEquals(lhs.timestamp, rhs.timestamp)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgUserLocation")
+    MessagesPigeonInternal.deepHash(value: position, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: altitude, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bearing, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: speed, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: horizontalAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: verticalAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: timestamp, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgUserLocation(position: \(String(describing: position)), altitude: \(String(describing: altitude)), bearing: \(String(describing: bearing)), speed: \(String(describing: speed)), horizontalAccuracy: \(String(describing: horizontalAccuracy)), verticalAccuracy: \(String(describing: verticalAccuracy)), timestamp: \(String(describing: timestamp)))"
+  }
+}
+
+/// A tap on a feature of an interactive layer: the arguments of
+/// `feature#onTap`.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgFeatureTap: Hashable, CustomStringConvertible {
+  /// The feature id, as the SDK reports it.
+  var id: Any? = nil
+  /// The legacy `x` and `y`.
+  var point: PgScreenPoint
+  /// The legacy `lat` and `lng`.
+  var latLng: PgLatLng
+  var layerId: String? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgFeatureTap? {
+    let id: Any? = pigeonVar_list[0]
+    let point = pigeonVar_list[1] as! PgScreenPoint
+    let latLng = pigeonVar_list[2] as! PgLatLng
+    let layerId: String? = nilOrValue(pigeonVar_list[3])
+
+    return PgFeatureTap(
+      id: id,
+      point: point,
+      latLng: latLng,
+      layerId: layerId
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      id,
+      point,
+      latLng,
+      layerId,
+    ]
+  }
+  static func == (lhs: PgFeatureTap, rhs: PgFeatureTap) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.id, rhs.id) && MessagesPigeonInternal.deepEquals(lhs.point, rhs.point) && MessagesPigeonInternal.deepEquals(lhs.latLng, rhs.latLng) && MessagesPigeonInternal.deepEquals(lhs.layerId, rhs.layerId)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgFeatureTap")
+    MessagesPigeonInternal.deepHash(value: id, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: point, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: latLng, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: layerId, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgFeatureTap(id: \(String(describing: id)), point: \(String(describing: point)), latLng: \(String(describing: latLng)), layerId: \(String(describing: layerId)))"
+  }
+}
+
+/// One step of a feature drag: the arguments of `feature#onDrag`.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgFeatureDrag: Hashable, CustomStringConvertible {
+  /// The feature id, as the SDK reports it.
+  var id: Any? = nil
+  /// The legacy `x` and `y`.
+  var point: PgScreenPoint
+  /// The legacy `originLat` and `originLng`.
+  var origin: PgLatLng
+  /// The legacy `currentLat` and `currentLng`.
+  var current: PgLatLng
+  /// The legacy `deltaLat` and `deltaLng`.
+  var delta: PgLatLng
+  /// `start`, `drag` or `end`.
+  var eventType: String
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgFeatureDrag? {
+    let id: Any? = pigeonVar_list[0]
+    let point = pigeonVar_list[1] as! PgScreenPoint
+    let origin = pigeonVar_list[2] as! PgLatLng
+    let current = pigeonVar_list[3] as! PgLatLng
+    let delta = pigeonVar_list[4] as! PgLatLng
+    let eventType = pigeonVar_list[5] as! String
+
+    return PgFeatureDrag(
+      id: id,
+      point: point,
+      origin: origin,
+      current: current,
+      delta: delta,
+      eventType: eventType
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      id,
+      point,
+      origin,
+      current,
+      delta,
+      eventType,
+    ]
+  }
+  static func == (lhs: PgFeatureDrag, rhs: PgFeatureDrag) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.id, rhs.id) && MessagesPigeonInternal.deepEquals(lhs.point, rhs.point) && MessagesPigeonInternal.deepEquals(lhs.origin, rhs.origin) && MessagesPigeonInternal.deepEquals(lhs.current, rhs.current) && MessagesPigeonInternal.deepEquals(lhs.delta, rhs.delta) && MessagesPigeonInternal.deepEquals(lhs.eventType, rhs.eventType)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgFeatureDrag")
+    MessagesPigeonInternal.deepHash(value: id, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: point, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: origin, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: current, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: delta, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: eventType, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgFeatureDrag(id: \(String(describing: id)), point: \(String(describing: point)), origin: \(String(describing: origin)), current: \(String(describing: current)), delta: \(String(describing: delta)), eventType: \(String(describing: eventType)))"
+  }
+}
+
 private class MessagesPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -282,6 +683,20 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
       return nil
     case 130:
       return PgOfflineDownloadEvent.fromList(self.readValue() as! [Any?])
+    case 131:
+      return PgLatLng.fromList(self.readValue() as! [Any?])
+    case 132:
+      return PgScreenPoint.fromList(self.readValue() as! [Any?])
+    case 133:
+      return PgCameraPosition.fromList(self.readValue() as! [Any?])
+    case 134:
+      return PgUserHeading.fromList(self.readValue() as! [Any?])
+    case 135:
+      return PgUserLocation.fromList(self.readValue() as! [Any?])
+    case 136:
+      return PgFeatureTap.fromList(self.readValue() as! [Any?])
+    case 137:
+      return PgFeatureDrag.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -295,6 +710,27 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.rawValue)
     } else if let value = value as? PgOfflineDownloadEvent {
       super.writeByte(130)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgLatLng {
+      super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgScreenPoint {
+      super.writeByte(132)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraPosition {
+      super.writeByte(133)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgUserHeading {
+      super.writeByte(134)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgUserLocation {
+      super.writeByte(135)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgFeatureTap {
+      super.writeByte(136)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgFeatureDrag {
+      super.writeByte(137)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -678,6 +1114,2273 @@ class MapLibreOfflineDownloadFlutterApi: MapLibreOfflineDownloadFlutterApiProtoc
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreOfflineDownloadFlutterApi.onDownloadEvent\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([downloadIdArg, eventArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+}
+/// The calls of one map, from Dart to native. Each map has its own channels,
+/// told apart by a message channel suffix: the platform view id of the map.
+///
+/// Every method stands for one call of the method channel these messages
+/// replace, named in the first line of its documentation. Its parameters are
+/// named after the keys of that call's argument map, so native can rebuild
+/// the call and run it through the handler it already has. The documentation
+/// notes where a key was left out of the map when null, and where the
+/// arguments were not a map. Answers that Dart parses further, such as maps
+/// of features or camera positions, come back as [Object] in the shape the
+/// handler already answers with.
+///
+/// Generated protocol from Pigeon that represents a handler of messages from Flutter.
+protocol MapLibreMapHostApi {
+  /// map#waitForMap
+  ///
+  /// The legacy call had no arguments. Answers once the map is ready.
+  func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#update
+  ///
+  /// Answers with the camera position map.
+  func mapUpdate(options: [String: Any?], completion: @escaping (Result<Any?, Error>) -> Void)
+  /// camera#animate
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  func cameraAnimate(cameraUpdate: [Any?], duration: Int64?, completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// camera#move
+  func cameraMove(cameraUpdate: [Any?], completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// map#updateMyLocationTrackingMode
+  ///
+  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  func mapUpdateMyLocationTrackingMode(mode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  /// locationComponent#setTrackingCameraOptions
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  func locationComponentSetTrackingCameraOptions(tilt: Double, duration: Int64?, completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// locationComponent#setManualLocation
+  ///
+  /// The legacy arguments were [update] itself, not a map holding it under a
+  /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
+  /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
+  /// `bearing` and `speed` only when set.
+  func locationComponentSetManualLocation(update: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#matchMapLanguageWithDeviceDefault
+  ///
+  /// The legacy call had no arguments.
+  func mapMatchMapLanguageWithDeviceDefault(completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#updateContentInsets
+  ///
+  /// [bounds] holds `top`, `left`, `bottom` and `right`.
+  func mapUpdateContentInsets(bounds: [String: Double], animated: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#setMapLanguage
+  func mapSetMapLanguage(language: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#setTelemetryEnabled
+  func mapSetTelemetryEnabled(enabled: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#getTelemetryEnabled
+  ///
+  /// The legacy call had no arguments.
+  func mapGetTelemetryEnabled(completion: @escaping (Result<Bool, Error>) -> Void)
+  /// map#setMaximumFps
+  func mapSetMaximumFps(fps: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#forceOnlineMode
+  ///
+  /// The legacy call had no arguments.
+  func mapForceOnlineMode(completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#pause
+  ///
+  /// The legacy call had no arguments.
+  func mapPause(completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#resume
+  ///
+  /// The legacy call had no arguments.
+  func mapResume(completion: @escaping (Result<Void, Error>) -> Void)
+  /// camera#ease
+  ///
+  /// [duration] is in milliseconds and was sent as null when unset.
+  /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
+  /// value, and was omitted from the legacy map when null.
+  func cameraEase(cameraUpdate: [Any?], duration: Int64?, interpolation: String?, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// map#queryCameraPosition
+  ///
+  /// The legacy call had no arguments. Answers with the camera position map.
+  func mapQueryCameraPosition(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#editGeoJsonSource
+  ///
+  /// Answers with `{result: bool}`.
+  func mapEditGeoJsonSource(id: String, data: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#editGeoJsonUrl
+  ///
+  /// Answers with `{result: bool}`.
+  func mapEditGeoJsonUrl(id: String, url: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#setLayerFilter
+  ///
+  /// [filter] is the JSON string the caller passed. Answers with
+  /// `{result: bool}`.
+  func mapSetLayerFilter(id: String, filter: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#getStyle
+  ///
+  /// The legacy call had no arguments. Answers with `{result: bool, json:
+  /// String?}`.
+  func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#setCustomHeaders
+  ///
+  /// [filter] holds URL patterns, not a style filter.
+  func mapSetCustomHeaders(headers: [String: String], filter: [String], completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#getCustomHeaders
+  ///
+  /// The legacy arguments were an empty map. Answers with the headers map.
+  func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#queryRenderedFeatures
+  ///
+  /// The point form of the call. [filter] is the expression as a list, not
+  /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
+  func mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: [String], filter: [Any?]?, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#queryRenderedFeatures
+  ///
+  /// The rectangle form of the call. [filter] is the JSON string the caller
+  /// passed. Answers with `{features: [String]}`, each feature a JSON string.
+  func mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: [String], filter: String?, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#querySourceFeatures
+  ///
+  /// [filter] is the expression as a list, not encoded. Answers with
+  /// `{features: [String]}`, each feature a JSON string.
+  func mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: [Any?]?, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// source#getClusterExpansionZoom
+  func sourceGetClusterExpansionZoom(sourceId: String, clusterId: Int64, completion: @escaping (Result<Int64, Error>) -> Void)
+  /// source#getClusterChildren
+  ///
+  /// Answers with `{features: [String]}`, each feature a JSON string.
+  func sourceGetClusterChildren(sourceId: String, clusterId: Int64, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// source#getClusterLeaves
+  ///
+  /// Answers with `{features: [String]}`, each feature a JSON string.
+  func sourceGetClusterLeaves(sourceId: String, clusterId: Int64, limit: Int64, offset: Int64, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#invalidateAmbientCache
+  ///
+  /// The legacy call had no arguments.
+  func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#clearAmbientCache
+  ///
+  /// The legacy call had no arguments.
+  func mapClearAmbientCache(completion: @escaping (Result<Void, Error>) -> Void)
+  /// locationComponent#getLastLocation
+  ///
+  /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
+  /// or null when there is no location.
+  func locationComponentGetLastLocation(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#getVisibleRegion
+  ///
+  /// The legacy call had no arguments. Answers with `{sw: [latitude,
+  /// longitude], ne: [latitude, longitude]}`.
+  func mapGetVisibleRegion(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#addImage
+  ///
+  /// [length] is the length of [bytes].
+  func styleAddImage(name: String, bytes: FlutterStandardTypedData, length: Int64, sdf: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#addImageSource
+  ///
+  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+  /// each a `[latitude, longitude]` list.
+  func styleAddImageSource(imageSourceId: String, bytes: FlutterStandardTypedData, length: Int64, coordinates: [Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#updateImageSource
+  ///
+  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+  /// each a `[latitude, longitude]` list. The null ones were sent as null.
+  func styleUpdateImageSource(imageSourceId: String, bytes: FlutterStandardTypedData?, length: Int64?, coordinates: [Any?]?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#toScreenLocation
+  ///
+  /// Answers with `{x, y}`.
+  func mapToScreenLocation(latitude: Double, longitude: Double, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#toScreenLocationBatch
+  ///
+  /// [coordinates] holds latitude and longitude pairs, one after the other.
+  /// Answers with x and y pairs in the same order.
+  func mapToScreenLocationBatch(coordinates: FlutterStandardTypedData, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void)
+  /// style#removeSource
+  func styleRemoveSource(sourceId: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#addLayer
+  func styleAddLayer(imageLayerId: String, imageSourceId: String, minzoom: Double?, maxzoom: Double?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#addLayerBelow
+  func styleAddLayerBelow(imageLayerId: String, imageSourceId: String, belowLayerId: String, minzoom: Double?, maxzoom: Double?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#removeLayer
+  func styleRemoveLayer(layerId: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#moveLayer
+  ///
+  /// [belowLayerId] was omitted from the legacy map when null.
+  func styleMoveLayer(layerId: String, belowLayerId: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#setFilter
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func styleSetFilter(layerId: String, filter: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#getFilter
+  ///
+  /// Answers with `{filter: String?}`, the expression as a JSON string.
+  func styleGetFilter(layerId: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#toLatLng
+  ///
+  /// Answers with `{latitude, longitude}`.
+  func mapToLatLng(x: Double, y: Double, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// map#getMetersPerPixelAtLatitude
+  ///
+  /// Answers with `{metersperpixel: double}`.
+  func mapGetMetersPerPixelAtLatitude(latitude: Double, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// source#addGeoJson
+  ///
+  /// [geojson] is the data encoded by Dart.
+  func sourceAddGeoJson(sourceId: String, geojson: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// source#setGeoJson
+  ///
+  /// [geojson] is the data encoded by Dart.
+  func sourceSetGeoJson(sourceId: String, geojson: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// map#setCameraBounds
+  func mapSetCameraBounds(west: Double, north: Double, south: Double, east: Double, padding: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  /// symbolLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// lineLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// layer#setProperties
+  func layerSetProperties(layerId: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// circleLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// fillLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// fillExtrusionLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// style#addSource
+  ///
+  /// [properties] is the source in style-spec form.
+  func styleAddSource(sourceId: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// rasterLayer#add
+  func rasterLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// hillshadeLayer#add
+  func hillshadeLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// colorReliefLayer#add
+  func colorReliefLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// backgroundLayer#add
+  func backgroundLayerAdd(layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// heatmapLayer#add
+  ///
+  /// [filter] is the expression encoded by Dart, the string `null` when there
+  /// is none.
+  func heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// source#setFeature
+  ///
+  /// [geojsonFeature] is the feature encoded by Dart.
+  func sourceSetFeature(sourceId: String, geojsonFeature: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// source#setFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it.
+  func sourceSetFeatureState(sourceId: String, featureId: String, state: [String: Any?], sourceLayer: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// source#removeFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it.
+  func sourceRemoveFeatureState(sourceId: String, featureId: String?, stateKey: String?, sourceLayer: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// source#getFeatureState
+  ///
+  /// Android only: Dart rejects the call on iOS before sending it. Answers
+  /// with `{state: String?}`, the state as a JSON string.
+  func sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#setLight
+  ///
+  /// [light] is the light in style-spec form.
+  func styleSetLight(light: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// layer#setVisibility
+  func layerSetVisibility(layerId: String, visible: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// layer#setVisibilityBatch
+  ///
+  /// Answers with the ids that matched no layer.
+  func layerSetVisibilityBatch(layerIds: [String], visible: Bool, completion: @escaping (Result<[String]?, Error>) -> Void)
+  /// layer#setZoomRange
+  func layerSetZoomRange(layerId: String, minzoom: Double, maxzoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// layer#getVisibility
+  ///
+  /// Answers with null when there is no such layer.
+  func layerGetVisibility(layerId: String, completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// map#takeSnapshot
+  ///
+  /// [width] and [height] are in logical pixels, and each was omitted from
+  /// the legacy map when null. Answers with PNG bytes.
+  func mapTakeSnapshot(width: Int64?, height: Int64?, completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
+  /// style#getLayerIds
+  ///
+  /// The legacy call had no arguments. Answers with `{layers: [String]}`.
+  func styleGetLayerIds(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#getSourceIds
+  ///
+  /// The legacy call had no arguments. Answers with `{sources: [String]}`.
+  func styleGetSourceIds(completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#getLayerProperties
+  ///
+  /// Answers with `{properties: String}`, the layer as a JSON string, or
+  /// without `properties` when there is no such layer.
+  func styleGetLayerProperties(layerId: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#getSourceProperties
+  ///
+  /// Answers with `{properties: String}`, the source as a JSON string, or
+  /// without `properties` when there is no such source.
+  func styleGetSourceProperties(sourceId: String, completion: @escaping (Result<Any?, Error>) -> Void)
+  /// style#setStyle
+  func styleSetStyle(style: String, completion: @escaping (Result<Void, Error>) -> Void)
+}
+
+/// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
+class MapLibreMapHostApiSetup {
+  static var codec: FlutterStandardMessageCodec { MessagesPigeonCodec.shared }
+  /// Sets up an instance of `MapLibreMapHostApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: MapLibreMapHostApi?, messageChannelSuffix: String = "") {
+    let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+    /// map#waitForMap
+    ///
+    /// The legacy call had no arguments. Answers once the map is ready.
+    let mapWaitForMapChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapWaitForMap\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapWaitForMapChannel.setMessageHandler { _, reply in
+        api.mapWaitForMap { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapWaitForMapChannel.setMessageHandler(nil)
+    }
+    /// map#update
+    ///
+    /// Answers with the camera position map.
+    let mapUpdateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapUpdateChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let optionsArg = args[0] as! [String: Any?]
+        api.mapUpdate(options: optionsArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapUpdateChannel.setMessageHandler(nil)
+    }
+    /// camera#animate
+    ///
+    /// [duration] is in milliseconds and was sent as null when unset.
+    let cameraAnimateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraAnimate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      cameraAnimateChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let cameraUpdateArg = args[0] as! [Any?]
+        let durationArg: Int64? = nilOrValue(args[1])
+        api.cameraAnimate(cameraUpdate: cameraUpdateArg, duration: durationArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      cameraAnimateChannel.setMessageHandler(nil)
+    }
+    /// camera#move
+    let cameraMoveChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraMove\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      cameraMoveChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let cameraUpdateArg = args[0] as! [Any?]
+        api.cameraMove(cameraUpdate: cameraUpdateArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      cameraMoveChannel.setMessageHandler(nil)
+    }
+    /// map#updateMyLocationTrackingMode
+    ///
+    /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+    let mapUpdateMyLocationTrackingModeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateMyLocationTrackingMode\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapUpdateMyLocationTrackingModeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let modeArg = args[0] as! Int64
+        api.mapUpdateMyLocationTrackingMode(mode: modeArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapUpdateMyLocationTrackingModeChannel.setMessageHandler(nil)
+    }
+    /// locationComponent#setTrackingCameraOptions
+    ///
+    /// [duration] is in milliseconds and was sent as null when unset.
+    let locationComponentSetTrackingCameraOptionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetTrackingCameraOptions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      locationComponentSetTrackingCameraOptionsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let tiltArg = args[0] as! Double
+        let durationArg: Int64? = nilOrValue(args[1])
+        api.locationComponentSetTrackingCameraOptions(tilt: tiltArg, duration: durationArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      locationComponentSetTrackingCameraOptionsChannel.setMessageHandler(nil)
+    }
+    /// locationComponent#setManualLocation
+    ///
+    /// The legacy arguments were [update] itself, not a map holding it under a
+    /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
+    /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
+    /// `bearing` and `speed` only when set.
+    let locationComponentSetManualLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetManualLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      locationComponentSetManualLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let updateArg = args[0] as! [String: Any?]
+        api.locationComponentSetManualLocation(update: updateArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      locationComponentSetManualLocationChannel.setMessageHandler(nil)
+    }
+    /// map#matchMapLanguageWithDeviceDefault
+    ///
+    /// The legacy call had no arguments.
+    let mapMatchMapLanguageWithDeviceDefaultChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapMatchMapLanguageWithDeviceDefault\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapMatchMapLanguageWithDeviceDefaultChannel.setMessageHandler { _, reply in
+        api.mapMatchMapLanguageWithDeviceDefault { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapMatchMapLanguageWithDeviceDefaultChannel.setMessageHandler(nil)
+    }
+    /// map#updateContentInsets
+    ///
+    /// [bounds] holds `top`, `left`, `bottom` and `right`.
+    let mapUpdateContentInsetsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateContentInsets\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapUpdateContentInsetsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let boundsArg = args[0] as! [String: Double]
+        let animatedArg = args[1] as! Bool
+        api.mapUpdateContentInsets(bounds: boundsArg, animated: animatedArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapUpdateContentInsetsChannel.setMessageHandler(nil)
+    }
+    /// map#setMapLanguage
+    let mapSetMapLanguageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMapLanguage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetMapLanguageChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let languageArg = args[0] as! String
+        api.mapSetMapLanguage(language: languageArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetMapLanguageChannel.setMessageHandler(nil)
+    }
+    /// map#setTelemetryEnabled
+    let mapSetTelemetryEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetTelemetryEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetTelemetryEnabledChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let enabledArg = args[0] as! Bool
+        api.mapSetTelemetryEnabled(enabled: enabledArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetTelemetryEnabledChannel.setMessageHandler(nil)
+    }
+    /// map#getTelemetryEnabled
+    ///
+    /// The legacy call had no arguments.
+    let mapGetTelemetryEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetTelemetryEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapGetTelemetryEnabledChannel.setMessageHandler { _, reply in
+        api.mapGetTelemetryEnabled { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapGetTelemetryEnabledChannel.setMessageHandler(nil)
+    }
+    /// map#setMaximumFps
+    let mapSetMaximumFpsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMaximumFps\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetMaximumFpsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let fpsArg = args[0] as! Int64
+        api.mapSetMaximumFps(fps: fpsArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetMaximumFpsChannel.setMessageHandler(nil)
+    }
+    /// map#forceOnlineMode
+    ///
+    /// The legacy call had no arguments.
+    let mapForceOnlineModeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapForceOnlineMode\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapForceOnlineModeChannel.setMessageHandler { _, reply in
+        api.mapForceOnlineMode { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapForceOnlineModeChannel.setMessageHandler(nil)
+    }
+    /// map#pause
+    ///
+    /// The legacy call had no arguments.
+    let mapPauseChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapPause\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapPauseChannel.setMessageHandler { _, reply in
+        api.mapPause { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapPauseChannel.setMessageHandler(nil)
+    }
+    /// map#resume
+    ///
+    /// The legacy call had no arguments.
+    let mapResumeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapResume\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapResumeChannel.setMessageHandler { _, reply in
+        api.mapResume { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapResumeChannel.setMessageHandler(nil)
+    }
+    /// camera#ease
+    ///
+    /// [duration] is in milliseconds and was sent as null when unset.
+    /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
+    /// value, and was omitted from the legacy map when null.
+    let cameraEaseChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraEase\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      cameraEaseChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let cameraUpdateArg = args[0] as! [Any?]
+        let durationArg: Int64? = nilOrValue(args[1])
+        let interpolationArg: String? = nilOrValue(args[2])
+        api.cameraEase(cameraUpdate: cameraUpdateArg, duration: durationArg, interpolation: interpolationArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      cameraEaseChannel.setMessageHandler(nil)
+    }
+    /// map#queryCameraPosition
+    ///
+    /// The legacy call had no arguments. Answers with the camera position map.
+    let mapQueryCameraPositionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapQueryCameraPositionChannel.setMessageHandler { _, reply in
+        api.mapQueryCameraPosition { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapQueryCameraPositionChannel.setMessageHandler(nil)
+    }
+    /// map#editGeoJsonSource
+    ///
+    /// Answers with `{result: bool}`.
+    let mapEditGeoJsonSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapEditGeoJsonSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let dataArg = args[1] as! String
+        api.mapEditGeoJsonSource(id: idArg, data: dataArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapEditGeoJsonSourceChannel.setMessageHandler(nil)
+    }
+    /// map#editGeoJsonUrl
+    ///
+    /// Answers with `{result: bool}`.
+    let mapEditGeoJsonUrlChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonUrl\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapEditGeoJsonUrlChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let urlArg = args[1] as! String
+        api.mapEditGeoJsonUrl(id: idArg, url: urlArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapEditGeoJsonUrlChannel.setMessageHandler(nil)
+    }
+    /// map#setLayerFilter
+    ///
+    /// [filter] is the JSON string the caller passed. Answers with
+    /// `{result: bool}`.
+    let mapSetLayerFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetLayerFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetLayerFilterChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let filterArg = args[1] as! String
+        api.mapSetLayerFilter(id: idArg, filter: filterArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetLayerFilterChannel.setMessageHandler(nil)
+    }
+    /// map#getStyle
+    ///
+    /// The legacy call had no arguments. Answers with `{result: bool, json:
+    /// String?}`.
+    let mapGetStyleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapGetStyleChannel.setMessageHandler { _, reply in
+        api.mapGetStyle { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapGetStyleChannel.setMessageHandler(nil)
+    }
+    /// map#setCustomHeaders
+    ///
+    /// [filter] holds URL patterns, not a style filter.
+    let mapSetCustomHeadersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCustomHeaders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetCustomHeadersChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let headersArg = args[0] as! [String: String]
+        let filterArg = args[1] as! [String]
+        api.mapSetCustomHeaders(headers: headersArg, filter: filterArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetCustomHeadersChannel.setMessageHandler(nil)
+    }
+    /// map#getCustomHeaders
+    ///
+    /// The legacy arguments were an empty map. Answers with the headers map.
+    let mapGetCustomHeadersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapGetCustomHeadersChannel.setMessageHandler { _, reply in
+        api.mapGetCustomHeaders { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapGetCustomHeadersChannel.setMessageHandler(nil)
+    }
+    /// map#queryRenderedFeatures
+    ///
+    /// The point form of the call. [filter] is the expression as a list, not
+    /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
+    let mapQueryRenderedFeaturesAtPointChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesAtPoint\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapQueryRenderedFeaturesAtPointChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let xArg = args[0] as! Double
+        let yArg = args[1] as! Double
+        let layerIdsArg = args[2] as! [String]
+        let filterArg: [Any?]? = nilOrValue(args[3])
+        api.mapQueryRenderedFeaturesAtPoint(x: xArg, y: yArg, layerIds: layerIdsArg, filter: filterArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapQueryRenderedFeaturesAtPointChannel.setMessageHandler(nil)
+    }
+    /// map#queryRenderedFeatures
+    ///
+    /// The rectangle form of the call. [filter] is the JSON string the caller
+    /// passed. Answers with `{features: [String]}`, each feature a JSON string.
+    let mapQueryRenderedFeaturesInRectChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesInRect\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapQueryRenderedFeaturesInRectChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let leftArg = args[0] as! Double
+        let topArg = args[1] as! Double
+        let rightArg = args[2] as! Double
+        let bottomArg = args[3] as! Double
+        let layerIdsArg = args[4] as! [String]
+        let filterArg: String? = nilOrValue(args[5])
+        api.mapQueryRenderedFeaturesInRect(left: leftArg, top: topArg, right: rightArg, bottom: bottomArg, layerIds: layerIdsArg, filter: filterArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapQueryRenderedFeaturesInRectChannel.setMessageHandler(nil)
+    }
+    /// map#querySourceFeatures
+    ///
+    /// [filter] is the expression as a list, not encoded. Answers with
+    /// `{features: [String]}`, each feature a JSON string.
+    let mapQuerySourceFeaturesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQuerySourceFeatures\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapQuerySourceFeaturesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let sourceLayerIdArg: String? = nilOrValue(args[1])
+        let filterArg: [Any?]? = nilOrValue(args[2])
+        api.mapQuerySourceFeatures(sourceId: sourceIdArg, sourceLayerId: sourceLayerIdArg, filter: filterArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapQuerySourceFeaturesChannel.setMessageHandler(nil)
+    }
+    /// source#getClusterExpansionZoom
+    let sourceGetClusterExpansionZoomChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterExpansionZoom\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceGetClusterExpansionZoomChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let clusterIdArg = args[1] as! Int64
+        api.sourceGetClusterExpansionZoom(sourceId: sourceIdArg, clusterId: clusterIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceGetClusterExpansionZoomChannel.setMessageHandler(nil)
+    }
+    /// source#getClusterChildren
+    ///
+    /// Answers with `{features: [String]}`, each feature a JSON string.
+    let sourceGetClusterChildrenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterChildren\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceGetClusterChildrenChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let clusterIdArg = args[1] as! Int64
+        api.sourceGetClusterChildren(sourceId: sourceIdArg, clusterId: clusterIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceGetClusterChildrenChannel.setMessageHandler(nil)
+    }
+    /// source#getClusterLeaves
+    ///
+    /// Answers with `{features: [String]}`, each feature a JSON string.
+    let sourceGetClusterLeavesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterLeaves\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceGetClusterLeavesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let clusterIdArg = args[1] as! Int64
+        let limitArg = args[2] as! Int64
+        let offsetArg = args[3] as! Int64
+        api.sourceGetClusterLeaves(sourceId: sourceIdArg, clusterId: clusterIdArg, limit: limitArg, offset: offsetArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceGetClusterLeavesChannel.setMessageHandler(nil)
+    }
+    /// map#invalidateAmbientCache
+    ///
+    /// The legacy call had no arguments.
+    let mapInvalidateAmbientCacheChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapInvalidateAmbientCache\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapInvalidateAmbientCacheChannel.setMessageHandler { _, reply in
+        api.mapInvalidateAmbientCache { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapInvalidateAmbientCacheChannel.setMessageHandler(nil)
+    }
+    /// map#clearAmbientCache
+    ///
+    /// The legacy call had no arguments.
+    let mapClearAmbientCacheChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapClearAmbientCache\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapClearAmbientCacheChannel.setMessageHandler { _, reply in
+        api.mapClearAmbientCache { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapClearAmbientCacheChannel.setMessageHandler(nil)
+    }
+    /// locationComponent#getLastLocation
+    ///
+    /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
+    /// or null when there is no location.
+    let locationComponentGetLastLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      locationComponentGetLastLocationChannel.setMessageHandler { _, reply in
+        api.locationComponentGetLastLocation { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      locationComponentGetLastLocationChannel.setMessageHandler(nil)
+    }
+    /// map#getVisibleRegion
+    ///
+    /// The legacy call had no arguments. Answers with `{sw: [latitude,
+    /// longitude], ne: [latitude, longitude]}`.
+    let mapGetVisibleRegionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapGetVisibleRegionChannel.setMessageHandler { _, reply in
+        api.mapGetVisibleRegion { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapGetVisibleRegionChannel.setMessageHandler(nil)
+    }
+    /// style#addImage
+    ///
+    /// [length] is the length of [bytes].
+    let styleAddImageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddImageChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let nameArg = args[0] as! String
+        let bytesArg = args[1] as! FlutterStandardTypedData
+        let lengthArg = args[2] as! Int64
+        let sdfArg = args[3] as! Bool
+        api.styleAddImage(name: nameArg, bytes: bytesArg, length: lengthArg, sdf: sdfArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddImageChannel.setMessageHandler(nil)
+    }
+    /// style#addImageSource
+    ///
+    /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+    /// each a `[latitude, longitude]` list.
+    let styleAddImageSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImageSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddImageSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let imageSourceIdArg = args[0] as! String
+        let bytesArg = args[1] as! FlutterStandardTypedData
+        let lengthArg = args[2] as! Int64
+        let coordinatesArg = args[3] as! [Any?]
+        api.styleAddImageSource(imageSourceId: imageSourceIdArg, bytes: bytesArg, length: lengthArg, coordinates: coordinatesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddImageSourceChannel.setMessageHandler(nil)
+    }
+    /// style#updateImageSource
+    ///
+    /// [length] is the length of [bytes]. [coordinates] holds the four corners,
+    /// each a `[latitude, longitude]` list. The null ones were sent as null.
+    let styleUpdateImageSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleUpdateImageSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleUpdateImageSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let imageSourceIdArg = args[0] as! String
+        let bytesArg: FlutterStandardTypedData? = nilOrValue(args[1])
+        let lengthArg: Int64? = nilOrValue(args[2])
+        let coordinatesArg: [Any?]? = nilOrValue(args[3])
+        api.styleUpdateImageSource(imageSourceId: imageSourceIdArg, bytes: bytesArg, length: lengthArg, coordinates: coordinatesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleUpdateImageSourceChannel.setMessageHandler(nil)
+    }
+    /// map#toScreenLocation
+    ///
+    /// Answers with `{x, y}`.
+    let mapToScreenLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapToScreenLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let latitudeArg = args[0] as! Double
+        let longitudeArg = args[1] as! Double
+        api.mapToScreenLocation(latitude: latitudeArg, longitude: longitudeArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapToScreenLocationChannel.setMessageHandler(nil)
+    }
+    /// map#toScreenLocationBatch
+    ///
+    /// [coordinates] holds latitude and longitude pairs, one after the other.
+    /// Answers with x and y pairs in the same order.
+    let mapToScreenLocationBatchChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocationBatch\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapToScreenLocationBatchChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let coordinatesArg = args[0] as! FlutterStandardTypedData
+        api.mapToScreenLocationBatch(coordinates: coordinatesArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapToScreenLocationBatchChannel.setMessageHandler(nil)
+    }
+    /// style#removeSource
+    let styleRemoveSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleRemoveSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        api.styleRemoveSource(sourceId: sourceIdArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleRemoveSourceChannel.setMessageHandler(nil)
+    }
+    /// style#addLayer
+    let styleAddLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let imageLayerIdArg = args[0] as! String
+        let imageSourceIdArg = args[1] as! String
+        let minzoomArg: Double? = nilOrValue(args[2])
+        let maxzoomArg: Double? = nilOrValue(args[3])
+        api.styleAddLayer(imageLayerId: imageLayerIdArg, imageSourceId: imageSourceIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddLayerChannel.setMessageHandler(nil)
+    }
+    /// style#addLayerBelow
+    let styleAddLayerBelowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayerBelow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddLayerBelowChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let imageLayerIdArg = args[0] as! String
+        let imageSourceIdArg = args[1] as! String
+        let belowLayerIdArg = args[2] as! String
+        let minzoomArg: Double? = nilOrValue(args[3])
+        let maxzoomArg: Double? = nilOrValue(args[4])
+        api.styleAddLayerBelow(imageLayerId: imageLayerIdArg, imageSourceId: imageSourceIdArg, belowLayerId: belowLayerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddLayerBelowChannel.setMessageHandler(nil)
+    }
+    /// style#removeLayer
+    let styleRemoveLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleRemoveLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        api.styleRemoveLayer(layerId: layerIdArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleRemoveLayerChannel.setMessageHandler(nil)
+    }
+    /// style#moveLayer
+    ///
+    /// [belowLayerId] was omitted from the legacy map when null.
+    let styleMoveLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleMoveLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleMoveLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[1])
+        api.styleMoveLayer(layerId: layerIdArg, belowLayerId: belowLayerIdArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleMoveLayerChannel.setMessageHandler(nil)
+    }
+    /// style#setFilter
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let styleSetFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleSetFilterChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let filterArg = args[1] as! String
+        api.styleSetFilter(layerId: layerIdArg, filter: filterArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleSetFilterChannel.setMessageHandler(nil)
+    }
+    /// style#getFilter
+    ///
+    /// Answers with `{filter: String?}`, the expression as a JSON string.
+    let styleGetFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetFilterChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        api.styleGetFilter(layerId: layerIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetFilterChannel.setMessageHandler(nil)
+    }
+    /// map#toLatLng
+    ///
+    /// Answers with `{latitude, longitude}`.
+    let mapToLatLngChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToLatLng\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapToLatLngChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let xArg = args[0] as! Double
+        let yArg = args[1] as! Double
+        api.mapToLatLng(x: xArg, y: yArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapToLatLngChannel.setMessageHandler(nil)
+    }
+    /// map#getMetersPerPixelAtLatitude
+    ///
+    /// Answers with `{metersperpixel: double}`.
+    let mapGetMetersPerPixelAtLatitudeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetMetersPerPixelAtLatitude\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapGetMetersPerPixelAtLatitudeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let latitudeArg = args[0] as! Double
+        api.mapGetMetersPerPixelAtLatitude(latitude: latitudeArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapGetMetersPerPixelAtLatitudeChannel.setMessageHandler(nil)
+    }
+    /// source#addGeoJson
+    ///
+    /// [geojson] is the data encoded by Dart.
+    let sourceAddGeoJsonChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceAddGeoJson\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceAddGeoJsonChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let geojsonArg = args[1] as! String
+        api.sourceAddGeoJson(sourceId: sourceIdArg, geojson: geojsonArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceAddGeoJsonChannel.setMessageHandler(nil)
+    }
+    /// source#setGeoJson
+    ///
+    /// [geojson] is the data encoded by Dart.
+    let sourceSetGeoJsonChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetGeoJson\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceSetGeoJsonChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let geojsonArg = args[1] as! String
+        api.sourceSetGeoJson(sourceId: sourceIdArg, geojson: geojsonArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceSetGeoJsonChannel.setMessageHandler(nil)
+    }
+    /// map#setCameraBounds
+    let mapSetCameraBoundsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCameraBounds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapSetCameraBoundsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let westArg = args[0] as! Double
+        let northArg = args[1] as! Double
+        let southArg = args[2] as! Double
+        let eastArg = args[3] as! Double
+        let paddingArg = args[4] as! Int64
+        api.mapSetCameraBounds(west: westArg, north: northArg, south: southArg, east: eastArg, padding: paddingArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapSetCameraBoundsChannel.setMessageHandler(nil)
+    }
+    /// symbolLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let symbolLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.symbolLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      symbolLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let enableInteractionArg = args[7] as! Bool
+        let propertiesArg = args[8] as! [String: Any?]
+        api.symbolLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      symbolLayerAddChannel.setMessageHandler(nil)
+    }
+    /// lineLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let lineLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.lineLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      lineLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let enableInteractionArg = args[7] as! Bool
+        let propertiesArg = args[8] as! [String: Any?]
+        api.lineLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      lineLayerAddChannel.setMessageHandler(nil)
+    }
+    /// layer#setProperties
+    let layerSetPropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      layerSetPropertiesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let propertiesArg = args[1] as! [String: Any?]
+        api.layerSetProperties(layerId: layerIdArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      layerSetPropertiesChannel.setMessageHandler(nil)
+    }
+    /// circleLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let circleLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.circleLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      circleLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let enableInteractionArg = args[7] as! Bool
+        let propertiesArg = args[8] as! [String: Any?]
+        api.circleLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      circleLayerAddChannel.setMessageHandler(nil)
+    }
+    /// fillLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let fillLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      fillLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let enableInteractionArg = args[7] as! Bool
+        let propertiesArg = args[8] as! [String: Any?]
+        api.fillLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      fillLayerAddChannel.setMessageHandler(nil)
+    }
+    /// fillExtrusionLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let fillExtrusionLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillExtrusionLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      fillExtrusionLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let enableInteractionArg = args[7] as! Bool
+        let propertiesArg = args[8] as! [String: Any?]
+        api.fillExtrusionLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      fillExtrusionLayerAddChannel.setMessageHandler(nil)
+    }
+    /// style#addSource
+    ///
+    /// [properties] is the source in style-spec form.
+    let styleAddSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let propertiesArg = args[1] as! [String: Any?]
+        api.styleAddSource(sourceId: sourceIdArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddSourceChannel.setMessageHandler(nil)
+    }
+    /// rasterLayer#add
+    let rasterLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.rasterLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      rasterLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let minzoomArg: Double? = nilOrValue(args[3])
+        let maxzoomArg: Double? = nilOrValue(args[4])
+        let propertiesArg = args[5] as! [String: Any?]
+        api.rasterLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      rasterLayerAddChannel.setMessageHandler(nil)
+    }
+    /// hillshadeLayer#add
+    let hillshadeLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.hillshadeLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      hillshadeLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let minzoomArg: Double? = nilOrValue(args[3])
+        let maxzoomArg: Double? = nilOrValue(args[4])
+        let propertiesArg = args[5] as! [String: Any?]
+        api.hillshadeLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      hillshadeLayerAddChannel.setMessageHandler(nil)
+    }
+    /// colorReliefLayer#add
+    let colorReliefLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.colorReliefLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      colorReliefLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let minzoomArg: Double? = nilOrValue(args[3])
+        let maxzoomArg: Double? = nilOrValue(args[4])
+        let propertiesArg = args[5] as! [String: Any?]
+        api.colorReliefLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      colorReliefLayerAddChannel.setMessageHandler(nil)
+    }
+    /// backgroundLayer#add
+    let backgroundLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.backgroundLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      backgroundLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[1])
+        let minzoomArg: Double? = nilOrValue(args[2])
+        let maxzoomArg: Double? = nilOrValue(args[3])
+        let propertiesArg = args[4] as! [String: Any?]
+        api.backgroundLayerAdd(layerId: layerIdArg, belowLayerId: belowLayerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      backgroundLayerAddChannel.setMessageHandler(nil)
+    }
+    /// heatmapLayer#add
+    ///
+    /// [filter] is the expression encoded by Dart, the string `null` when there
+    /// is none.
+    let heatmapLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.heatmapLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      heatmapLayerAddChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let layerIdArg = args[1] as! String
+        let belowLayerIdArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        let minzoomArg: Double? = nilOrValue(args[4])
+        let maxzoomArg: Double? = nilOrValue(args[5])
+        let filterArg = args[6] as! String
+        let propertiesArg = args[7] as! [String: Any?]
+        api.heatmapLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, properties: propertiesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      heatmapLayerAddChannel.setMessageHandler(nil)
+    }
+    /// source#setFeature
+    ///
+    /// [geojsonFeature] is the feature encoded by Dart.
+    let sourceSetFeatureChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceSetFeatureChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let geojsonFeatureArg = args[1] as! String
+        api.sourceSetFeature(sourceId: sourceIdArg, geojsonFeature: geojsonFeatureArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceSetFeatureChannel.setMessageHandler(nil)
+    }
+    /// source#setFeatureState
+    ///
+    /// Android only: Dart rejects the call on iOS before sending it.
+    let sourceSetFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceSetFeatureStateChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let featureIdArg = args[1] as! String
+        let stateArg = args[2] as! [String: Any?]
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        api.sourceSetFeatureState(sourceId: sourceIdArg, featureId: featureIdArg, state: stateArg, sourceLayer: sourceLayerArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceSetFeatureStateChannel.setMessageHandler(nil)
+    }
+    /// source#removeFeatureState
+    ///
+    /// Android only: Dart rejects the call on iOS before sending it.
+    let sourceRemoveFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceRemoveFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceRemoveFeatureStateChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let featureIdArg: String? = nilOrValue(args[1])
+        let stateKeyArg: String? = nilOrValue(args[2])
+        let sourceLayerArg: String? = nilOrValue(args[3])
+        api.sourceRemoveFeatureState(sourceId: sourceIdArg, featureId: featureIdArg, stateKey: stateKeyArg, sourceLayer: sourceLayerArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceRemoveFeatureStateChannel.setMessageHandler(nil)
+    }
+    /// source#getFeatureState
+    ///
+    /// Android only: Dart rejects the call on iOS before sending it. Answers
+    /// with `{state: String?}`, the state as a JSON string.
+    let sourceGetFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      sourceGetFeatureStateChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        let featureIdArg = args[1] as! String
+        let sourceLayerArg: String? = nilOrValue(args[2])
+        api.sourceGetFeatureState(sourceId: sourceIdArg, featureId: featureIdArg, sourceLayer: sourceLayerArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      sourceGetFeatureStateChannel.setMessageHandler(nil)
+    }
+    /// style#setLight
+    ///
+    /// [light] is the light in style-spec form.
+    let styleSetLightChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetLight\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleSetLightChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let lightArg = args[0] as! [String: Any?]
+        api.styleSetLight(light: lightArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleSetLightChannel.setMessageHandler(nil)
+    }
+    /// layer#setVisibility
+    let layerSetVisibilityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      layerSetVisibilityChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let visibleArg = args[1] as! Bool
+        api.layerSetVisibility(layerId: layerIdArg, visible: visibleArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      layerSetVisibilityChannel.setMessageHandler(nil)
+    }
+    /// layer#setVisibilityBatch
+    ///
+    /// Answers with the ids that matched no layer.
+    let layerSetVisibilityBatchChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibilityBatch\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      layerSetVisibilityBatchChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdsArg = args[0] as! [String]
+        let visibleArg = args[1] as! Bool
+        api.layerSetVisibilityBatch(layerIds: layerIdsArg, visible: visibleArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      layerSetVisibilityBatchChannel.setMessageHandler(nil)
+    }
+    /// layer#setZoomRange
+    let layerSetZoomRangeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetZoomRange\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      layerSetZoomRangeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let minzoomArg = args[1] as! Double
+        let maxzoomArg = args[2] as! Double
+        api.layerSetZoomRange(layerId: layerIdArg, minzoom: minzoomArg, maxzoom: maxzoomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      layerSetZoomRangeChannel.setMessageHandler(nil)
+    }
+    /// layer#getVisibility
+    ///
+    /// Answers with null when there is no such layer.
+    let layerGetVisibilityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerGetVisibility\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      layerGetVisibilityChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        api.layerGetVisibility(layerId: layerIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      layerGetVisibilityChannel.setMessageHandler(nil)
+    }
+    /// map#takeSnapshot
+    ///
+    /// [width] and [height] are in logical pixels, and each was omitted from
+    /// the legacy map when null. Answers with PNG bytes.
+    let mapTakeSnapshotChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      mapTakeSnapshotChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let widthArg: Int64? = nilOrValue(args[0])
+        let heightArg: Int64? = nilOrValue(args[1])
+        api.mapTakeSnapshot(width: widthArg, height: heightArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      mapTakeSnapshotChannel.setMessageHandler(nil)
+    }
+    /// style#getLayerIds
+    ///
+    /// The legacy call had no arguments. Answers with `{layers: [String]}`.
+    let styleGetLayerIdsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetLayerIdsChannel.setMessageHandler { _, reply in
+        api.styleGetLayerIds { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetLayerIdsChannel.setMessageHandler(nil)
+    }
+    /// style#getSourceIds
+    ///
+    /// The legacy call had no arguments. Answers with `{sources: [String]}`.
+    let styleGetSourceIdsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetSourceIdsChannel.setMessageHandler { _, reply in
+        api.styleGetSourceIds { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetSourceIdsChannel.setMessageHandler(nil)
+    }
+    /// style#getLayerProperties
+    ///
+    /// Answers with `{properties: String}`, the layer as a JSON string, or
+    /// without `properties` when there is no such layer.
+    let styleGetLayerPropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetLayerPropertiesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        api.styleGetLayerProperties(layerId: layerIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetLayerPropertiesChannel.setMessageHandler(nil)
+    }
+    /// style#getSourceProperties
+    ///
+    /// Answers with `{properties: String}`, the source as a JSON string, or
+    /// without `properties` when there is no such source.
+    let styleGetSourcePropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetSourcePropertiesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let sourceIdArg = args[0] as! String
+        api.styleGetSourceProperties(sourceId: sourceIdArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetSourcePropertiesChannel.setMessageHandler(nil)
+    }
+    /// style#setStyle
+    let styleSetStyleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetStyle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleSetStyleChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let styleArg = args[0] as! String
+        api.styleSetStyle(style: styleArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleSetStyleChannel.setMessageHandler(nil)
+    }
+  }
+}
+
+/// The events of one map, from native to Dart, on channels told apart by the
+/// same suffix as [MapLibreMapHostApi].
+///
+/// Every method stands for one call native made on the method channel these
+/// messages replace, named in the first line of its documentation.
+///
+/// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
+protocol MapLibreMapFlutterApiProtocol {
+  /// feature#onTap
+  func featureOnTap(tap tapArg: PgFeatureTap, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// feature#onDrag
+  func featureOnDrag(drag dragArg: PgFeatureDrag, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// camera#onMoveStarted
+  func cameraOnMoveStarted(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// camera#onMove
+  func cameraOnMove(position positionArg: PgCameraPosition, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// camera#onIdle
+  ///
+  /// [position] is null when the map does not track the camera position.
+  func cameraOnIdle(position positionArg: PgCameraPosition?, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onStyleLoaded
+  func mapOnStyleLoaded(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onMapClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  func mapOnMapClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onMapLongClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  func mapOnMapLongClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onCameraTrackingChanged
+  ///
+  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  func mapOnCameraTrackingChanged(mode modeArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onCameraTrackingDismissed
+  func mapOnCameraTrackingDismissed(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onIdle
+  func mapOnIdle(completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// map#onUserLocationUpdated
+  func mapOnUserLocationUpdated(userLocation userLocationArg: PgUserLocation, heading headingArg: PgUserHeading?, completion: @escaping (Result<Void, PigeonError>) -> Void)
+}
+class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
+  private let binaryMessenger: FlutterBinaryMessenger
+  private let messageChannelSuffix: String
+  init(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String = "") {
+    self.binaryMessenger = binaryMessenger
+    self.messageChannelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
+  }
+  var codec: MessagesPigeonCodec {
+    return MessagesPigeonCodec.shared
+  }
+  /// feature#onTap
+  func featureOnTap(tap tapArg: PgFeatureTap, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnTap\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([tapArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// feature#onDrag
+  func featureOnDrag(drag dragArg: PgFeatureDrag, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnDrag\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([dragArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// camera#onMoveStarted
+  func cameraOnMoveStarted(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage(nil) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// camera#onMove
+  func cameraOnMove(position positionArg: PgCameraPosition, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMove\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([positionArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// camera#onIdle
+  ///
+  /// [position] is null when the map does not track the camera position.
+  func cameraOnIdle(position positionArg: PgCameraPosition?, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnIdle\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([positionArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onStyleLoaded
+  func mapOnStyleLoaded(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnStyleLoaded\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage(nil) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onMapClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  func mapOnMapClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapClick\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([pointArg, latLngArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onMapLongClick
+  ///
+  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  func mapOnMapLongClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapLongClick\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([pointArg, latLngArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onCameraTrackingChanged
+  ///
+  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+  func mapOnCameraTrackingChanged(mode modeArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingChanged\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([modeArg] as [Any?]) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onCameraTrackingDismissed
+  func mapOnCameraTrackingDismissed(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingDismissed\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage(nil) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onIdle
+  func mapOnIdle(completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnIdle\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage(nil) { response in
+      guard let listResponse = response as? [Any?] else {
+        completion(.failure(createConnectionError(withChannelName: channelName)))
+        return
+      }
+      if listResponse.count > 1 {
+        let code: String = listResponse[0] as! String
+        let message: String? = nilOrValue(listResponse[1])
+        let details: String? = nilOrValue(listResponse[2])
+        completion(.failure(PigeonError(code: code, message: message, details: details)))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+  /// map#onUserLocationUpdated
+  func mapOnUserLocationUpdated(userLocation userLocationArg: PgUserLocation, heading headingArg: PgUserHeading?, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+    let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnUserLocationUpdated\(messageChannelSuffix)"
+    let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
+    channel.sendMessage([userLocationArg, headingArg] as [Any?]) { response in
       guard let listResponse = response as? [Any?] else {
         completion(.failure(createConnectionError(withChannelName: channelName)))
         return

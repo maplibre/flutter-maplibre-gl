@@ -9,7 +9,7 @@ flowchart TD
     APP["Your Flutter app"]
     WIDGET["MapLibreMap widget<br/><small>placed in your widget tree</small>"]
     CTRL["MapLibreMapController<br/><small>camera · layers · sources<br/>annotations · events</small>"]
-    BRIDGE["Platform Bridge<br/><small>MethodChannel / dart:js_interop</small>"]
+    BRIDGE["Platform Bridge<br/><small>Pigeon messages / dart:js_interop</small>"]
     AND["Android<br/><small>MapLibre Native (C++ / JVM)</small>"]
     IOS["iOS<br/><small>MapLibre Native (C++ / Obj-C)</small>"]
     WEB["Web<br/><small>MapLibre GL JS (JavaScript)</small>"]
@@ -52,9 +52,7 @@ The widget creates the controller (and the platform bridge) once the native view
 
 ### Layer 3: The platform bridge
 
-On **Android and iOS**, the controller communicates with the native MapLibre SDK via a `MethodChannel` named `plugins.flutter.io/maplibre_gl_<id>`. Each method call crosses the Dart-to-native boundary.
-
-The plugin-wide calls that need no map (offline regions, the offline database, the ambient cache, HTTP headers, `preWarm`) go through messages generated with [Pigeon](https://pub.dev/packages/pigeon) from `maplibre_gl/pigeons/messages.dart`, which give Dart, Kotlin and Swift one typed contract. The per-map calls are moving to the same scheme ([#465](https://github.com/maplibre/flutter-maplibre-gl/issues/465)).
+On **Android and iOS**, the controller communicates with the native MapLibre SDK through messages generated with [Pigeon](https://pub.dev/packages/pigeon) from `maplibre_gl/pigeons/messages.dart`, which give Dart, Kotlin and Swift one typed contract. Each map has its own `MapLibreMapHostApi` for the calls down and `MapLibreMapFlutterApi` for the events up, told apart by the map's id. The plugin-wide calls that need no map (offline regions, the offline database, the ambient cache, HTTP headers, `preWarm`) go through `MapLibreGlobalHostApi`. Each call still crosses the Dart-to-native boundary and is asynchronous.
 
 On **Web**, there is no MethodChannel. Instead, the web implementation uses `dart:js_interop` to call MapLibre GL JS directly in the browser. The same `MapLibreMapController` API is exposed, but the underlying calls go to JavaScript.
 
@@ -107,7 +105,7 @@ Events flow the other way, from native up to your Dart callback:
 ```mermaid
 flowchart TD
     EV["Native SDK fires an event"]
-    ROUTE["MethodChannel handler routes it<br/><small>(js_interop callback on web)</small>"]
+    ROUTE["MapLibreMapFlutterApi routes it<br/><small>(js_interop callback on web)</small>"]
     LISTEN["MapLibrePlatform listener<br/><small>e.g. onFeatureTappedPlatform</small>"]
     REEXPOSE["MapLibreMapController re-exposes it<br/><small>e.g. onSymbolTapped</small>"]
     CB["Your app's callback"]

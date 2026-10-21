@@ -211,6 +211,18 @@ class Convert {
     return data;
   }
 
+  /** The camera position of camera#onMove and camera#onIdle, with the fields of the map above. */
+  static PgCameraPosition toPgCameraPosition(CameraPosition position) {
+    if (position == null) {
+      return null;
+    }
+    return new PgCameraPosition(
+        position.bearing,
+        new PgLatLng(position.target.getLatitude(), position.target.getLongitude()),
+        position.tilt,
+        position.zoom);
+  }
+
   private static Object toJson(LatLng latLng) {
     return Arrays.asList(latLng.getLatitude(), latLng.getLongitude());
   }

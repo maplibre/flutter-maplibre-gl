@@ -1,5 +1,18 @@
 part of '../maplibre_gl_platform_interface.dart';
 
+/// The method channel implementation of [MapLibrePlatform] that Android and
+/// iOS used to answer.
+///
+/// Android and iOS now register a Pigeon-based implementation from
+/// `maplibre_gl`, so the calls of this class no longer reach native code. It
+/// stays as the default of [MapLibrePlatform.createInstance] for a host where
+/// no implementation registered, and as the store of [useHybridComposition].
+@Deprecated(
+  'Android and iOS now register a Pigeon-based implementation from '
+  'maplibre_gl, so this class no longer reaches native code. Use '
+  'MapLibrePlatform.createInstance to get the platform of a map, and '
+  'MapLibreMap.useHybridComposition to set the Android view mode.',
+)
 class MapLibreMethodChannel extends MapLibrePlatform {
   /// Set by [initPlatform]. A map widget can be disposed before its platform
   /// view exists, so [dispose] has to cope with this never being set.

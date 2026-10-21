@@ -1,0 +1,1080 @@
+import Flutter
+import Foundation
+
+/// The calls of one map, from Dart to native.
+///
+/// Each method rebuilds the call the method channel used to deliver, named
+/// in the first line of its schema documentation, and hands it to
+/// `MapLibreMapController.onMethodCall`, so every call keeps a single
+/// implementation and answers exactly as before.
+///
+/// The generated setup holds this object strongly while its handlers are
+/// registered, so the controller is held weakly: a strong reference would
+/// keep the controller, and its MLNMapView, alive after the view is gone.
+final class MapHostApi: MapLibreMapHostApi {
+    weak var controller: MapLibreMapController?
+
+    // MARK: Map
+
+    func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#waitForMap", result: voidResult(completion))
+    }
+
+    func mapUpdate(
+        options: [String: Any?],
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("map#update", ["options": options], result: anyResult(completion))
+    }
+
+    func mapUpdateMyLocationTrackingMode(
+        mode: Int64,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("map#updateMyLocationTrackingMode", ["mode": mode], result: voidResult(completion))
+    }
+
+    func mapMatchMapLanguageWithDeviceDefault(
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("map#matchMapLanguageWithDeviceDefault", result: voidResult(completion))
+    }
+
+    func mapUpdateContentInsets(
+        bounds: [String: Double],
+        animated: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "map#updateContentInsets",
+            ["bounds": bounds, "animated": animated],
+            result: voidResult(completion)
+        )
+    }
+
+    func mapSetMapLanguage(
+        language: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("map#setMapLanguage", ["language": language], result: voidResult(completion))
+    }
+
+    func mapSetTelemetryEnabled(
+        enabled: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("map#setTelemetryEnabled", ["enabled": enabled], result: voidResult(completion))
+    }
+
+    func mapGetTelemetryEnabled(completion: @escaping (Result<Bool, Error>) -> Void) {
+        send("map#getTelemetryEnabled", result: nonNullResult(completion) { $0 as? Bool })
+    }
+
+    func mapSetMaximumFps(fps: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#setMaximumFps", ["fps": fps], result: voidResult(completion))
+    }
+
+    func mapForceOnlineMode(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#forceOnlineMode", result: voidResult(completion))
+    }
+
+    func mapPause(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#pause", result: voidResult(completion))
+    }
+
+    func mapResume(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#resume", result: voidResult(completion))
+    }
+
+    func mapQueryCameraPosition(completion: @escaping (Result<Any?, Error>) -> Void) {
+        send("map#queryCameraPosition", result: anyResult(completion))
+    }
+
+    func mapEditGeoJsonSource(
+        id: String,
+        data: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("map#editGeoJsonSource", ["id": id, "data": data], result: anyResult(completion))
+    }
+
+    func mapEditGeoJsonUrl(
+        id: String,
+        url: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("map#editGeoJsonUrl", ["id": id, "url": url], result: anyResult(completion))
+    }
+
+    func mapSetLayerFilter(
+        id: String,
+        filter: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("map#setLayerFilter", ["id": id, "filter": filter], result: anyResult(completion))
+    }
+
+    func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void) {
+        send("map#getStyle", result: anyResult(completion))
+    }
+
+    func mapSetCustomHeaders(
+        headers: [String: String],
+        filter: [String],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "map#setCustomHeaders",
+            ["headers": headers, "filter": filter],
+            result: voidResult(completion)
+        )
+    }
+
+    func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void) {
+        // The legacy arguments were an empty map, not nil.
+        send("map#getCustomHeaders", [:], result: anyResult(completion))
+    }
+
+    func mapQueryRenderedFeaturesAtPoint(
+        x: Double,
+        y: Double,
+        layerIds: [String],
+        filter: [Any?]?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "map#queryRenderedFeatures",
+            ["x": x, "y": y, "layerIds": layerIds, "filter": filter],
+            result: anyResult(completion)
+        )
+    }
+
+    func mapQueryRenderedFeaturesInRect(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        layerIds: [String],
+        filter: String?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "map#queryRenderedFeatures",
+            [
+                "left": left,
+                "top": top,
+                "right": right,
+                "bottom": bottom,
+                "layerIds": layerIds,
+                "filter": filter,
+            ],
+            result: anyResult(completion)
+        )
+    }
+
+    func mapQuerySourceFeatures(
+        sourceId: String,
+        sourceLayerId: String?,
+        filter: [Any?]?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "map#querySourceFeatures",
+            ["sourceId": sourceId, "sourceLayerId": sourceLayerId, "filter": filter],
+            result: anyResult(completion)
+        )
+    }
+
+    func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#invalidateAmbientCache", result: voidResult(completion))
+    }
+
+    func mapClearAmbientCache(completion: @escaping (Result<Void, Error>) -> Void) {
+        send("map#clearAmbientCache", result: voidResult(completion))
+    }
+
+    func mapGetVisibleRegion(completion: @escaping (Result<Any?, Error>) -> Void) {
+        send("map#getVisibleRegion", result: anyResult(completion))
+    }
+
+    func mapToScreenLocation(
+        latitude: Double,
+        longitude: Double,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "map#toScreenLocation",
+            ["latitude": latitude, "longitude": longitude],
+            result: anyResult(completion)
+        )
+    }
+
+    func mapToScreenLocationBatch(
+        coordinates: FlutterStandardTypedData,
+        completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void
+    ) {
+        send(
+            "map#toScreenLocationBatch",
+            ["coordinates": coordinates],
+            result: nonNullResult(completion) { $0 as? FlutterStandardTypedData }
+        )
+    }
+
+    func mapToLatLng(
+        x: Double,
+        y: Double,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("map#toLatLng", ["x": x, "y": y], result: anyResult(completion))
+    }
+
+    func mapGetMetersPerPixelAtLatitude(
+        latitude: Double,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "map#getMetersPerPixelAtLatitude",
+            ["latitude": latitude],
+            result: anyResult(completion)
+        )
+    }
+
+    func mapSetCameraBounds(
+        west: Double,
+        north: Double,
+        south: Double,
+        east: Double,
+        padding: Int64,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "map#setCameraBounds",
+            ["west": west, "north": north, "south": south, "east": east, "padding": padding],
+            result: voidResult(completion)
+        )
+    }
+
+    func mapTakeSnapshot(
+        width: Int64?,
+        height: Int64?,
+        completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void
+    ) {
+        // The legacy map left out a null width or height, and was empty when
+        // both were null.
+        var arguments: [String: Any?] = [:]
+        if let width = width {
+            arguments["width"] = width
+        }
+        if let height = height {
+            arguments["height"] = height
+        }
+        send(
+            "map#takeSnapshot",
+            arguments,
+            result: pigeonResult(completion) { $0 as? FlutterStandardTypedData }
+        )
+    }
+
+    // MARK: Camera
+
+    func cameraAnimate(
+        cameraUpdate: [Any?],
+        duration: Int64?,
+        completion: @escaping (Result<Bool?, Error>) -> Void
+    ) {
+        send(
+            "camera#animate",
+            ["cameraUpdate": cameraUpdate, "duration": duration],
+            result: pigeonResult(completion) { $0 as? Bool }
+        )
+    }
+
+    func cameraMove(
+        cameraUpdate: [Any?],
+        completion: @escaping (Result<Bool?, Error>) -> Void
+    ) {
+        send(
+            "camera#move",
+            ["cameraUpdate": cameraUpdate],
+            result: pigeonResult(completion) { $0 as? Bool }
+        )
+    }
+
+    func cameraEase(
+        cameraUpdate: [Any?],
+        duration: Int64?,
+        interpolation: String?,
+        completion: @escaping (Result<Bool, Error>) -> Void
+    ) {
+        var arguments: [String: Any?] = ["cameraUpdate": cameraUpdate, "duration": duration]
+        // Left out of the legacy map when null.
+        if let interpolation = interpolation {
+            arguments["interpolation"] = interpolation
+        }
+        send("camera#ease", arguments, result: nonNullResult(completion) { $0 as? Bool })
+    }
+
+    // MARK: Location component
+
+    func locationComponentSetTrackingCameraOptions(
+        tilt: Double,
+        duration: Int64?,
+        completion: @escaping (Result<Bool?, Error>) -> Void
+    ) {
+        send(
+            "locationComponent#setTrackingCameraOptions",
+            ["tilt": tilt, "duration": duration],
+            result: pigeonResult(completion) { $0 as? Bool }
+        )
+    }
+
+    func locationComponentSetManualLocation(
+        update: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        // The legacy arguments were the update itself, not a map holding it.
+        dispatch(
+            "locationComponent#setManualLocation",
+            arguments: legacyMap(update),
+            result: voidResult(completion)
+        )
+    }
+
+    func locationComponentGetLastLocation(
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("locationComponent#getLastLocation", result: anyResult(completion))
+    }
+
+    // MARK: Sources
+
+    func sourceGetClusterExpansionZoom(
+        sourceId: String,
+        clusterId: Int64,
+        completion: @escaping (Result<Int64, Error>) -> Void
+    ) {
+        send(
+            "source#getClusterExpansionZoom",
+            ["sourceId": sourceId, "clusterId": clusterId],
+            // The controller answers a Swift Int.
+            result: nonNullResult(completion) { value in (value as? Int).map { Int64($0) } }
+        )
+    }
+
+    func sourceGetClusterChildren(
+        sourceId: String,
+        clusterId: Int64,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "source#getClusterChildren",
+            ["sourceId": sourceId, "clusterId": clusterId],
+            result: anyResult(completion)
+        )
+    }
+
+    func sourceGetClusterLeaves(
+        sourceId: String,
+        clusterId: Int64,
+        limit: Int64,
+        offset: Int64,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "source#getClusterLeaves",
+            ["sourceId": sourceId, "clusterId": clusterId, "limit": limit, "offset": offset],
+            result: anyResult(completion)
+        )
+    }
+
+    func sourceAddGeoJson(
+        sourceId: String,
+        geojson: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "source#addGeoJson",
+            ["sourceId": sourceId, "geojson": geojson],
+            result: voidResult(completion)
+        )
+    }
+
+    func sourceSetGeoJson(
+        sourceId: String,
+        geojson: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "source#setGeoJson",
+            ["sourceId": sourceId, "geojson": geojson],
+            result: voidResult(completion)
+        )
+    }
+
+    func sourceSetFeature(
+        sourceId: String,
+        geojsonFeature: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "source#setFeature",
+            ["sourceId": sourceId, "geojsonFeature": geojsonFeature],
+            result: voidResult(completion)
+        )
+    }
+
+    // The feature state calls have no iOS implementation: Dart rejects them
+    // before sending, and the controller answers not implemented otherwise.
+
+    func sourceSetFeatureState(
+        sourceId: String,
+        featureId: String,
+        state: [String: Any?],
+        sourceLayer: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "source#setFeatureState",
+            [
+                "sourceId": sourceId,
+                "featureId": featureId,
+                "state": state,
+                "sourceLayer": sourceLayer,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func sourceRemoveFeatureState(
+        sourceId: String,
+        featureId: String?,
+        stateKey: String?,
+        sourceLayer: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "source#removeFeatureState",
+            [
+                "sourceId": sourceId,
+                "featureId": featureId,
+                "stateKey": stateKey,
+                "sourceLayer": sourceLayer,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func sourceGetFeatureState(
+        sourceId: String,
+        featureId: String,
+        sourceLayer: String?,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send(
+            "source#getFeatureState",
+            ["sourceId": sourceId, "featureId": featureId, "sourceLayer": sourceLayer],
+            result: anyResult(completion)
+        )
+    }
+
+    // MARK: Style
+
+    func styleAddImage(
+        name: String,
+        bytes: FlutterStandardTypedData,
+        length: Int64,
+        sdf: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#addImage",
+            ["name": name, "bytes": bytes, "length": length, "sdf": sdf],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleAddImageSource(
+        imageSourceId: String,
+        bytes: FlutterStandardTypedData,
+        length: Int64,
+        coordinates: [Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#addImageSource",
+            [
+                "imageSourceId": imageSourceId,
+                "bytes": bytes,
+                "length": length,
+                "coordinates": coordinates,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleUpdateImageSource(
+        imageSourceId: String,
+        bytes: FlutterStandardTypedData?,
+        length: Int64?,
+        coordinates: [Any?]?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#updateImageSource",
+            [
+                "imageSourceId": imageSourceId,
+                "bytes": bytes,
+                "length": length,
+                "coordinates": coordinates,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleRemoveSource(
+        sourceId: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("style#removeSource", ["sourceId": sourceId], result: voidResult(completion))
+    }
+
+    func styleAddLayer(
+        imageLayerId: String,
+        imageSourceId: String,
+        minzoom: Double?,
+        maxzoom: Double?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#addLayer",
+            [
+                "imageLayerId": imageLayerId,
+                "imageSourceId": imageSourceId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleAddLayerBelow(
+        imageLayerId: String,
+        imageSourceId: String,
+        belowLayerId: String,
+        minzoom: Double?,
+        maxzoom: Double?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#addLayerBelow",
+            [
+                "imageLayerId": imageLayerId,
+                "imageSourceId": imageSourceId,
+                "belowLayerId": belowLayerId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleRemoveLayer(
+        layerId: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("style#removeLayer", ["layerId": layerId], result: voidResult(completion))
+    }
+
+    func styleMoveLayer(
+        layerId: String,
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        var arguments: [String: Any?] = ["layerId": layerId]
+        // Left out of the legacy map when null.
+        if let belowLayerId = belowLayerId {
+            arguments["belowLayerId"] = belowLayerId
+        }
+        send("style#moveLayer", arguments, result: voidResult(completion))
+    }
+
+    func styleSetFilter(
+        layerId: String,
+        filter: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#setFilter",
+            ["layerId": layerId, "filter": filter],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleGetFilter(
+        layerId: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("style#getFilter", ["layerId": layerId], result: anyResult(completion))
+    }
+
+    func styleAddSource(
+        sourceId: String,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "style#addSource",
+            ["sourceId": sourceId, "properties": properties],
+            result: voidResult(completion)
+        )
+    }
+
+    func styleSetLight(
+        light: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send("style#setLight", ["light": light], result: voidResult(completion))
+    }
+
+    func styleGetLayerIds(completion: @escaping (Result<Any?, Error>) -> Void) {
+        send("style#getLayerIds", result: anyResult(completion))
+    }
+
+    func styleGetSourceIds(completion: @escaping (Result<Any?, Error>) -> Void) {
+        send("style#getSourceIds", result: anyResult(completion))
+    }
+
+    func styleGetLayerProperties(
+        layerId: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("style#getLayerProperties", ["layerId": layerId], result: anyResult(completion))
+    }
+
+    func styleGetSourceProperties(
+        sourceId: String,
+        completion: @escaping (Result<Any?, Error>) -> Void
+    ) {
+        send("style#getSourceProperties", ["sourceId": sourceId], result: anyResult(completion))
+    }
+
+    func styleSetStyle(style: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        send("style#setStyle", ["style": style], result: voidResult(completion))
+    }
+
+    // MARK: Layers
+
+    func symbolLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "symbolLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "enableInteraction": enableInteraction,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func lineLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "lineLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "enableInteraction": enableInteraction,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func circleLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "circleLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "enableInteraction": enableInteraction,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func fillLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "fillLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "enableInteraction": enableInteraction,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func fillExtrusionLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        enableInteraction: Bool,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "fillExtrusionLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "enableInteraction": enableInteraction,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func rasterLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "rasterLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func hillshadeLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "hillshadeLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func colorReliefLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "colorReliefLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func backgroundLayerAdd(
+        layerId: String,
+        belowLayerId: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "backgroundLayer#add",
+            [
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func heatmapLayerAdd(
+        sourceId: String,
+        layerId: String,
+        belowLayerId: String?,
+        sourceLayer: String?,
+        minzoom: Double?,
+        maxzoom: Double?,
+        filter: String,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "heatmapLayer#add",
+            [
+                "sourceId": sourceId,
+                "layerId": layerId,
+                "belowLayerId": belowLayerId,
+                "sourceLayer": sourceLayer,
+                "minzoom": minzoom,
+                "maxzoom": maxzoom,
+                "filter": filter,
+                "properties": properties,
+            ],
+            result: voidResult(completion)
+        )
+    }
+
+    func layerSetProperties(
+        layerId: String,
+        properties: [String: Any?],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "layer#setProperties",
+            ["layerId": layerId, "properties": properties],
+            result: voidResult(completion)
+        )
+    }
+
+    func layerSetVisibility(
+        layerId: String,
+        visible: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "layer#setVisibility",
+            ["layerId": layerId, "visible": visible],
+            result: voidResult(completion)
+        )
+    }
+
+    func layerSetVisibilityBatch(
+        layerIds: [String],
+        visible: Bool,
+        completion: @escaping (Result<[String]?, Error>) -> Void
+    ) {
+        send(
+            "layer#setVisibilityBatch",
+            ["layerIds": layerIds, "visible": visible],
+            result: pigeonResult(completion) { $0 as? [String] }
+        )
+    }
+
+    func layerSetZoomRange(
+        layerId: String,
+        minzoom: Double,
+        maxzoom: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        send(
+            "layer#setZoomRange",
+            ["layerId": layerId, "minzoom": minzoom, "maxzoom": maxzoom],
+            result: voidResult(completion)
+        )
+    }
+
+    func layerGetVisibility(
+        layerId: String,
+        completion: @escaping (Result<Bool?, Error>) -> Void
+    ) {
+        send(
+            "layer#getVisibility",
+            ["layerId": layerId],
+            result: pigeonResult(completion) { $0 as? Bool }
+        )
+    }
+
+    // MARK: Dispatch
+
+    /// A call whose legacy arguments were nil.
+    private func send(_ method: String, result: @escaping FlutterResult) {
+        dispatch(method, arguments: nil, result: result)
+    }
+
+    /// A call whose legacy arguments were a map, keyed by the parameter names.
+    private func send(
+        _ method: String,
+        _ arguments: [String: Any?],
+        result: @escaping FlutterResult
+    ) {
+        dispatch(method, arguments: legacyMap(arguments), result: result)
+    }
+
+    private func dispatch(_ method: String, arguments: Any?, result: @escaping FlutterResult) {
+        guard let controller = controller else {
+            result(FlutterError(
+                code: "MAP_DISPOSED",
+                message: "The map was disposed before the call reached it.",
+                details: nil
+            ))
+            return
+        }
+        controller.onMethodCall(
+            methodCall: FlutterMethodCall(methodName: method, arguments: arguments),
+            result: result
+        )
+    }
+}
+
+// MARK: Results
+
+/// For the calls Pigeon answers with any object: the controller's answer as it is.
+private func anyResult(_ completion: @escaping (Result<Any?, Error>) -> Void) -> FlutterResult {
+    pigeonResult(completion) { $0 }
+}
+
+/// Like `pigeonResult`, for a return the schema declares non-null. An answer
+/// `convert` cannot read fails the call with the error Pigeon's Dart side
+/// raises for a null reply, rather than making a value up.
+private func nonNullResult<T>(
+    _ completion: @escaping (Result<T, Error>) -> Void,
+    convert: @escaping (Any?) -> T?
+) -> FlutterResult {
+    pigeonResult({ (result: Result<T?, Error>) in
+        switch result {
+        case let .success(value?):
+            completion(.success(value))
+        case .success(nil):
+            completion(.failure(PigeonError(
+                code: "null-error",
+                message: "Host platform returned null value for non-null return value.",
+                details: nil
+            )))
+        case let .failure(error):
+            completion(.failure(error))
+        }
+    }, convert: convert)
+}
+
+// MARK: Legacy arguments
+
+/// A map as the method channel's codec delivered it. See `legacyValue`.
+private func legacyMap(_ map: [String: Any?]) -> [String: Any] {
+    map.mapValues(legacyValue)
+}
+
+/// A value as the method channel's codec delivered it: nil as NSNull, numbers
+/// and booleans as NSNumber, and maps and lists, at any depth, as
+/// `[String: Any]` and `[Any]` without optionals. The controller's casts
+/// (`as? [String: Any]`, `as? [[Double]]`, `as? CGFloat`, `is NSNull`) then
+/// read every value as before. Strings and typed data pass through, as does
+/// a map with keys other than strings, which the codec handed over as is.
+private func legacyValue(_ value: Any?) -> Any {
+    guard let value = value else { return NSNull() }
+    switch value {
+    case is NSNull:
+        return value
+    case let map as [String: Any?]:
+        return legacyMap(map)
+    case let list as [Any?]:
+        return list.map(legacyValue)
+    case let number as NSNumber:
+        // A Swift Int64, Double or Bool becomes the NSNumber the codec made;
+        // one that already is an NSNumber is returned unchanged.
+        return number
+    default:
+        return value
+    }
+}
