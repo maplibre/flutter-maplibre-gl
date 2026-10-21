@@ -98,7 +98,7 @@ final class CameraAnimationTracker {
     }
 
     /// Call from `mapView(_:regionDidChangeWith:animated:)`.
-    func regionDidChange(reason: MLNCameraChangeReason) {
+    func regionDidChange(reason: MLNCameraChangeReason, animated: Bool) {
         if isStarting {
             // Inside a start call, a cancelled change is the previous animation being stopped,
             // already settled by interruptRunning. Any other is the new one ending at once.
@@ -108,6 +108,12 @@ final class CameraAnimationTracker {
             return
         }
         guard let animation = running else { return }
+        // A resize of the view moves the camera at once without ending the animation, and its
+        // change still reads as programmatic. Only an animated change or an interrupting reason
+        // ends it; a gesture ends without animation when it does not drift.
+        if !animated && reason.isDisjoint(with: Self.interruptingReasons) {
+            return
+        }
         running = nil
         if !reason.isDisjoint(with: Self.interruptingReasons) {
             animation.interrupted = true

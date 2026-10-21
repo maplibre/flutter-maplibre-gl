@@ -10,7 +10,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, ValueListenable, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +67,9 @@ Map<String, dynamic> pointCollection({int count = 3, double lat = 0}) => {
 ///
 /// Extra widget arguments a test needs can be passed through [builder], which
 /// receives the callbacks the harness relies on and must forward them.
+///
+/// A test that resizes the map passes [resizableSize]: the box then follows
+/// it instead of [size].
 Future<MapLibreMapController> pumpMap(
   WidgetTester tester, {
   String? styleString,
@@ -77,6 +80,7 @@ Future<MapLibreMapController> pumpMap(
   // Small enough to fit a phone in portrait: a 360 dp wide emulator would
   // clamp a wider box and every screen-space expectation would drift.
   Size size = const Size(300, 300),
+  ValueListenable<Size>? resizableSize,
   MapLibreMap Function(
     MapCreatedCallback onMapCreated,
     OnStyleLoadedCallback onStyleLoaded,
@@ -110,7 +114,19 @@ Future<MapLibreMapController> pumpMap(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
-          child: SizedBox(width: size.width, height: size.height, child: map),
+          child:
+              resizableSize == null
+                  ? SizedBox(width: size.width, height: size.height, child: map)
+                  : ValueListenableBuilder<Size>(
+                    valueListenable: resizableSize,
+                    builder:
+                        (context, size, child) => SizedBox(
+                          width: size.width,
+                          height: size.height,
+                          child: child,
+                        ),
+                    child: map,
+                  ),
         ),
       ),
     ),
