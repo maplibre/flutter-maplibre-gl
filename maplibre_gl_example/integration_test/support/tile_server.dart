@@ -12,6 +12,12 @@ class TileServer {
 
   int tilesServed = 0;
 
+  int tileRequests = 0;
+
+  void holdTiles() {}
+
+  void releaseTiles() {}
+
   String get styleUrl => throw UnsupportedError('TileServer needs dart:io.');
 
   Future<void> close() async {}
