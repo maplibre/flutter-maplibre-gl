@@ -275,6 +275,8 @@ final class MapLibreMapController
   // gets none of the gesture.
   private boolean dragOwnsGesture;
   private MapSnapshotter activeSnapshotter;
+  // Never added to a style: the engine checks the filter of each feature query on it.
+  private CircleLayer queryFilterCheck;
 
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
@@ -1392,23 +1394,39 @@ final class MapLibreMapController
   /**
    * The filter of a layer, the JSON text of an expression or of a boolean, or null for no filter:
    * {@code filter} is null or the text {@code null}.
+   *
+   * @throws IllegalArgumentException, saying why, for text that is not JSON or not a filter.
    */
   @Nullable
   static Expression parseFilter(@Nullable String filter) {
     if (filter == null) {
       return null;
     }
-    JsonElement json = new JsonParser().parse(filter);
+    JsonElement json = PigeonConvert.parseFilterJson(filter);
     if (json.isJsonNull()) {
       return null;
     }
-    boolean isExpression =
-        json.isJsonArray()
-            && json.getAsJsonArray().size() > 0
-            && json.getAsJsonArray().get(0).isJsonPrimitive()
-            && json.getAsJsonArray().get(0).getAsJsonPrimitive().isString();
-    boolean isBoolean = json.isJsonPrimitive() && json.getAsJsonPrimitive().isBoolean();
-    if (!isExpression && !isBoolean) {
+    return toFilterExpression(json);
+  }
+
+  /**
+   * {@code json}, an expression array or a boolean, as the expression of a filter, with its numbers
+   * exact. Whether the engine takes it is not checked here.
+   *
+   * @throws IllegalArgumentException for any other value, or an array that does not start with the
+   *     name of an operator.
+   */
+  static Expression toFilterExpression(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      boolean namesOperator =
+          array.size() > 0
+              && array.get(0).isJsonPrimitive()
+              && array.get(0).getAsJsonPrimitive().isString();
+      if (!namesOperator) {
+        throw new IllegalArgumentException("An expression starts with the name of its operator.");
+      }
+    } else if (!json.isJsonPrimitive() || !json.getAsJsonPrimitive().isBoolean()) {
       throw new IllegalArgumentException("A filter is an expression array or a boolean.");
     }
     // Hand the engine the JSON as plain values. Expression.Converter would
@@ -2415,10 +2433,11 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
     final PointF pixel = new PointF((float) x, (float) y);
-    result.success(
-        featuresReply(mapLibreMap.queryRenderedFeatures(pixel, filterExpression, layers)));
+    answerFeatures(
+        filter,
+        result,
+        expression -> mapLibreMap.queryRenderedFeatures(pixel, expression, layers));
   }
 
   @Override
@@ -2431,10 +2450,11 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
     final RectF rectF = new RectF((float) left, (float) top, (float) right, (float) bottom);
-    result.success(
-        featuresReply(mapLibreMap.queryRenderedFeatures(rectF, filterExpression, layers)));
+    answerFeatures(
+        filter,
+        result,
+        expression -> mapLibreMap.queryRenderedFeatures(rectF, expression, layers));
   }
 
   @Override
@@ -2443,8 +2463,6 @@ final class MapLibreMapController
       @Nullable String sourceLayerId,
       @Nullable String filter,
       MethodChannel.Result result) {
-    List<Feature> features;
-
     // A source is resolved by id out of the style, so without a style
     // there is no source to query. Reading it blind raised a
     // NullPointerException, which reached the caller as a bare "error".
@@ -2456,20 +2474,73 @@ final class MapLibreMapController
       return;
     }
 
-    final Expression filterExpression = PigeonConvert.toQueryFilter(filter);
+    final Source source = style.getSource(sourceId);
+    answerFeatures(
+        filter,
+        result,
+        expression -> {
+          if (source instanceof GeoJsonSource) {
+            return ((GeoJsonSource) source).querySourceFeatures(expression);
+          } else if (source instanceof CustomGeometrySource) {
+            return ((CustomGeometrySource) source).querySourceFeatures(expression);
+          } else if (source instanceof VectorSource && sourceLayerId != null) {
+            return ((VectorSource) source)
+                .querySourceFeatures(new String[] {sourceLayerId}, expression);
+          }
+          return Collections.emptyList();
+        });
+  }
 
-    Source source = style.getSource(sourceId);
-    if (source instanceof GeoJsonSource) {
-      features = ((GeoJsonSource) source).querySourceFeatures(filterExpression);
-    } else if (source instanceof CustomGeometrySource) {
-      features = ((CustomGeometrySource) source).querySourceFeatures(filterExpression);
-    } else if (source instanceof VectorSource && sourceLayerId != null) {
-      features = ((VectorSource) source).querySourceFeatures(new String[] {sourceLayerId}, filterExpression);
-    } else {
-      features = Collections.emptyList();
+  /** A feature query, run with the expression of its filter, or null without one. */
+  private interface FeatureQuery {
+    List<Feature> run(@Nullable Expression filter);
+  }
+
+  /**
+   * Answers the features {@code query} finds with {@code filter}, the JSON text of an expression.
+   * Only an expression array filters, see {@link PigeonConvert#toQueryFilter}.
+   *
+   * <p>A filter that is not JSON, not an expression, or one the engine rejects is answered with
+   * INVALID_EXPRESSION, as on iOS, and the query does not run: the engine only logs why it cannot
+   * read the filter of a query, then queries with it all the same, which crashed the app.
+   */
+  private void answerFeatures(
+      @Nullable String filter, MethodChannel.Result result, FeatureQuery query) {
+    final Expression expression;
+    try {
+      expression = PigeonConvert.toQueryFilter(filter);
+    } catch (IllegalArgumentException e) {
+      replyInvalidFilter(result, e.getMessage());
+      return;
     }
+    if (expression != null) {
+      final String error = queryFilterError(expression);
+      if (error != null) {
+        replyInvalidFilter(result, error);
+        return;
+      }
+    }
+    result.success(featuresReply(query.run(expression)));
+  }
 
-    result.success(featuresReply(features));
+  /**
+   * Why the engine rejects {@code filter} as the filter of a query, or null when it takes it. A
+   * query and a layer read their filter the same way, so the filter is set on a layer that is never
+   * added to a style, where the engine reports what it rejects.
+   */
+  @Nullable
+  private String queryFilterError(Expression filter) {
+    if (queryFilterCheck == null) {
+      queryFilterCheck = new CircleLayer(QUERY_FILTER_CHECK_ID, QUERY_FILTER_CHECK_ID);
+    }
+    final CircleLayer layer = queryFilterCheck;
+    return captureFilterError(() -> layer.setFilter(filter));
+  }
+
+  private static final String QUERY_FILTER_CHECK_ID = "maplibre-gl-query-filter-check";
+
+  private static void replyInvalidFilter(MethodChannel.Result result, String reason) {
+    result.error("INVALID_EXPRESSION", "Invalid filter: " + reason, reason);
   }
 
   // -- Sources ----------------------------------------------------------------

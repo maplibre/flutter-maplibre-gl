@@ -1,6 +1,12 @@
 package org.maplibre.maplibregl
 
-import com.google.gson.JsonParser
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import java.io.IOException
+import java.io.StringReader
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdate
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -162,14 +168,46 @@ internal object PigeonConvert {
 
     /**
      * The filter of a feature query, the JSON text of an expression, or null when there is none.
-     * Only an expression array filters: null, the text `null` and any other value do not.
+     * Only an expression array filters: null, the text `null` and any other JSON value do not.
+     * Numbers keep their exact value, as in a layer filter.
+     *
+     * @throws IllegalArgumentException, saying why, for text that is not JSON and for an array
+     *   that is not an expression. Whether the engine takes the expression is not checked here.
      */
     @JvmStatic
     fun toQueryFilter(filter: String?): Expression? {
         if (filter == null) {
             return null
         }
-        val json = JsonParser.parseString(filter)
-        return if (json.isJsonArray) Expression.Converter.convert(json.asJsonArray) else null
+        val json = parseFilterJson(filter)
+        return if (json.isJsonArray) MapLibreMapController.toFilterExpression(json) else null
     }
+
+    /** Why a filter cannot be read, when its text is not JSON. iOS says the same. */
+    const val FILTER_NOT_JSON = "Not valid JSON."
+
+    /**
+     * [filter], the text of a filter, as JSON. It is read strictly, as iOS reads it: Gson would
+     * otherwise read text such as `n == 3` as a string, which then filters nothing.
+     *
+     * @throws IllegalArgumentException with [FILTER_NOT_JSON] for text that is not JSON.
+     */
+    @JvmStatic
+    fun parseFilterJson(filter: String): JsonElement {
+        try {
+            val reader = JsonReader(StringReader(filter))
+            val json = jsonElementAdapter.read(reader)
+            if (reader.peek() == JsonToken.END_DOCUMENT) {
+                return json
+            }
+        } catch (e: IOException) {
+            // Below: the text is not JSON.
+        } catch (e: JsonParseException) {
+            // Below: the text is not JSON.
+        }
+        throw IllegalArgumentException(FILTER_NOT_JSON)
+    }
+
+    // Reads with the leniency of the reader it is given; JsonParser makes every reader lenient.
+    private val jsonElementAdapter = Gson().getAdapter(JsonElement::class.java)
 }
