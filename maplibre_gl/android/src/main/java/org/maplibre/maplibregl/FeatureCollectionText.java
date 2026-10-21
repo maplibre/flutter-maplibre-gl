@@ -137,10 +137,13 @@ final class FeatureCollectionText {
    */
   private static final class Scanner {
     private final String json;
+    // Indexed directly: on ART this is several times faster than charAt.
+    private final char[] chars;
     private int pos;
 
     Scanner(String json) {
       this.json = json;
+      this.chars = json.toCharArray();
     }
 
     FeatureCollectionText collection() {
@@ -159,7 +162,7 @@ final class FeatureCollectionText {
           expect(':');
           if ("type".equals(key)) {
             skipWhitespace();
-            type = json.charAt(pos) == '"' ? string() : null;
+            type = chars[pos] == '"' ? string() : null;
             if (type == null) {
               skipValue();
             }
@@ -191,7 +194,7 @@ final class FeatureCollectionText {
         } while (consume(','));
         expect('}');
         skipWhitespace();
-        if (pos != json.length() || !"FeatureCollection".equals(type) || features == null) {
+        if (pos != chars.length || !"FeatureCollection".equals(type) || features == null) {
           return null;
         }
         return new FeatureCollectionText(
@@ -205,7 +208,7 @@ final class FeatureCollectionText {
     // it, or null when it has none.
     private String featureId() {
       skipWhitespace();
-      if (json.charAt(pos) != '{') {
+      if (chars[pos] != '{') {
         skipValue();
         return null;
       }
@@ -231,7 +234,7 @@ final class FeatureCollectionText {
     // A string, number or boolean value as text; null for null, objects and arrays.
     private String primitiveText() {
       skipWhitespace();
-      final char c = json.charAt(pos);
+      final char c = chars[pos];
       if (c == '"') {
         return string();
       }
@@ -245,22 +248,27 @@ final class FeatureCollectionText {
 
     private void skipValue() {
       skipWhitespace();
-      final char c = json.charAt(pos);
+      final char c = chars[pos];
       if (c == '"') {
         skipString();
       } else if (c == '{' || c == '[') {
         int depth = 0;
         do {
-          final char ch = json.charAt(pos);
-          if (ch == '"') {
-            skipString();
-            continue;
-          }
-          pos++;
-          if (ch == '{' || ch == '[') {
-            depth++;
-          } else if (ch == '}' || ch == ']') {
-            depth--;
+          switch (chars[pos++]) {
+            case '"':
+              pos--;
+              skipString();
+              break;
+            case '{':
+            case '[':
+              depth++;
+              break;
+            case '}':
+            case ']':
+              depth--;
+              break;
+            default:
+              break;
           }
         } while (depth > 0);
       } else {
@@ -271,7 +279,7 @@ final class FeatureCollectionText {
     // A number, true, false or null, up to the next delimiter.
     private String literal() {
       final int start = pos;
-      while (pos < json.length() && ",:]} \t\n\r\"[{".indexOf(json.charAt(pos)) < 0) {
+      while (pos < chars.length && !isDelimiter(chars[pos])) {
         pos++;
       }
       if (pos == start) {
@@ -280,15 +288,34 @@ final class FeatureCollectionText {
       return json.substring(start, pos);
     }
 
+    private static boolean isDelimiter(char c) {
+      switch (c) {
+        case ',':
+        case ':':
+        case ']':
+        case '}':
+        case '[':
+        case '{':
+        case '"':
+        case ' ':
+        case '\t':
+        case '\n':
+        case '\r':
+          return true;
+        default:
+          return false;
+      }
+    }
+
     private String string() {
       skipWhitespace();
-      if (json.charAt(pos) != '"') {
+      if (chars[pos] != '"') {
         throw new Unexpected();
       }
       final int start = ++pos;
       StringBuilder decoded = null;
       while (true) {
-        final char c = json.charAt(pos);
+        final char c = chars[pos];
         if (c == '"') {
           final String text = decoded == null
               ? json.substring(start, pos)
@@ -300,7 +327,7 @@ final class FeatureCollectionText {
           if (decoded == null) {
             decoded = new StringBuilder(json.substring(start, pos));
           }
-          final char escaped = json.charAt(pos + 1);
+          final char escaped = chars[pos + 1];
           switch (escaped) {
             case '"':
             case '\\':
@@ -342,18 +369,19 @@ final class FeatureCollectionText {
     private void skipString() {
       pos++;
       while (true) {
-        final char c = json.charAt(pos);
+        final char c = chars[pos++];
         if (c == '"') {
-          pos++;
           return;
         }
-        pos += c == '\\' ? 2 : 1;
+        if (c == '\\') {
+          pos++;
+        }
       }
     }
 
     private void skipWhitespace() {
-      while (pos < json.length()) {
-        final char c = json.charAt(pos);
+      while (pos < chars.length) {
+        final char c = chars[pos];
         if (c != ' ' && c != '\t' && c != '\n' && c != '\r') {
           return;
         }
@@ -363,7 +391,7 @@ final class FeatureCollectionText {
 
     private boolean consume(char c) {
       skipWhitespace();
-      if (pos < json.length() && json.charAt(pos) == c) {
+      if (pos < chars.length && chars[pos] == c) {
         pos++;
         return true;
       }
