@@ -30,9 +30,11 @@ MapLibreGlobalPlatform get _global {
 MapLibrePlatform _createMapLibrePlatform() {
   final platform = MapLibrePlatform.createInstance();
   if (!kIsWeb &&
-      // The deprecated default is what tells that nothing registered.
+      // The deprecated default is what tells that nothing registered. Only
+      // the default itself: a subclass is a platform a package installed on
+      // purpose.
       // ignore: deprecated_member_use
-      platform is MapLibreMethodChannel &&
+      platform.runtimeType == MapLibreMethodChannel &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS)) {
     MapLibrePlatform.createInstance = _MapLibreNativePlatform.new;

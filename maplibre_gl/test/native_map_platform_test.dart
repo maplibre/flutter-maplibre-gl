@@ -101,6 +101,23 @@ void main() {
         await tester.pumpWidget(const SizedBox());
       },
     );
+
+    testWidgets(
+      'a map keeps a subclass of the method channel platform',
+      variant: TargetPlatformVariant.only(TargetPlatform.iOS),
+      (tester) async {
+        // A package that installed its own platform, built on the deprecated
+        // default, did so on purpose.
+        MapLibrePlatform appFactory() => _AppMethodChannel();
+        MapLibrePlatform.createInstance = appFactory;
+
+        await tester.pumpWidget(MaterialApp(home: MapLibreMap()));
+
+        expect(find.byKey(_AppMethodChannel.viewKey), findsOneWidget);
+        expect(MapLibrePlatform.createInstance, same(appFactory));
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
   });
 
   group('initPlatform', () {
@@ -2581,4 +2598,19 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
 
   @override
   Future<void> styleSetStyle(String style) => _call('styleSetStyle', [style]);
+}
+
+/// A platform a package built on the deprecated method channel platform and
+/// installed through [MapLibrePlatform.createInstance]. It shows its own view,
+/// so the test can tell that the map used it.
+// ignore: deprecated_member_use
+class _AppMethodChannel extends MapLibreMethodChannel {
+  static const viewKey = Key('app platform view');
+
+  @override
+  Widget buildView(
+    Map<String, dynamic> creationParams,
+    OnPlatformViewCreatedCallback onPlatformViewCreated,
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+  ) => const SizedBox(key: viewKey);
 }
