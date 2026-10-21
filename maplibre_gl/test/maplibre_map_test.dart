@@ -136,6 +136,35 @@ void main() {
       expect(platform.onCameraMovePlatform.isEmpty, isTrue);
       expect(created, isNull);
     });
+ 
+    testWidgets('a style load during the map creation stops quietly when the '
+        'widget goes away', (tester) async {
+      // The controller listens to the platform before the map is created, so
+      // a style can load while initPlatform is still running. If the widget
+      // goes away then, the annotation setup that load started fails against
+      // the closed channel and must not surface as an unhandled error.
+      final initDone = Completer<void>();
+      platform.onInitPlatform = (_) => initDone.future;
+      final sourceAdded = Completer<void>();
+      platform.onAddGeoJsonSource = (_) => sourceAdded.future;
+      MapLibreMapController? created;
+
+      await tester.pumpWidget(
+        MaterialApp(home: MapLibreMap(onMapCreated: (c) => created = c)),
+      );
+      platform.lastOnPlatformViewCreated!(0);
+      await tester.pump();
+      platform.onMapStyleLoadedPlatform.call(null);
+      await tester.pump();
+
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      sourceAdded.completeError(MissingPluginException('map disposed'));
+      initDone.complete();
+      await tester.pump();
+
+      expect(created, isNull);
+      expect(platform.wasCalled('addFillLayer'), isFalse);
+    });
   });
 
   group('onStyleLoaded manager disposal', () {
