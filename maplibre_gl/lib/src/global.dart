@@ -4,23 +4,26 @@
 
 part of '../maplibre_gl.dart';
 
-const _globalChannel = MethodChannel('plugins.flutter.io/maplibre_gl');
-
-/// Retains active offline-download event-channel subscriptions so that Dart's
-/// GC cannot tear them down during idle periods (e.g. while a download is
-/// paused). If the subscription is collected, the native `EventSink` is
-/// released and subsequent progress/success events are silently dropped,
-/// causing the UI to appear stuck after resume.
-final Map<String, StreamSubscription<dynamic>> _offlineDownloadSubscriptions =
-    {};
+// Every call goes through MapLibreGlobalPlatform.instance, which each platform
+// replaces when it registers: Pigeon messages on Android and iOS, an
+// UnsupportedError per call on web, where offline storage does not exist.
+MapLibreGlobalPlatform get _global {
+  // The generated registrant only runs in the app's main isolate. Elsewhere,
+  // for instance in an isolate the app spawns, install the Android and iOS
+  // implementation on first use instead of leaving the default in place.
+  if (!kIsWeb &&
+      MapLibreGlobalPlatform.instance is MapLibreGlobalMethodChannel &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    MapLibreNativePlugin.registerWith();
+  }
+  return MapLibreGlobalPlatform.instance;
+}
 
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
-Future<void> installOfflineMapTiles(String tilesDb) async {
-  await _globalChannel.invokeMethod('installOfflineMapTiles', <String, dynamic>{
-    'tilesdb': tilesDb,
-  });
-}
+Future<void> installOfflineMapTiles(String tilesDb) =>
+    _global.installOfflineMapTiles(tilesDb);
 
 enum DragEventType { start, drag, end }
 
@@ -35,21 +38,7 @@ enum HoverEventType { enter, move, leave }
 ///
 /// Android only. Throws an [UnsupportedError] on iOS, where the MapLibre iOS
 /// SDK has no offline switch, and on web.
-Future<dynamic> setOffline(bool offline) {
-  // Reject here rather than let the method channel answer: on iOS and web
-  // that call fails with a MissingPluginException, which reads like a broken
-  // plugin registration instead of a platform limit.
-  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
-    throw UnsupportedError(
-      'setOffline is not available on '
-      '${kIsWeb ? 'web' : defaultTargetPlatform.name} because the MapLibre '
-      'SDK there has no offline switch. It is supported on Android only.',
-    );
-  }
-  return _globalChannel.invokeMethod('setOffline', <String, dynamic>{
-    'offline': offline,
-  });
-}
+Future<void> setOffline(bool offline) => _global.setOffline(offline);
 
 /// Sets HTTP headers that are injected into every network request MapLibre
 /// makes (tile fetches, style JSON, sprites, glyphs).
@@ -79,20 +68,15 @@ Future<dynamic> setOffline(bool offline) {
 /// ```dart
 /// await setHttpHeaders({});
 /// ```
-Future<void> setHttpHeaders(Map<String, String> headers) {
-  return _globalChannel.invokeMethod('setHttpHeaders', <String, dynamic>{
-    'headers': headers,
-  });
-}
+Future<void> setHttpHeaders(Map<String, String> headers) =>
+    _global.setHttpHeaders(headers);
 
-Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
-  final String regionsJson = await _globalChannel.invokeMethod(
-    'mergeOfflineRegions',
-    <String, dynamic>{'path': path},
-  );
-  final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
-  return regions.map(OfflineRegion.fromMap).toList();
-}
+/// Imports the regions of the offline database at [path], for example one
+/// written by [exportOfflineDatabase] on another device, and returns them.
+///
+/// Android and iOS only; throws [UnsupportedError] on web.
+Future<List<OfflineRegion>> mergeOfflineRegions(String path) =>
+    _global.mergeOfflineRegions(path);
 
 /// Returns the absolute path of the offline database backing the offline packs
 /// and the ambient cache, or `null` if it cannot be resolved.
@@ -102,9 +86,7 @@ Future<List<OfflineRegion>> mergeOfflineRegions(String path) async {
 /// export.
 ///
 /// Android and iOS only; there is no offline support on web.
-Future<String?> getOfflineDatabasePath() async {
-  return _globalChannel.invokeMethod<String>('getOfflineDatabasePath');
-}
+Future<String?> getOfflineDatabasePath() => _global.getOfflineDatabasePath();
 
 /// Writes a copy of the offline database to a path of your choosing, file name
 /// included, for example
@@ -135,14 +117,7 @@ Future<String?> exportOfflineDatabase(String destinationPath) async {
 ///
 /// On iOS the stored regions load asynchronously after launch; this waits for
 /// them, so a call made right at startup returns the same list as Android.
-Future<List<OfflineRegion>> getListOfRegions() async {
-  final String regionsJson = await _globalChannel.invokeMethod(
-    'getListOfRegions',
-    <String, dynamic>{},
-  );
-  final regions = List<Map<String, dynamic>>.from(json.decode(regionsJson));
-  return regions.map(OfflineRegion.fromMap).toList();
-}
+Future<List<OfflineRegion>> getListOfRegions() => _global.getListOfRegions();
 
 /// Replaces the metadata of the offline region with the given [id] and returns
 /// the updated region.
@@ -158,19 +133,12 @@ Future<List<OfflineRegion>> getListOfRegions() async {
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
   Map<String, dynamic> metadata,
-) async {
-  final regionJson = await _globalChannel.invokeMethod(
-    'updateOfflineRegionMetadata',
-    <String, dynamic>{'id': id, 'metadata': metadata},
-  );
+) => _global.updateOfflineRegionMetadata(id, metadata);
 
-  return OfflineRegion.fromMap(json.decode(regionJson));
-}
-
-Future<dynamic> setOfflineTileCountLimit(int limit) =>
-    _globalChannel.invokeMethod('setOfflineTileCountLimit', <String, dynamic>{
-      'limit': limit,
-    });
+/// Caps the number of tiles a single offline region download may store.
+/// A download that would need more fails with `tileCountLimitExceeded`.
+Future<void> setOfflineTileCountLimit(int limit) =>
+    _global.setOfflineTileCountLimit(limit);
 
 /// Sets the maximum number of concurrent HTTP requests for tile downloads.
 ///
@@ -193,49 +161,32 @@ Future<void> setOfflineMaxConcurrentRequests({
     maxRequestsPerHost == null || maxRequestsPerHost >= 1,
     'maxRequestsPerHost must be >= 1 (got $maxRequestsPerHost)',
   );
-  return _globalChannel.invokeMethod(
-    'setOfflineMaxConcurrentRequests',
-    <String, dynamic>{
-      if (maxRequests != null) 'maxRequests': maxRequests,
-      if (maxRequestsPerHost != null) 'maxRequestsPerHost': maxRequestsPerHost,
-    },
+  return _global.setOfflineMaxConcurrentRequests(
+    maxRequests: maxRequests,
+    maxRequestsPerHost: maxRequestsPerHost,
   );
 }
 
 /// Pauses an in-progress offline region download.
-Future<void> pauseOfflineRegionDownload(int id) => _globalChannel.invokeMethod(
-  'pauseOfflineRegionDownload',
-  <String, dynamic>{'id': id},
-);
+Future<void> pauseOfflineRegionDownload(int id) =>
+    _global.pauseOfflineRegionDownload(id);
 
 /// Resumes a paused offline region download.
-Future<void> resumeOfflineRegionDownload(int id) => _globalChannel.invokeMethod(
-  'resumeOfflineRegionDownload',
-  <String, dynamic>{'id': id},
-);
+Future<void> resumeOfflineRegionDownload(int id) =>
+    _global.resumeOfflineRegionDownload(id);
 
 /// Gets the current download status of an offline region.
-Future<OfflineRegionStatus> getOfflineRegionStatus(int id) async {
-  final String result = await _globalChannel.invokeMethod(
-    'getOfflineRegionStatus',
-    <String, dynamic>{'id': id},
-  );
-  return OfflineRegionStatus.fromMap(
-    Map<String, dynamic>.from(json.decode(result)),
-  );
-}
+Future<OfflineRegionStatus> getOfflineRegionStatus(int id) =>
+    _global.getOfflineRegionStatus(id);
 
-Future<dynamic> deleteOfflineRegion(int id) => _globalChannel.invokeMethod(
-  'deleteOfflineRegion',
-  <String, dynamic>{'id': id},
-);
+/// Deletes the offline region with the given [id] and the tiles only it uses.
+Future<void> deleteOfflineRegion(int id) => _global.deleteOfflineRegion(id);
 
 /// Removes all tiles from the shared ambient cache that are not associated
 /// with any offline region. Call this after [deleteOfflineRegion] to fully
 /// evict tiles that would otherwise be reused by a future download of the
 /// same area.
-Future<void> clearAmbientCache() =>
-    _globalChannel.invokeMethod('clearAmbientCache');
+Future<void> clearAmbientCache() => _global.clearAmbientCache();
 
 /// Sets the size limit, in [bytes], of the ambient cache: the tiles and
 /// style resources the map keeps on disk from normal browsing. The default
@@ -251,107 +202,26 @@ Future<void> setMaximumAmbientCacheSize(int bytes) {
   if (bytes < 0) {
     throw ArgumentError.value(bytes, 'bytes', 'Must be 0 or more');
   }
-  if (kIsWeb) {
-    throw UnsupportedError('The ambient cache is not available on web.');
-  }
-  return _globalChannel.invokeMethod(
-    'setMaximumAmbientCacheSize',
-    <String, dynamic>{'bytes': bytes},
-  );
+  return _global.setMaximumAmbientCacheSize(bytes);
 }
 
 /// Resets the entire offline database: deletes every offline region and
 /// clears the ambient cache. Use with care — offline regions cannot be
 /// recovered afterwards.
-Future<void> resetOfflineDatabase() async {
-  try {
-    await _globalChannel.invokeMethod('resetOfflineDatabase');
-  } finally {
-    // Belt-and-suspenders: in the normal path, native emits a terminal
-    // error for every in-flight download and cleanup() in the listener
-    // has already removed the entry from the map. The short delay gives
-    // any queued EventChannel messages a chance to be processed before we
-    // forcibly cancel anything that somehow slipped through, guaranteeing
-    // we don't leak retained subscriptions if the native terminal event
-    // is ever missed.
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    final stragglers = _offlineDownloadSubscriptions.values.toList();
-    _offlineDownloadSubscriptions.clear();
-    for (final sub in stragglers) {
-      unawaited(sub.cancel());
-    }
-  }
-}
+Future<void> resetOfflineDatabase() => _global.resetOfflineDatabase();
 
+/// Downloads the region described by [definition] for offline use and
+/// completes with it once the region is created, before its tiles are in.
+///
+/// [onEvent] receives the progress of the download: [InProgress] events, then
+/// [Success], or [Error] with the [PlatformException] that stopped it.
+/// [metadata] is stored with the region and must be JSON-encodable.
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},
   Function(DownloadRegionStatus event)? onEvent,
-}) async {
-  final channelName =
-      'downloadOfflineRegion_${DateTime.now().microsecondsSinceEpoch}';
-
-  await _globalChannel.invokeMethod(
-    'downloadOfflineRegion#setup',
-    <String, dynamic>{'channelName': channelName},
-  );
-
-  if (onEvent != null) {
-    void cleanup() {
-      final sub = _offlineDownloadSubscriptions.remove(channelName);
-      if (sub != null) unawaited(sub.cancel());
-    }
-
-    // Subscription is retained in _offlineDownloadSubscriptions and cancelled
-    // in cleanup() on the terminal Success/Error event.
-    // ignore: cancel_subscriptions
-    final subscription = EventChannel(channelName)
-        .receiveBroadcastStream()
-        .handleError((error) {
-          if (error is PlatformException) {
-            onEvent(Error(error));
-            cleanup();
-            return Error(error);
-          }
-          final unknownError = Error(
-            PlatformException(
-              code: 'UnknowException',
-              message:
-                  'This error is unhandled by plugin. Please contact us if needed.',
-              details: error,
-            ),
-          );
-          onEvent(unknownError);
-          cleanup();
-          return unknownError;
-        })
-        .listen((data) {
-          final Map<String, Object?> jsonData = json.decode(data);
-          final status = switch (jsonData['status']) {
-            'start' => InProgress(0.0),
-            'progress' => InProgress(
-              (jsonData['progress']! as num).toDouble(),
-              completedResourceCount:
-                  (jsonData['completedResourceCount'] as num?)?.toInt() ?? 0,
-              requiredResourceCount:
-                  (jsonData['requiredResourceCount'] as num?)?.toInt() ?? 0,
-              completedResourceSize:
-                  (jsonData['completedResourceSize'] as num?)?.toInt() ?? 0,
-            ),
-            'success' => Success(),
-            _ => throw Exception('Invalid event status ${jsonData['status']}'),
-          };
-          onEvent(status);
-          if (status is Success) cleanup();
-        });
-
-    _offlineDownloadSubscriptions[channelName] = subscription;
-  }
-
-  final result = await _globalChannel.invokeMethod(
-    'downloadOfflineRegion',
-    <String, dynamic>{'definition': definition.toMap(), 'metadata': metadata},
-  );
-
-  return OfflineRegion.fromMap(json.decode(result));
-}
+}) => _global.downloadOfflineRegion(
+  definition,
+  metadata: metadata,
+  onEvent: onEvent == null ? null : (event) => onEvent(event),
+);

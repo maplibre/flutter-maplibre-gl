@@ -13,7 +13,7 @@ class OfflinePackDownloader {
     // MARK: Properties
 
     private let result: FlutterResult
-    private let channelHandler: OfflineChannelHandler
+    private let channelHandler: OfflineDownloadEvents
     private let regionDefinition: OfflineRegionDefinition
     private let metadata: [String: Any]
 
@@ -28,7 +28,7 @@ class OfflinePackDownloader {
 
     init(
         result: @escaping FlutterResult,
-        channelHandler: OfflineChannelHandler,
+        channelHandler: OfflineDownloadEvents,
         regionDefintion: OfflineRegionDefinition,
         metadata: [String: Any]
     ) {

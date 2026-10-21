@@ -28,7 +28,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MissingPluginException, rootBundle;
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -498,16 +498,16 @@ void main() {
     );
   });
 
-  testWidgets('clearAmbientCache completes on native, has no web handler', (
+  testWidgets('clearAmbientCache completes on native, is unsupported on web', (
     tester,
   ) async {
     // A map is pumped so the native plugin is attached on every platform.
     await pumpMap(tester);
 
     if (testPlatform == TestPlatform.web) {
-      // There is no offline support on web (documented in global.dart) and no
-      // handler for the global channel, so the call fails as unhandled.
-      await _expectThrows<MissingPluginException>(
+      // There is no offline support on web (documented in global.dart), and
+      // the web implementation says so.
+      await _expectThrows<UnsupportedError>(
         tester,
         clearAmbientCache(),
         'clearAmbientCache',
