@@ -63,11 +63,9 @@ class MapHostApiTest {
 
     private val api = MapHostApi(map)
 
-    /** The Pigeon methods that have a MapCalls method of the same name. */
-    private val typedPigeonMethods: List<Method> =
-        MapLibreMapHostApi::class.java.declaredMethods
-            .filter { pigeon -> MapCalls::class.java.methods.any { it.name == pigeon.name } }
-            .sortedBy { it.name }
+    /** The methods of the Pigeon host API, each ending with the callback. */
+    private val pigeonMethods: List<Method> =
+        MapLibreMapHostApi::class.java.declaredMethods.sortedBy { it.name }
 
     /**
      * The Pigeon methods that add a source or a layer, with the duplicate check they make first
@@ -132,9 +130,19 @@ class MapHostApiTest {
         answers(block).single().exceptionOrNull() as PigeonError
 
     @Test
+    fun mapCallsHasAMethodForEveryPigeonMethodAndNoOther() {
+        val notCalls = setOf("isMapReady", "rejectDuplicateLayerId", "rejectDuplicateSourceId")
+
+        assertEquals(78, pigeonMethods.size)
+        assertEquals(
+            pigeonMethods.map { it.name }.toSet(),
+            MapCalls::class.java.methods.map { it.name }.toSet() - notCalls,
+        )
+    }
+
+    @Test
     fun everyCallReachesTheMapCallOfTheSameNameWithItsArguments() {
-        assertTrue(typedPigeonMethods.isNotEmpty())
-        for (method in typedPigeonMethods) {
+        for (method in pigeonMethods) {
             calls.clear()
 
             val (arguments, answers) = invoke(method)
@@ -148,7 +156,7 @@ class MapHostApiTest {
     @Test
     fun withoutTheMapEveryCallButWaitForMapPauseAndResumeAnswersMapNotReady() {
         mapReady = false
-        for (method in typedPigeonMethods) {
+        for (method in pigeonMethods) {
             calls.clear()
 
             val (_, answers) = invoke(method)
@@ -169,7 +177,7 @@ class MapHostApiTest {
 
     @Test
     fun theCallsThatAddASourceOrALayerCheckTheirIdFirst() {
-        for (method in typedPigeonMethods) {
+        for (method in pigeonMethods) {
             checks.clear()
 
             val (arguments, _) = invoke(method)
@@ -186,8 +194,8 @@ class MapHostApiTest {
     @Test
     fun aCallThatAddsATakenIdIsAnsweredByTheCheckAlone() {
         takenIds = setOf("argument 0", "argument 1")
-        val adding = typedPigeonMethods.filter { it.name in duplicateChecks }
-        assertTrue(adding.isNotEmpty())
+        val adding = pigeonMethods.filter { it.name in duplicateChecks }
+        assertEquals(duplicateChecks.keys, adding.map { it.name }.toSet())
         for (method in adding) {
             calls.clear()
 
@@ -201,7 +209,7 @@ class MapHostApiTest {
     @Test
     fun whatACallThrowsIsAnsweredWithCodeError() {
         answer = { _, _ -> throw IllegalStateException("boom") }
-        for (method in typedPigeonMethods) {
+        for (method in pigeonMethods) {
             val (_, answers) = invoke(method)
 
             val error = answers.single().exceptionOrNull() as PigeonError

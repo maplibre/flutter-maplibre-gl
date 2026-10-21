@@ -19,7 +19,7 @@ import io.flutter.plugin.common.MethodChannel;
  * <p>{@link MapLibreMapController} implements it. It is an interface so the JVM tests can stand in
  * for the controller.
  */
-public interface MapCalls extends MethodChannel.MethodCallHandler {
+public interface MapCalls {
   /** Whether the native map exists. It does not while the MapView is being rebuilt. */
   boolean isMapReady();
 

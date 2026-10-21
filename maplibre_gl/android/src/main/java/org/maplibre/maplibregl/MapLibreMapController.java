@@ -120,7 +120,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import io.flutter.plugin.common.BinaryMessenger;
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.platform.PlatformView;
 
@@ -3695,23 +3694,6 @@ final class MapLibreMapController
     }
     reply.put("result", ret);
     result.success(reply);
-  }
-
-  @Override
-  public void onMethodCall(MethodCall call, MethodChannel.Result result) {
-    if (mapLibreMap == null) {
-      result.error("MAP_NOT_READY", "Map is not ready (activity may have been recreated)", null);
-      return;
-    }
-    onMethodCallWithMap(call, result);
-  }
-
-  private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
-    switch (call.method) {
-
-      default:
-        result.notImplemented();
-    }
   }
 
   @Override

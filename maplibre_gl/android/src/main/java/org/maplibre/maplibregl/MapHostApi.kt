@@ -1,7 +1,6 @@
 package org.maplibre.maplibregl
 
 import android.util.Log
-import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
@@ -594,54 +593,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         }
     }
 
-    /** Runs a call not yet typed, whose answer Dart does not read. */
-    private fun unit(method: String, arguments: Any?, callback: (Result<Unit>) -> Unit) =
-        call(method, arguments, callback) { }
-
-    /** Runs a call not yet typed, whose answer goes to Dart as the handler gave it. */
-    private fun any(method: String, arguments: Any?, callback: (Result<Any?>) -> Unit) =
-        call(method, arguments, callback) { it }
-
-    /**
-     * Hands [method] with [arguments] to the handler, and its answer, turned
-     * by [convert] into the type the Pigeon method returns, to [callback].
-     */
-    private fun <T> call(
-        method: String,
-        arguments: Any?,
-        callback: (Result<T>) -> Unit,
-        convert: (Any?) -> T,
-    ) = answer(PigeonMethodResult(callback, convert)) {
-        map.onMethodCall(MethodCall(method, legacyInts(arguments)), it)
-    }
-
     companion object {
         private const val TAG = "MapHostApi"
         private const val MAP_NOT_READY = "MAP_NOT_READY"
         private const val MAP_NOT_READY_MESSAGE =
             "Map is not ready (activity may have been recreated)"
-
-        /**
-         * [value] with every Long that fits in 32 bits turned into an Int, in
-         * nested maps and lists too. Pigeon delivers every Dart int as a Long,
-         * while the method channel delivered an Integer when the value fit, and
-         * the handler casts to Integer. Maps and lists are copied into a
-         * HashMap and an ArrayList, the types the method channel delivered;
-         * everything else is left as it is.
-         */
-        private fun legacyInts(value: Any?): Any? = when (value) {
-            is Long -> if (value.toInt().toLong() == value) value.toInt() else value
-            is Map<*, *> -> HashMap<Any?, Any?>(value.size).also { copy ->
-                for ((key, item) in value) {
-                    copy[key] = legacyInts(item)
-                }
-            }
-            is List<*> -> ArrayList<Any?>(value.size).also { copy ->
-                for (item in value) {
-                    copy.add(legacyInts(item))
-                }
-            }
-            else -> value
-        }
     }
 }
