@@ -354,4 +354,15 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
   void styleGetLayerIds(MethodChannel.Result result);
 
   void styleGetLayerProperties(String layerId, MethodChannel.Result result);
+
+  // Style
+
+  void styleAddImage(
+      String name, byte[] bytes, long length, boolean sdf, MethodChannel.Result result);
+
+  void styleSetLight(Map<String, Object> light, MethodChannel.Result result);
+
+  void styleSetStyle(String style, MethodChannel.Result result);
+
+  void mapGetStyle(MethodChannel.Result result);
 }

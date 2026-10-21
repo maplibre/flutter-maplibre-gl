@@ -98,7 +98,8 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit) =
         any(callback) { map.mapSetLayerFilter(id, filter, it) }
 
-    override fun mapGetStyle(callback: (Result<Any?>) -> Unit) = any("map#getStyle", null, callback)
+    override fun mapGetStyle(callback: (Result<Any?>) -> Unit) =
+        any(callback) { map.mapGetStyle(it) }
 
     override fun mapSetCustomHeaders(
         headers: Map<String, String>,
@@ -177,11 +178,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         length: Long,
         sdf: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addImage",
-        hashMapOf("name" to name, "bytes" to bytes, "length" to length, "sdf" to sdf),
-        callback,
-    )
+    ) = unit(callback) { map.styleAddImage(name, bytes, length, sdf, it) }
 
     override fun styleAddImageSource(
         imageSourceId: String,
@@ -478,7 +475,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     ) = any(callback) { map.sourceGetFeatureState(sourceId, featureId, sourceLayer, it) }
 
     override fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit) =
-        unit("style#setLight", hashMapOf("light" to light), callback)
+        unit(callback) { map.styleSetLight(light, it) }
 
     override fun layerSetVisibility(
         layerId: String,
@@ -525,7 +522,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         any(callback) { map.styleGetSourceProperties(sourceId, it) }
 
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#setStyle", hashMapOf("style" to style), callback)
+        unit(callback) { map.styleSetStyle(style, it) }
 
     /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
     private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =

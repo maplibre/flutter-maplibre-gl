@@ -3577,6 +3577,126 @@ final class MapLibreMapController
     result.success(getLayerProperties(layerId));
   }
 
+  // -- Style ------------------------------------------------------------------
+
+  @Override
+  public void styleAddImage(
+      String name, byte[] bytes, long length, boolean sdf, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inScaled = false;
+    options.inDensity = 0;
+    options.inTargetDensity = 0;
+    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, Convert.toIntExact(length), options);
+    if (bitmap == null) {
+      result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
+      return;
+    }
+    style.addImage(name, bitmap, sdf);
+    result.success(null);
+  }
+
+  @Override
+  public void styleSetLight(Map<String, Object> lightProperties, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      result.error(
+          "STYLE_NOT_READY",
+          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
+          null);
+      return;
+    }
+    // Every LightProperties field is dynamic, so anything can arrive here. The
+    // values are checked rather than cast: MapLibre Native takes constants only,
+    // and an expression is a List, which would fail the call as a bare
+    // ClassCastException. All fields are checked before any is applied, so a
+    // rejected call changes nothing.
+    final String constantsOnly =
+        " MapLibre Native takes constant light values only, not expressions.";
+    final Object anchor = lightProperties.get("anchor");
+    if (anchor != null && !(anchor instanceof String)) {
+      result.error(
+          "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+      return;
+    }
+    final Object position = lightProperties.get("position");
+    final List<?> positionValues = position instanceof List ? (List<?>) position : null;
+    if (position != null
+        && (positionValues == null
+            || positionValues.size() != 3
+            || !(positionValues.get(0) instanceof Number)
+            || !(positionValues.get(1) instanceof Number)
+            || !(positionValues.get(2) instanceof Number))) {
+      result.error(
+          "INVALID_ARGUMENT",
+          "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
+              + " polar]."
+              + constantsOnly,
+          null);
+      return;
+    }
+    final Object color = lightProperties.get("color");
+    if (color != null && !(color instanceof String)) {
+      result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+      return;
+    }
+    final Object intensity = lightProperties.get("intensity");
+    if (intensity != null && !(intensity instanceof Number)) {
+      result.error(
+          "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+      return;
+    }
+
+    final Light light = style.getLight();
+    if (anchor != null) {
+      light.setAnchor((String) anchor);
+    }
+    if (positionValues != null) {
+      light.setPosition(
+          new Position(
+              ((Number) positionValues.get(0)).floatValue(),
+              ((Number) positionValues.get(1)).floatValue(),
+              ((Number) positionValues.get(2)).floatValue()));
+    }
+    if (color != null) {
+      light.setColor((String) color);
+    }
+    if (intensity != null) {
+      light.setIntensity(((Number) intensity).floatValue());
+    }
+    result.success(null);
+  }
+
+  @Override
+  public void styleSetStyle(String styleString, MethodChannel.Result result) {
+    // A style JSON, URL, path or asset name.
+    setStyleString(styleString);
+    result.success(null);
+  }
+
+  @Override
+  public void mapGetStyle(MethodChannel.Result result) {
+    Map<String, Object> reply = new HashMap<>();
+    boolean ret = false;
+    if (mapLibreMap != null) {
+      Style style = mapLibreMap.getStyle();
+      if (style != null) {
+        try {
+          String json = style.getJson();
+          reply.put("json", json);
+          ret = true;
+        } catch (Exception e) {}
+      }
+    }
+    reply.put("result", ret);
+    result.success(reply);
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -3588,146 +3708,7 @@ final class MapLibreMapController
 
   private void onMethodCallWithMap(MethodCall call, MethodChannel.Result result) {
     switch (call.method) {
-      case "map#getStyle":
-        {
-          Map<String, Object> reply = new HashMap<>();
-          boolean ret = false;
-          if (mapLibreMap != null) {
-            Style style = mapLibreMap.getStyle();
-            if (style != null) {
-              try {
-                String json = style.getJson();
-                reply.put("json", json);
-                ret = true;
-              } catch (Exception e) {}
-            }
-          }
-          reply.put("result", ret);
-          result.success(reply);
-          break;
-        }
-      case "style#setLight":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          final Map<String, Object> lightProperties = call.argument("light");
-          // Every LightProperties field is dynamic, so anything can arrive here. The
-          // values are checked rather than cast: MapLibre Native takes constants only,
-          // and an expression is a List, which would leave onMethodCall as a bare
-          // ClassCastException. All fields are checked before any is applied, so a
-          // rejected call changes nothing.
-          final String constantsOnly =
-              " MapLibre Native takes constant light values only, not expressions.";
-          final Object anchor = lightProperties.get("anchor");
-          if (anchor != null && !(anchor instanceof String)) {
-            result.error(
-                "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
-            break;
-          }
-          final Object position = lightProperties.get("position");
-          final List<?> positionValues = position instanceof List ? (List<?>) position : null;
-          if (position != null
-              && (positionValues == null
-                  || positionValues.size() != 3
-                  || !(positionValues.get(0) instanceof Number)
-                  || !(positionValues.get(1) instanceof Number)
-                  || !(positionValues.get(2) instanceof Number))) {
-            result.error(
-                "INVALID_ARGUMENT",
-                "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
-                    + " polar]."
-                    + constantsOnly,
-                null);
-            break;
-          }
-          final Object color = lightProperties.get("color");
-          if (color != null && !(color instanceof String)) {
-            result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
-            break;
-          }
-          final Object intensity = lightProperties.get("intensity");
-          if (intensity != null && !(intensity instanceof Number)) {
-            result.error(
-                "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
-            break;
-          }
 
-          final Light light = style.getLight();
-          if (anchor != null) {
-            light.setAnchor((String) anchor);
-          }
-          if (positionValues != null) {
-            light.setPosition(
-                new Position(
-                    ((Number) positionValues.get(0)).floatValue(),
-                    ((Number) positionValues.get(1)).floatValue(),
-                    ((Number) positionValues.get(2)).floatValue()));
-          }
-          if (color != null) {
-            light.setColor((String) color);
-          }
-          if (intensity != null) {
-            light.setIntensity(((Number) intensity).floatValue());
-          }
-          result.success(null);
-          break;
-        }
-      case "style#addImage":
-        {
-          if (style == null || !style.isFullyLoaded()) {
-            result.error(
-                "STYLE_NOT_READY",
-                "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-                null);
-            break;
-          }
-          BitmapFactory.Options options = new BitmapFactory.Options();
-          options.inScaled = false;
-          options.inDensity = 0;
-          options.inTargetDensity = 0;
-          Bitmap bitmap = BitmapFactory.decodeByteArray(
-              call.argument("bytes"),
-              0,
-              call.argument("length"),
-              options);
-          if (bitmap == null) {
-            result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
-            break;
-          }
-          style.addImage(
-              call.argument("name"),
-              bitmap,
-              call.argument("sdf"));
-          result.success(null);
-          break;
-        }
-
-      case "style#setStyle":
-      {
-        // Getting style json, url, path etc. from the flutter side
-        String styleString = call.argument("style");
-
-        // Checking if style is null or not
-        if (styleString != null) {
-          // If style is not null setting style
-          setStyleString(styleString);
-          result.success(null);
-        } else {
-
-          // else throwing error
-          result.error(
-                  "STYLE STRING IS NULL",
-                  "The style string is null.",
-                  null
-          );
-        }
-        break;
-      }
       default:
         result.notImplemented();
     }
