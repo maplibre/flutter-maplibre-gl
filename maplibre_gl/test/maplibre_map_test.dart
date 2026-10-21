@@ -136,7 +136,7 @@ void main() {
       expect(platform.onCameraMovePlatform.isEmpty, isTrue);
       expect(created, isNull);
     });
- 
+
     testWidgets('a style load during the map creation stops quietly when the '
         'widget goes away', (tester) async {
       // The controller listens to the platform before the map is created, so
