@@ -230,6 +230,16 @@ class MapHostApiTest {
     }
 
     @Test
+    fun answersWhetherACameraMoveFinished() {
+        answer = { _, result -> result.success(false) }
+
+        assertEquals(false, value<Boolean?> { api.cameraMove(listOf("zoomIn"), it) })
+        assertEquals(false, value<Boolean?> { api.cameraAnimate(listOf("zoomIn"), 300L, it) })
+        assertEquals(false, value<Boolean> { api.cameraEase(listOf("zoomIn"), null, "linear", it) })
+        assertEquals(listOf<Any?>(listOf("zoomIn"), null, "linear"), calls.last().arguments)
+    }
+
+    @Test
     fun answersTheReplyOfTheCallAsItIs() {
         val headers = hashMapOf("Authorization" to "Bearer token")
         answer = { _, result -> result.success(headers) }

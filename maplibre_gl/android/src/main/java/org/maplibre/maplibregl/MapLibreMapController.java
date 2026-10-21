@@ -1862,12 +1862,12 @@ final class MapLibreMapController
   }
 
   /**
-   * Reads the camera update of a camera#move, camera#animate or camera#ease call. When it does
-   * not decode, the call is answered with INVALID_ARGUMENT, as on iOS, and null comes back.
+   * Reads the camera update of a {@link #cameraMove}, {@link #cameraAnimate} or {@link
+   * #cameraEase} call. When it does not decode, the call is answered with INVALID_ARGUMENT, as on
+   * iOS, and null comes back.
    */
   @Nullable
-  private CameraUpdate parseCameraUpdate(MethodCall call, MethodChannel.Result result) {
-    final Object data = call.argument("cameraUpdate");
+  private CameraUpdate parseCameraUpdate(Object data, MethodChannel.Result result) {
     try {
       final CameraUpdate cameraUpdate = Convert.toCameraUpdate(data, mapLibreMap, density);
       if (cameraUpdate != null) {
@@ -2097,6 +2097,148 @@ final class MapLibreMapController
     });
   }
 
+  // -- Camera -----------------------------------------------------------------
+
+  @Override
+  public void cameraMove(List<Object> cameraUpdate, MethodChannel.Result result) {
+    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+    if (update == null) {
+      return;
+    }
+    mapLibreMap.moveCamera(
+        update,
+        new OnCameraMoveFinishedListener() {
+          @Override
+          public void onFinish() {
+            super.onFinish();
+            result.success(true);
+          }
+
+          @Override
+          public void onCancel() {
+            super.onCancel();
+            result.success(false);
+          }
+        });
+  }
+
+  @Override
+  public void cameraAnimate(
+      List<Object> cameraUpdate, @Nullable Long duration, MethodChannel.Result result) {
+    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+    if (update == null) {
+      return;
+    }
+    final Integer durationMs = duration == null ? null : Convert.toIntExact(duration);
+
+    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+        new OnCameraMoveFinishedListener() {
+          @Override
+          public void onFinish() {
+            super.onFinish();
+            result.success(true);
+          }
+
+          @Override
+          public void onCancel() {
+            super.onCancel();
+            result.success(false);
+          }
+        };
+    if (durationMs != null) {
+      mapLibreMap.animateCamera(update, durationMs, onCameraMoveFinishedListener);
+    } else {
+      mapLibreMap.animateCamera(update, onCameraMoveFinishedListener);
+    }
+  }
+
+  @Override
+  public void cameraEase(
+      List<Object> cameraUpdate,
+      @Nullable Long duration,
+      @Nullable String interpolation,
+      MethodChannel.Result result) {
+    final CameraUpdate update = parseCameraUpdate(cameraUpdate, result);
+    if (update == null) {
+      return;
+    }
+    final Integer durationMs = duration == null ? null : Convert.toIntExact(duration);
+
+    // MapLibre Android's easeCamera only exposes a boolean:
+    //   false = linear (constant velocity)
+    //   true  = default ease-in/ease-out
+    // Custom timing curves (easeOut, fastOutLinearIn) are not supported
+    // natively, so any non-"linear" value falls back to eased. This
+    // cross-platform caveat is documented on CameraAnimationInterpolation.
+    final boolean easingInterpolator = !"linear".equals(interpolation);
+
+    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
+        new OnCameraMoveFinishedListener() {
+          @Override
+          public void onFinish() {
+            super.onFinish();
+            result.success(true);
+          }
+
+          @Override
+          public void onCancel() {
+            super.onCancel();
+            result.success(false);
+          }
+        };
+
+    if (durationMs != null && durationMs > 0) {
+      mapLibreMap.easeCamera(update, durationMs, easingInterpolator, onCameraMoveFinishedListener);
+    } else {
+      mapLibreMap.easeCamera(update, onCameraMoveFinishedListener);
+    }
+  }
+
+  @Override
+  public void mapQueryCameraPosition(MethodChannel.Result result) {
+    result.success(Convert.toJson(mapLibreMap.getCameraPosition()));
+  }
+
+  @Override
+  public void mapUpdateContentInsets(
+      Map<String, Double> bounds, boolean animated, MethodChannel.Result result) {
+    final CameraUpdate cameraUpdate =
+        CameraUpdateFactory.paddingTo(
+            Convert.toPixels(bounds.get("left"), density),
+            Convert.toPixels(bounds.get("top"), density),
+            Convert.toPixels(bounds.get("right"), density),
+            Convert.toPixels(bounds.get("bottom"), density));
+
+    if (animated) {
+      animateCamera(cameraUpdate, null, result);
+    } else {
+      moveCamera(cameraUpdate, result);
+    }
+  }
+
+  @Override
+  public void mapSetCameraBounds(
+      double west,
+      double north,
+      double south,
+      double east,
+      long padding,
+      MethodChannel.Result result) {
+    final int logicalPadding = Convert.toIntExact(padding);
+
+    LatLng locationOne = new LatLng(north, east);
+    LatLng locationTwo = new LatLng(south, west);
+    LatLngBounds latLngBounds = new LatLngBounds.Builder()
+            .include(locationOne) // Northeast
+            .include(locationTwo) // Southwest
+            .build();
+    // Padding is in logical pixels, like every other camera input.
+    mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
+            (int) (logicalPadding * density)), 200);
+    // Replies once the move is started, as iOS and web do.
+    result.success(null);
+  }
+
   @Override
   public void onMethodCall(MethodCall call, MethodChannel.Result result) {
     if (mapLibreMap == null) {
@@ -2116,23 +2258,6 @@ final class MapLibreMapController
           int myLocationTrackingMode = call.argument("mode");
           setMyLocationTrackingMode(myLocationTrackingMode);
           result.success(null);
-          break;
-        }
-      case "map#updateContentInsets":
-        {
-          HashMap<String, Object> insets = call.argument("bounds");
-          final CameraUpdate cameraUpdate =
-              CameraUpdateFactory.paddingTo(
-                  Convert.toPixels(insets.get("left"), density),
-                  Convert.toPixels(insets.get("top"), density),
-                  Convert.toPixels(insets.get("right"), density),
-                  Convert.toPixels(insets.get("bottom"), density));
-
-          if (call.argument("animated")) {
-            animateCamera(cameraUpdate, null, result);
-          } else {
-            moveCamera(cameraUpdate, result);
-          }
           break;
         }
       case "map#getVisibleRegion":
@@ -2220,58 +2345,6 @@ final class MapLibreMapController
           result.success(reply);
           break;
         }
-      case "camera#move":
-        {
-          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
-          if (cameraUpdate == null) {
-            break;
-          }
-          mapLibreMap.moveCamera(
-              cameraUpdate,
-              new OnCameraMoveFinishedListener() {
-                @Override
-                public void onFinish() {
-                  super.onFinish();
-                  result.success(true);
-                }
-
-                @Override
-                public void onCancel() {
-                  super.onCancel();
-                  result.success(false);
-                }
-              });
-          break;
-        }
-      case "camera#animate":
-        {
-          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
-          if (cameraUpdate == null) {
-            break;
-          }
-          final Integer duration = call.argument("duration");
-
-          final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
-              new OnCameraMoveFinishedListener() {
-                @Override
-                public void onFinish() {
-                  super.onFinish();
-                  result.success(true);
-                }
-
-                @Override
-                public void onCancel() {
-                  super.onCancel();
-                  result.success(false);
-                }
-              };
-          if (duration != null) {
-            mapLibreMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
-          } else {
-            mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
-          }
-          break;
-        }
       case "map#queryRenderedFeatures":
         {
           List<Feature> features;
@@ -2328,50 +2401,6 @@ final class MapLibreMapController
             break;
           }
           result.success(featuresReply(features));
-          break;
-        }
-      case "camera#ease":
-        {
-          final CameraUpdate cameraUpdate = parseCameraUpdate(call, result);
-          if (cameraUpdate == null) {
-            break;
-          }
-          final Integer duration = call.argument("duration");
-          final String interpolationStr = call.argument("interpolation");
-
-          // MapLibre Android's easeCamera only exposes a boolean:
-          //   false = linear (constant velocity)
-          //   true  = default ease-in/ease-out
-          // Custom timing curves (easeOut, fastOutLinearIn) are not supported
-          // natively, so any non-"linear" value falls back to eased. This
-          // cross-platform caveat is documented on CameraAnimationInterpolation.
-          final boolean easingInterpolator = !"linear".equals(interpolationStr);
-
-          final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
-              new OnCameraMoveFinishedListener() {
-                @Override
-                public void onFinish() {
-                  super.onFinish();
-                  result.success(true);
-                }
-
-                @Override
-                public void onCancel() {
-                  super.onCancel();
-                  result.success(false);
-                }
-              };
-
-          if (duration != null && duration > 0) {
-            mapLibreMap.easeCamera(cameraUpdate, duration, easingInterpolator, onCameraMoveFinishedListener);
-          } else {
-            mapLibreMap.easeCamera(cameraUpdate, onCameraMoveFinishedListener);
-          }
-          break;
-        }
-      case "map#queryCameraPosition":
-        {
-          result.success(Convert.toJson(mapLibreMap.getCameraPosition()));
           break;
         }
       case "map#editGeoJsonSource":
@@ -3481,28 +3510,6 @@ final class MapLibreMapController
           } else {
             style.addLayer(layer);
           }
-          result.success(null);
-          break;
-        }
-      case "map#setCameraBounds":
-        {
-          double west = call.argument("west");
-          double north = call.argument("north");
-          double south = call.argument("south");
-          double east = call.argument("east");
-
-          int padding = call.argument("padding");
-
-          LatLng locationOne = new LatLng(north, east);
-          LatLng locationTwo = new LatLng(south, west);
-          LatLngBounds latLngBounds = new LatLngBounds.Builder()
-                  .include(locationOne) // Northeast
-                  .include(locationTwo) // Southwest
-                  .build();
-          // Padding is in logical pixels, like every other camera input.
-          mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-                  (int) (padding * density)), 200);
-          // Replies once the move is started, as iOS and web do.
           result.success(null);
           break;
         }

@@ -55,4 +55,30 @@ public interface MapCalls extends MethodChannel.MethodCallHandler {
   void mapClearAmbientCache(MethodChannel.Result result);
 
   void mapTakeSnapshot(@Nullable Long width, @Nullable Long height, MethodChannel.Result result);
+
+  // Camera
+
+  void cameraMove(List<Object> cameraUpdate, MethodChannel.Result result);
+
+  void cameraAnimate(
+      List<Object> cameraUpdate, @Nullable Long duration, MethodChannel.Result result);
+
+  void cameraEase(
+      List<Object> cameraUpdate,
+      @Nullable Long duration,
+      @Nullable String interpolation,
+      MethodChannel.Result result);
+
+  void mapQueryCameraPosition(MethodChannel.Result result);
+
+  void mapUpdateContentInsets(
+      Map<String, Double> bounds, boolean animated, MethodChannel.Result result);
+
+  void mapSetCameraBounds(
+      double west,
+      double north,
+      double south,
+      double east,
+      long padding,
+      MethodChannel.Result result);
 }

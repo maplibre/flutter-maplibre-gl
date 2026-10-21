@@ -26,14 +26,10 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         cameraUpdate: List<Any?>,
         duration: Long?,
         callback: (Result<Boolean?>) -> Unit,
-    ) = call(
-        "camera#animate",
-        hashMapOf("cameraUpdate" to cameraUpdate, "duration" to duration),
-        callback,
-    ) { it as Boolean? }
+    ) = call(callback, { it as Boolean? }) { map.cameraAnimate(cameraUpdate, duration, it) }
 
     override fun cameraMove(cameraUpdate: List<Any?>, callback: (Result<Boolean?>) -> Unit) =
-        call("camera#move", hashMapOf("cameraUpdate" to cameraUpdate), callback) { it as Boolean? }
+        call(callback, { it as Boolean? }) { map.cameraMove(cameraUpdate, it) }
 
     override fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit) =
         unit("map#updateMyLocationTrackingMode", hashMapOf("mode" to mode), callback)
@@ -61,11 +57,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         bounds: Map<String, Double>,
         animated: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "map#updateContentInsets",
-        hashMapOf("bounds" to bounds, "animated" to animated),
-        callback,
-    )
+    ) = unit(callback) { map.mapUpdateContentInsets(bounds, animated, it) }
 
     override fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapSetMapLanguage(language, it) }
@@ -93,18 +85,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         duration: Long?,
         interpolation: String?,
         callback: (Result<Boolean>) -> Unit,
-    ) {
-        val arguments =
-            hashMapOf<String, Any?>("cameraUpdate" to cameraUpdate, "duration" to duration)
-        // Left out when null, as the legacy call did.
-        if (interpolation != null) {
-            arguments["interpolation"] = interpolation
-        }
-        call("camera#ease", arguments, callback) { it as Boolean }
+    ) = call(callback, { it as Boolean }) {
+        map.cameraEase(cameraUpdate, duration, interpolation, it)
     }
 
     override fun mapQueryCameraPosition(callback: (Result<Any?>) -> Unit) =
-        any("map#queryCameraPosition", null, callback)
+        any(callback) { map.mapQueryCameraPosition(it) }
 
     override fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit) =
         any("map#editGeoJsonSource", hashMapOf("id" to id, "data" to data), callback)
@@ -374,17 +360,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         east: Double,
         padding: Long,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "map#setCameraBounds",
-        hashMapOf(
-            "west" to west,
-            "north" to north,
-            "south" to south,
-            "east" to east,
-            "padding" to padding,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.mapSetCameraBounds(west, north, south, east, padding, it) }
 
     override fun symbolLayerAdd(
         sourceId: String,
