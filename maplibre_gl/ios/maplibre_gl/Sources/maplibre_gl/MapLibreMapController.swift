@@ -982,7 +982,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(MethodCallError.sourceAlreadyExists(sourceId: imageSourceId).flutterError)
             return
         }
-        guard let image = UIImage(data: bytes.data) else { return }
+        guard let image = UIImage(data: bytes.data) else {
+            result(invalidImageError())
+            return
+        }
 
         let source = MLNImageSource(
             identifier: imageSourceId,
@@ -1001,9 +1004,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result: @escaping FlutterResult
     ) {
         guard let imageSource = mapView.style?
-            .source(withIdentifier: imageSourceId) as? MLNImageSource else { return }
+            .source(withIdentifier: imageSourceId) as? MLNImageSource
+        else {
+            result(FlutterError(
+                code: "SOURCE_NOT_FOUND",
+                message: "Image source \(imageSourceId) not found.",
+                details: nil
+            ))
+            return
+        }
+        // Read before anything changes, so a call that fails changes nothing.
         if let bytes = bytes {
-            guard let image = UIImage(data: bytes.data) else { return }
+            guard let image = UIImage(data: bytes.data) else {
+                result(invalidImageError())
+                return
+            }
             imageSource.image = image
         }
         if let coordinates = coordinates {
@@ -2923,6 +2938,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private func invalidArgumentError(_ message: String) -> FlutterError {
         return FlutterError(code: "INVALID_ARGUMENT", message: message, details: nil)
+    }
+
+    /// Image bytes that do not decode, answered as on Android.
+    private func invalidImageError() -> FlutterError {
+        return FlutterError(code: "INVALID_IMAGE", message: "Failed to decode image bytes.", details: nil)
     }
 
     /// Answers a call with nothing, or with the error it failed with.
