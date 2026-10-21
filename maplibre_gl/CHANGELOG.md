@@ -104,10 +104,6 @@
 * **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
 * **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background (#1105).
 * Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
-* **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#XXXX).
-* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#XXXX).
-* **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1112).
-* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#1112).
 * **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1114).
 * **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#1114).
 
