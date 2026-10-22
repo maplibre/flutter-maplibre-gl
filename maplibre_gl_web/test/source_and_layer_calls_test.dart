@@ -561,4 +561,83 @@ void main() {
       expect(map.layerListeners, contains('mouseenter circles'));
     });
   });
+
+  group('GeoJSON source calls on a source of another type', () {
+    test('fail with UNSUPPORTED_SOURCE_TYPE, and a missing source with '
+        'SOURCE_NOT_FOUND', () async {
+      await controller.addSource(
+        'tiles',
+        const VectorSourceProperties(tiles: ['https://example.com/{z}']),
+      );
+      final calls = <String, Future<void> Function(String)>{
+        'setGeoJsonSource':
+            (id) => controller.setGeoJsonSource(id, _collection([])),
+        'setGeoJsonFeature':
+            (id) => controller.setFeatureForGeoJsonSource(id, _point(1, 1)),
+      };
+      for (final MapEntry(key: method, value: call) in calls.entries) {
+        await expectLater(
+          call('tiles'),
+          throwsA(
+            platformError('UNSUPPORTED_SOURCE_TYPE').having(
+              (e) => e.message,
+              'message',
+              "Source 'tiles' is not a GeoJSON source. $method only applies "
+                  'to GeoJSON sources.',
+            ),
+          ),
+        );
+        await expectLater(
+          call('missing'),
+          throwsA(platformError('SOURCE_NOT_FOUND')),
+        );
+      }
+    });
+  });
+
+  group('addSource', () {
+    test('fails with INVALID_ARGUMENT for a source MapLibre Native cannot '
+        'build', () async {
+      const tiles = ['https://example.com/{z}/{x}/{y}.pbf'];
+      final sources = <String, SourceProperties>{
+        'inverted bounds': const VectorSourceProperties(
+          tiles: tiles,
+          bounds: [-10, 20, 10, 10],
+        ),
+        'minzoom above maxzoom': const RasterSourceProperties(
+          tiles: tiles,
+          minzoom: 10,
+          maxzoom: 5,
+        ),
+        'an empty url and no tiles': const VectorSourceProperties(url: ''),
+        'a data url with spaces': const GeojsonSourceProperties(
+          data: 'not a url',
+        ),
+      };
+      for (final MapEntry(key: label, value: source) in sources.entries) {
+        await expectLater(
+          controller.addSource('broken', source),
+          throwsA(
+            platformError('INVALID_ARGUMENT').having(
+              (e) => e.message,
+              'message',
+              "Source 'broken' cannot be built from its properties as a "
+                  "'${source.toJson()['type']}' source.",
+            ),
+          ),
+          reason: label,
+        );
+      }
+      expect(map.sources, isEmpty);
+
+      await controller.addSource(
+        'clamped',
+        const VectorSourceProperties(
+          tiles: tiles,
+          bounds: [-180, -95, 180, 95],
+        ),
+      );
+      expect(map.sources.keys, ['clamped']);
+    });
+  });
 }

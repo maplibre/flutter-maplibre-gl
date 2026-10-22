@@ -150,16 +150,24 @@ PropertyError? propertyError(String message) {
 bool isUnknownProperty(String reason) => reason.startsWith('unknown property');
 
 /// Whether [properties], those of a source of [type], have what MapLibre
-/// Native needs to build it: a url or tiles, the GeoJSON data, or the media
-/// url and four corners.
+/// Native needs to build it: a url or tiles, the GeoJSON data or its url, or
+/// the media url and four corners.
+///
+/// The tiles of a source without a url need bounds of four finite numbers,
+/// south not above north and west not east of east once the latitudes are
+/// clamped to the poles, and a minzoom and maxzoom from 0 to 255, minzoom not
+/// above maxzoom. An empty url counts as none.
 bool canBuildSource(String? type, Map<String, dynamic> properties) {
   switch (type) {
     case 'vector':
     case 'raster':
     case 'raster-dem':
-      return properties['url'] is String || properties['tiles'] is List;
+      final url = properties['url'];
+      if (url is String && url.isNotEmpty) return true;
+      return properties['tiles'] is List && _hasTileOptions(properties);
     case 'geojson':
-      return properties['data'] != null;
+      final data = properties['data'];
+      return data is String ? isUrl(data) : data != null;
     case 'image':
       final url = properties['url'];
       return url is String && url.isNotEmpty && _hasCorners(properties);
@@ -173,6 +181,39 @@ bool canBuildSource(String? type, Map<String, dynamic> properties) {
       return true;
   }
 }
+
+/// Whether the bounds and zoom levels in [properties], those of a tiled
+/// source, are ones MapLibre Native takes.
+bool _hasTileOptions(Map<String, dynamic> properties) {
+  final bounds = properties['bounds'];
+  if (bounds != null) {
+    if (bounds is! List || bounds.length != 4) return false;
+    if (!bounds.every((value) => value is num && value.isFinite)) return false;
+    final [west as num, south as num, east as num, north as num] = bounds;
+    if (south.clamp(-90, 90) > north.clamp(-90, 90) || west > east) {
+      return false;
+    }
+  }
+  final minzoom = properties['minzoom'];
+  final maxzoom = properties['maxzoom'];
+  for (final zoom in [minzoom, maxzoom]) {
+    if (zoom != null && !(zoom is num && zoom >= 0 && zoom <= 255)) {
+      return false;
+    }
+  }
+  return !(minzoom is num && maxzoom is num && minzoom > maxzoom);
+}
+
+/// Whether [text] is a url MapLibre Native reads: not empty, and without a
+/// space or another character a url cannot hold.
+bool isUrl(String text) =>
+    text.isNotEmpty && _urlText.hasMatch(text) && Uri.tryParse(text) != null;
+
+/// The characters of a url: those RFC 3986 allows, a percent sign only before
+/// two hex digits, and letters beyond ASCII.
+final _urlText = RegExp(
+  r"^(?:[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=]|%[0-9A-Fa-f]{2}|[^\x00-\x7F\s])*$",
+);
 
 /// Whether `coordinates` holds four [longitude, latitude] corners, latitudes
 /// within the range of the map.
@@ -190,3 +231,17 @@ bool _hasCorners(Map<String, dynamic> properties) {
   }
   return true;
 }
+
+/// The error of a call made on the source [sourceId], which is not GeoJSON.
+/// [methodName] is the Dart method, and [clustered] tells whether it needs a
+/// clustered source.
+PlatformException notGeoJsonSource(
+  String sourceId,
+  String methodName, {
+  bool clustered = false,
+}) => PlatformException(
+  code: 'UNSUPPORTED_SOURCE_TYPE',
+  message:
+      "Source '$sourceId' is not a GeoJSON source. $methodName only applies "
+      'to ${clustered ? 'clustered ' : ''}GeoJSON sources.',
+);

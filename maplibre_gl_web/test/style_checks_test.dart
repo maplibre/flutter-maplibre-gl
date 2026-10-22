@@ -156,11 +156,95 @@ void main() {
           reason: type,
         );
         expect(canBuildSource(type, {}), isFalse, reason: type);
+        expect(canBuildSource(type, {'url': ''}), isFalse, reason: type);
       }
     });
 
-    test('needs the data of a GeoJSON source', () {
+    test('needs bounds and zoom levels MapLibre Native takes with tiles', () {
+      bool build(Map<String, dynamic> options) => canBuildSource('vector', {
+        'tiles': ['t'],
+        ...options,
+      });
+
+      expect(
+        build({
+          'bounds': <num>[-10, -10, 10, 10],
+        }),
+        isTrue,
+      );
+      expect(
+        build({
+          'bounds': <num>[-180, -95, 180, 95],
+        }),
+        isTrue,
+        reason: 'latitudes beyond the poles are clamped',
+      );
+      expect(build({'minzoom': 0, 'maxzoom': 255}), isTrue);
+      expect(build({'minzoom': 5, 'maxzoom': 5}), isTrue);
+      for (final (label, options) in <(String, Map<String, dynamic>)>[
+        (
+          'three numbers',
+          {
+            'bounds': <num>[-10, -10, 10],
+          },
+        ),
+        (
+          'a NaN',
+          {
+            'bounds': <num>[-10, double.nan, 10, 10],
+          },
+        ),
+        (
+          'a string',
+          {
+            'bounds': <Object>['-10', -10, 10, 10],
+          },
+        ),
+        (
+          'south above north',
+          {
+            'bounds': <num>[-10, 20, 10, 10],
+          },
+        ),
+        (
+          'west east of east',
+          {
+            'bounds': <num>[20, -10, 10, 10],
+          },
+        ),
+        (
+          'south above north once clamped',
+          {
+            'bounds': <num>[-10, 95, 10, 80],
+          },
+        ),
+        ('a negative zoom', {'maxzoom': -1}),
+        ('a zoom above 255', {'minzoom': 256}),
+        ('a NaN zoom', {'minzoom': double.nan}),
+        ('minzoom above maxzoom', {'minzoom': 10, 'maxzoom': 5}),
+      ]) {
+        expect(build(options), isFalse, reason: label);
+      }
+      // A url wins over tiles, and its options are its own.
+      expect(
+        canBuildSource('raster', {
+          'url': 'u',
+          'tiles': ['t'],
+          'minzoom': 10,
+          'maxzoom': 5,
+        }),
+        isTrue,
+      );
+    });
+
+    test('needs the data of a GeoJSON source, or a url MapLibre Native '
+        'reads', () {
       expect(canBuildSource('geojson', {'data': 'u'}), isTrue);
+      expect(
+        canBuildSource('geojson', {'data': 'https://example.com/a b.json'}),
+        isFalse,
+      );
+      expect(canBuildSource('geojson', {'data': ''}), isFalse);
       expect(canBuildSource('geojson', {}), isFalse);
     });
 
@@ -327,5 +411,49 @@ void main() {
         reason: 'the key is matched as it is written',
       );
     });
+  });
+
+  group('isUrl', () {
+    test('takes the urls MapLibre Native reads', () {
+      for (final url in [
+        'https://example.com/a.json?x=1&y=%20#top',
+        'data/points.geojson',
+        'https://example.com/café.json',
+      ]) {
+        expect(isUrl(url), isTrue, reason: url);
+      }
+    });
+
+    test('rejects an empty one and characters a url cannot hold', () {
+      for (final url in [
+        '',
+        'not a url',
+        'https://example.com/a\tb',
+        'https://example.com/{z}',
+        'https://example.com/%zz',
+        'https://example.com/"a"',
+      ]) {
+        expect(isUrl(url), isFalse, reason: url);
+      }
+    });
+  });
+
+  test('notGeoJsonSource names the method and the source', () {
+    expect(
+      notGeoJsonSource('tiles', 'setGeoJsonSource'),
+      isA<PlatformException>()
+          .having((e) => e.code, 'code', 'UNSUPPORTED_SOURCE_TYPE')
+          .having(
+            (e) => e.message,
+            'message',
+            "Source 'tiles' is not a GeoJSON source. setGeoJsonSource only "
+                'applies to GeoJSON sources.',
+          ),
+    );
+    expect(
+      notGeoJsonSource('tiles', 'getClusterLeaves', clustered: true).message,
+      "Source 'tiles' is not a GeoJSON source. getClusterLeaves only applies "
+      'to clustered GeoJSON sources.',
+    );
   });
 }

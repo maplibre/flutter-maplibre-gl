@@ -1052,12 +1052,7 @@ class MapLibreMapController extends MapLibrePlatform
       jsSource as GeoJsonSourceJsImpl,
     );
     if (!source.hasClusterInspection) {
-      throw PlatformException(
-        code: 'UNSUPPORTED_SOURCE_TYPE',
-        message:
-            "Source '$sourceId' is not a GeoJSON source. $methodName only "
-            'applies to clustered GeoJSON sources.',
-      );
+      throw checks.notGeoJsonSource(sourceId, methodName, clustered: true);
     }
     return source;
   }
@@ -2064,15 +2059,18 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final reason = geoJsonError(geojson);
     if (reason != null) throw invalidGeoJson(sourceId, reason);
-    final source = _geoJsonSource(sourceId);
+    final source = _geoJsonSource(sourceId, 'setGeoJsonSource');
     await source.setData(_rememberGeoJson(sourceId, geojson));
   }
 
-  /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
-  /// and `SOURCE_NOT_FOUND` without such a source.
-  GeoJsonSource _geoJsonSource(String sourceId) {
+  /// The GeoJSON source [sourceId], for the Dart method [methodName]. Throws
+  /// `STYLE_NOT_READY` without a style, `SOURCE_NOT_FOUND` without the source
+  /// and `UNSUPPORTED_SOURCE_TYPE` for a source of another type.
+  GeoJsonSource _geoJsonSource(String sourceId, String methodName) {
     _ensureStyleReady();
-    return _geoJsonSourceOrNull(sourceId) ?? (throw _sourceNotFound(sourceId));
+    if (_jsSource(sourceId) == null) throw _sourceNotFound(sourceId);
+    return _geoJsonSourceOrNull(sourceId) ??
+        (throw checks.notGeoJsonSource(sourceId, methodName));
   }
 
   @override
@@ -2969,7 +2967,7 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final reason = geoJsonFeatureError(geojsonFeature);
     if (reason != null) throw invalidGeoJsonFeature(sourceId, reason);
-    final source = _geoJsonSource(sourceId);
+    final source = _geoJsonSource(sourceId, 'setGeoJsonFeature');
     // Nothing changes in a source whose data this controller did not set.
     final features = _addedFeaturesByLayer[sourceId];
     // A feature without an id replaces nothing.
