@@ -190,8 +190,13 @@ class Convert {
   }
 
   /** Converts {@code value} from logical to physical pixels, as the float the SDK takes. */
-  private static float toFractionalPixels(double value, float density) {
+  static float toFractionalPixels(double value, float density) {
     return (float) value * density;
+  }
+
+  /** Converts {@code value} from the physical pixels the SDK answers in to logical pixels. */
+  static double toLogicalPixels(float value, float density) {
+    return value / (double) density;
   }
 
   /** Converts {@code value} from logical to whole physical pixels, rounded towards zero. */

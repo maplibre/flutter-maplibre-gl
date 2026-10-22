@@ -1886,13 +1886,8 @@ void main() {
         'addCircleLayer',
       );
       final center = await _screen(tester, controller, _p1);
-      // 9 logical pixels to the right: Android measures the screen in
-      // physical pixels.
-      final scale =
-          testPlatform == TestPlatform.android
-              ? tester.view.devicePixelRatio
-              : 1.0;
-      final aside = Point(center.x + 9 * scale, center.y);
+      // 9 logical pixels to the right.
+      final aside = Point(center.x + 9, center.y);
       await _waitForRendered(tester, controller, aside);
 
       // circle-radius comes before circle-stroke-width, so a call that sets

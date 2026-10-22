@@ -33,6 +33,13 @@ class ConvertTest {
     }
 
     @Test
+    fun screenPixelsConvertBothWays() {
+        // At density 2.625, 100 logical pixels are 262.5 physical ones.
+        assertEquals(262.5f, Convert.toFractionalPixels(100.0, 2.625f))
+        assertEquals(100.0, Convert.toLogicalPixels(262.5f, 2.625f), 0.0)
+    }
+
+    @Test
     fun toIntKeepsTheBitsOfAColorAbove32BitsSigned() {
         // An opaque ARGB color is above Int.MAX_VALUE as a Dart int.
         assertEquals(0xFF336699.toInt(), Convert.toInt(0xFF336699L))
