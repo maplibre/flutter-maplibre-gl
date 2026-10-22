@@ -362,9 +362,7 @@ void main() {
         final camera = await _queryCamera(tester, controller);
         final viewCenter = await pumpUntil(
           tester,
-          controller.toLatLng(
-            Point(_mapSize / 2, _mapSize / 2),
-          ),
+          controller.toLatLng(const Point(_mapSize / 2, _mapSize / 2)),
           '$label toLatLng view center',
         );
         _expectLatLng(camera.target, viewCenter, 0.05, '$label target');
@@ -1120,7 +1118,7 @@ void main() {
 
       final center = await pumpUntil(
         tester,
-        controller.toLatLng(Point(_mapSize / 2, _mapSize / 2)),
+        controller.toLatLng(const Point(_mapSize / 2, _mapSize / 2)),
         'toLatLng',
       );
       _expectLatLng(center, const LatLng(15, 25), 0.05, 'view center');

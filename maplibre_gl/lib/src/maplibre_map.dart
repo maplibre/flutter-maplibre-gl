@@ -365,8 +365,8 @@ class MapLibreMap extends StatefulWidget {
   /// were not claimed by any other gesture recognizer.
   final Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers;
 
-  /// Called when the user taps the map, with the screen point and the
-  /// coordinates under it.
+  /// Called when the user taps the map, with the point of the map view in
+  /// logical pixels and the coordinates under it.
   ///
   /// A tap that lands on an interactive layer is reported as a feature tap
   /// instead, and does not reach this callback unless

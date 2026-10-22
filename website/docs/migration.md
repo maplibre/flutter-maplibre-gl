@@ -123,6 +123,23 @@ fillColor: '#ff000080',
 
 The plugin's `UIColor(hexString:)` extension reads it the same way.
 
+### Android: screen points in logical pixels
+
+On Android, screen points are in logical pixels, as on iOS and web, where they used to be physical pixels. This covers `toScreenLocation`, `toScreenLocationBatch`, `toLatLng`, `queryRenderedFeatures`, `queryRenderedFeaturesInRect`, and the point passed to `onMapClick`, `onMapLongClick`, `onFeatureTapped` and `onFeatureDrag`. Remove any Android-only scaling by the device pixel ratio:
+
+```dart
+final point = await controller.toScreenLocation(latLng);
+
+// Before
+final ratio = Platform.isAndroid ? MediaQuery.of(context).devicePixelRatio : 1.0;
+final left = point.x / ratio;
+
+// After (every platform)
+final left = point.x;
+```
+
+Code that only hands these points from one call to another, such as the `onMapClick` point to `queryRenderedFeatures`, works unchanged. `getMetersPerPixelAtLatitude` already measured logical pixels, so it now matches these points on Android too.
+
 ### Android and iOS: Pigeon messages
 
 The plugin now talks to Android and iOS through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon), instead of hand-written method channels. Your map code keeps working as before, with these differences:
