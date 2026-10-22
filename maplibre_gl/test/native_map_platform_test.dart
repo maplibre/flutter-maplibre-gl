@@ -1023,6 +1023,20 @@ void main() {
       expect(api.calls[2][2], 'https://example.com/a%20b');
     });
 
+    // MapLibre Native rejects them, and maplibre-gl-js requests no tile.
+    test('addSource gives bounds across the antimeridian every '
+        'longitude', () async {
+      await platform.addSource(
+        'tiles',
+        const RasterSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          bounds: [170, -10, -170, 10],
+        ),
+      );
+
+      expect((api.calls.single[2]! as Map)['bounds'], [-180, -10, 180, 10]);
+    });
+
     test('addSource rejects the custom raster-dem encoding', () {
       expect(
         () => platform.addSource(

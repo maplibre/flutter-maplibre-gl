@@ -2804,7 +2804,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
-    final json = encodeSourceUrl(properties.toJson());
+    final json = normalizeSource(properties.toJson());
     final type = json['type'] as String?;
     // A string is the url of the data.
     final data = json['data'];

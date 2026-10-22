@@ -1389,7 +1389,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
     _ensureDemEncodingSupported(properties);
-    final json = encodeSourceUrl(properties.toJson());
+    final json = normalizeSource(properties.toJson());
     // A string is the url of the data.
     final data = jsonValueOf(json['data']);
     if (properties is! GeojsonSourceProperties ||

@@ -10,9 +10,9 @@ part of '../maplibre_gl_platform_interface.dart';
 /// back as it is. A url Dart's [Uri] still cannot read after that, such as
 /// one with a port that is not a number, is null.
 ///
-/// Every platform runs it on the url of a GeoJSON source, an image source or
-/// a raster-dem source, and on the url of `editGeoJsonUrl`, so the same text
-/// loads the same file everywhere.
+/// Every platform runs it on the url of `editGeoJsonUrl` and, through
+/// [normalizeSource], on the url of a GeoJSON, image or raster-dem source, so
+/// the same text loads the same file everywhere.
 String? encodeUrl(String text) {
   if (text.isEmpty) return null;
   final hostEnd = _schemeAndHost.matchAsPrefix(text)?.end ?? 0;
@@ -53,28 +53,49 @@ String? encodeUrl(String text) {
   return Uri.tryParse(url) == null ? null : url;
 }
 
-/// [source], the JSON of a source, with the url it loads read by [encodeUrl]:
-/// the `data` of a GeoJSON source when it is a string, and the `url` of an
-/// image or raster-dem source. A url [encodeUrl] reads as null is left out,
-/// so the source fails as one without it.
-Map<String, dynamic> encodeSourceUrl(Map<String, dynamic> source) {
+/// [source], the JSON of a source, as every platform hands it to MapLibre,
+/// so the same properties load the same data everywhere.
+///
+/// * The url it loads is read by [encodeUrl]: the `data` of a GeoJSON source
+///   when it is a string, and the `url` of an image or raster-dem source. A
+///   url [encodeUrl] reads as null is left out, so the source fails as one
+///   without it.
+/// * `bounds` with west greater than east, which cross the antimeridian, take
+///   every longitude: MapLibre Native rejects them and maplibre-gl-js requests
+///   no tile for them, so this is how the tiles across the antimeridian load.
+///
+/// Comes back as it is when there is nothing to change.
+Map<String, dynamic> normalizeSource(Map<String, dynamic> source) {
+  final normalized = {...source};
+  var changed = false;
   final key = switch (source['type']) {
     'geojson' => 'data',
     'image' || 'raster-dem' => 'url',
     _ => null,
   };
-  if (key == null) return source;
   final text = source[key];
-  if (text is! String) return source;
-  final url = encodeUrl(text);
-  if (url == text) return source;
-  final encoded = {...source};
-  if (url == null) {
-    encoded.remove(key);
-  } else {
-    encoded[key] = url;
+  if (key != null && text is String) {
+    final url = encodeUrl(text);
+    if (url != text) {
+      changed = true;
+      if (url == null) {
+        normalized.remove(key);
+      } else {
+        normalized[key] = url;
+      }
+    }
   }
-  return encoded;
+  final bounds = source['bounds'];
+  if (bounds is List &&
+      bounds.length == 4 &&
+      bounds.every((value) => value is num && value.isFinite)) {
+    final [west as num, south, east as num, north] = bounds;
+    if (west > east) {
+      changed = true;
+      normalized['bounds'] = [-180, south, 180, north];
+    }
+  }
+  return changed ? normalized : source;
 }
 
 /// The scheme of a url and the authority after it, which holds the host.

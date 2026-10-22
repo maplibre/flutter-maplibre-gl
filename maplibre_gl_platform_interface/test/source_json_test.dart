@@ -1,5 +1,6 @@
-// The url every platform loads a GeoJSON, image or raster-dem source from, so
-// the same text loads the same file on Android, iOS and web.
+// The url and the bounds of a source as every platform hands them to
+// MapLibre, so the same properties load the same data on Android, iOS and
+// web.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
@@ -69,9 +70,9 @@ void main() {
     });
   });
 
-  group('encodeSourceUrl', () {
+  group('normalizeSource', () {
     test('encodes the data url of a GeoJSON source', () {
-      expect(encodeSourceUrl({'type': 'geojson', 'data': 'a b.json'}), {
+      expect(normalizeSource({'type': 'geojson', 'data': 'a b.json'}), {
         'type': 'geojson',
         'data': 'a%20b.json',
       });
@@ -80,7 +81,7 @@ void main() {
     test('encodes the url of an image and a raster-dem source', () {
       for (final type in ['image', 'raster-dem']) {
         expect(
-          encodeSourceUrl({'type': type, 'url': 'a b', 'tiles': []}),
+          normalizeSource({'type': type, 'url': 'a b', 'tiles': []}),
           {'type': type, 'url': 'a%20b', 'tiles': []},
           reason: type,
         );
@@ -88,12 +89,27 @@ void main() {
     });
 
     test('leaves out a url that cannot be one, so the source has none', () {
-      expect(encodeSourceUrl({'type': 'geojson', 'data': ''}), {
+      expect(normalizeSource({'type': 'geojson', 'data': ''}), {
         'type': 'geojson',
       });
-      expect(encodeSourceUrl({'type': 'image', 'url': 'http://['}), {
+      expect(normalizeSource({'type': 'image', 'url': 'http://['}), {
         'type': 'image',
       });
+    });
+
+    test('gives bounds that cross the antimeridian every longitude', () {
+      expect(
+        normalizeSource({
+          'type': 'vector',
+          'tiles': ['https://example.com/{z}/{x}/{y}.pbf'],
+          'bounds': [170, -10, -170.5, 10],
+        }),
+        {
+          'type': 'vector',
+          'tiles': ['https://example.com/{z}/{x}/{y}.pbf'],
+          'bounds': [-180, -10, 180, 10],
+        },
+      );
     });
 
     test('leaves the rest as it is', () {
@@ -109,9 +125,22 @@ void main() {
           'data': {'type': 'FeatureCollection', 'features': <Object>[]},
         },
         {'type': 'geojson', 'data': 'https://example.com/a.json'},
+        {
+          'type': 'raster',
+          'bounds': [-10, -10, 10, 10],
+        },
+        // The platform rejects what are not bounds.
+        {
+          'type': 'raster',
+          'bounds': [10, -10, double.nan, 10],
+        },
+        {
+          'type': 'raster',
+          'bounds': [10, -10, -10],
+        },
       ];
       for (final source in sources) {
-        expect(encodeSourceUrl(source), same(source), reason: '$source');
+        expect(normalizeSource(source), same(source), reason: '$source');
       }
     });
   });

@@ -183,7 +183,7 @@ class _FakeMap {
   /// settles a moment later, as the worker of maplibre-gl-js does.
   JSObject _source(JSObject spec) {
     final source = JSObject();
-    for (final name in ['type', 'data', 'url', 'coordinates']) {
+    for (final name in ['type', 'data', 'url', 'coordinates', 'bounds']) {
       source.setProperty(name.toJS, spec.getProperty<JSAny?>(name.toJS));
     }
     source.setProperty(
@@ -712,6 +712,24 @@ void main() {
         ),
       );
       expect(map.sources.keys, ['clamped']);
+    });
+
+    // MapLibre Native rejects them, and maplibre-gl-js requests no tile.
+    test('gives bounds across the antimeridian every longitude', () async {
+      await controller.addSource(
+        'antimeridian',
+        const RasterSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          bounds: [170, -10, -170, 10],
+        ),
+      );
+
+      expect(
+        dartify(
+          map.sources['antimeridian']!.getProperty<JSAny?>('bounds'.toJS),
+        ),
+        [-180, -10, 180, 10],
+      );
     });
 
     // As MapLibre Native gets it on Android and iOS.

@@ -1982,10 +1982,6 @@ void main() {
             tiles: tiles,
             bounds: [-10, 20, 10, 10],
           ),
-          'bounds with west east of east': const RasterSourceProperties(
-            tiles: [_tileUrl],
-            bounds: [20, -10, 10, 10],
-          ),
           'minzoom above maxzoom': const RasterSourceProperties(
             tiles: [_tileUrl],
             minzoom: 10,
@@ -2033,6 +2029,18 @@ void main() {
             ),
           ),
           'addSource with bounds beyond the poles',
+        );
+        // Bounds across the antimeridian take every longitude.
+        await pumpUntil(
+          tester,
+          controller.addSource(
+            'antimeridian',
+            const RasterSourceProperties(
+              tiles: [_tileUrl],
+              bounds: [170, -10, -170, 10],
+            ),
+          ),
+          'addSource with bounds across the antimeridian',
         );
       },
     );
