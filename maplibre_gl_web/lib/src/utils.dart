@@ -104,17 +104,15 @@ JSObject jsifyMap(Map<String, dynamic> map) {
 /// number, bool or null goes in as what its `toJson()` returns. Map entries
 /// that are null are left out, as [jsifyMap] does.
 ///
-/// Throws a [JsonUnsupportedObjectError] for what `jsonEncode` cannot write,
-/// a number that is not finite included.
+/// A number that is NaN or infinite goes in as it is: maplibre-gl-js takes
+/// it, where JSON, and so Android and iOS, cannot. Throws a
+/// [JsonUnsupportedObjectError] for anything else `jsonEncode` cannot write.
 JSAny? jsifyJson(Object? value) {
   final json = jsonValueOf(value);
   if (json == null) return null;
   if (json is String) return json.toJS;
   if (json is bool) return json.toJS;
-  if (json is num) {
-    if (json.isFinite) return json.toJS;
-    throw JsonUnsupportedObjectError(json);
-  }
+  if (json is num) return json.toJS;
   if (json is List) return [for (final item in json) jsifyJson(item)].toJS;
   if (json is Map) {
     final object = createJsObject();

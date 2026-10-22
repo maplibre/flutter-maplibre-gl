@@ -117,7 +117,9 @@ typedef OnMapIdleCallback = void Function();
 /// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression.
 /// * `INVALID_ARGUMENT`: a property value has the wrong kind, a layer zoom is
 ///   outside 0 to 24 on web, or a source cannot be built from its properties.
-/// * `INVALID_GEOJSON`: the data is not valid GeoJSON.
+/// * `INVALID_GEOJSON`: the data is not valid GeoJSON, or on Android and iOS
+///   holds a number that is NaN or infinite, which JSON cannot hold. Web
+///   takes such a number.
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
     required MapLibrePlatform maplibrePlatform,

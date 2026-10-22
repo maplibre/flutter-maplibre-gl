@@ -1407,6 +1407,48 @@ void main() {
       );
     });
 
+    // JSON has no such number, so MapLibre Native cannot read it, where
+    // maplibre-gl-js takes it.
+    testWidgets('a number that is not finite fails with INVALID_GEOJSON on '
+        'Android and iOS, and goes in on web', (tester) async {
+      final controller = await pumpMap(tester);
+      Map<String, dynamic> data(double value) => {
+        'type': 'FeatureCollection',
+        'features': [
+          _point(1, _p1, {'n': value}),
+        ],
+      };
+
+      final calls = <String, Future<Object?> Function()>{
+        'addGeoJsonSource':
+            () => controller.addGeoJsonSource('nan', data(double.nan)),
+        'setGeoJsonSource':
+            () => controller.setGeoJsonSource('nan', data(double.infinity)),
+        'addSource':
+            () => controller.addSource(
+              'nan-properties',
+              GeojsonSourceProperties(data: data(double.nan)),
+            ),
+      };
+      for (final call in calls.entries) {
+        if (kIsWeb) {
+          await pumpUntil(tester, call.value(), call.key);
+          continue;
+        }
+        final error = await expectPlatformError(
+          tester,
+          call.value(),
+          call.key,
+          code: 'INVALID_GEOJSON',
+        );
+        expect(
+          error.message,
+          endsWith('A number is NaN or infinite, which JSON cannot hold.'),
+          reason: call.key,
+        );
+      }
+    });
+
     testWidgets('GeoJSON MapLibre reads goes in everywhere', (tester) async {
       final controller = await pumpMap(tester);
 

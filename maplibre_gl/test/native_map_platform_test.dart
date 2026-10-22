@@ -929,18 +929,54 @@ void main() {
         platform.addSource('source', GeojsonSourceProperties(data: feature)),
         throwsA(isA<JsonUnsupportedObjectError>()),
       );
-      // A number that is not finite, which jsonEncode cannot write either.
-      final notFinite = {
-        ...feature,
-        'properties': {'value': double.nan},
+      expect(api.calls, isEmpty);
+    });
+
+    // JSON has no NaN or infinity, so MapLibre Native cannot read them.
+    test('a number that is not finite fails every GeoJSON write with '
+        'INVALID_GEOJSON', () async {
+      final invalid = isA<PlatformException>()
+          .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+          .having(
+            (e) => e.details,
+            'details',
+            'A number is NaN or infinite, which JSON cannot hold.',
+          );
+      Map<String, dynamic> feature(Object? value) => {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': value},
       };
+      final big = line(40000);
+      ((big['features'] as List).single as Map)['properties'] = {
+        'value': double.infinity,
+      };
+
       await expectLater(
-        platform.addGeoJsonSource('source', notFinite),
-        throwsA(isA<JsonUnsupportedObjectError>()),
+        platform.addGeoJsonSource('source', feature(double.nan)),
+        throwsA(invalid),
       );
       await expectLater(
-        platform.addSource('source', GeojsonSourceProperties(data: notFinite)),
-        throwsA(isA<JsonUnsupportedObjectError>()),
+        platform.setGeoJsonSource('source', big),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setFeatureForGeoJsonSource(
+          'source',
+          feature(const _Wrapped(double.negativeInfinity)),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource(
+          'source',
+          GeojsonSourceProperties(data: feature(double.nan)),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource('source', GeojsonSourceProperties(data: big)),
+        throwsA(invalid),
       );
       expect(api.calls, isEmpty);
     });
@@ -2736,11 +2772,6 @@ void main() {
   });
 }
 
-/// Records each call as its name followed by its arguments, and answers with
-/// [replies] by name, or fails with [errors] by name.
-///
-/// Every method of the generated client is overridden. One that was not would
-/// send on a channel nothing listens to, and fail with a channel-error.
 /// A position class of a GeoJSON library: `jsonEncode` writes it as the list
 /// its `toJson()` returns.
 class _Position {
@@ -2763,6 +2794,21 @@ class _Geometry {
   Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
 }
 
+/// An app model `jsonEncode` writes as the map its `toJson()` returns, with
+/// [value] in it.
+class _Wrapped {
+  const _Wrapped(this.value);
+
+  final Object? value;
+
+  Map<String, Object?> toJson() => {'value': value};
+}
+
+/// Records each call as its name followed by its arguments, and answers with
+/// [replies] by name, or fails with [errors] by name.
+///
+/// Every method of the generated client is overridden. One that was not would
+/// send on a channel nothing listens to, and fail with a channel-error.
 class _FakeMapHostApi extends MapLibreMapHostApi {
   _FakeMapHostApi() : super(messageChannelSuffix: 'not-overridden');
 

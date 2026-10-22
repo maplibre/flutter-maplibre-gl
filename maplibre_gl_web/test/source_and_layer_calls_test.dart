@@ -412,27 +412,40 @@ void main() {
 
     test('a value jsonEncode cannot write fails as on Android and '
         'iOS', () async {
-      for (final value in [DateTime(2020), double.nan]) {
-        final feature = {
-          'type': 'Feature',
-          'geometry': null,
-          'properties': {'value': value},
-        };
-        await expectLater(
-          controller.addGeoJsonSource('points', feature),
-          throwsA(isA<JsonUnsupportedObjectError>()),
-          reason: '$value',
-        );
-        await expectLater(
-          controller.addSource(
-            'points',
-            GeojsonSourceProperties(data: feature),
-          ),
-          throwsA(isA<JsonUnsupportedObjectError>()),
-          reason: '$value',
-        );
-      }
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': DateTime(2020)},
+      };
+      await expectLater(
+        controller.addGeoJsonSource('points', feature),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      await expectLater(
+        controller.addSource('points', GeojsonSourceProperties(data: feature)),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
       expect(map.sources, isEmpty);
+    });
+
+    // Android and iOS fail it with INVALID_GEOJSON: JSON has no such number.
+    test('a number that is not finite goes in as it is', () async {
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': double.nan},
+      };
+      await controller.addGeoJsonSource('points', feature);
+      await controller.addSource(
+        'other',
+        GeojsonSourceProperties(data: feature),
+      );
+
+      for (final sourceId in ['points', 'other']) {
+        final properties =
+            (map.data(sourceId)! as Map)['properties'] as Map<Object?, Object?>;
+        expect((properties['value']! as double).isNaN, isTrue);
+      }
     });
   });
 

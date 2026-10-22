@@ -1123,7 +1123,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojson,
   ) {
     final reason = geoJsonError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason(() => jsonEncode(geojson));
   }
 
   /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
@@ -1131,7 +1132,31 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojson,
   ) {
     final reason = geoJsonFeatureError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason(() => jsonEncode(geojson));
+  }
+
+  /// Why INVALID_GEOJSON rejects a number that is NaN or infinite.
+  static const _nonFiniteNumber =
+      'A number is NaN or infinite, which JSON cannot hold.';
+
+  /// What [encode] returns, or [_nonFiniteNumber] when it meets a number that
+  /// is NaN or infinite: GeoJSON reaches MapLibre Native as JSON, which has
+  /// no such number. Any other value `jsonEncode` cannot write still throws.
+  static (T?, String?) _jsonOrReason<T>(T Function() encode) {
+    try {
+      return (encode(), null);
+      // The error of jsonEncode, read for the value it could not write.
+      // ignore: avoid_catching_errors
+    } on JsonUnsupportedObjectError catch (error) {
+      Object? cause = error;
+      while (cause is JsonUnsupportedObjectError) {
+        final value = cause.unsupportedObject;
+        if (value is num && !value.isFinite) return (null, _nonFiniteNumber);
+        cause = cause.cause;
+      }
+      rethrow;
+    }
   }
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
@@ -1390,7 +1415,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// GeoJSON. The platform channel takes plain JSON values only.
   static (Object?, String?) _checkSourceData(Object? data) {
     final reason = geoJsonError(data);
-    return reason == null ? (_plainJson(data), null) : (null, reason);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason<Object?>(() => _plainJson(data));
   }
 
   /// [value] with each object in it that is not a JSON value replaced by
