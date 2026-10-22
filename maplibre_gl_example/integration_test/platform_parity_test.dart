@@ -22,8 +22,7 @@ import 'dart:convert';
 import 'dart:math' show Point;
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
