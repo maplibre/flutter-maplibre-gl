@@ -26,6 +26,8 @@ void copyFeatureId(JSObject feature) {
 /// Answers whether the source now takes them from [featureIdProperty]. A
 /// source that the app or the style gave a `promoteId` of its own keeps it.
 bool promoteFeatureIds(JSObject source, {required bool promote}) {
+  // Without serialize() this is not a maplibre-gl-js GeoJSON source.
+  if (!source.has('serialize')) return false;
   // serialize() answers the options the source was created with.
   final own = source
       .callMethod<JSObject?>('serialize'.toJS)
