@@ -370,6 +370,31 @@ void main() {
     expect(bytes.sublist(0, 4), [0x89, 0x50, 0x4E, 0x47]);
   });
 
+  testWidgets('takeSnapshot sizes are logical pixels at the screen density', (
+    tester,
+  ) async {
+    // The 300 x 300 map box of pumpMap.
+    final controller = await pumpMap(tester);
+    await pumpFor(tester, const Duration(milliseconds: 500));
+    final ratio = tester.view.devicePixelRatio;
+
+    final view = _pngSize(
+      await pumpUntil(tester, controller.takeSnapshot(), 'takeSnapshot'),
+    );
+    expect(view.width, closeTo(300 * ratio, ratio), reason: '$view');
+    expect(view.height, closeTo(300 * ratio, ratio), reason: '$view');
+
+    final sized = _pngSize(
+      await pumpUntil(
+        tester,
+        controller.takeSnapshot(width: 200, height: 100),
+        'takeSnapshot 200 x 100',
+      ),
+    );
+    expect(sized.width, closeTo(200 * ratio, ratio), reason: '$sized');
+    expect(sized.height, closeTo(100 * ratio, ratio), reason: '$sized');
+  });
+
   testWidgets('setMaximumFps, pauseMap and resumeMap keep the map usable', (
     tester,
   ) async {
@@ -622,4 +647,10 @@ Future<void> _expectThrows<E extends Object>(
     return;
   }
   fail('$label: expected $E, the call succeeded');
+}
+
+/// Width and height of a PNG in pixels, read from its IHDR chunk.
+Size _pngSize(Uint8List png) {
+  final data = ByteData.sublistView(png);
+  return Size(data.getUint32(16).toDouble(), data.getUint32(20).toDouble());
 }

@@ -2329,10 +2329,15 @@ final class MapLibreMapController
         styleUrl == null || styleUrl.isEmpty()
             ? new Style.Builder().fromJson(currentStyle.getJson())
             : new Style.Builder().fromUri(styleUrl);
-    int snapshotWidth = width != null ? Convert.toIntExact(width) : mapView.getWidth();
-    int snapshotHeight = height != null ? Convert.toIntExact(height) : mapView.getHeight();
+    // The snapshotter takes a size in logical pixels, like iOS and web, and renders it at the
+    // screen's density, so the default shows what the map shows.
+    int snapshotWidth =
+        width != null ? Convert.toIntExact(width) : Math.round(mapView.getWidth() / density);
+    int snapshotHeight =
+        height != null ? Convert.toIntExact(height) : Math.round(mapView.getHeight() / density);
 
     MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
+            .withPixelRatio(density)
             .withStyleBuilder(snapshotStyle)
             .withCameraPosition(mapLibreMap.getCameraPosition());
     if (activeSnapshotter != null) {
