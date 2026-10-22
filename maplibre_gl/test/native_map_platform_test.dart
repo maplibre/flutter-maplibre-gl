@@ -846,6 +846,19 @@ void main() {
         platform.addSource('source', GeojsonSourceProperties(data: feature)),
         throwsA(isA<JsonUnsupportedObjectError>()),
       );
+      // A number that is not finite, which jsonEncode cannot write either.
+      final notFinite = {
+        ...feature,
+        'properties': {'value': double.nan},
+      };
+      await expectLater(
+        platform.addGeoJsonSource('source', notFinite),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      await expectLater(
+        platform.addSource('source', GeojsonSourceProperties(data: notFinite)),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
       expect(api.calls, isEmpty);
     });
 
