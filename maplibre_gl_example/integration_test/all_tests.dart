@@ -18,6 +18,7 @@ import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
 import 'attribution_test.dart' as attribution;
 import 'camera_test.dart' as camera;
+import 'feature_id_test.dart' as feature_id;
 import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
 import 'haptic_feedback_test.dart' as haptic_feedback;
@@ -38,6 +39,7 @@ void main() {
   annotations.main();
   attribution.main();
   camera.main();
+  feature_id.main();
   feature_hit_tolerance.main();
   geojson_query.main();
   haptic_feedback.main();
