@@ -6,8 +6,8 @@
 // draw one image pixel per logical pixel, 2 to 3 times larger than Android and
 // iOS on most screens.
 //
-// The width is measured where queryRenderedFeatures finds the icon, so no
-// renderer change can break it the way a pixel-exact golden would. Headless
+// The width is measured where queryRenderedFeatures finds the icon, so it does
+// not depend on the exact pixels a renderer draws, as a golden would. Headless
 // Chrome runs at a ratio of 1, where both rules agree, so CI also runs this
 // file on web at a ratio of 2:
 //
@@ -100,10 +100,12 @@ void main() {
     final east = await _edge(hits, 1);
     final west = await _edge(hits, -1);
 
+    // The icon snaps to device pixels, about 1 logical px off at a ratio such
+    // as 2.625. A wrong ratio is off by 4 px or more.
     final ratio = tester.view.devicePixelRatio;
     expect(
       east + west,
-      closeTo(_imagePixels / ratio, 2),
+      closeTo(_imagePixels / ratio, 3),
       reason:
           'width in logical px of a $_imagePixels px image '
           'at a device pixel ratio of $ratio',
