@@ -1,4 +1,9 @@
+import 'dart:convert';
 import 'dart:js_interop';
+
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
+    show jsonValueOf;
+
 import 'interop/js.dart';
 
 /// Returns Dart representation from JS Object.
@@ -92,4 +97,32 @@ JSObject jsifyMap(Map<String, dynamic> map) {
     setJsProperty(jsObj, key, jsValue);
   });
   return jsObj;
+}
+
+/// Converts [value], JSON data from Dart, to a JS value the way `jsonEncode`
+/// writes it for Android and iOS: an object other than a map, list, string,
+/// number, bool or null goes in as what its `toJson()` returns. Map entries
+/// that are null are left out, as [jsifyMap] does.
+///
+/// Throws a [JsonUnsupportedObjectError] for what `jsonEncode` cannot write,
+/// a number that is not finite included.
+JSAny? jsifyJson(Object? value) {
+  final json = jsonValueOf(value);
+  if (json == null) return null;
+  if (json is String) return json.toJS;
+  if (json is bool) return json.toJS;
+  if (json is num) {
+    if (json.isFinite) return json.toJS;
+    throw JsonUnsupportedObjectError(json);
+  }
+  if (json is List) return [for (final item in json) jsifyJson(item)].toJS;
+  if (json is Map) {
+    final object = createJsObject();
+    for (final MapEntry(:key, value: item) in json.entries) {
+      if (key is! String) throw JsonUnsupportedObjectError(json);
+      if (item != null) setJsProperty(object, key, jsifyJson(item));
+    }
+    return object;
+  }
+  throw JsonUnsupportedObjectError(value);
 }

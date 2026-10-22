@@ -5,10 +5,12 @@
 @TestOn('browser')
 library;
 
+import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:maplibre_gl_web/maplibre_gl_web.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
@@ -179,6 +181,28 @@ class _FakeMap {
       sources[sourceId]!.getProperty<JSString?>('url'.toJS)?.toDart;
 }
 
+/// A position class of a GeoJSON library: `jsonEncode` writes it as the list
+/// its `toJson()` returns.
+class _Position {
+  const _Position(this.longitude, this.latitude);
+
+  final num longitude;
+  final num latitude;
+
+  List<num> toJson() => [longitude, latitude];
+}
+
+/// A geometry class of an app model, written as the map its `toJson()`
+/// returns.
+class _Geometry {
+  const _Geometry(this.type, this.coordinates);
+
+  final String type;
+  final Object? coordinates;
+
+  Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
+}
+
 Map<String, dynamic> _point(int id, num n) => {
   'type': 'Feature',
   'id': id,
@@ -233,6 +257,70 @@ void main() {
       await controller.setFeatureForGeoJsonSource('points', _point(2, 5));
 
       expect(map.data('points'), _collection([_point(2, 5)]));
+    });
+
+    // Android and iOS send what jsonEncode writes, and it writes an object
+    // through its toJson().
+    test('objects with toJson() go in as what toJson() returns', () async {
+      final line = {
+        'type': 'Feature',
+        'id': 1,
+        'geometry': const _Geometry('LineString', [
+          _Position(1, 2),
+          _Position(3, 4),
+        ]),
+        'properties': {'n': 1},
+      };
+      final plain = jsonDecode(jsonEncode(line)) as Map<String, dynamic>;
+
+      await controller.addGeoJsonSource('line', _collection([line]));
+      expect(map.data('line'), _collection([plain]));
+
+      await controller.setGeoJsonSource('line', _collection([line]));
+      await controller.setFeatureForGeoJsonSource('line', {
+        ...line,
+        'properties': {'n': 2},
+      });
+      expect(
+        map.data('line'),
+        _collection([
+          {
+            ...plain,
+            'properties': {'n': 2},
+          },
+        ]),
+      );
+
+      await controller.addSource(
+        'other',
+        GeojsonSourceProperties(data: _collection([line])),
+      );
+      expect(map.data('other'), _collection([plain]));
+    });
+
+    test('a value jsonEncode cannot write fails as on Android and '
+        'iOS', () async {
+      for (final value in [DateTime(2020), double.nan]) {
+        final feature = {
+          'type': 'Feature',
+          'geometry': null,
+          'properties': {'value': value},
+        };
+        await expectLater(
+          controller.addGeoJsonSource('points', feature),
+          throwsA(isA<JsonUnsupportedObjectError>()),
+          reason: '$value',
+        );
+        await expectLater(
+          controller.addSource(
+            'points',
+            GeojsonSourceProperties(data: feature),
+          ),
+          throwsA(isA<JsonUnsupportedObjectError>()),
+          reason: '$value',
+        );
+      }
+      expect(map.sources, isEmpty);
     });
   });
 }

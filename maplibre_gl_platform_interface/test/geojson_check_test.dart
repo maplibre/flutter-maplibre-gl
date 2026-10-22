@@ -1,5 +1,7 @@
 // The GeoJSON check every platform runs before it hands data to MapLibre, so
 // the same data gets the same answer on Android, iOS and web.
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
@@ -20,6 +22,33 @@ Map<String, dynamic> _collection(List<Object?> features) => {
   'type': 'FeatureCollection',
   'features': features,
 };
+
+/// A position class of a GeoJSON library: `jsonEncode` writes it as the list
+/// its `toJson()` returns.
+class _Position {
+  const _Position(this.longitude, this.latitude);
+
+  final num longitude;
+  final num latitude;
+
+  List<num> toJson() => [longitude, latitude];
+}
+
+/// A geometry class of an app model, written as the map its `toJson()`
+/// returns.
+class _Geometry {
+  const _Geometry(this.type, this.coordinates);
+
+  final String type;
+  final Object? coordinates;
+
+  Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
+}
+
+/// An object `jsonEncode` cannot write.
+class _NotJson {
+  const _NotJson();
+}
 
 void main() {
   group('geoJsonError accepts', () {
@@ -231,6 +260,87 @@ void main() {
     ]) {
       test(name, () => expect(geoJsonError(data), reason));
     }
+  });
+
+  // jsonEncode writes these objects through toJson(), so Android and iOS send
+  // what toJson() returns, and the check reads the same.
+  group('objects with toJson()', () {
+    final line = {
+      'type': 'Feature',
+      'id': 1,
+      'geometry': const _Geometry('LineString', [
+        _Position(1, 2),
+        _Position(3, 4),
+      ]),
+      'properties': <String, dynamic>{},
+    };
+
+    test('a geometry and its positions read as what toJson() returns', () {
+      expect(geoJsonError(line), isNull);
+      expect(geoJsonError(_collection([line])), isNull);
+      expect(geoJsonFeatureError(line), isNull);
+      expect(
+        jsonDecode(jsonEncode(line)),
+        _feature({
+          'type': 'LineString',
+          'coordinates': [
+            [1, 2],
+            [3, 4],
+          ],
+        }),
+      );
+    });
+
+    test('a position object goes where a position does', () {
+      expect(
+        geoJsonError({
+          'type': 'Polygon',
+          'coordinates': [
+            [const _Position(1, 2), const _Position(3, 4)],
+          ],
+        }),
+        isNull,
+      );
+      expect(geoJsonError(_point([const _Position(1, 2)])), startsWith('The'));
+    });
+
+    test('toJson() data MapLibre cannot read fails like the data itself', () {
+      expect(
+        geoJsonError(
+          _feature(
+            const _Geometry('LineString', [_Position(1, double.nan)]),
+          ),
+        ),
+        'The "coordinates" of a LineString must be an array of positions, '
+        'where a position starts with a longitude and a latitude.',
+      );
+      expect(
+        geoJsonError(_feature(const _Geometry('Circle', null))),
+        '"Circle" is not a GeoJSON type.',
+      );
+    });
+
+    test('an object jsonEncode cannot write is not GeoJSON', () {
+      expect(
+        geoJsonError(_feature(const _NotJson())),
+        'A geometry must be an object.',
+      );
+      expect(
+        geoJsonError(_point([const _NotJson(), 2])),
+        startsWith('The "coordinates" of a Point'),
+      );
+    });
+
+    test('jsonValueOf reads a value the way jsonEncode writes it', () {
+      final map = <String, dynamic>{};
+      final list = <Object?>[];
+      for (final value in <Object?>[null, true, 1, 1.5, 'a', map, list]) {
+        expect(jsonValueOf(value), same(value));
+      }
+      expect(jsonValueOf(const _Position(1, 2)), [1, 2]);
+      const notJson = _NotJson();
+      expect(jsonValueOf(notJson), same(notJson));
+    });
   });
 
   group('geoJsonFeatureError', () {

@@ -2009,30 +2009,36 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// [geojson] as a JS object, keeping its features for
   /// [setFeatureForGeoJsonSource]. A lone Feature counts as a collection of
-  /// one; a geometry has no feature to replace.
+  /// one; a geometry has no feature to replace. An object in it goes in as
+  /// what its `toJson()` returns, as on Android and iOS.
   JSObject _rememberGeoJson(String sourceId, Map<String, dynamic> geojson) {
-    final data = jsify(geojson)! as JSObject;
+    final data = jsifyJson(geojson)! as JSObject;
     final List<_SourceFeature> features;
-    switch (geojson['type']) {
+    switch (jsonValueOf(geojson['type'])) {
       case 'FeatureCollection':
         final jsFeatures =
             data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
-        final dartFeatures = geojson['features'] as List;
+        final dartFeatures = jsonValueOf(geojson['features'])! as List;
         features = [
           for (var i = 0; i < dartFeatures.length; i++)
             (
-              id: _featureIdKey((dartFeatures[i] as Map)['id']),
+              id: _featureIdKey(_jsonId(dartFeatures[i])),
               feature: jsFeatures[i],
             ),
         ];
       case 'Feature':
-        features = [(id: _featureIdKey(geojson['id']), feature: data)];
+        features = [(id: _featureIdKey(_jsonId(geojson)), feature: data)];
       default:
         features = const [];
     }
     _addedFeaturesByLayer[sourceId] = features;
     return data;
   }
+
+  /// The id of [feature], a Feature the GeoJSON check accepted, as
+  /// `jsonEncode` writes it.
+  static Object? _jsonId(Object? feature) =>
+      jsonValueOf((jsonValueOf(feature)! as Map)['id']);
 
   /// A feature id as text, so 2, 2.0 and "2" match, as on Android and iOS.
   static String? _featureIdKey(Object? id) {
@@ -2742,7 +2748,13 @@ class MapLibreMapController extends MapLibrePlatform
             "'$type' source.",
       );
     }
-    _map.addSource(sourceId, json);
+    // An object in GeoJSON data goes in as what its toJson() returns, as on
+    // Android and iOS.
+    (_map.jsObject as JSObject).callMethod<JSAny?>(
+      'addSource'.toJS,
+      sourceId.toJS,
+      jsifyJson(json),
+    );
   }
 
   @override
@@ -2928,12 +2940,12 @@ class MapLibreMapController extends MapLibrePlatform
     // Nothing changes in a source whose data this controller did not set.
     final features = _addedFeaturesByLayer[sourceId];
     // A feature without an id replaces nothing.
-    final id = _featureIdKey(geojsonFeature['id']);
+    final id = _featureIdKey(_jsonId(geojsonFeature));
     if (features == null || id == null) return;
     final index = features.indexWhere((feature) => feature.id == id);
     if (index < 0) return;
     final updated = List.of(features);
-    updated[index] = (id: id, feature: jsify(geojsonFeature));
+    updated[index] = (id: id, feature: jsifyJson(geojsonFeature));
     _addedFeaturesByLayer[sourceId] = updated;
     await source.setData(_featureCollection(updated));
   }

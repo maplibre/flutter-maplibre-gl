@@ -707,6 +707,69 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
+    // jsonEncode writes app models and the position classes of GeoJSON
+    // libraries through their toJson(), as it always has.
+    test('objects with toJson() go in as jsonEncode writes them', () async {
+      final feature = {
+        'type': 'Feature',
+        'id': 1,
+        'geometry': const _Geometry('LineString', [
+          _Position(1, 2),
+          _Position(3, 4),
+        ]),
+        'properties': <String, dynamic>{},
+      };
+      final collection = {
+        'type': 'FeatureCollection',
+        'features': [feature],
+      };
+
+      await platform.addGeoJsonSource('source', collection);
+      await platform.setGeoJsonSource('source', collection);
+      await platform.setFeatureForGeoJsonSource('source', feature);
+      await platform.addSource(
+        'other',
+        GeojsonSourceProperties(data: collection),
+      );
+
+      expect(api.calls.take(3), [
+        ['sourceAddGeoJson', 'source', jsonEncode(collection)],
+        ['sourceSetGeoJson', 'source', jsonEncode(collection)],
+        ['sourceSetFeature', 'source', jsonEncode(feature)],
+      ]);
+      expect(api.calls.last.take(2), ['styleAddSource', 'other']);
+      expect(
+        (api.calls.last[2]! as Map)['data'],
+        jsonDecode(jsonEncode(collection)),
+      );
+      // The platform channel takes what addSource hands it.
+      expect(
+        () => MapLibreMapHostApi.pigeonChannelCodec.encodeMessage(
+          api.calls.last,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('a value jsonEncode cannot write fails every GeoJSON write the '
+        'same way', () async {
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'when': DateTime(2020)},
+      };
+
+      await expectLater(
+        platform.addGeoJsonSource('source', feature),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      await expectLater(
+        platform.addSource('source', GeojsonSourceProperties(data: feature)),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      expect(api.calls, isEmpty);
+    });
+
     test('a url as the data of addSource is not checked', () async {
       await platform.addSource(
         'source',
@@ -2470,6 +2533,28 @@ void main() {
 ///
 /// Every method of the generated client is overridden. One that was not would
 /// send on a channel nothing listens to, and fail with a channel-error.
+/// A position class of a GeoJSON library: `jsonEncode` writes it as the list
+/// its `toJson()` returns.
+class _Position {
+  const _Position(this.longitude, this.latitude);
+
+  final num longitude;
+  final num latitude;
+
+  List<num> toJson() => [longitude, latitude];
+}
+
+/// A geometry class of an app model, written as the map its `toJson()`
+/// returns.
+class _Geometry {
+  const _Geometry(this.type, this.coordinates);
+
+  final String type;
+  final Object? coordinates;
+
+  Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
+}
+
 class _FakeMapHostApi extends MapLibreMapHostApi {
   _FakeMapHostApi() : super(messageChannelSuffix: 'not-overridden');
 

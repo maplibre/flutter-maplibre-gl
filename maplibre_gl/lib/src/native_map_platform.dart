@@ -1248,14 +1248,58 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     _ensureDemEncodingSupported(properties);
     final json = properties.toJson();
     // A string is the url of the data.
-    final data = json['data'];
+    final data = jsonValueOf(json['data']);
     if (properties is GeojsonSourceProperties &&
         data != null &&
         data is! String) {
-      final reason = geoJsonError(data);
+      final (plain, reason) = _checkSourceData(data);
       if (reason != null) throw invalidGeoJson(sourceId, reason);
+      json['data'] = plain;
     }
     await _api.styleAddSource(sourceId, json);
+  }
+
+  /// [data], the GeoJSON data of `addSource`, with what `jsonEncode` writes in
+  /// place of each object it reads through `toJson()`, or why it is not
+  /// GeoJSON. The platform channel takes plain JSON values only.
+  static (Object?, String?) _checkSourceData(Object? data) {
+    final reason = geoJsonError(data);
+    return reason == null ? (_plainJson(data), null) : (null, reason);
+  }
+
+  /// [value] with each object in it that is not a JSON value replaced by
+  /// what its `toJson()` returns, as `jsonEncode` writes it. [value] itself
+  /// when nothing is replaced. Throws a [JsonUnsupportedObjectError] for what
+  /// `jsonEncode` cannot write, a number that is not finite included.
+  static Object? _plainJson(Object? value) {
+    final json = jsonValueOf(value);
+    if (json == null || json is bool || json is String) return json;
+    if (json is num) {
+      if (json.isFinite) return json;
+      throw JsonUnsupportedObjectError(json);
+    }
+    if (json is List) {
+      List<Object?>? copy;
+      for (var i = 0; i < json.length; i++) {
+        final item = json[i];
+        final plain = _plainJson(item);
+        if (!identical(plain, item)) {
+          (copy ??= List<Object?>.of(json))[i] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    if (json is Map) {
+      Map<Object?, Object?>? copy;
+      for (final entry in json.entries) {
+        final plain = _plainJson(entry.value);
+        if (!identical(plain, entry.value)) {
+          (copy ??= Map<Object?, Object?>.of(json))[entry.key] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    throw JsonUnsupportedObjectError(value);
   }
 
   /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre
