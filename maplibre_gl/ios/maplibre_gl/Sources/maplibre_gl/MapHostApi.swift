@@ -74,10 +74,20 @@ final class MapHostApi: MapLibreMapHostApi {
         options: PgMapOptions,
         completion: @escaping (Result<PgCameraPosition?, Error>) -> Void
     ) {
-        // Options such as the camera bounds or the zoom range move the camera.
-        run(pigeonResult(completion) { $0 as? PgCameraPosition }, kind: .movesCamera) {
-            $0.mapUpdate(options: options, result: $1)
+        let result = pigeonResult(completion) { $0 as? PgCameraPosition }
+        // The options that move the camera wait for the view to have a size,
+        // as the camera calls do. The others apply at once, so they keep their
+        // place among the calls made after them, such as a setGeoJsonSource.
+        let (camera, others) = Convert.splitCameraOptions(options)
+        guard let camera = camera else {
+            run(result) { $0.mapUpdate(options: options, result: $1) }
+            return
         }
+        if let others = others {
+            // The camera part answers the call.
+            run({ _ in }) { $0.mapUpdate(options: others, result: $1) }
+        }
+        run(result, kind: .movesCamera) { $0.mapUpdate(options: camera, result: $1) }
     }
 
     func mapUpdateMyLocationTrackingMode(

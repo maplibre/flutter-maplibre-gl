@@ -419,8 +419,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapUpdate(options: PgMapOptions, result: @escaping FlutterResult) {
         Convert.interpretMapLibreMapOptions(options: options, delegate: self)
-        // Nil when the map does not track the camera position.
-        result(getCamera()?.toPigeon(mapView: mapView))
+        // Nil when the map does not track the camera position. A map without a
+        // size has yet to show its initial camera, so that is the one it reports.
+        guard let camera = getCamera() else {
+            result(nil)
+            return
+        }
+        result(pendingInitialCamera ?? camera.toPigeon(mapView: mapView))
     }
 
     func mapInvalidateAmbientCache(result: @escaping FlutterResult) {
