@@ -142,6 +142,13 @@ Dragging annotations and draggable features works the same on every platform:
 
 If your app relied on a drag starting at touch down, or on tapping exactly next to a feature without selecting it, check those flows.
 
+### Camera events
+
+`onCameraMove` reports the same positions on every platform:
+
+* On iOS it fires for `moveCamera` and a zero duration `animateCamera` too, and its last call before `onCameraIdle` has the position where the camera stopped.
+* On web it needs `trackCameraPosition: true`, as on Android and iOS, and so does `controller.cameraPosition` to follow the camera. If your web app reads the camera position without the flag, set it.
+
 ### Web: browsers without WebGL2
 
 The MapLibre GL JS build the plugin now loads throws when it cannot get a WebGL2 context. On such a browser the map is no longer created as a blank map: the controller future completes with an error and `onMapCreated` is not called. The error report still says whether a MapLibre GL JS 5 build, configured through `MapLibreMap.webLibrarySource`, would work there. See [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).

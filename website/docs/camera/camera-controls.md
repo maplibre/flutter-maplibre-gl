@@ -134,7 +134,7 @@ MapLibreMap(
 ```
 
 !!! tip "`trackCameraPosition: true`"
-    Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them.
+    Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them. The last `onCameraMove` before `onCameraIdle` has the position where the camera stopped, also after `moveCamera`.
 
 ## Key APIs
 

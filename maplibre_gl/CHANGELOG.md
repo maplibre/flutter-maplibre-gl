@@ -32,6 +32,7 @@
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
+* **Web**: `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS. Set it if your web app reads the camera position (#1126).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -150,6 +151,10 @@
   * `setLayerProperties` converts each value once on Android and iOS instead of twice.
 * Feature ids come back from the queries and the cluster calls as they are in the data on every platform, and `["id"]` filters and feature state find them by that id. On web `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. A source added with `generateId` numbers its features on Android and iOS too. The drag and hover callbacks no longer throw a `TypeError` on a numeric id on iOS and web (#1124).
 * **iOS**: `getLayerProperties()` and `getSourceProperties()` read layers and sources added at runtime instead of answering `null`, and a layer reads its current values instead of the ones the style loaded with. As on Android, colors read as `rgba(...)` text. On Android and iOS, a filter from `getLayerProperties()` or `getLayerFilter()` reads as the app or the style wrote it, where a legacy one came back with internal operators such as `filter-==` (#985, #1127).
+* `onCameraMove` and moves without animation work the same on every platform (#1126):
+  * **iOS**: `onCameraMove` fires for `moveCamera` and a zero duration `animateCamera`, which only reached `onCameraIdle`, and its last call before `onCameraIdle` has the position where the camera stopped instead of the frame before.
+  * **Android**: `animateCamera` with a zero duration moves the camera at once, as on iOS and web, instead of failing with a generic error.
+* **Android**: `takeSnapshot` shows the area the map shows, at the screen's pixel density, as on iOS and web. Without a size it covered an area about 3x larger than the map, and with a size the image came out at 1x (#1128).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

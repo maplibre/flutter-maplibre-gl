@@ -242,10 +242,11 @@ class MapLibreMap extends StatefulWidget {
   /// This takes presedence over zoomGesturesEnabled. Only supported for web.
   final bool? doubleClickZoomEnabled;
 
-  /// True if you want to be notified of map camera movements by the [MapLibreMapController]. Default is false.
+  /// Whether the map reports the camera position. Default is false.
   ///
-  /// If this is set to true and the user pans/zooms/rotates the map, [MapLibreMapController] (which is a [ChangeNotifier])
-  /// will notify it's listeners and you can then get the new [MapLibreMapController].cameraPosition.
+  /// When true, [onCameraMove] receives the camera position as it moves, and
+  /// [MapLibreMapController.cameraPosition] follows it. When false,
+  /// [onCameraMove] is never called; [onCameraIdle] still is.
   final bool trackCameraPosition;
 
   /// True if a "My Location" layer should be shown on the map.
@@ -386,10 +387,15 @@ class MapLibreMap extends StatefulWidget {
   /// Called when the location tracking mode changes
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
-  /// Called when camera is moving.
+  /// Called with the camera position while the camera moves. The last call
+  /// before [onCameraIdle] has the position where it stopped, also for a move
+  /// without animation such as `moveCamera`.
+  ///
+  /// Only called when [trackCameraPosition] is true.
   final OnCameraMoveCallback? onCameraMove;
 
-  /// Called when camera movement has ended.
+  /// Called when camera movement has ended. With [trackCameraPosition], read
+  /// the final position from [MapLibreMapController.cameraPosition].
   final OnCameraIdleCallback? onCameraIdle;
 
   /// Called when map view is entering an idle state, and no more drawing will
