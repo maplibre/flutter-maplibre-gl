@@ -169,7 +169,7 @@ bool canBuildSource(String? type, Map<String, dynamic> properties) {
       return properties['tiles'] is List && _hasTileOptions(properties);
     case 'geojson':
       final data = properties['data'];
-      return data is String ? isUrl(data) : data != null;
+      return data is String ? data.isNotEmpty : data != null;
     case 'image':
       final url = properties['url'];
       return url is String && url.isNotEmpty && _hasCorners(properties);
@@ -205,17 +205,6 @@ bool _hasTileOptions(Map<String, dynamic> properties) {
   }
   return !(minzoom is num && maxzoom is num && minzoom > maxzoom);
 }
-
-/// Whether [text] is a url MapLibre Native reads: not empty, and without a
-/// space or another character a url cannot hold.
-bool isUrl(String text) =>
-    text.isNotEmpty && _urlText.hasMatch(text) && Uri.tryParse(text) != null;
-
-/// The characters of a url: those RFC 3986 allows, a percent sign only before
-/// two hex digits, and letters beyond ASCII.
-final _urlText = RegExp(
-  r"^(?:[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=]|%[0-9A-Fa-f]{2}|[^\x00-\x7F\s])*$",
-);
 
 /// Whether `coordinates` holds four [longitude, latitude] corners, latitudes
 /// within the range of the map.

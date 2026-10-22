@@ -184,7 +184,7 @@ class _FakeMap {
   /// settles a moment later, as the worker of maplibre-gl-js does.
   JSObject _source(JSObject spec) {
     final source = JSObject();
-    for (final name in ['type', 'data', 'url', 'coordinates']) {
+    for (final name in ['type', 'data', 'url', 'coordinates', 'bounds']) {
       source.setProperty(name.toJS, spec.getProperty<JSAny?>(name.toJS));
     }
     source.setProperty(
@@ -322,6 +322,19 @@ void main() {
       expect(map.data('points'), 'https://example.com/a.json');
     });
 
+    test('editGeoJsonUrl percent-encodes what a url cannot hold, and '
+        'answers false for an empty one', () async {
+      await controller.addGeoJsonSource('points', _collection([_point(1, 1)]));
+
+      expect(await controller.editGeoJsonUrl('points', ''), isFalse);
+      expect(map.data('points'), _collection([_point(1, 1)]));
+      expect(
+        await controller.editGeoJsonUrl('points', 'https://example.com/a b'),
+        isTrue,
+      );
+      expect(map.data('points'), 'https://example.com/a%20b');
+    });
+
     test('data set while editGeoJsonUrl runs stays editable', () async {
       await controller.addGeoJsonSource('points', _collection([_point(1, 1)]));
 
@@ -400,27 +413,40 @@ void main() {
 
     test('a value jsonEncode cannot write fails as on Android and '
         'iOS', () async {
-      for (final value in [DateTime(2020), double.nan]) {
-        final feature = {
-          'type': 'Feature',
-          'geometry': null,
-          'properties': {'value': value},
-        };
-        await expectLater(
-          controller.addGeoJsonSource('points', feature),
-          throwsA(isA<JsonUnsupportedObjectError>()),
-          reason: '$value',
-        );
-        await expectLater(
-          controller.addSource(
-            'points',
-            GeojsonSourceProperties(data: feature),
-          ),
-          throwsA(isA<JsonUnsupportedObjectError>()),
-          reason: '$value',
-        );
-      }
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': DateTime(2020)},
+      };
+      await expectLater(
+        controller.addGeoJsonSource('points', feature),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      await expectLater(
+        controller.addSource('points', GeojsonSourceProperties(data: feature)),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
       expect(map.sources, isEmpty);
+    });
+
+    // Android and iOS fail it with INVALID_GEOJSON: JSON has no such number.
+    test('a number that is not finite goes in as it is', () async {
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': double.nan},
+      };
+      await controller.addGeoJsonSource('points', feature);
+      await controller.addSource(
+        'other',
+        GeojsonSourceProperties(data: feature),
+      );
+
+      for (final sourceId in ['points', 'other']) {
+        final properties =
+            (map.data(sourceId)! as Map)['properties'] as Map<Object?, Object?>;
+        expect((properties['value']! as double).isNaN, isTrue);
+      }
     });
   });
 
@@ -658,9 +684,10 @@ void main() {
           maxzoom: 5,
         ),
         'an empty url and no tiles': const VectorSourceProperties(url: ''),
-        'a data url with spaces': const GeojsonSourceProperties(
-          data: 'not a url',
-        ),
+        'a data url with a port that is not a number':
+            const GeojsonSourceProperties(
+              data: 'https://example.com:port/a.json',
+            ),
       };
       for (final MapEntry(key: label, value: source) in sources.entries) {
         await expectLater(
@@ -686,6 +713,47 @@ void main() {
         ),
       );
       expect(map.sources.keys, ['clamped']);
+    });
+
+    // MapLibre Native rejects them, and maplibre-gl-js requests no tile.
+    test('gives bounds across the antimeridian every longitude', () async {
+      await controller.addSource(
+        'antimeridian',
+        const RasterSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          bounds: [170, -10, -170, 10],
+        ),
+      );
+
+      expect(
+        dartify(
+          map.sources['antimeridian']!.getProperty<JSAny?>('bounds'.toJS),
+        ),
+        [-180, -10, 180, 10],
+      );
+    });
+
+    // As MapLibre Native gets it on Android and iOS.
+    test('percent-encodes what a url cannot hold', () async {
+      await controller.addSource(
+        'spaced',
+        const GeojsonSourceProperties(data: 'https://example.com/a b.json'),
+      );
+      await controller.addSource(
+        'image',
+        const ImageSourceProperties(
+          url: 'https://example.com/a|b.png',
+          coordinates: [
+            [-2, 2],
+            [2, 2],
+            [2, -2],
+            [-2, -2],
+          ],
+        ),
+      );
+
+      expect(map.data('spaced'), 'https://example.com/a%20b.json');
+      expect(map.url('image'), 'https://example.com/a%7Cb.png');
     });
   });
 

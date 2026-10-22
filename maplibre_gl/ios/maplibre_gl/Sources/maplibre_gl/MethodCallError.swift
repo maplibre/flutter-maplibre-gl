@@ -149,21 +149,8 @@ extension MethodCallError {
         )
     }
 
-    /// A layer add with a zoom outside 0 to 24.
-    static func zoomOutOfRange(layerId: String) -> MethodCallError {
-        return .invalidArgument(
-            message: "The minzoom and maxzoom of layer '\(layerId)' must be within 0 and 24."
-        )
-    }
-
     /// A camera padding that does not fit in the 32 bits Android takes.
     static func paddingOutOfRange(_ padding: Int64) -> MethodCallError {
         return .invalidArgument(message: "Padding \(padding) does not fit in 32 bits.")
-    }
-
-    /// Whether `minzoom` and `maxzoom`, each nil when not set, are within 0
-    /// and 24.
-    static func isZoomInRange(_ minzoom: Double?, _ maxzoom: Double?) -> Bool {
-        return [minzoom, maxzoom].allSatisfy { zoom in zoom.map { (0.0 ... 24.0).contains($0) } ?? true }
     }
 }

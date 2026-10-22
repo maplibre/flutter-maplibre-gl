@@ -775,11 +775,14 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonUrl(String id, String url) async {
+    final encoded = encodeUrl(url);
+    // A url that cannot be one changes nothing, as on Android and iOS.
+    if (encoded == null) return false;
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
     final held = _addedFeaturesByLayer[id];
     _releaseFeatureIds(id);
-    await source.setData(url.toJS);
+    await source.setData(encoded.toJS);
     // setGeoJsonFeature cannot change data it does not hold. Data set while
     // the url was handed over came after it, and stays.
     if (identical(_addedFeaturesByLayer[id], held)) {
@@ -2915,7 +2918,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
-    final json = properties.toJson();
+    final json = normalizeSource(properties.toJson());
     final type = json['type'] as String?;
     // A string is the url of the data.
     final data = json['data'];

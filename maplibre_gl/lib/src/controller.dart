@@ -101,6 +101,10 @@ typedef OnMapIdleCallback = void Function();
 ///
 /// Listeners are notified after changes have been applied on the platform side.
 ///
+/// The calls on a source or a layer reach the platform in the order they are
+/// made, even without `await`: a layer added right after its source finds
+/// it, though checking large GeoJSON data takes a while.
+///
 /// ## Errors
 ///
 /// The style, layer and source calls throw a [PlatformException] with the
@@ -116,8 +120,10 @@ typedef OnMapIdleCallback = void Function();
 ///   layer.
 /// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression.
 /// * `INVALID_ARGUMENT`: a property value has the wrong kind, a layer zoom is
-///   outside 0 to 24, or a source cannot be built from its properties.
-/// * `INVALID_GEOJSON`: the data is not valid GeoJSON.
+///   outside 0 to 24 on web, or a source cannot be built from its properties.
+/// * `INVALID_GEOJSON`: the data is not valid GeoJSON, or on Android and iOS
+///   holds a number that is NaN or infinite, which JSON cannot hold. Web
+///   takes such a number.
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
     required MapLibrePlatform maplibrePlatform,
@@ -735,7 +741,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addSymbolLayer(
@@ -786,7 +792,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addLineLayer(
@@ -861,7 +867,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillLayer(
@@ -912,7 +918,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillExtrusionLayer(
@@ -963,7 +969,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addCircleLayer(
@@ -1172,7 +1178,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addHeatmapLayer(
@@ -1435,7 +1441,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// URL for the GeoJSON data.
   ///
   /// The returned [Future] completes with true if the source was updated, and
-  /// false without a style or a GeoJSON source [id].
+  /// false without a style or a GeoJSON source [id], or for a [url] that is
+  /// empty or cannot be a url at all. Characters a url cannot hold, such as a
+  /// space, are percent-encoded, as [addSource] does.
   Future<bool> editGeoJsonUrl(String id, String url) async {
     return _maplibrePlatform.editGeoJsonUrl(id, url);
   }
@@ -2250,8 +2258,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [imageSourceId] is an image or raster source, `INVALID_ARGUMENT` for a
-  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// [minzoom] or [maxzoom] outside 0 to 24 on web, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]).
   Future<void> addImageLayer(
     String layerId,
     String imageSourceId, {
@@ -2268,8 +2277,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is an image or raster source, `INVALID_ARGUMENT` for a
-  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// [minzoom] or [maxzoom] outside 0 to 24 on web, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]).
   Future<void> addImageLayerBelow(
     String layerId,
     String sourceId,
@@ -2395,12 +2405,17 @@ class MapLibreMapController extends ChangeNotifier {
   /// [MapLibreMapController]). These cannot be built from:
   ///
   /// * a tiled source with neither a url nor tiles (an empty url counts as
-  ///   none), or tiles with `bounds` that are not four finite numbers, west
-  ///   not beyond east and south not above north once clamped to the poles,
-  ///   or a `minzoom` or `maxzoom` outside 0 to 255 or in the wrong order;
-  /// * a GeoJSON source without data, or with a url that is empty or holds a
-  ///   space or another character a url cannot;
+  ///   none), or tiles with `bounds` that are not four finite numbers with
+  ///   south not above north once clamped to the poles, or a `minzoom` or
+  ///   `maxzoom` outside 0 to 255 or in the wrong order;
+  /// * a GeoJSON source without data, or with a url that is empty or cannot
+  ///   be a url at all, such as one with a port that is not a number;
   /// * an image source without a url or four corners.
+  ///
+  /// The url of a GeoJSON, image or raster-dem source loads with the
+  /// characters a url cannot hold, such as a space, percent-encoded, on every
+  /// platform. `bounds` with west greater than east, which cross the
+  /// antimeridian, take every longitude, so the tiles on both sides load.
   ///
   /// **Platform support**: [VideoSourceProperties] is web only. Android and
   /// iOS throw `UNSUPPORTED_SOURCE_TYPE`.

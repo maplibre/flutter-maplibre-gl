@@ -1965,8 +1965,8 @@ final class MapLibreMapController
   /**
    * Answers, in this order, STYLE_NOT_READY without a style, SOURCE_NOT_FOUND without the source
    * {@code sourceId}, UNSUPPORTED_SOURCE_TYPE when a layer of {@code layerType} cannot draw that
-   * source, SOURCE_LAYER_REQUIRED for a vector source without {@code sourceLayer}, and
-   * INVALID_ARGUMENT for a zoom outside 0 to 24. The engine would add the layer and draw nothing.
+   * source, and SOURCE_LAYER_REQUIRED for a vector source without {@code sourceLayer}. The engine
+   * would add the layer and draw nothing.
    *
    * @return true when the call has been answered with an error.
    */
@@ -1975,8 +1975,6 @@ final class MapLibreMapController
       String layerType,
       String sourceId,
       @Nullable String sourceLayer,
-      @Nullable Double minzoom,
-      @Nullable Double maxzoom,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
@@ -2002,24 +2000,7 @@ final class MapLibreMapController
           null);
       return true;
     }
-    return rejectZoomOutOfRange(layerId, minzoom, maxzoom, result);
-  }
-
-  /**
-   * Answers INVALID_ARGUMENT for a layer zoom outside 0 to 24.
-   *
-   * @return true when the call has been answered with an error.
-   */
-  private static boolean rejectZoomOutOfRange(
-      String layerId,
-      @Nullable Double minzoom,
-      @Nullable Double maxzoom,
-      MethodChannel.Result result) {
-    if (StyleChecks.isZoomInRange(minzoom, maxzoom)) {
-      return false;
-    }
-    result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.zoomOutOfRange(layerId), null);
-    return true;
+    return false;
   }
 
   /**
@@ -3251,7 +3232,7 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "symbol", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "symbol", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3295,7 +3276,7 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "line", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "line", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3339,7 +3320,7 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "fill", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "fill", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3383,7 +3364,7 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "fill-extrusion", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "fill-extrusion", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3427,7 +3408,7 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "circle", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "circle", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3468,7 +3449,7 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "raster", sourceId, null, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "raster", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3501,7 +3482,7 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "hillshade", sourceId, null, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "hillshade", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3534,7 +3515,7 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "color-relief", sourceId, null, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "color-relief", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
@@ -3570,9 +3551,6 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
-    if (rejectZoomOutOfRange(layerId, minzoom, maxzoom, result)) {
-      return;
-    }
     final PropertyValue[] propertyValues =
         checkedLayerProperties(layerId, "background", properties, result);
     if (propertyValues == null) {
@@ -3603,7 +3581,7 @@ final class MapLibreMapController
       @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(layerId, "heatmap", sourceId, sourceLayer, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(layerId, "heatmap", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
@@ -3751,8 +3729,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(
-        imageLayerId, "raster", imageSourceId, null, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(imageLayerId, "raster", imageSourceId, null, result)) {
       return;
     }
     if (!addRasterLayer(
@@ -3777,8 +3754,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectLayerAdd(
-        imageLayerId, "raster", imageSourceId, null, minzoom, maxzoom, result)) {
+    if (rejectLayerAdd(imageLayerId, "raster", imageSourceId, null, result)) {
       return;
     }
     if (!addRasterLayer(

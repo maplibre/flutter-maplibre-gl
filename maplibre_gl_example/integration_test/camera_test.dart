@@ -1304,6 +1304,31 @@ void main() {
       );
     }, skip: skip);
 
+    // Only the options that move the camera wait, so the others keep their
+    // place among the calls made after them.
+    testWidgets('applies an option that does not move the camera at once', (
+      tester,
+    ) async {
+      final size = ValueNotifier(Size.zero);
+      addTearDown(size.dispose);
+      final controller = await pumpMap(tester, resizableSize: size);
+
+      // The map never gets a size here, so a call that waited for one would
+      // time out.
+      await pumpUntil(
+        tester,
+        controller.setSymbolPlacementTransitionsEnabled(false),
+        'setSymbolPlacementTransitionsEnabled on a map without a size',
+        timeout: const Duration(seconds: 5),
+      );
+      await pumpUntil(
+        tester,
+        controller.addGeoJsonSource('points', pointCollection()),
+        'addGeoJsonSource on a map without a size',
+        timeout: const Duration(seconds: 5),
+      );
+    }, skip: skip);
+
     testWidgets('fails a waiting call with MAP_DISPOSED when it goes away', (
       tester,
     ) async {

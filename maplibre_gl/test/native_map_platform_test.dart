@@ -786,6 +786,89 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
+    // A large addSource is checked on another isolate, and a layer add made
+    // right after it without await would otherwise find no source.
+    test('a call on a source waits for the writes to it in flight', () async {
+      api.replies['mapQuerySourceFeatures'] = <String>[];
+      api.replies['sourceGetClusterExpansionZoom'] = 3;
+      final big = line(40000);
+
+      await Future.wait([
+        platform.addSource('source', GeojsonSourceProperties(data: big)),
+        platform.addCircleLayer(
+          'source',
+          'circles',
+          const {},
+          enableInteraction: true,
+        ),
+        platform.querySourceFeatures('source', null, null),
+        platform.getClusterExpansionZoom('source', 1),
+        platform.setFeatureState('source', '1', const {'on': true}),
+        platform.getSourceProperties('source'),
+        platform.removeSource('source'),
+      ]);
+
+      expect(api.calls.map((call) => call.first), [
+        'styleAddSource',
+        'circleLayerAdd',
+        'mapQuerySourceFeatures',
+        'sourceGetClusterExpansionZoom',
+        'sourceSetFeatureState',
+        'styleGetSourceProperties',
+        'styleRemoveSource',
+      ]);
+    });
+
+    // The layer add waits for the source, so the calls on the layer wait
+    // for the layer add.
+    test('a call on a layer waits for its add in flight', () async {
+      final big = line(40000);
+
+      await Future.wait([
+        platform.addGeoJsonSource('source', big),
+        platform.addCircleLayer(
+          'source',
+          'circles',
+          const {},
+          enableInteraction: true,
+        ),
+        platform.setLayerProperties('circles', const {'circle-radius': 4}),
+        platform.addBackgroundLayer(
+          'background',
+          const {},
+          belowLayerId: 'circles',
+        ),
+        platform.setGeoJsonSource('source', line(1)),
+      ]);
+
+      expect(api.calls.map((call) => call.first), [
+        'sourceAddGeoJson',
+        'circleLayerAdd',
+        'layerSetProperties',
+        'backgroundLayerAdd',
+        'sourceSetGeoJson',
+      ]);
+    });
+
+    test('a call with no write in flight on its source goes at once', () async {
+      api.replies['mapQuerySourceFeatures'] = <String>[];
+      final big = platform.addGeoJsonSource('big', line(40000));
+      final add = platform.addCircleLayer(
+        'other',
+        'circles',
+        const {},
+        enableInteraction: true,
+      );
+      final query = platform.querySourceFeatures('other', null, null);
+
+      expect(api.calls.map((call) => call.first), [
+        'circleLayerAdd',
+        'mapQuerySourceFeatures',
+      ]);
+      await Future.wait([big, add, query]);
+      expect(api.calls.last.first, 'sourceAddGeoJson');
+    });
+
     // jsonEncode writes app models and the position classes of GeoJSON
     // libraries through their toJson(), as it always has.
     test('objects with toJson() go in as jsonEncode writes them', () async {
@@ -846,18 +929,54 @@ void main() {
         platform.addSource('source', GeojsonSourceProperties(data: feature)),
         throwsA(isA<JsonUnsupportedObjectError>()),
       );
-      // A number that is not finite, which jsonEncode cannot write either.
-      final notFinite = {
-        ...feature,
-        'properties': {'value': double.nan},
+      expect(api.calls, isEmpty);
+    });
+
+    // JSON has no NaN or infinity, so MapLibre Native cannot read them.
+    test('a number that is not finite fails every GeoJSON write with '
+        'INVALID_GEOJSON', () async {
+      final invalid = isA<PlatformException>()
+          .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+          .having(
+            (e) => e.details,
+            'details',
+            'A number is NaN or infinite, which JSON cannot hold.',
+          );
+      Map<String, dynamic> feature(Object? value) => {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'value': value},
       };
+      final big = line(40000);
+      ((big['features'] as List).single as Map)['properties'] = {
+        'value': double.infinity,
+      };
+
       await expectLater(
-        platform.addGeoJsonSource('source', notFinite),
-        throwsA(isA<JsonUnsupportedObjectError>()),
+        platform.addGeoJsonSource('source', feature(double.nan)),
+        throwsA(invalid),
       );
       await expectLater(
-        platform.addSource('source', GeojsonSourceProperties(data: notFinite)),
-        throwsA(isA<JsonUnsupportedObjectError>()),
+        platform.setGeoJsonSource('source', big),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setFeatureForGeoJsonSource(
+          'source',
+          feature(const _Wrapped(double.negativeInfinity)),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource(
+          'source',
+          GeojsonSourceProperties(data: feature(double.nan)),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource('source', GeojsonSourceProperties(data: big)),
+        throwsA(invalid),
       );
       expect(api.calls, isEmpty);
     });
@@ -869,6 +988,53 @@ void main() {
       );
 
       expect(api.calls.single.take(2), ['styleAddSource', 'source']);
+    });
+
+    // As web hands it to maplibre-gl-js.
+    test('a url reaches native with what a url cannot hold '
+        'percent-encoded', () async {
+      api.replies['mapEditGeoJsonUrl'] = true;
+
+      await platform.addSource(
+        'source',
+        const GeojsonSourceProperties(data: 'file:///a b/c.json'),
+      );
+      await platform.addSource(
+        'image',
+        const ImageSourceProperties(url: 'https://example.com/{a}.png'),
+      );
+      expect(
+        await platform.editGeoJsonUrl('source', 'https://example.com/a b'),
+        isTrue,
+      );
+      // An empty url changes nothing, as on web.
+      expect(await platform.editGeoJsonUrl('source', ''), isFalse);
+
+      expect(api.calls.map((call) => call.take(2)), [
+        ['styleAddSource', 'source'],
+        ['styleAddSource', 'image'],
+        ['mapEditGeoJsonUrl', 'source'],
+      ]);
+      expect((api.calls[0][2]! as Map)['data'], 'file:///a%20b/c.json');
+      expect(
+        (api.calls[1][2]! as Map)['url'],
+        'https://example.com/%7Ba%7D.png',
+      );
+      expect(api.calls[2][2], 'https://example.com/a%20b');
+    });
+
+    // MapLibre Native rejects them, and maplibre-gl-js requests no tile.
+    test('addSource gives bounds across the antimeridian every '
+        'longitude', () async {
+      await platform.addSource(
+        'tiles',
+        const RasterSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          bounds: [170, -10, -170, 10],
+        ),
+      );
+
+      expect((api.calls.single[2]! as Map)['bounds'], [-180, -10, 180, 10]);
     });
 
     test('addSource rejects the custom raster-dem encoding', () {
@@ -1143,6 +1309,34 @@ void main() {
         throwsA(isA<PlatformException>()),
       );
       api.errors.remove('styleAddSource');
+      api.calls.clear();
+
+      await platform.setGeoJsonSource('generated', collection([5]));
+
+      expectIds(api.calls.single[2], [0]);
+    });
+
+    test('a failed remove leaves the source as it was', () async {
+      await addGenerated('generated', collection([]));
+      api.errors['styleRemoveSource'] = PlatformException(code: 'boom');
+      await expectLater(
+        platform.removeSource('generated'),
+        throwsA(isA<PlatformException>()),
+      );
+      api.errors.remove('styleRemoveSource');
+      api.calls.clear();
+
+      await platform.setGeoJsonSource('generated', collection([5]));
+
+      expectIds(api.calls.single[2], [0]);
+    });
+
+    test('a remove and an add made without await keep call order', () async {
+      await addGenerated('generated', collection([]));
+      await Future.wait([
+        platform.removeSource('generated'),
+        addGenerated('generated', collection([])),
+      ]);
       api.calls.clear();
 
       await platform.setGeoJsonSource('generated', collection([5]));
@@ -2885,11 +3079,6 @@ void main() {
   });
 }
 
-/// Records each call as its name followed by its arguments, and answers with
-/// [replies] by name, or fails with [errors] by name.
-///
-/// Every method of the generated client is overridden. One that was not would
-/// send on a channel nothing listens to, and fail with a channel-error.
 /// A position class of a GeoJSON library: `jsonEncode` writes it as the list
 /// its `toJson()` returns.
 class _Position {
@@ -2912,6 +3101,21 @@ class _Geometry {
   Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
 }
 
+/// An app model `jsonEncode` writes as the map its `toJson()` returns, with
+/// [value] in it.
+class _Wrapped {
+  const _Wrapped(this.value);
+
+  final Object? value;
+
+  Map<String, Object?> toJson() => {'value': value};
+}
+
+/// Records each call as its name followed by its arguments, and answers with
+/// [replies] by name, or fails with [errors] by name.
+///
+/// Every method of the generated client is overridden. One that was not would
+/// send on a channel nothing listens to, and fail with a channel-error.
 class _FakeMapHostApi extends MapLibreMapHostApi {
   _FakeMapHostApi() : super(messageChannelSuffix: 'not-overridden');
 

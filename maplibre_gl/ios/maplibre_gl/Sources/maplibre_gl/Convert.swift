@@ -117,6 +117,24 @@ class Convert {
         }
     }
 
+    /// `options` in two parts: the options that move the camera, which are the
+    /// camera bounds, the zoom range and the location tracking mode, and the
+    /// others. Each part is nil when it holds no option.
+    class func splitCameraOptions(
+        _ options: PgMapOptions
+    ) -> (camera: PgMapOptions?, others: PgMapOptions?) {
+        var camera = PgMapOptions()
+        camera.cameraTargetBounds = options.cameraTargetBounds
+        camera.minMaxZoomPreference = options.minMaxZoomPreference
+        camera.myLocationTrackingMode = options.myLocationTrackingMode
+        var others = options
+        others.cameraTargetBounds = nil
+        others.minMaxZoomPreference = nil
+        others.myLocationTrackingMode = nil
+        let none = PgMapOptions()
+        return (camera == none ? nil : camera, others == none ? nil : others)
+    }
+
     /// The SDK position of an ornament. The raw values are those of
     /// MLNOrnamentPosition.
     private class func ornamentPosition(_ position: PgOrnamentPosition?) -> MLNOrnamentPosition? {
