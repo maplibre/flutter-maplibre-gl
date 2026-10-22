@@ -685,6 +685,43 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
+    // Text longer than 100 000 characters is checked in a background isolate.
+    test('editGeoJsonSource checks a large text the same way', () async {
+      final features = [
+        for (var i = 0; i < 2000; i++)
+          {
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Point',
+              'coordinates': [i * 0.001, 0],
+            },
+            'properties': {'name': 'feature $i'},
+          },
+      ];
+      final valid = jsonEncode({
+        'type': 'FeatureCollection',
+        'features': features,
+      });
+      expect(valid.length, greaterThan(100000));
+      api.replies['mapEditGeoJsonSource'] = true;
+
+      expect(await platform.editGeoJsonSource('source', valid), isTrue);
+      await expectLater(
+        platform.editGeoJsonSource(
+          'source',
+          jsonEncode({'type': 'Nope', 'features': features}),
+        ),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'INVALID_GEOJSON',
+          ),
+        ),
+      );
+      expect(api.calls, hasLength(1));
+    });
+
     // A payload above the offload thresholds is checked on the other isolate,
     // with the same answer.
     test('a large payload is checked too', () async {
