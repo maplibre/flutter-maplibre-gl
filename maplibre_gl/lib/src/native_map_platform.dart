@@ -1171,6 +1171,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     (Map<String, dynamic>, _FeatureIds) input,
   ) {
     final (geojson, ids) = input;
+    final json = _GeoJsonWriter.encode(geojson, ids);
+    if (json != null) return (json, null);
     final (data, reason) = _checkFeatureIds(geojson, ids, geoJsonError);
     if (reason != null) return (null, reason);
     return _jsonOrReason(() => jsonEncode(data));
@@ -1182,6 +1184,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     (Map<String, dynamic>, _FeatureIds) input,
   ) {
     final (geojson, ids) = input;
+    final json = _GeoJsonWriter.encode(geojson, ids, feature: true);
+    if (json != null) return (json, null);
     final (data, reason) = _checkFeatureIds(geojson, ids, geoJsonFeatureError);
     if (reason != null) return (null, reason);
     return _jsonOrReason(() => jsonEncode(data));
@@ -1533,6 +1537,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// plain JSON values only.
   static (Object?, String?) _checkSourceData((Object?, _FeatureIds) input) {
     final (data, ids) = input;
+    if (_GeoJsonWriter.check(data, ids) case final marked?) {
+      return switch (ids) {
+        _FeatureIds.generate => (_withGeneratedIds(data), null),
+        _ => (_withStringIdMarkers(data, marked), null),
+      };
+    }
     final (checked, reason) = _checkFeatureIds(data, ids, geoJsonError);
     if (reason != null) return (null, reason);
     return _jsonOrReason<Object?>(() => _plainJson(checked));

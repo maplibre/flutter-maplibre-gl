@@ -16,6 +16,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl/src/native/messages.g.dart';
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
+    show geoJsonError;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -2783,6 +2785,244 @@ void main() {
         expect(api.calls, isEmpty);
       });
     }
+  });
+
+  // Plain GeoJSON is checked and written in one pass; anything else goes
+  // through geoJsonError and jsonEncode. Native gets the same either way.
+  group('GeoJSON text', () {
+    setUp(init);
+
+    const marker = 'maplibre_gl:string_id';
+
+    Map<String, dynamic> point(Object? properties, {Object? id = 1}) => {
+      'type': 'Feature',
+      'id': id,
+      'properties': properties,
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [1.5, -2],
+      },
+    };
+
+    Object deep(int levels) => levels == 0 ? 1 : {'d': deep(levels - 1)};
+
+    for (final target in [TargetPlatform.android, TargetPlatform.iOS]) {
+      test('is what jsonEncode writes on ${target.name}', () async {
+        debugDefaultTargetPlatformOverride = target;
+        addTearDown(() => debugDefaultTargetPlatformOverride = null);
+        final text = point({
+          'name': 'ő"x',
+          'tab\there': '漢\n字',
+          'emoji': '😀',
+          'lone': '\ud800',
+          'latin1': 'é ÿ',
+          '\u001f': r'back\slash',
+        });
+        final numbers = point({
+          'n': [-0.0, 1e21, 1e-7, 0.1 + 0.2, 2147483648, true, null],
+        }, id: 'poi-1');
+        final collection = {
+          'type': 'FeatureCollection',
+          'bbox': [-180, -90, 180, 90],
+          'features': [
+            text,
+            numbers,
+            {
+              'geometry': {
+                'coordinates': [
+                  [
+                    [0, 0, 12.5, 'extra'],
+                    [1, 0],
+                    [1, 1],
+                    [0, 0],
+                  ],
+                ],
+                'type': 'Polygon',
+              },
+              'properties': null,
+              'type': 'Feature',
+            },
+            point({'deep': deep(10)}, id: 2.5),
+          ],
+        };
+        // Deeper than the single pass goes.
+        final deeper = point({'deep': deep(100)});
+
+        await platform.setGeoJsonSource('source', collection);
+        await platform.setFeatureForGeoJsonSource('source', text);
+        await platform.setGeoJsonSource('source', deeper);
+
+        expect(api.calls, [
+          ['sourceSetGeoJson', 'source', jsonEncode(collection)],
+          ['sourceSetFeature', 'source', jsonEncode(text)],
+          ['sourceSetGeoJson', 'source', jsonEncode(deeper)],
+        ]);
+      });
+    }
+
+    test('marks a text id as a copy of the feature would', () async {
+      Map<String, dynamic> collection(List<Map<String, dynamic>> features) => {
+        'type': 'FeatureCollection',
+        'features': features,
+      };
+
+      await platform.setGeoJsonSource(
+        'source',
+        collection([
+          {'type': 'Feature', 'id': '1', 'geometry': null},
+          {'type': 'Feature', 'properties': null, 'id': '2', 'geometry': null},
+        ]),
+      );
+      // The marker already there.
+      await platform.setGeoJsonSource(
+        'source',
+        collection([
+          {
+            'properties': {'a': 1, marker: false},
+            'type': 'Feature',
+            'id': '3',
+            'geometry': null,
+          },
+        ]),
+      );
+
+      expect(api.calls.map((call) => call[2]), [
+        jsonEncode(
+          collection([
+            {
+              'type': 'Feature',
+              'id': '1',
+              'geometry': null,
+              'properties': {marker: true},
+            },
+            {
+              'type': 'Feature',
+              'properties': {marker: true},
+              'id': '2',
+              'geometry': null,
+            },
+          ]),
+        ),
+        jsonEncode(
+          collection([
+            {
+              'properties': {'a': 1, marker: true},
+              'type': 'Feature',
+              'id': '3',
+              'geometry': null,
+            },
+          ]),
+        ),
+      ]);
+    });
+
+    test(
+      'numbers a feature in place of its id, or after its members',
+      () async {
+        await platform.addSource(
+          'generated',
+          const GeojsonSourceProperties(
+            data: 'https://example.com/a.json',
+            generateId: true,
+          ),
+        );
+
+        await platform.setGeoJsonSource('generated', {
+          'type': 'FeatureCollection',
+          'features': [
+            {'id': 'a', 'type': 'Feature', 'geometry': null},
+            {'type': 'Feature', 'geometry': null, 'properties': {}},
+          ],
+        });
+
+        expect(
+          api.calls.last[2],
+          jsonEncode({
+            'type': 'FeatureCollection',
+            'features': [
+              {'id': 0, 'type': 'Feature', 'geometry': null},
+              {'type': 'Feature', 'geometry': null, 'properties': {}, 'id': 1},
+            ],
+          }),
+        );
+      },
+    );
+
+    // The first error geoJsonError finds wins, wherever the data stops being
+    // plain JSON.
+    for (final (name, data) in <(String, Map<String, dynamic>)>[
+      (
+        'a feature without a geometry after a valid one',
+        {
+          'type': 'FeatureCollection',
+          'features': [
+            point(null),
+            {'type': 'Feature'},
+          ],
+        },
+      ),
+      (
+        'a position that is not a number',
+        {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'LineString',
+            'coordinates': [
+              [1, 2],
+              [double.nan, 0],
+            ],
+          },
+        },
+      ),
+      (
+        'a bad geometry after a NaN property',
+        {
+          'type': 'Feature',
+          'properties': {'v': double.nan},
+          'geometry': {
+            'type': 'Point',
+            'coordinates': [1],
+          },
+        },
+      ),
+      ('properties that are a list', point([1])),
+      ('a null id', point(null, id: null)),
+      (
+        'a type after a bad geometry',
+        {
+          'geometry': {'type': 'Circle'},
+          'type': 'Feature',
+        },
+      ),
+    ]) {
+      test('rejects $name with the reason of geoJsonError', () async {
+        final reason = geoJsonError(data);
+        expect(reason, isNotNull);
+        final invalid = isA<PlatformException>()
+            .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+            .having((e) => e.details, 'details', reason);
+
+        await expectLater(
+          platform.setGeoJsonSource('source', data),
+          throwsA(invalid),
+        );
+        await expectLater(
+          platform.addSource('source', GeojsonSourceProperties(data: data)),
+          throwsA(invalid),
+        );
+        expect(api.calls, isEmpty);
+      });
+    }
+
+    test('a cycle fails as jsonEncode fails on it', () async {
+      final properties = <String, dynamic>{};
+      properties['self'] = properties;
+
+      await expectLater(
+        platform.setGeoJsonSource('source', point(properties)),
+        throwsA(isA<JsonCyclicError>()),
+      );
+    });
   });
 
   group('conversions, clusters and feature state', () {
