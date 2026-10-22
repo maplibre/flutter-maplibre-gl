@@ -649,7 +649,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonUrl(String id, String url) {
-    return _writeGeoJson(id, () => _api.mapEditGeoJsonUrl(id, url));
+    final encoded = encodeUrl(url);
+    // A url that cannot be one changes nothing, as on web.
+    if (encoded == null) return Future.value(false);
+    return _writeGeoJson(id, () => _api.mapEditGeoJsonUrl(id, encoded));
   }
 
   @override
@@ -1250,7 +1253,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
     _ensureDemEncodingSupported(properties);
-    final json = properties.toJson();
+    final json = encodeSourceUrl(properties.toJson());
     // A string is the url of the data.
     final data = jsonValueOf(json['data']);
     if (properties is! GeojsonSourceProperties ||

@@ -31,6 +31,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'support/map_harness.dart';
+import 'support/temp_file.dart'
+    if (dart.library.io) 'support/temp_file_io.dart';
 
 const _sourceId = 'points';
 const _layerId = 'points-circle';
@@ -1953,9 +1955,10 @@ void main() {
             maxzoom: -1,
           ),
           'an empty data url': const GeojsonSourceProperties(data: ''),
-          'a data url with spaces': const GeojsonSourceProperties(
-            data: 'not a url',
-          ),
+          'a data url with a port that is not a number':
+              const GeojsonSourceProperties(
+                data: 'https://tiles.invalid:port/a.json',
+              ),
         };
         for (final source in sources.entries) {
           final type = source.value.toJson()['type'];
@@ -1989,6 +1992,65 @@ void main() {
           ),
           'addSource with bounds beyond the poles',
         );
+      },
+    );
+
+    testWidgets(
+      'a GeoJSON url with a space builds the source, and loads the file on '
+      'Android and iOS',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        // The host does not exist, so nothing leaves the browser.
+        var url = 'https://tiles.invalid/a b.json';
+        if (!kIsWeb) {
+          final path = await pumpUntil(
+            tester,
+            writeFileInDirectoryWithSpace(jsonEncode(_onePoint)),
+            'writeFileInDirectoryWithSpace',
+          );
+          url = 'file://$path';
+        }
+
+        await pumpUntil(
+          tester,
+          controller.addSource('spaced', GeojsonSourceProperties(data: url)),
+          'addSource with a space in the url',
+        );
+        await pumpUntil(
+          tester,
+          controller.addGeoJsonSource('edited', const {
+            'type': 'FeatureCollection',
+            'features': <Object>[],
+          }),
+          'addGeoJsonSource',
+        );
+        expect(
+          await pumpUntil(
+            tester,
+            controller.editGeoJsonUrl('edited', url),
+            'editGeoJsonUrl with a space in the url',
+          ),
+          isTrue,
+        );
+        if (kIsWeb) return;
+
+        for (final sourceId in ['spaced', 'edited']) {
+          await pumpUntil(
+            tester,
+            controller.addCircleLayer(
+              sourceId,
+              '$sourceId-circle',
+              const CircleLayerProperties(),
+            ),
+            'addCircleLayer on $sourceId',
+          );
+          await pumpUntilValue(
+            tester,
+            () => controller.querySourceFeatures(sourceId, null, null),
+            (features) => _ids(features).contains(1),
+            'querySourceFeatures of the file on $sourceId',
+          );
+        }
       },
     );
 

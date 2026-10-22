@@ -1423,7 +1423,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// URL for the GeoJSON data.
   ///
   /// The returned [Future] completes with true if the source was updated, and
-  /// false without a style or a GeoJSON source [id].
+  /// false without a style or a GeoJSON source [id], or for a [url] that is
+  /// empty or cannot be a url at all. Characters a url cannot hold, such as a
+  /// space, are percent-encoded, as [addSource] does.
   Future<bool> editGeoJsonUrl(String id, String url) async {
     return _maplibrePlatform.editGeoJsonUrl(id, url);
   }
@@ -2374,9 +2376,13 @@ class MapLibreMapController extends ChangeNotifier {
   ///   none), or tiles with `bounds` that are not four finite numbers, west
   ///   not beyond east and south not above north once clamped to the poles,
   ///   or a `minzoom` or `maxzoom` outside 0 to 255 or in the wrong order;
-  /// * a GeoJSON source without data, or with a url that is empty or holds a
-  ///   space or another character a url cannot;
+  /// * a GeoJSON source without data, or with a url that is empty or cannot
+  ///   be a url at all, such as one with a port that is not a number;
   /// * an image source without a url or four corners.
+  ///
+  /// The url of a GeoJSON, image or raster-dem source loads with the
+  /// characters a url cannot hold, such as a space, percent-encoded, on every
+  /// platform.
   ///
   /// **Platform support**: [VideoSourceProperties] is web only. Android and
   /// iOS throw `UNSUPPORTED_SOURCE_TYPE`.

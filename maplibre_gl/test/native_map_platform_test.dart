@@ -871,6 +871,39 @@ void main() {
       expect(api.calls.single.take(2), ['styleAddSource', 'source']);
     });
 
+    // As web hands it to maplibre-gl-js.
+    test('a url reaches native with what a url cannot hold '
+        'percent-encoded', () async {
+      api.replies['mapEditGeoJsonUrl'] = true;
+
+      await platform.addSource(
+        'source',
+        const GeojsonSourceProperties(data: 'file:///a b/c.json'),
+      );
+      await platform.addSource(
+        'image',
+        const ImageSourceProperties(url: 'https://example.com/{a}.png'),
+      );
+      expect(
+        await platform.editGeoJsonUrl('source', 'https://example.com/a b'),
+        isTrue,
+      );
+      // An empty url changes nothing, as on web.
+      expect(await platform.editGeoJsonUrl('source', ''), isFalse);
+
+      expect(api.calls.map((call) => call.take(2)), [
+        ['styleAddSource', 'source'],
+        ['styleAddSource', 'image'],
+        ['mapEditGeoJsonUrl', 'source'],
+      ]);
+      expect((api.calls[0][2]! as Map)['data'], 'file:///a%20b/c.json');
+      expect(
+        (api.calls[1][2]! as Map)['url'],
+        'https://example.com/%7Ba%7D.png',
+      );
+      expect(api.calls[2][2], 'https://example.com/a%20b');
+    });
+
     test('addSource rejects the custom raster-dem encoding', () {
       expect(
         () => platform.addSource(

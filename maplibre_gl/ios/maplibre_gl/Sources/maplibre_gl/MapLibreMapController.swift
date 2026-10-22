@@ -1075,7 +1075,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let src = style.source(withIdentifier: srcId)
         if src != nil && src is MLNShapeSource {
             let geojsonSrc = src as! MLNShapeSource
-            let geojsonUrl = URL(string: srcUrl)
+            let geojsonUrl = SourcePropertyConverter.strictURL(srcUrl)
             if geojsonUrl != nil {
                 geojsonSrc.url = geojsonUrl
                 // setGeoJsonFeature cannot change data it does not hold.
