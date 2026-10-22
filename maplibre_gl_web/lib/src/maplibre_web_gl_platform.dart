@@ -99,6 +99,10 @@ class MapLibreMapController extends MapLibrePlatform
   void dispose() {
     // The map goes away mid-animation: answer the waiting camera call.
     _cancelCameraAnimation();
+    _cancelSnapshot(
+      'MAP_DISPOSED',
+      'The map was disposed before the snapshot was ready.',
+    );
     _removeManualPuck();
     _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
@@ -3331,35 +3335,90 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
-    ui.Size? originalSize;
+  Future<Uint8List> takeSnapshot({int? width, int? height}) {
+    // A snapshot waits for map events that a newer call or a dispose can keep
+    // from coming. Android and iOS answer it then, so web does too.
+    _cancelSnapshot(
+      'SNAPSHOT_ERROR',
+      'A newer takeSnapshot call cancelled this one.',
+    );
+    final answer = Completer<Uint8List>();
+    _pendingSnapshot = answer;
+    bool current() => identical(_pendingSnapshot, answer);
+    unawaited(
+      _snapshot(width, height, current).then(
+        (bytes) {
+          if (!current() || bytes == null) return;
+          _pendingSnapshot = null;
+          answer.complete(bytes);
+        },
+        onError: (Object error, StackTrace stack) {
+          if (!current()) return;
+          _pendingSnapshot = null;
+          answer.completeError(error, stack);
+        },
+      ),
+    );
+    return answer.future;
+  }
 
-    // If custom size requested, temporarily resize the map
-    if (width != null && height != null) {
-      originalSize = await setWebMapToCustomSize(
-        ui.Size(width.toDouble(), height.toDouble()),
+  /// The answer of the [takeSnapshot] call still running.
+  Completer<Uint8List>? _pendingSnapshot;
+
+  /// The size of the map before a [takeSnapshot] call with a size resized it,
+  /// until the size is put back.
+  ui.Size? _sizeBeforeSnapshot;
+
+  /// Answers the [takeSnapshot] call still running, if any, with the error
+  /// [code] and [message].
+  void _cancelSnapshot(String code, String message) {
+    final pending = _pendingSnapshot;
+    _pendingSnapshot = null;
+    pending?.completeError(PlatformException(code: code, message: message));
+  }
+
+  /// The snapshot of a [takeSnapshot] call, at [width] by [height] when both
+  /// are set. Null once [current] is false: a newer call or a dispose has
+  /// answered the call, and the size is left for the newer call to put back.
+  Future<Uint8List?> _snapshot(
+    int? width,
+    int? height,
+    bool Function() current,
+  ) async {
+    final sized = width != null && height != null;
+    if (sized) {
+      final container = _map.getContainer();
+      _sizeBeforeSnapshot ??= ui.Size(
+        container.clientWidth.toDouble(),
+        container.clientHeight.toDouble(),
       );
+      await setWebMapToCustomSize(ui.Size(width.toDouble(), height.toDouble()));
+      if (!current()) return null;
       await waitUntilMapTilesAreLoaded();
+    } else if (_sizeBeforeSnapshot case final size?) {
+      // A cancelled call left the map at the size it asked for.
+      _sizeBeforeSnapshot = null;
+      await setWebMapToCustomSize(size);
     }
+    if (!current()) return null;
+    final dataUrl = await _renderedImage();
+    if (!current()) return null;
+    if (_sizeBeforeSnapshot case final size? when sized) {
+      _sizeBeforeSnapshot = null;
+      await setWebMapToCustomSize(size);
+    }
+    return base64Decode(dataUrl.split(',').last);
+  }
 
-    // "preserveDrawingBuffer" is set to false in the WebGL context to get the best possible performance,
-    // therefore we cannot directly use the canvas.toDataURL() method to get a snapshot of the map because it would be blank then.
-    // That's the reason why we trigger a repaint and then directly catch the image data from the canvas during the rendering.
+  /// The map as a PNG data URL, read while it renders: the WebGL context does
+  /// not keep its drawing buffer, for speed, so the canvas is blank between
+  /// renders.
+  Future<String> _renderedImage() {
     final completer = Completer<String>();
     _map.once('render', (_) {
-      final canvas = _map.getCanvas();
-      final dataUrl = canvas.toDataUrl('image/png');
-      completer.complete(dataUrl);
+      completer.complete(_map.getCanvas().toDataUrl('image/png'));
     });
     _map.triggerRepaint();
-    final dataUrl = await completer.future;
-
-    // Restore original size if we changed it
-    if (originalSize != null) {
-      await setWebMapToCustomSize(originalSize);
-    }
-
-    final base64Data = dataUrl.split(',').last;
-    return base64Decode(base64Data);
+    return completer.future;
   }
 }

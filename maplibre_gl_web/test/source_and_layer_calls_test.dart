@@ -130,6 +130,15 @@ class _FakeMap {
         }).toJS,
       );
     }
+    method(
+      'once',
+      ((JSString type, JSFunction listener) {
+        once.add((type: type.toDart, listener: listener));
+        return JSObject()..setProperty('unsubscribe'.toJS, (() {}).toJS);
+      }).toJS,
+    );
+    method('triggerRepaint', (() {}).toJS);
+    method('getCanvas', (() => canvas).toJS);
   }
 
   /// The paint or layout properties set on the layer [layerId], by [kind].
@@ -139,6 +148,20 @@ class _FakeMap {
   /// The paint and layout properties set on each layer, by "layerId Paint" or
   /// "layerId Layout".
   final properties = <String, Map<String, JSAny?>>{};
+
+  /// The listeners waiting for one event.
+  final once = <({String type, JSFunction listener})>[];
+
+  final canvas = web.HTMLCanvasElement();
+
+  /// Fires the event [type] to the listeners waiting for one.
+  void fireOnce(String type) {
+    final waiting = once.where((entry) => entry.type == type).toList();
+    once.removeWhere((entry) => entry.type == type);
+    for (final entry in waiting) {
+      entry.listener.callAsFunction(null, JSObject());
+    }
+  }
 
   final jsObject = JSObject();
 
@@ -834,6 +857,43 @@ void main() {
         throwsA(nonFinite),
       );
       expect(map.url('image'), url);
+    });
+  });
+
+  group('takeSnapshot', () {
+    test('a newer call answers the one still running with '
+        'SNAPSHOT_ERROR', () async {
+      final first = controller.takeSnapshot();
+      final second = controller.takeSnapshot();
+
+      await expectLater(
+        first,
+        throwsA(
+          platformError('SNAPSHOT_ERROR').having(
+            (e) => e.message,
+            'message',
+            'A newer takeSnapshot call cancelled this one.',
+          ),
+        ),
+      );
+      map.fireOnce('render');
+      expect(await second, isNotEmpty);
+    });
+
+    test('dispose answers the call still running with MAP_DISPOSED', () async {
+      final snapshot = controller.takeSnapshot();
+      controller.dispose();
+
+      await expectLater(
+        snapshot,
+        throwsA(
+          platformError('MAP_DISPOSED').having(
+            (e) => e.message,
+            'message',
+            'The map was disposed before the snapshot was ready.',
+          ),
+        ),
+      );
     });
   });
 }
