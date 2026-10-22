@@ -438,6 +438,33 @@ void main() {
     });
   });
 
+  group('hexColorError', () {
+    test('rejects a hex color with digits that are not hex', () {
+      for (final color in ['#ggg', '#ff00zz', '#12345', '#']) {
+        expect(
+          hexColorError('circle-color', color),
+          "Could not parse color from value '$color'.",
+          reason: color,
+        );
+      }
+    });
+
+    test('takes every hex form, and leaves other values to MapLibre', () {
+      for (final color in [
+        '#f00',
+        '#f008',
+        '#ff0000',
+        '#FF000080',
+        '# f 0 0',
+      ]) {
+        expect(hexColorError('circle-color', color), isNull, reason: color);
+      }
+      expect(hexColorError('circle-color', 'red'), isNull);
+      expect(hexColorError('circle-color', ['get', 'color']), isNull);
+      expect(hexColorError('circle-radius', '#ggg'), isNull);
+    });
+  });
+
   test('notGeoJsonSource names the method and the source', () {
     expect(
       notGeoJsonSource('tiles', 'setGeoJsonSource'),

@@ -245,3 +245,21 @@ PlatformException notGeoJsonSource(
       "Source '$sourceId' is not a GeoJSON source. $methodName only applies "
       'to ${clustered ? 'clustered ' : ''}GeoJSON sources.',
 );
+
+/// Why [value] of [property], a layer property, is not a color, or null. Only
+/// a hex color is checked: MapLibre Native reads one with digits that are not
+/// hex, such as `#ggg`, as black, where maplibre-gl-js rejects it with a
+/// reason of its own.
+String? hexColorError(String property, Object? value) {
+  if (!property.endsWith('-color') || value is! String) return null;
+  final color = value.replaceAll(' ', '');
+  if (!color.startsWith('#')) return null;
+  return _hexColor.hasMatch(color)
+      ? null
+      : "Could not parse color from value '$value'.";
+}
+
+/// A hex color as CSS writes it: #rgb, #rgba, #rrggbb or #rrggbbaa.
+final _hexColor = RegExp(
+  r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$',
+);

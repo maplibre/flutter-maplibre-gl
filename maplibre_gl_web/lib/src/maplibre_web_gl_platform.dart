@@ -2213,31 +2213,36 @@ class MapLibreMapController extends MapLibrePlatform
         layerId.toJS,
         name.toJS,
       );
-      String? reason;
-      try {
-        final errors = _mapErrorsDuring(
-          () => map.callMethod<JSAny?>(
-            setter.toJS,
-            layerId.toJS,
-            name.toJS,
-            jsify(value),
-          ),
-        );
-        for (final message in errors) {
-          final error = checks.propertyError(message);
-          if (error == null || checks.isUnknownProperty(error.reason)) {
-            web.console.warn(message.toJS);
-          } else {
-            reason ??= error.reason;
+      var reason = checks.hexColorError(name, value);
+      // A hex color fails with the reason Android and iOS give.
+      if (reason == null) {
+        try {
+          final errors = _mapErrorsDuring(
+            () => map.callMethod<JSAny?>(
+              setter.toJS,
+              layerId.toJS,
+              name.toJS,
+              jsify(value),
+            ),
+          );
+          for (final message in errors) {
+            final error = checks.propertyError(message);
+            if (error == null || checks.isUnknownProperty(error.reason)) {
+              web.console.warn(message.toJS);
+            } else {
+              reason ??= error.reason;
+            }
           }
+        } catch (e) {
+          // Resetting fails only for a property maplibre-gl-js does not know.
+          if (value == null) {
+            web.console.warn(
+              'Cannot reset "$name" of layer "$layerId": $e'.toJS,
+            );
+            continue;
+          }
+          reason = e.toString();
         }
-      } catch (e) {
-        // Resetting fails only for a property maplibre-gl-js does not know.
-        if (value == null) {
-          web.console.warn('Cannot reset "$name" of layer "$layerId": $e'.toJS);
-          continue;
-        }
-        reason = e.toString();
       }
       if (reason != null) {
         for (final set in applied.reversed) {
@@ -2500,9 +2505,10 @@ class MapLibreMapController extends MapLibrePlatform
   /// Adds the layer [layerId] of [layerType] with [properties] and the
   /// [source] entries. maplibre-gl-js reports an invalid filter or property
   /// only through an error event; this throws it instead, the filter first,
-  /// then the property whose name comes first. A property maplibre-gl-js does
-  /// not know is dropped. A layer maplibre-gl-js did not add for any other
-  /// reason fails with `INVALID_LAYER`.
+  /// then the property whose name comes first, a hex color MapLibre Native
+  /// cannot read included. A property maplibre-gl-js does not know is
+  /// dropped. A layer maplibre-gl-js did not add for any other reason fails
+  /// with `INVALID_LAYER`.
   void _addValidatedLayer(
     String layerId,
     String layerType,
@@ -2518,6 +2524,10 @@ class MapLibreMapController extends MapLibrePlatform
     if (!checks.isZoomInRange(minzoom, maxzoom)) {
       throw checks.zoomOutOfRange(layerId);
     }
+    final colorErrors = <String, String>{
+      for (final MapEntry(:key, :value) in properties.entries)
+        if (checks.hexColorError(key, value) case final reason?) key: reason,
+    };
     final before = _existingLayerId(belowLayerId);
     var kept = properties;
     // At most twice: the second time without the properties it did not know.
@@ -2561,11 +2571,20 @@ class MapLibreMapController extends MapLibrePlatform
         }
       }
       if (filterReason != null) throw _invalidFilter(filterReason);
-      if (propertyError case final error?) {
+      var rejected = propertyError;
+      for (final MapEntry(key: property, value: reason)
+          in colorErrors.entries) {
+        if (rejected == null || property.compareTo(rejected.property) <= 0) {
+          rejected = (property: property, reason: reason);
+        }
+      }
+      if (rejected case final error?) {
+        // A failed add changes nothing, whatever maplibre-gl-js took.
+        if (_map.getLayer(layerId) != null) _map.removeLayer(layerId);
         throw _invalidProperty(
           layerId,
           error.property,
-          kept[error.property],
+          properties[error.property],
           error.reason,
         );
       }

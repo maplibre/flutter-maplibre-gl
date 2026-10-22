@@ -114,7 +114,30 @@ class _FakeMap {
       }).toJS,
     );
     method('setStyle', ((JSAny? style, JSAny? options) => jsObject).toJS);
+    for (final kind in ['Paint', 'Layout']) {
+      method(
+        'get${kind}Property',
+        ((JSString layerId, JSString name) =>
+                _properties(layerId.toDart, kind)[name.toDart])
+            .toJS,
+      );
+      method(
+        'set${kind}Property',
+        ((JSString layerId, JSString name, [JSAny? value, JSAny? options]) {
+          _properties(layerId.toDart, kind)[name.toDart] = value;
+          return jsObject;
+        }).toJS,
+      );
+    }
   }
+
+  /// The paint or layout properties set on the layer [layerId], by [kind].
+  Map<String, JSAny?> _properties(String layerId, String kind) =>
+      properties.putIfAbsent('$layerId $kind', () => {});
+
+  /// The paint and layout properties set on each layer, by "layerId Paint" or
+  /// "layerId Layout".
+  final properties = <String, Map<String, JSAny?>>{};
 
   final jsObject = JSObject();
 
@@ -638,6 +661,68 @@ void main() {
         ),
       );
       expect(map.sources.keys, ['clamped']);
+    });
+  });
+
+  group('hex colors', () {
+    setUp(() async {
+      await controller.addGeoJsonSource('points', _collection([]));
+    });
+
+    test('with digits that are not hex fail a layer add and change '
+        'nothing', () async {
+      await expectLater(
+        controller.addCircleLayer(
+          'points',
+          'circles',
+          const {'circle-color': '#ggg', 'circle-radius': 4},
+          enableInteraction: true,
+        ),
+        throwsA(
+          platformError('INVALID_ARGUMENT').having(
+            (e) => e.message,
+            'message',
+            "Invalid value for property 'circle-color' of layer 'circles': "
+                "Could not parse color from value '#ggg'.",
+          ),
+        ),
+      );
+      expect(map.layers, isEmpty);
+      expect(map.layerListeners, isEmpty);
+    });
+
+    test('with digits that are not hex fail setLayerProperties and change '
+        'nothing', () async {
+      await controller.addCircleLayer(
+        'points',
+        'circles',
+        const {'circle-color': '#f008'},
+        enableInteraction: false,
+      );
+      await controller
+          .setLayerProperties('circles', const {
+            'circle-blur': 1,
+            'circle-color': '#ff00zz',
+          })
+          .then<void>(
+            (_) => fail('setLayerProperties succeeded'),
+            onError: (Object error) {
+              expect(
+                error,
+                platformError('INVALID_ARGUMENT').having(
+                  (e) => e.message,
+                  'message',
+                  "Invalid value for property 'circle-color' of layer "
+                      "'circles': Could not parse color from value '#ff00zz'.",
+                ),
+              );
+            },
+          );
+      expect(
+        dartify(map.properties['circles Paint']!['circle-blur']),
+        isNull,
+        reason: 'the property set before it is put back',
+      );
     });
   });
 }
