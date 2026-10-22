@@ -5,7 +5,9 @@
 /// writes carries its id in [featureIdProperty] too, and the source takes its
 /// ids from there with `promoteId`. The functions here keep that property out
 /// of what the app reads, and make `['id']` in an expression read it, since
-/// expressions see the integer ids even with `promoteId`.
+/// expressions see the integer ids even with `promoteId`. The legacy filter
+/// syntax, such as `['==', '$id', 2]`, is left as it is: it reads the integer
+/// ids maplibre-gl-js keeps.
 library;
 
 /// The property holding the id a feature has in the data, and the `promoteId`
@@ -23,12 +25,29 @@ List<Object?> _idExpression() => [
 
 /// [value], an expression or a map of them such as layer properties, with
 /// every `['id']` reading the id in the data. Returns [value] itself when it
-/// holds no `['id']`.
+/// holds no `['id']` to rewrite.
+///
+/// Only expressions are rewritten: a `literal` value, the GeoJSON of
+/// `within` and `distance`, and the labels of a `match` are data, so a label
+/// `['id']` stays the text `id`. An `['id']` already rewritten stays as it is.
 Object? withFeatureIds(Object? value) {
   if (value is List) {
     if (_isId(value)) return _idExpression();
-    if (value.isNotEmpty && value.first == 'literal') return value;
-    return _mapList(value, withFeatureIds);
+    if (_isIdExpression(value) || value.isEmpty) return value;
+    switch (value.first) {
+      case 'literal' || 'within' || 'distance':
+        return value;
+      // ['match', input, label, output, ..., label, output, fallback]
+      case 'match':
+        return _mapList(
+          value,
+          (item, index) =>
+              index > 1 && index < value.length - 1 && index.isEven
+                  ? item
+                  : withFeatureIds(item),
+        );
+    }
+    return _mapList(value, (item, _) => withFeatureIds(item));
   }
   if (value is Map) return _mapValues(value, withFeatureIds);
   return value;
@@ -38,7 +57,7 @@ Object? withFeatureIds(Object? value) {
 Object? withoutFeatureIds(Object? value) {
   if (value is List) {
     if (_isIdExpression(value)) return ['id'];
-    return _mapList(value, withoutFeatureIds);
+    return _mapList(value, (item, _) => withoutFeatureIds(item));
   }
   if (value is Map) return _mapValues(value, withoutFeatureIds);
   return value;
@@ -101,13 +120,16 @@ bool _isIdExpression(List<Object?> value) =>
     value[2] is List &&
     _isId(value[2]! as List);
 
-/// [list] with [convert] applied to each item, or [list] itself when that
-/// changes nothing.
-List<Object?> _mapList(List<Object?> list, Object? Function(Object?) convert) {
+/// [list] with [convert] applied to each item and its index, or [list]
+/// itself when that changes nothing.
+List<Object?> _mapList(
+  List<Object?> list,
+  Object? Function(Object? item, int index) convert,
+) {
   List<Object?>? copy;
   for (var i = 0; i < list.length; i++) {
     final item = list[i];
-    final converted = convert(item);
+    final converted = convert(item, i);
     if (!identical(converted, item)) {
       (copy ??= List<Object?>.of(list))[i] = converted;
     }

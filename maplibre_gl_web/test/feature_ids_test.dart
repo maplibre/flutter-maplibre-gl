@@ -97,6 +97,76 @@ void main() {
       expect(withFeatureIds(null), isNull);
       expect(withFeatureIds(true), isTrue);
     });
+
+    test("leaves a match label ['id'], which is the text id", () {
+      final byLabel = [
+        'match',
+        ['get', 'field'],
+        ['id'],
+        1,
+        0,
+      ];
+      expect(withFeatureIds(byLabel), same(byLabel));
+
+      // The input, the outputs and the fallback are expressions.
+      expect(
+        withFeatureIds([
+          'match',
+          ['id'],
+          ['id'],
+          ['id'],
+          'poi-12',
+          ['id'],
+          ['id'],
+        ]),
+        [
+          'match',
+          idExpression,
+          ['id'],
+          idExpression,
+          'poi-12',
+          idExpression,
+          idExpression,
+        ],
+      );
+    });
+
+    test('leaves the GeoJSON of within and distance as it is', () {
+      final geometry = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {
+          'tags': ['id'],
+        },
+      };
+      final within = ['within', geometry];
+      final distance = ['distance', geometry];
+
+      expect(withFeatureIds(within), same(within));
+      expect(withFeatureIds(distance), same(distance));
+    });
+
+    test('leaves the legacy syntax as it is', () {
+      final legacy = [
+        'all',
+        ['==', r'$id', 'poi-12'],
+        ['in', r'$id', 1, 2],
+        ['has', r'$id'],
+      ];
+
+      expect(withFeatureIds(legacy), same(legacy));
+    });
+
+    test('rewrites an expression once, however many times it runs', () {
+      final once = withFeatureIds([
+        '==',
+        ['id'],
+        2,
+      ]);
+
+      expect(withFeatureIds(once), same(once));
+      expect(withFeatureIds(idExpression), same(idExpression));
+    });
   });
 
   test('withoutFeatureIds gives back what withFeatureIds took', () {
