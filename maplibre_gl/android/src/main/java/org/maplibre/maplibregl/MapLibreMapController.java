@@ -37,6 +37,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
@@ -284,6 +285,9 @@ final class MapLibreMapController
   private final Map<String, Layer> propertyCheckLayers = new HashMap<>();
   // Image source corners set through this API, which the SDK cannot read back.
   private final Map<String, LatLngQuad> imageSourceCoordinates = new HashMap<>();
+  // The filter of each layer this API added or filtered, as it was written, by layer id; JsonNull
+  // for none. The engine turns a legacy filter into internal operators such as filter-==.
+  private final Map<String, JsonElement> layerFilters = new HashMap<>();
 
   private Set<String> interactiveFeatureLayerIds;
   // GeoJSON last fed to each source added through addGeoJsonSource, kept for
@@ -533,6 +537,7 @@ final class MapLibreMapController
     interactiveFeatureLayerIds.clear();
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
+    layerFilters.clear();
 
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
@@ -633,6 +638,7 @@ final class MapLibreMapController
     // The data of the old style's sources must not come back through setGeoJsonFeature.
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
+    layerFilters.clear();
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -832,9 +838,9 @@ final class MapLibreMapController
     if (layer.getMaxZoom() < 24) {
       json.addProperty("maxzoom", layer.getMaxZoom());
     }
-    // Read like getLayerFilter, so numbers keep their exact value.
+    // Read like getLayerFilter.
     try {
-      final JsonElement filter = getRawFilter(layer);
+      final JsonElement filter = isFilterable(layer) ? layerFilter(layer) : null;
       if (filter != null) {
         json.add("filter", filter);
       }
@@ -1623,6 +1629,31 @@ final class MapLibreMapController
     @Override public void w(String tag, String msg, Throwable tr) { target.w(tag, msg, tr); }
     @Override public void e(String tag, String msg) { target.e(tag, msg); }
     @Override public void e(String tag, String msg, Throwable tr) { target.e(tag, msg, tr); }
+  }
+
+  /**
+   * The filter of {@code layer} as it was written, or null without one: as this API set it, else
+   * as the style wrote it. The engine turns a legacy filter into internal operators, such as
+   * {@code filter-==}, so only a layer added some other way is read from the engine.
+   */
+  @Nullable
+  private JsonElement layerFilter(Layer layer) throws ReflectiveOperationException {
+    JsonElement filter;
+    if (layerFilters.containsKey(layer.getId())) {
+      filter = layerFilters.get(layer.getId());
+    } else {
+      final JsonObject loaded = findLoadedLayer(layer.getId());
+      if (loaded == null) {
+        return getRawFilter(layer);
+      }
+      filter = loaded.get("filter");
+    }
+    return filter == null || filter.isJsonNull() ? null : filter;
+  }
+
+  /** The filter text of a layer add or of setFilter as JSON, JsonNull for none. */
+  private static JsonElement filterJson(@Nullable String filter) {
+    return filter == null ? JsonNull.INSTANCE : PigeonConvert.parseFilterJson(filter);
   }
 
   /**
@@ -3259,6 +3290,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3303,6 +3335,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3347,6 +3380,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3391,6 +3425,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3435,6 +3470,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3607,6 +3643,7 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     updateLocationComponentLayer();
 
     result.success(null);
@@ -3783,6 +3820,7 @@ final class MapLibreMapController
     }
     style.removeLayer(layerId);
     interactiveFeatureLayerIds.remove(layerId);
+    layerFilters.remove(layerId);
 
     result.success(null);
   }
@@ -3856,6 +3894,7 @@ final class MapLibreMapController
       result.error(StyleChecks.INVALID_EXPRESSION, "Invalid filter: " + error, error);
       return;
     }
+    layerFilters.put(layerId, filterJson(filter));
     result.success(null);
   }
 
@@ -3882,7 +3921,7 @@ final class MapLibreMapController
 
     JsonElement filter;
     try {
-      filter = getRawFilter(layer);
+      filter = layerFilter(layer);
     } catch (ReflectiveOperationException e) {
       result.error("INTERNAL_ERROR", "Could not read the filter", e.toString());
       return;
