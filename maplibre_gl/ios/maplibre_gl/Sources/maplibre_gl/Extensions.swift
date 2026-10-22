@@ -189,13 +189,19 @@ public extension UIColor {
         else {
             return nil
         }
-        let nibbles = digits.compactMap { $0.hexDigitValue }
-        // A short color repeats each digit: #f80 is #ff8800.
-        let channels: [CGFloat] = digits.count <= 4
-            ? nibbles.map { CGFloat($0 * 17) / 255 }
-            : stride(from: 0, to: nibbles.count, by: 2).map {
-                CGFloat(nibbles[$0] * 16 + nibbles[$0 + 1]) / 255
+        let nibbles: [Int] = digits.compactMap { $0.hexDigitValue }
+        var channels: [CGFloat] = []
+        if nibbles.count <= 4 {
+            // A short color repeats each digit: #f80 is #ff8800.
+            for nibble in nibbles {
+                channels.append(CGFloat(nibble * 17) / 255)
             }
+        } else {
+            for index in stride(from: 0, to: nibbles.count, by: 2) {
+                let byte: Int = nibbles[index] * 16 + nibbles[index + 1]
+                channels.append(CGFloat(byte) / 255)
+            }
+        }
         self.init(
             red: channels[0],
             green: channels[1],
