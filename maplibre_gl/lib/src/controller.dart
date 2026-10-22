@@ -7,9 +7,9 @@ part of '../maplibre_gl.dart';
 typedef OnMapClickCallback =
     void Function(Point<double> point, LatLng coordinates);
 
-// New generalized feature interaction callback that always provides a raw feature id.
-// If the feature also corresponds to a managed annotation, the annotation parameter
-// is non-null; otherwise it is null (e.g. raw style layer feature not managed by an AnnotationManager).
+/// A tap on a feature of an interactive layer. [id] is the feature id as text,
+/// such as `'2'` for the id 2, on every platform. [annotation] is the
+/// annotation the feature belongs to, or null for a feature of your own layers.
 typedef OnFeatureInteractionCallback =
     void Function(
       Point<double> point,
@@ -19,6 +19,8 @@ typedef OnFeatureInteractionCallback =
       Annotation? annotation,
     );
 
+/// A step of a feature drag. [id] is the feature id as text, such as `'2'` for
+/// the id 2, on every platform.
 typedef OnFeatureDragCallback =
     void Function(
       Point<double> point,
@@ -30,6 +32,8 @@ typedef OnFeatureDragCallback =
       DragEventType eventType,
     );
 
+/// The mouse entering, moving over or leaving a feature, on web. [id] is the
+/// feature id as text, such as `'2'` for the id 2.
 typedef OnFeatureHoverCallback =
     void Function(
       Point<double> point,
@@ -158,7 +162,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
-      final id = payload["id"];
+      final id = payload["id"].toString();
       final annotation = getAnnotationById(id);
       final enmDragEventType = DragEventType.values.firstWhere(
         (element) => element.name == payload["eventType"],
@@ -177,7 +181,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
-      final id = payload["id"];
+      final id = payload["id"].toString();
       final annotation = getAnnotationById(id);
       final hoverEventType = HoverEventType.values.firstWhere(
         (e) => e.name == payload["eventType"],

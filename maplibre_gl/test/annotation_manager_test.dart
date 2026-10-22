@@ -728,4 +728,102 @@ void main() {
       expect(tappedId, circle.id);
     });
   });
+
+  group('Feature event ids', () {
+    // iOS and web report a numeric id as a number, Android as text: the
+    // callbacks take it as text everywhere.
+    Map<String, dynamic> drag(Object id) => {
+      'id': id,
+      'eventType': DragEventType.drag.name,
+      'point': const Point(0.0, 0.0),
+      'origin': const LatLng(10, 20),
+      'current': const LatLng(11, 22),
+      'delta': const LatLng(1, 2),
+    };
+
+    Map<String, dynamic> hover(Object id) => {
+      'id': id,
+      'eventType': HoverEventType.enter.name,
+      'point': const Point(0.0, 0.0),
+      'latLng': const LatLng(10, 20),
+    };
+
+    test('a numeric id reaches the tap callback as text', () {
+      final ids = <String>[];
+      controller.onFeatureTapped.add(
+        (point, latLng, id, layerId, annotation) => ids.add(id),
+      );
+
+      platform.onFeatureTappedPlatform.call({
+        'id': 2.5,
+        'layerId': 'pois',
+        'point': const Point(0.0, 0.0),
+        'latLng': const LatLng(10, 20),
+      });
+
+      expect(ids, ['2.5']);
+    });
+
+    test('a numeric id reaches the drag callback as text', () {
+      final ids = <String>[];
+      final annotations = <Annotation?>[];
+      controller.onFeatureDrag.add((
+        point,
+        origin,
+        current,
+        delta,
+        id,
+        annotation,
+        eventType,
+      ) {
+        ids.add(id);
+        annotations.add(annotation);
+      });
+
+      platform.onFeatureDraggedPlatform.call(drag(7));
+
+      expect(ids, ['7']);
+      expect(annotations, [null]);
+    });
+
+    test('a numeric id reaches the hover callback as text', () {
+      final ids = <String>[];
+      final annotations = <Annotation?>[];
+      controller.onFeatureHover.add((point, latLng, id, annotation, type) {
+        ids.add(id);
+        annotations.add(annotation);
+      });
+
+      platform.onFeatureHoverPlatform.call(hover(7));
+
+      expect(ids, ['7']);
+      expect(annotations, [null]);
+    });
+
+    test('drag and hover still resolve an annotation', () async {
+      final circle = await controller.addCircle(
+        const CircleOptions(geometry: LatLng(10, 20), draggable: true),
+      );
+      final resolved = <Annotation?>[];
+      controller.onFeatureDrag.add((
+        point,
+        origin,
+        current,
+        delta,
+        id,
+        annotation,
+        eventType,
+      ) {
+        resolved.add(annotation);
+      });
+      controller.onFeatureHover.add(
+        (point, latLng, id, annotation, type) => resolved.add(annotation),
+      );
+
+      platform.onFeatureDraggedPlatform.call(drag(circle.id));
+      platform.onFeatureHoverPlatform.call(hover(circle.id));
+
+      expect(resolved, [circle, circle]);
+    });
+  });
 }
