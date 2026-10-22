@@ -22,15 +22,20 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
   * **iOS**: `parseError` is now `INVALID_GEOJSON`
   * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119):
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
   * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error.
   * **Android, Web**: `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. Android and web ignored these, iOS crashed on some.
+  * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`, and a `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`. Android and iOS added a layer that drew nothing, web dropped it.
+  * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE` instead of `SOURCE_NOT_FOUND`.
+  * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
+  * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Only integer ids come back the same on every platform: see the migration guide (#1073).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
+* **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
@@ -71,6 +76,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web can play video sources (#1119).
 * **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
+* **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
+* **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web, instead of throwing `LAYER_NOT_FOUND_ERROR` (#1123).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -130,9 +137,19 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `setLayerProperties` applies all the values or none.
   * `getSourceProperties` returns the same shape for image sources on every platform.
   * A layer added below a layer the style does not have goes on top.
-  * `setGeoJsonFeature` works after `editGeoJsonSource` and `editGeoJsonUrl`, and on a source that holds a single Feature.
+  * `setGeoJsonFeature` works after `editGeoJsonSource` and on a source that holds a single Feature.
   * **Web**: `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, and `updateImageSource` moves the corners at once.
   * **Android**: query filters keep their numbers exact, and camera values keep double precision.
+* More fixes from the reviews of the Pigeon migration (#1123):
+  * No crash on NaN or infinite coordinates and camera values, which throw `INVALID_ARGUMENT` (iOS), nor on `addSource` with malformed bounds, zoom levels or urls (iOS, and Android for bounds).
+  * `takeSnapshot` answers `SNAPSHOT_ERROR` when a newer call cancels it and `MAP_DISPOSED` when the map goes away, instead of never completing.
+  * **iOS**: camera calls made before the map has a size, now including `setCameraBounds`, `updateContentInsets` and option updates, wait for the first layout, and answer `MAP_DISPOSED` if the map goes away first.
+  * **Web**: `editGeoJsonUrl` works in JavaScript builds; it threw a `TypeError` outside wasm.
+  * GeoJSON holding objects with `toJson()` goes in again on Android and iOS, and now on web.
+  * Writes to the same GeoJSON source keep their order, and `addSource` checks large GeoJSON off the UI isolate.
+  * `removeSource` keeps a source that a layer still uses, and a source added again with the same id no longer brings back old data in `setGeoJsonFeature`.
+  * **Android**: pausing an offline region right after resuming it keeps it paused.
+  * `setLayerProperties` converts each value once on Android and iOS instead of twice.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

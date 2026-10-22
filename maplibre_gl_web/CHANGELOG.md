@@ -3,13 +3,17 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Actions needed
-* Some calls that used to do nothing, or answer a wrong value, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119):
+* Some calls that used to do nothing, or answer a wrong value, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123):
   * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id, where they answered 0 or an empty list.
   * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY`.
   * `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre GL JS cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. These were dropped with a console log.
+  * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`, a `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, and a layer MapLibre GL JS does not add throws `INVALID_LAYER`.
+  * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE`, and a feature with `"id": null` throws `INVALID_GEOJSON`.
+  * A hex color with a digit that is not hex throws `INVALID_ARGUMENT`, and `addSource` checks bounds, tile zoom levels and urls as Android and iOS do.
+* `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
@@ -45,6 +49,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
 * The queries throw a `PlatformException` with code `INVALID_EXPRESSION` for a filter MapLibre GL JS rejects, and `queryRenderedFeaturesInRect` filters only with an expression array, as on Android and iOS (#1119).
 * `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, `updateImageSource` moves the corners at once, and a layer added below a missing layer goes on top (#1119).
+* `editGeoJsonUrl` works in JavaScript builds; it threw a `TypeError` outside wasm. `removeSource` keeps a source that a layer still uses, image source bytes load through an object URL, and GeoJSON holding objects with `toJson()` goes in (#1123).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
