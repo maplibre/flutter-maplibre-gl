@@ -94,7 +94,7 @@ void main() {
 
   group('calls', () {
     test('initPlatform waits for the map on the channel of its view', () {
-      // Without arguments, as the legacy map#waitForMap.
+      // Without arguments.
       expect(calls('mapWaitForMap'), [null]);
     });
 
@@ -173,21 +173,132 @@ void main() {
 
       expect(moved, isTrue);
       expect(animated, isFalse);
+      // Native decodes each kind of update as its own class.
       expect(calls('cameraMove'), [
         [
-          [
-            'newLatLngZoom',
-            [45.0, 9.0],
-            12.0,
-          ],
+          PgCameraUpdateNewLatLngZoom(
+            latLng: PgLatLng(latitude: 45, longitude: 9),
+            zoom: 12,
+          ),
         ],
       ]);
       expect(calls('cameraAnimate'), [
+        [PgCameraUpdateZoomTo(zoom: 3), 300],
+      ]);
+    });
+
+    test('updateMapOptions sends the options and reads the camera', () async {
+      onHost(
+        'mapUpdate',
+        (_) => PgCameraPosition(
+          bearing: 30,
+          target: PgLatLng(latitude: 45, longitude: 9),
+          tilt: 10,
+          zoom: 12,
+        ),
+      );
+
+      final position = await platform.updateMapOptions({
+        'compassEnabled': false,
+        'myLocationTrackingMode': MyLocationTrackingMode.tracking.index,
+        'cameraTargetBounds': CameraTargetBounds.unbounded.toJson(),
+      });
+
+      expect(
+        position,
+        const CameraPosition(
+          bearing: 30,
+          target: LatLng(45, 9),
+          tilt: 10,
+          zoom: 12,
+        ),
+      );
+      expect(calls('mapUpdate'), [
         [
-          ['zoomTo', 3.0],
-          300,
+          PgMapOptions(
+            compassEnabled: false,
+            myLocationTrackingMode: PgMyLocationTrackingMode.tracking,
+            cameraTargetBounds: PgCameraTargetBounds(),
+          ),
         ],
       ]);
+    });
+
+    test('the typed answers become the values of the public API', () async {
+      onHost(
+        'mapGetVisibleRegion',
+        (_) => PgLatLngBounds(
+          southwest: PgLatLng(latitude: 1, longitude: 2),
+          northeast: PgLatLng(latitude: 3, longitude: 4),
+        ),
+      );
+      onHost('mapToScreenLocation', (_) => PgScreenPoint(x: 10.5, y: 20));
+      onHost('mapGetMetersPerPixelAtLatitude', (_) => 0.5);
+      onHost('styleGetFilter', (_) => '["has","name"]');
+      onHost('mapGetCustomHeaders', (_) => <String, String>{'X-Key': 'v'});
+
+      expect(
+        await platform.getVisibleRegion(),
+        LatLngBounds(
+          southwest: const LatLng(1, 2),
+          northeast: const LatLng(3, 4),
+        ),
+      );
+      expect(
+        await platform.toScreenLocation(const LatLng(1, 2)),
+        const Point(10.5, 20.0),
+      );
+      expect(await platform.getMetersPerPixelAtLatitude(45), 0.5);
+      expect(await platform.getFilter('layer'), ['has', 'name']);
+      expect(await platform.getCustomHeaders(), {'X-Key': 'v'});
+    });
+
+    test('the image corners cross as a quad', () async {
+      onHost('styleAddImageSource', (_) => null);
+
+      await platform.addImageSource(
+        'image',
+        Uint8List.fromList([1]),
+        const LatLngQuad(
+          topLeft: LatLng(4, 1),
+          topRight: LatLng(4, 2),
+          bottomRight: LatLng(3, 2),
+          bottomLeft: LatLng(3, 1),
+        ),
+      );
+
+      final args = calls('styleAddImageSource')!.single! as List<Object?>;
+      expect(
+        args[3],
+        PgLatLngQuad(
+          topLeft: PgLatLng(latitude: 4, longitude: 1),
+          topRight: PgLatLng(latitude: 4, longitude: 2),
+          bottomRight: PgLatLng(latitude: 3, longitude: 2),
+          bottomLeft: PgLatLng(latitude: 3, longitude: 1),
+        ),
+      );
+    });
+
+    test('the creation params survive the codec of the messages', () {
+      final params = PgCreationParams(
+        styleString: 'https://example.com/style.json',
+        options: PgMapOptions(
+          compassEnabled: true,
+          panInertia: PgPanInertia.none,
+          myLocationStyle: PgMyLocationStyle(accuracyCircleEnabled: true),
+        ),
+        initialCameraPosition: PgCameraPosition(
+          bearing: 0,
+          target: PgLatLng(latitude: 45, longitude: 9),
+          tilt: 0,
+          zoom: 3,
+        ),
+        dragEnabled: true,
+        iosLongClickDurationMs: 300,
+        useHybridComposition: false,
+      );
+
+      expect(codec.decodeMessage(codec.encodeMessage(params)), params);
     });
 
     test('toScreenLocationBatch sends and reads a Float64List', () async {
@@ -219,12 +330,10 @@ void main() {
       ]);
     });
 
-    test('queryRenderedFeatures reads the features map', () async {
+    test('queryRenderedFeatures reads the features', () async {
       onHost(
         'mapQueryRenderedFeaturesAtPoint',
-        (_) => <String, Object?>{
-          'features': <Object?>['{"type":"Feature","id":1}'],
-        },
+        (_) => <Object?>['{"type":"Feature","id":1}'],
       );
 
       final features = await platform.queryRenderedFeatures(
@@ -232,10 +341,15 @@ void main() {
         ['layer'],
         null,
       );
+      await platform.queryRenderedFeatures(const Point(10, 20), [], [
+        'has',
+        'name',
+      ]);
 
       expect(features, [
         {'type': 'Feature', 'id': 1},
       ]);
+      // The filter crosses as JSON text, and as null without one.
       expect(calls('mapQueryRenderedFeaturesAtPoint'), [
         [
           10.0,
@@ -243,6 +357,7 @@ void main() {
           ['layer'],
           null,
         ],
+        [10.0, 20.0, <String>[], '["has","name"]'],
       ]);
     });
 
@@ -278,6 +393,21 @@ void main() {
       );
 
       expect(await platform.requestMyLocationLatLng(), isNull);
+    });
+
+    test('a null reply to getLastLocation reads as no location', () async {
+      onHost('locationComponentGetLastLocation', (_) => null);
+
+      expect(await platform.requestMyLocationLatLng(), isNull);
+    });
+
+    test('getLastLocation reads the location', () async {
+      onHost(
+        'locationComponentGetLastLocation',
+        (_) => PgLatLng(latitude: 45, longitude: 9),
+      );
+
+      expect(await platform.requestMyLocationLatLng(), const LatLng(45, 9));
     });
 
     test('a null reply to a non-null method is a null-error', () async {
@@ -439,7 +569,9 @@ void main() {
 
       await fromNative('mapOnStyleLoaded', null);
       await fromNative('mapOnIdle', null);
-      await fromNative('mapOnCameraTrackingChanged', [3]);
+      await fromNative('mapOnCameraTrackingChanged', [
+        PgMyLocationTrackingMode.trackingGps,
+      ]);
       await fromNative('mapOnCameraTrackingDismissed', null);
       await fromNative('mapOnMapClick', [
         PgScreenPoint(x: 1, y: 2),
@@ -667,7 +799,7 @@ void main() {
     }
 
     test('the Dart client sends on the listed name and the view id', () async {
-      onHost('styleGetLayerIds', (_) => <String, Object?>{'layers': []});
+      onHost('styleGetLayerIds', (_) => <Object?>[]);
 
       await platform.getLayerIds();
 

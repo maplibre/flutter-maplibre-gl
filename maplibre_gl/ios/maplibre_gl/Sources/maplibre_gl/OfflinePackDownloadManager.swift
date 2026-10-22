@@ -114,7 +114,7 @@ class OfflinePackDownloader {
     private func releaseDuplicate(_ pack: MLNOfflinePack) {
         guard let oldId = OfflineRegion.fromOfflinePack(pack)?.id else { return }
         OfflineManagerUtils.activeDownloaders[oldId]?.terminate(
-            errorCode: "RegionReplaced",
+            errorCode: OfflineErrorCode.regionReplaced,
             errorMessage: "Region was replaced by a new download of the same area"
         )
         OfflineManagerUtils.activePacks.removeValue(forKey: oldId)
@@ -180,12 +180,12 @@ class OfflinePackDownloader {
     private func onPackCreationError(error: Error?) {
         // Reset downloading state
         channelHandler.onError(
-            errorCode: "invalidRegionDefinition",
+            errorCode: OfflineErrorCode.invalidRegionDefinition,
             errorMessage: error?.localizedDescription,
             errorDetails: nil
         )
         result(FlutterError(
-            code: "invalidRegionDefinition",
+            code: OfflineErrorCode.invalidRegionDefinition,
             message: error?.localizedDescription,
             details: nil
         ))
@@ -251,12 +251,12 @@ class OfflinePackDownloader {
         // set download state to inactive
         isCompleted = true
         channelHandler.onError(
-            errorCode: "tileCountLimitExceeded",
+            errorCode: OfflineErrorCode.tileCountLimitExceeded,
             errorMessage: "MapLibre tile count limit exceeded: \(maximumCount)",
             errorDetails: nil
         )
         result(FlutterError(
-            code: "tileCountLimitExceeded",
+            code: OfflineErrorCode.tileCountLimitExceeded,
             message: "MapLibre tile count limit exceeded: \(maximumCount)",
             details: nil
         ))

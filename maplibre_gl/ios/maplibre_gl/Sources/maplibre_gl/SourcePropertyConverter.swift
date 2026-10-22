@@ -132,13 +132,10 @@ class SourcePropertyConverter {
         if let tiles = properties["tiles"] as? [String] {
             var options = interpretTileOptions(properties: properties)
             if let encoding = properties["encoding"] as? String {
-                // MLNDEMEncoding only knows mapbox and terrarium; the spec's
-                // "custom" encoding is web-only and is rejected before it gets
-                // here. Refusing anything else lets addSource report an
-                // invalidSourceType failure, rather than decoding the tiles as
-                // mapbox and drawing a plausible map from wrong elevations.
-                // The encoding is caller input, so it goes through the %@
-                // argument instead of into the NSLog format string.
+                // MLNDEMEncoding knows only the two encodings below ("custom" is web
+                // only and rejected before this). Any other fails addSource with
+                // INVALID_ARGUMENT rather than drawing wrong elevations with the default.
+                // The encoding is caller input, so it goes through %@, not the format string.
                 switch encoding {
                 case "terrarium":
                     options[.demEncoding] = NSNumber(value: MLNDEMEncoding.terrarium.rawValue)
@@ -193,7 +190,7 @@ class SourcePropertyConverter {
                     let mapExpressionValue = expressions[1]
 
                     // The operator can be either:
-                    // 1. A simple string like "+" — expand to ["+", ["accumulated"], ["get", propertyName]]
+                    // 1. A simple string like "+": expand to ["+", ["accumulated"], ["get", propertyName]]
                     // 2. A full reduce expression array like ["+", ["accumulated"], ["get", "sum"]]
                     let operatorJSON: Any
                     if let op = operatorValue as? String {
@@ -231,6 +228,37 @@ class SourcePropertyConverter {
             } catch {}
         }
         return nil
+    }
+
+    /// Whether `properties` give an image source a url and four [lng, lat]
+    /// corners. quadFromArray and MapLibre would crash on bad corners.
+    class func isImageSource(_ properties: [String: Any]) -> Bool {
+        guard let url = properties["url"] as? String, !url.isEmpty,
+              let corners = properties["coordinates"] as? [Any], corners.count == 4
+        else {
+            return false
+        }
+        for corner in corners {
+            guard let pair = corner as? [Any], pair.count == 2,
+                  let longitude = number(pair[0]), let latitude = number(pair[1]),
+                  longitude.doubleValue.isFinite,
+                  latitude.doubleValue >= -90, latitude.doubleValue <= 90
+            else {
+                return false
+            }
+        }
+        return true
+    }
+
+    /// `value` as a number, or nil. The channel hands booleans over as
+    /// NSNumbers too.
+    private class func number(_ value: Any) -> NSNumber? {
+        guard let number = value as? NSNumber,
+              CFGetTypeID(number) != CFBooleanGetTypeID()
+        else {
+            return nil
+        }
+        return number
     }
 
     class func buildImageSource(identifier: String, properties: [String: Any]) -> MLNImageSource? {

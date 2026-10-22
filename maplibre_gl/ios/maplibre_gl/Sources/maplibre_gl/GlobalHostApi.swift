@@ -93,12 +93,9 @@ class GlobalHostApi: MapLibreGlobalHostApi {
         limit: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        // UInt64 below would trap on a negative limit.
         guard limit >= 0 else {
-            completion(.failure(PigeonError(
-                code: "SetOfflineTileCountLimitError",
-                message: "The tile count limit cannot be negative.",
-                details: nil
-            )))
+            completion(.failure(invalidArgument("limit must be >= 0 (got \(limit))")))
             return
         }
         OfflineManagerUtils.setOfflineTileCountLimit(
@@ -108,11 +105,22 @@ class GlobalHostApi: MapLibreGlobalHostApi {
     }
 
     func setOfflineMaxConcurrentRequests(
-        maxRequests _: Int64?,
+        maxRequests: Int64?,
         maxRequestsPerHost: Int64?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        // iOS has a per-host limit only; maxRequests is Android only.
+        // iOS has a per-host limit only. maxRequests is still checked, so a
+        // value Android rejects fails here too.
+        if let maxRequests = maxRequests, maxRequests < 1 {
+            completion(.failure(invalidArgument("maxRequests must be >= 1 (got \(maxRequests))")))
+            return
+        }
+        if let maxRequestsPerHost = maxRequestsPerHost, maxRequestsPerHost < 1 {
+            completion(.failure(invalidArgument(
+                "maxRequestsPerHost must be >= 1 (got \(maxRequestsPerHost))"
+            )))
+            return
+        }
         OfflineManagerUtils.setMaxConcurrentRequests(
             result: voidResult(completion),
             maxRequestsPerHost: maxRequestsPerHost.map { Int($0) }
@@ -149,12 +157,9 @@ class GlobalHostApi: MapLibreGlobalHostApi {
         bytes: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        // UInt64 below would trap on a negative size.
         guard bytes >= 0 else {
-            completion(.failure(PigeonError(
-                code: "SetMaximumAmbientCacheSizeError",
-                message: "The ambient cache size cannot be negative.",
-                details: nil
-            )))
+            completion(.failure(invalidArgument("bytes must be >= 0 (got \(bytes))")))
             return
         }
         OfflineManagerUtils.setMaximumAmbientCacheSize(
@@ -177,7 +182,7 @@ class GlobalHostApi: MapLibreGlobalHostApi {
             .fromDictionary(nonOptionalValues(definition))
         else {
             completion(.failure(PigeonError(
-                code: "invalidRegionDefinition",
+                code: OfflineErrorCode.invalidRegionDefinition,
                 message: "The region definition needs bounds, mapStyleUrl, minZoom and maxZoom.",
                 details: nil
             )))
@@ -193,6 +198,10 @@ class GlobalHostApi: MapLibreGlobalHostApi {
     }
 
     // MARK: Helpers
+
+    private func invalidArgument(_ message: String) -> PigeonError {
+        PigeonError(code: OfflineErrorCode.invalidArgument, message: message, details: nil)
+    }
 
     private static func getTilesUrl() -> URL {
         guard var cachesUrl = FileManager.default.urls(

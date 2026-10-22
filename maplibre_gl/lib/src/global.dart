@@ -97,6 +97,9 @@ Future<void> setHttpHeaders(Map<String, String> headers) =>
 /// Imports the regions of the offline database at [path], for example one
 /// written by [exportOfflineDatabase] on another device, and returns them.
 ///
+/// Throws a [PlatformException] with code `OFFLINE_DATABASE_ERROR` when the
+/// file cannot be merged, with MapLibre's reason as the message.
+///
 /// Android and iOS only; throws [UnsupportedError] on web.
 Future<List<OfflineRegion>> mergeOfflineRegions(String path) =>
     _global.mergeOfflineRegions(path);
@@ -147,11 +150,11 @@ Future<List<OfflineRegion>> getListOfRegions() => _global.getListOfRegions();
 ///
 /// [metadata] must be JSON-encodable: strings, numbers, booleans, null, and
 /// lists and maps of those, with string keys. Other values, such as a
-/// `Uint8List`, fail on iOS with `UpdateMetadataError`, while Android stores
+/// `Uint8List`, fail on iOS with `INVALID_ARGUMENT`, while Android stores
 /// them in whatever form its JSON encoder gives them (a `Uint8List` comes
 /// back as a list of numbers).
 ///
-/// Throws a [PlatformException] with code `UpdateMetadataError` when no region
+/// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
 /// has that [id].
 Future<OfflineRegion> updateOfflineRegionMetadata(
   int id,
@@ -159,7 +162,11 @@ Future<OfflineRegion> updateOfflineRegionMetadata(
 ) => _global.updateOfflineRegionMetadata(id, metadata);
 
 /// Caps the number of tiles a single offline region download may store.
-/// A download that would need more fails with `tileCountLimitExceeded`.
+/// A download that would need more ends with an [Error] event whose code is
+/// `TILE_COUNT_LIMIT_EXCEEDED`, and the region is deleted.
+///
+/// Throws a [PlatformException] with code `INVALID_ARGUMENT` if [limit] is
+/// negative.
 Future<void> setOfflineTileCountLimit(int limit) =>
     _global.setOfflineTileCountLimit(limit);
 
@@ -170,8 +177,8 @@ Future<void> setOfflineTileCountLimit(int limit) =>
 /// (both platforms). Lowering these values can help avoid rate limiting from
 /// tile servers (e.g. Cloudflare).
 ///
-/// Both values must be >= 1 when provided; OkHttp's `Dispatcher` throws on
-/// non-positive values.
+/// Throws a [PlatformException] with code `INVALID_ARGUMENT` if either value
+/// is below 1.
 Future<void> setOfflineMaxConcurrentRequests({
   int? maxRequests,
   int? maxRequestsPerHost,
@@ -191,24 +198,45 @@ Future<void> setOfflineMaxConcurrentRequests({
 }
 
 /// Pauses an in-progress offline region download.
+///
+/// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
+/// has that [id].
 Future<void> pauseOfflineRegionDownload(int id) =>
     _global.pauseOfflineRegionDownload(id);
 
 /// Resumes a paused offline region download.
+///
+/// It also resumes a region no [downloadOfflineRegion] call of this app
+/// session follows, such as one paused before the app restarted; read its
+/// progress with [getOfflineRegionStatus]. A complete region is left as it
+/// is.
+///
+/// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
+/// has that [id].
 Future<void> resumeOfflineRegionDownload(int id) =>
     _global.resumeOfflineRegionDownload(id);
 
 /// Gets the current download status of an offline region.
+///
+/// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
+/// has that [id].
 Future<OfflineRegionStatus> getOfflineRegionStatus(int id) =>
     _global.getOfflineRegionStatus(id);
 
 /// Deletes the offline region with the given [id] and the tiles only it uses.
+///
+/// A download of the region still in progress ends with an [Error] event
+/// whose code is `REGION_DELETED`. Throws a [PlatformException] with code
+/// `REGION_NOT_FOUND` when no region has that [id].
 Future<void> deleteOfflineRegion(int id) => _global.deleteOfflineRegion(id);
 
 /// Removes all tiles from the shared ambient cache that are not associated
 /// with any offline region. Call this after [deleteOfflineRegion] to fully
 /// evict tiles that would otherwise be reused by a future download of the
 /// same area.
+///
+/// Throws a [PlatformException] with code `AMBIENT_CACHE_ERROR` when MapLibre
+/// fails to clear the cache.
 Future<void> clearAmbientCache() => _global.clearAmbientCache();
 
 /// Sets the size limit, in [bytes], of the ambient cache: the tiles and
@@ -219,8 +247,9 @@ Future<void> clearAmbientCache() => _global.clearAmbientCache();
 /// Call it before the first map is created. A cache already over the new
 /// limit is trimmed right away.
 ///
-/// Throws an [ArgumentError] if [bytes] is negative. Android and iOS only;
-/// throws [UnsupportedError] on web.
+/// Throws an [ArgumentError] if [bytes] is negative, and a
+/// [PlatformException] with code `AMBIENT_CACHE_ERROR` when MapLibre fails to
+/// apply the limit. Android and iOS only; throws [UnsupportedError] on web.
 Future<void> setMaximumAmbientCacheSize(int bytes) {
   if (bytes < 0) {
     throw ArgumentError.value(bytes, 'bytes', 'Must be 0 or more');
@@ -229,16 +258,24 @@ Future<void> setMaximumAmbientCacheSize(int bytes) {
 }
 
 /// Resets the entire offline database: deletes every offline region and
-/// clears the ambient cache. Use with care — offline regions cannot be
+/// clears the ambient cache. Use with care: offline regions cannot be
 /// recovered afterwards.
+///
+/// Downloads still in progress end with an [Error] event whose code is
+/// `DATABASE_RESET`. Throws a [PlatformException] with code
+/// `OFFLINE_DATABASE_ERROR` when MapLibre fails to reset the database.
 Future<void> resetOfflineDatabase() => _global.resetOfflineDatabase();
 
 /// Downloads the region described by [definition] for offline use and
 /// completes with it once the region is created, before its tiles are in.
 ///
 /// [onEvent] receives the progress of the download: [InProgress] events, then
-/// [Success], or [Error] with the [PlatformException] that stopped it.
+/// [Success], or [Error] with the [PlatformException] that stopped it. Its
+/// code says why: see [Error].
 /// [metadata] is stored with the region and must be JSON-encodable.
+///
+/// Throws a [PlatformException] with code `INVALID_REGION_DEFINITION` when
+/// MapLibre cannot create a region from [definition].
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},

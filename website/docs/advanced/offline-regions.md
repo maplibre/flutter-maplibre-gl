@@ -135,6 +135,18 @@ print('Downloaded: ${status.completedResourceCount} tiles');
 print('Complete: ${status.isComplete}');
 ```
 
+## Pause and resume a download
+
+```dart
+await pauseOfflineRegionDownload(region.id);
+// Later, also after the app restarted:
+await resumeOfflineRegionDownload(region.id);
+```
+
+A region paused before the app restarted resumes too. No `onEvent` reports
+its progress then: read it with `getOfflineRegionStatus`. A complete region is
+left as it is.
+
 ## Delete a region
 
 ```dart
@@ -238,6 +250,39 @@ Passing `0` disables ambient caching. If the cache is already over the new
 limit, the SDK trims it immediately, which can take a moment on a large
 database. Not available on web, which has no ambient cache.
 
+## Errors
+
+The offline calls fail with a `PlatformException` whose `code` is the same on
+Android and iOS:
+
+| Code | When |
+|---|---|
+| `REGION_NOT_FOUND` | `pauseOfflineRegionDownload`, `resumeOfflineRegionDownload`, `getOfflineRegionStatus`, `deleteOfflineRegion` or `updateOfflineRegionMetadata` got an id that no stored region has. |
+| `INVALID_ARGUMENT` | A negative `setOfflineTileCountLimit` limit, a `setOfflineMaxConcurrentRequests` value below 1, or, on iOS, metadata that is not JSON-encodable. |
+| `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from. |
+| `OFFLINE_DATABASE_ERROR` | The offline database failed the call, for example on a file `mergeOfflineRegions` cannot import. The message carries MapLibre's reason. |
+| `AMBIENT_CACHE_ERROR` | MapLibre failed to clear the ambient cache or to change its size. |
+
+A download that stops before it completes calls `onEvent` with an `Error`
+whose `cause.code` says why:
+
+| Code | When |
+|---|---|
+| `INVALID_REGION_DEFINITION` | MapLibre could not create the region. `downloadOfflineRegion` fails with the same error. |
+| `TILE_COUNT_LIMIT_EXCEEDED` | The region needs more tiles than the limit set with `setOfflineTileCountLimit`. The region is deleted. |
+| `REGION_DELETED` | `deleteOfflineRegion` deleted the region. |
+| `REGION_REPLACED` | A download of the same area replaced the region. |
+| `DATABASE_RESET` | `resetOfflineDatabase` deleted every region. |
+
+```dart
+try {
+  await deleteOfflineRegion(id);
+} on PlatformException catch (e) {
+  // Deleted already, for example from another screen.
+  if (e.code != 'REGION_NOT_FOUND') rethrow;
+}
+```
+
 ## Key APIs
 
 | Function | Description |
@@ -245,6 +290,7 @@ database. Not available on web, which has no ambient cache.
 | `downloadOfflineRegion(definition, onEvent)` | Start a download, get status callbacks |
 | `getListOfRegions()` | List all downloaded regions |
 | `getOfflineRegionStatus(id)` | Check status of a specific region |
+| `pauseOfflineRegionDownload(id)` / `resumeOfflineRegionDownload(id)` | Pause or resume a download |
 | `deleteOfflineRegion(id)` | Delete a downloaded region |
 | `mergeOfflineRegions(path)` | Import regions from an external database file |
 | `exportOfflineDatabase(destPath)` | Copy the whole offline database to a shareable file |

@@ -69,8 +69,13 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
         callback: (Result<String>) -> Unit,
     ) = string(callback) { OfflineManagerUtils.updateRegionMetadata(it, context, id, metadata) }
 
-    override fun setOfflineTileCountLimit(limit: Long, callback: (Result<Unit>) -> Unit) =
+    override fun setOfflineTileCountLimit(limit: Long, callback: (Result<Unit>) -> Unit) {
+        if (limit < 0) {
+            callback(invalidArgument("limit must be >= 0 (got $limit)"))
+            return
+        }
         unit(callback) { OfflineManagerUtils.setOfflineTileCountLimit(it, context, limit) }
+    }
 
     override fun setOfflineMaxConcurrentRequests(
         maxRequests: Long?,
@@ -99,8 +104,13 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
     override fun clearAmbientCache(callback: (Result<Unit>) -> Unit) =
         unit(callback) { OfflineManagerUtils.clearAmbientCache(it, context) }
 
-    override fun setMaximumAmbientCacheSize(bytes: Long, callback: (Result<Unit>) -> Unit) =
+    override fun setMaximumAmbientCacheSize(bytes: Long, callback: (Result<Unit>) -> Unit) {
+        if (bytes < 0) {
+            callback(invalidArgument("bytes must be >= 0 (got $bytes)"))
+            return
+        }
         unit(callback) { OfflineManagerUtils.setMaximumAmbientCacheSize(it, context, bytes) }
+    }
 
     override fun resetOfflineDatabase(callback: (Result<Unit>) -> Unit) =
         unit(callback) { OfflineManagerUtils.resetOfflineDatabase(it, context) }
@@ -119,6 +129,10 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
             OfflineDownloadEvents(downloadEvents, downloadId),
         )
     }
+
+    // A negative limit or size is rejected here, before it reaches the SDK.
+    private fun invalidArgument(message: String): Result<Unit> =
+        Result.failure(PigeonError("INVALID_ARGUMENT", message, null))
 
     /** Runs an operation that answers nothing through a [MethodChannel.Result]. */
     private fun unit(callback: (Result<Unit>) -> Unit, block: (MethodChannel.Result) -> Unit) =

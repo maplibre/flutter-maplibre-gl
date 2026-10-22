@@ -744,6 +744,10 @@ class GeojsonSourceProperties implements SourceProperties {
   }
 }
 
+/// A video drawn over four corners of the map.
+///
+/// **Platform support**: web only. On Android and iOS
+/// `MapLibreMapController.addSource` throws `UNSUPPORTED_SOURCE_TYPE`.
 class VideoSourceProperties implements SourceProperties {
   /// URLs to video content in order of preferred format.
   ///
@@ -794,14 +798,18 @@ class VideoSourceProperties implements SourceProperties {
   }
 }
 
+/// An image drawn from a url over four corners of the map. For image bytes, use
+/// `MapLibreMapController.addImageSource`.
 class ImageSourceProperties implements SourceProperties {
-  /// URL that points to an image. Optional: a source created without a url
-  /// starts empty and renders nothing until an image is set at runtime.
+  /// URL that points to an image. Required: `addSource` throws
+  /// `INVALID_ARGUMENT` without it.
   ///
   /// Type: string
   final String? url;
 
-  /// Corners of image specified in longitude, latitude pairs.
+  /// Corners of the image as [longitude, latitude]: top left, top right,
+  /// bottom right, bottom left. Required: `addSource` throws
+  /// `INVALID_ARGUMENT` without four valid corners.
   ///
   /// Type: array
   final List<List>? coordinates;

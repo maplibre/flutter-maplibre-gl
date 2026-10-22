@@ -272,14 +272,14 @@ void main() {
       await sendDownloadEvent(
         PgOfflineDownloadEvent(
           status: PgOfflineDownloadStatus.error,
-          errorCode: 'tileCountLimitExceeded',
+          errorCode: 'TILE_COUNT_LIMIT_EXCEEDED',
           errorMessage: 'too many tiles',
         ),
       );
 
       expect(statuses, hasLength(1));
       final cause = (statuses.single as Error).cause;
-      expect(cause.code, 'tileCountLimitExceeded');
+      expect(cause.code, 'TILE_COUNT_LIMIT_EXCEEDED');
       expect(cause.message, 'too many tiles');
     });
 
@@ -310,7 +310,7 @@ void main() {
 
     test('fails with the error native answers', () async {
       api.downloadError = PlatformException(
-        code: 'invalidRegionDefinition',
+        code: 'INVALID_REGION_DEFINITION',
         message: 'bad bounds',
       );
 
@@ -320,7 +320,7 @@ void main() {
           isA<PlatformException>().having(
             (e) => e.code,
             'code',
-            'invalidRegionDefinition',
+            'INVALID_REGION_DEFINITION',
           ),
         ),
       );
@@ -328,7 +328,7 @@ void main() {
 
     test('drops the listener when native fails the call', () async {
       // As iOS does on a definition it cannot read: no event follows.
-      api.downloadError = PlatformException(code: 'invalidRegionDefinition');
+      api.downloadError = PlatformException(code: 'INVALID_REGION_DEFINITION');
       final statuses = <DownloadRegionStatus>[];
 
       await expectLater(

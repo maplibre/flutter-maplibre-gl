@@ -211,44 +211,45 @@ void main() {
       return controller;
     }
 
-    for (final code in ['styleNotFound', 'STYLE_NOT_READY']) {
-      test(
-        'a $code error is not reported and the next load recovers',
-        () async {
-          var styleLoads = 0;
-          final controller = createController(() => styleLoads++);
-          final errors = <Object>[];
+    test(
+      'a STYLE_NOT_READY error is not reported and the next load recovers',
+      () async {
+        var styleLoads = 0;
+        final controller = createController(() => styleLoads++);
+        final errors = <Object>[];
 
-          final logs = <String?>[];
-          final previousDebugPrint = debugPrint;
-          debugPrint = (message, {wrapWidth}) => logs.add(message);
-          addTearDown(() => debugPrint = previousDebugPrint);
+        final logs = <String?>[];
+        final previousDebugPrint = debugPrint;
+        debugPrint = (message, {wrapWidth}) => logs.add(message);
+        addTearDown(() => debugPrint = previousDebugPrint);
 
-          platform.onAddGeoJsonSource = (_) async {
-            throw PlatformException(code: code, message: 'Style not found');
-          };
-          await runZonedGuarded(() async {
-            platform.onMapStyleLoadedPlatform.call(null);
-            await pumpEventQueue();
-          }, (error, _) => errors.add(error));
-          debugPrint = previousDebugPrint;
-
-          expect(errors, isEmpty);
-          expect(logs, [contains(code)]);
-          expect(styleLoads, 0);
-          expect(controller.fillManager?.isInitialized ?? false, isFalse);
-
-          // The style is there by the next load.
-          platform.onAddGeoJsonSource = null;
+        platform.onAddGeoJsonSource = (_) async {
+          throw PlatformException(
+            code: 'STYLE_NOT_READY',
+            message: 'Style is null or not fully loaded.',
+          );
+        };
+        await runZonedGuarded(() async {
           platform.onMapStyleLoadedPlatform.call(null);
           await pumpEventQueue();
+        }, (error, _) => errors.add(error));
+        debugPrint = previousDebugPrint;
 
-          expect(styleLoads, 1);
-          expect(controller.fillManager!.isInitialized, isTrue);
-          expect(controller.symbolManager!.isInitialized, isTrue);
-        },
-      );
-    }
+        expect(errors, isEmpty);
+        expect(logs, [contains('STYLE_NOT_READY')]);
+        expect(styleLoads, 0);
+        expect(controller.fillManager?.isInitialized ?? false, isFalse);
+
+        // The style is there by the next load.
+        platform.onAddGeoJsonSource = null;
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+
+        expect(styleLoads, 1);
+        expect(controller.fillManager!.isInitialized, isTrue);
+        expect(controller.symbolManager!.isInitialized, isTrue);
+      },
+    );
 
     test('any other error is still reported', () async {
       createController(() {});

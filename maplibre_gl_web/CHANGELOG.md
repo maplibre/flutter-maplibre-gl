@@ -3,10 +3,13 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Actions needed
-* Some calls that used to do nothing, or answer a wrong value, now throw. Add a `catch` where your app can hit them (#1065, #1068):
+* Some calls that used to do nothing, or answer a wrong value, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119):
   * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id, where they answered 0 or an empty list.
+  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY`.
+  * `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
+  * Data MapLibre GL JS cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. These were dropped with a console log.
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
@@ -17,6 +20,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
+* `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set. On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
@@ -39,6 +43,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * Removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
 * Removing a hovered layer, or setting a new style, reports a hover `leave` and resets the cursor (#1089).
 * `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
+* The queries throw a `PlatformException` with code `INVALID_EXPRESSION` for a filter MapLibre GL JS rejects, and `queryRenderedFeaturesInRect` filters only with an expression array, as on Android and iOS (#1119).
+* `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, `updateImageSource` moves the corners at once, and a layer added below a missing layer goes on top (#1119).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

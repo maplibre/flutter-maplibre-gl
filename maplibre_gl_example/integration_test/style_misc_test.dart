@@ -180,38 +180,6 @@ void main() {
     final first = await _loadPng(tester, 'assets/sydney0.png');
     final second = await _loadPng(tester, 'assets/sydney1.png');
 
-    if (testPlatform == TestPlatform.web) {
-      // Not implemented in the web plugin (documented on addImageSource and
-      // updateImageSource). The calls throw before reaching maplibre-gl-js.
-      await _expectThrows<UnimplementedError>(
-        tester,
-        Future.sync(() => controller.addImageSource('image', first, _quad)),
-        'addImageSource',
-      );
-      await _expectThrows<UnimplementedError>(
-        tester,
-        Future.sync(() => controller.updateImageSource('image', second, null)),
-        'updateImageSource',
-      );
-      await _expectThrows<UnimplementedError>(
-        tester,
-        Future.sync(() => controller.addImageLayer('image-layer', 'image')),
-        'addImageLayer',
-      );
-      await _expectThrows<UnimplementedError>(
-        tester,
-        Future.sync(
-          () => controller.addImageLayerBelow(
-            'image-below',
-            'image',
-            backgroundLayerId,
-          ),
-        ),
-        'addImageLayerBelow',
-      );
-      return;
-    }
-
     await pumpUntil(
       tester,
       controller.addImageSource('image', first, _quad),

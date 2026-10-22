@@ -7,6 +7,7 @@ package org.maplibre.maplibregl;
 import android.content.Context;
 import android.view.Gravity;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.location.engine.LocationEngineRequest;
@@ -89,7 +90,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   @Override
-  public void setCameraTargetBounds(@NonNull LatLngBounds bounds) {
+  public void setCameraTargetBounds(@Nullable LatLngBounds bounds) {
     this.bounds = bounds;
   }
 
@@ -327,7 +328,10 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     options.textureMode(translucentRequested || hybridCompositionActive);
   }
 
-  @Override
+  /**
+   * Whether Flutter composes the map view with hybrid composition, which needs the map to draw
+   * into a TextureView. Set from the creation params, not the map options.
+   */
   public void setUseHybridComposition(boolean useHybridComposition) {
     this.hybridCompositionActive = useHybridComposition;
     options.textureMode(translucentRequested || hybridCompositionActive);

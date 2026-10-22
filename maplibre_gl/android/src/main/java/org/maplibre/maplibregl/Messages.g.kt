@@ -210,6 +210,118 @@ enum class PgOfflineDownloadStatus(val raw: Int) {
 }
 
 /**
+ * The timing curve of an eased camera move, the Dart
+ * `CameraAnimationInterpolation`. Android tells only [linear] apart: the
+ * others ease in and out there.
+ */
+enum class PgCameraAnimationInterpolation(val raw: Int) {
+  LINEAR(0),
+  EASE_IN_OUT(1),
+  EASE_OUT(2),
+  FAST_OUT_LINEAR_IN(3);
+
+  companion object {
+    fun ofRaw(raw: Int): PgCameraAnimationInterpolation? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * How the camera follows the user location, the Dart
+ * `MyLocationTrackingMode`. The raw values are those of iOS
+ * `MLNUserTrackingMode`; on Android the cases match, in order, the camera
+ * modes NONE, TRACKING, TRACKING_COMPASS and TRACKING_GPS.
+ */
+enum class PgMyLocationTrackingMode(val raw: Int) {
+  NONE(0),
+  TRACKING(1),
+  TRACKING_COMPASS(2),
+  TRACKING_GPS(3);
+
+  companion object {
+    fun ofRaw(raw: Int): PgMyLocationTrackingMode? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/** How the user location is drawn, the Dart `MyLocationRenderMode`. */
+enum class PgMyLocationRenderMode(val raw: Int) {
+  NORMAL(0),
+  COMPASS(1),
+  GPS(2);
+
+  companion object {
+    fun ofRaw(raw: Int): PgMyLocationRenderMode? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * A corner of the map view, for the logo, the compass and the attribution
+ * button. The raw values are those of iOS `MLNOrnamentPosition`.
+ */
+enum class PgOrnamentPosition(val raw: Int) {
+  TOP_LEFT(0),
+  TOP_RIGHT(1),
+  BOTTOM_LEFT(2),
+  BOTTOM_RIGHT(3);
+
+  companion object {
+    fun ofRaw(raw: Int): PgOrnamentPosition? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/** How long the map glides after a pan, the Dart `PanInertia`. */
+enum class PgPanInertia(val raw: Int) {
+  NONE(0),
+  SHORT(1),
+  NORMAL(2);
+
+  companion object {
+    fun ofRaw(raw: Int): PgPanInertia? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * The Android location priority, the Dart `LocationPriority`. The raw values
+ * are those of the `LocationEngineRequest` priorities.
+ */
+enum class PgLocationPriority(val raw: Int) {
+  HIGH_ACCURACY(0),
+  BALANCED(1),
+  LOW_POWER(2),
+  NO_POWER(3);
+
+  companion object {
+    fun ofRaw(raw: Int): PgLocationPriority? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
+ * Where the user location comes from: the platform location engine, or the
+ * app through [MapLibreMapHostApi.locationComponentSetManualLocation].
+ */
+enum class PgLocationSource(val raw: Int) {
+  PLATFORM(0),
+  MANUAL(1);
+
+  companion object {
+    fun ofRaw(raw: Int): PgLocationSource? {
+      return values().firstOrNull { it.raw == raw }
+    }
+  }
+}
+
+/**
  * One event of an offline region download, sent for the download started
  * with the same `downloadId`.
  *
@@ -327,7 +439,108 @@ data class PgLatLng (
 }
 
 /**
- * A point of the map view, in logical pixels from its top left corner.
+ * A rectangle of latitudes and longitudes, given by two of its corners.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgLatLngBounds (
+  val southwest: PgLatLng,
+  val northeast: PgLatLng
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgLatLngBounds {
+      val southwest = pigeonVar_list[0] as PgLatLng
+      val northeast = pigeonVar_list[1] as PgLatLng
+      return PgLatLngBounds(southwest, northeast)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      southwest,
+      northeast,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgLatLngBounds
+    return MessagesPigeonUtils.deepEquals(this.southwest, other.southwest) && MessagesPigeonUtils.deepEquals(this.northeast, other.northeast)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.southwest)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.northeast)
+    return result
+  }
+  override fun toString(): String {
+    return "PgLatLngBounds(southwest=$southwest, northeast=$northeast)"
+  }
+}
+
+/**
+ * Four geographical corners, which need not form a rectangle: where an
+ * image source is drawn.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgLatLngQuad (
+  val topLeft: PgLatLng,
+  val topRight: PgLatLng,
+  val bottomRight: PgLatLng,
+  val bottomLeft: PgLatLng
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgLatLngQuad {
+      val topLeft = pigeonVar_list[0] as PgLatLng
+      val topRight = pigeonVar_list[1] as PgLatLng
+      val bottomRight = pigeonVar_list[2] as PgLatLng
+      val bottomLeft = pigeonVar_list[3] as PgLatLng
+      return PgLatLngQuad(topLeft, topRight, bottomRight, bottomLeft)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      topLeft,
+      topRight,
+      bottomRight,
+      bottomLeft,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgLatLngQuad
+    return MessagesPigeonUtils.deepEquals(this.topLeft, other.topLeft) && MessagesPigeonUtils.deepEquals(this.topRight, other.topRight) && MessagesPigeonUtils.deepEquals(this.bottomRight, other.bottomRight) && MessagesPigeonUtils.deepEquals(this.bottomLeft, other.bottomLeft)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.topLeft)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.topRight)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bottomRight)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bottomLeft)
+    return result
+  }
+  override fun toString(): String {
+    return "PgLatLngQuad(topLeft=$topLeft, topRight=$topRight, bottomRight=$bottomRight, bottomLeft=$bottomLeft)"
+  }
+}
+
+/**
+ * A point of the map view, or an offset on screen, in logical pixels: x to
+ * the right and y down, from the top left corner of the map view for a
+ * point.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
@@ -372,15 +585,71 @@ data class PgScreenPoint (
 }
 
 /**
- * The camera of a map: the `position` map of `camera#onMove` and
- * `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+ * A space along each edge of the map view, in logical pixels.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgEdgeInsets (
+  val top: Double,
+  val left: Double,
+  val bottom: Double,
+  val right: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgEdgeInsets {
+      val top = pigeonVar_list[0] as Double
+      val left = pigeonVar_list[1] as Double
+      val bottom = pigeonVar_list[2] as Double
+      val right = pigeonVar_list[3] as Double
+      return PgEdgeInsets(top, left, bottom, right)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      top,
+      left,
+      bottom,
+      right,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgEdgeInsets
+    return MessagesPigeonUtils.deepEquals(this.top, other.top) && MessagesPigeonUtils.deepEquals(this.left, other.left) && MessagesPigeonUtils.deepEquals(this.bottom, other.bottom) && MessagesPigeonUtils.deepEquals(this.right, other.right)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.top)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.left)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bottom)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.right)
+    return result
+  }
+  override fun toString(): String {
+    return "PgEdgeInsets(top=$top, left=$left, bottom=$bottom, right=$right)"
+  }
+}
+
+/**
+ * The camera of a map.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class PgCameraPosition (
+  /** Degrees clockwise from north. */
   val bearing: Double,
+  /** The location at the center of the map view. */
   val target: PgLatLng,
+  /** Degrees from the nadir. */
   val tilt: Double,
+  /** The zoom level. */
   val zoom: Double
 )
  {
@@ -426,8 +695,1027 @@ data class PgCameraPosition (
 }
 
 /**
- * The compass heading of a user location update: the `heading` map of
- * `map#onUserLocationUpdated`. Only iOS sends one.
+ * A change of the camera, one subclass per kind. Native reads it against
+ * the camera the map has when the call arrives.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ * This class should not be extended by any user class outside of the generated file.
+ */
+sealed class PgCameraUpdate 
+/**
+ * Moves the camera to [cameraPosition].
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateNewCameraPosition (
+  val cameraPosition: PgCameraPosition
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateNewCameraPosition {
+      val cameraPosition = pigeonVar_list[0] as PgCameraPosition
+      return PgCameraUpdateNewCameraPosition(cameraPosition)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      cameraPosition,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateNewCameraPosition
+    return MessagesPigeonUtils.deepEquals(this.cameraPosition, other.cameraPosition)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.cameraPosition)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateNewCameraPosition(cameraPosition=$cameraPosition)"
+  }
+}
+
+/**
+ * Centers the camera on [latLng], keeping the zoom, bearing and tilt.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateNewLatLng (
+  val latLng: PgLatLng
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateNewLatLng {
+      val latLng = pigeonVar_list[0] as PgLatLng
+      return PgCameraUpdateNewLatLng(latLng)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      latLng,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateNewLatLng
+    return MessagesPigeonUtils.deepEquals(this.latLng, other.latLng)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.latLng)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateNewLatLng(latLng=$latLng)"
+  }
+}
+
+/**
+ * Fits [bounds] in the map view inset by [padding], at the greatest zoom
+ * that shows them whole, keeping the bearing and tilt. The padding adds to
+ * the content insets of the map and does not stay on after the move.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateNewLatLngBounds (
+  val bounds: PgLatLngBounds,
+  val padding: PgEdgeInsets
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateNewLatLngBounds {
+      val bounds = pigeonVar_list[0] as PgLatLngBounds
+      val padding = pigeonVar_list[1] as PgEdgeInsets
+      return PgCameraUpdateNewLatLngBounds(bounds, padding)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      bounds,
+      padding,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateNewLatLngBounds
+    return MessagesPigeonUtils.deepEquals(this.bounds, other.bounds) && MessagesPigeonUtils.deepEquals(this.padding, other.padding)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bounds)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.padding)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateNewLatLngBounds(bounds=$bounds, padding=$padding)"
+  }
+}
+
+/**
+ * Centers the camera on [latLng] at [zoom], keeping the bearing and tilt.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateNewLatLngZoom (
+  val latLng: PgLatLng,
+  val zoom: Double
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateNewLatLngZoom {
+      val latLng = pigeonVar_list[0] as PgLatLng
+      val zoom = pigeonVar_list[1] as Double
+      return PgCameraUpdateNewLatLngZoom(latLng, zoom)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      latLng,
+      zoom,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateNewLatLngZoom
+    return MessagesPigeonUtils.deepEquals(this.latLng, other.latLng) && MessagesPigeonUtils.deepEquals(this.zoom, other.zoom)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.latLng)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zoom)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateNewLatLngZoom(latLng=$latLng, zoom=$zoom)"
+  }
+}
+
+/**
+ * Pans the view by [dx] and [dy] logical pixels: a positive [dx] moves the
+ * view east and a positive [dy] south, for a camera facing north.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateScrollBy (
+  val dx: Double,
+  val dy: Double
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateScrollBy {
+      val dx = pigeonVar_list[0] as Double
+      val dy = pigeonVar_list[1] as Double
+      return PgCameraUpdateScrollBy(dx, dy)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      dx,
+      dy,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateScrollBy
+    return MessagesPigeonUtils.deepEquals(this.dx, other.dx) && MessagesPigeonUtils.deepEquals(this.dy, other.dy)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.dx)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.dy)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateScrollBy(dx=$dx, dy=$dy)"
+  }
+}
+
+/**
+ * Changes the zoom by [amount]. With a [focus], the location under that
+ * point of the map view stays where it is on screen.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateZoomBy (
+  val amount: Double,
+  val focus: PgScreenPoint? = null
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateZoomBy {
+      val amount = pigeonVar_list[0] as Double
+      val focus = pigeonVar_list[1] as PgScreenPoint?
+      return PgCameraUpdateZoomBy(amount, focus)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      amount,
+      focus,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateZoomBy
+    return MessagesPigeonUtils.deepEquals(this.amount, other.amount) && MessagesPigeonUtils.deepEquals(this.focus, other.focus)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.amount)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.focus)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateZoomBy(amount=$amount, focus=$focus)"
+  }
+}
+
+/**
+ * Zooms in by one level.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+class PgCameraUpdateZoomIn  : PgCameraUpdate() {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateZoomIn {
+      return PgCameraUpdateZoomIn()
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateZoomIn()"
+  }
+}
+
+/**
+ * Zooms out by one level.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+class PgCameraUpdateZoomOut  : PgCameraUpdate() {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateZoomOut {
+      return PgCameraUpdateZoomOut()
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateZoomOut()"
+  }
+}
+
+/**
+ * Sets the zoom level to [zoom].
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateZoomTo (
+  val zoom: Double
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateZoomTo {
+      val zoom = pigeonVar_list[0] as Double
+      return PgCameraUpdateZoomTo(zoom)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      zoom,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateZoomTo
+    return MessagesPigeonUtils.deepEquals(this.zoom, other.zoom)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zoom)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateZoomTo(zoom=$zoom)"
+  }
+}
+
+/**
+ * Sets the bearing to [bearing] degrees clockwise from north.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateBearingTo (
+  val bearing: Double
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateBearingTo {
+      val bearing = pigeonVar_list[0] as Double
+      return PgCameraUpdateBearingTo(bearing)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      bearing,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateBearingTo
+    return MessagesPigeonUtils.deepEquals(this.bearing, other.bearing)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bearing)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateBearingTo(bearing=$bearing)"
+  }
+}
+
+/**
+ * Sets the tilt to [tilt] degrees from the nadir, keeping the zoom.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraUpdateTiltTo (
+  val tilt: Double
+) : PgCameraUpdate()
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraUpdateTiltTo {
+      val tilt = pigeonVar_list[0] as Double
+      return PgCameraUpdateTiltTo(tilt)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      tilt,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraUpdateTiltTo
+    return MessagesPigeonUtils.deepEquals(this.tilt, other.tilt)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.tilt)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraUpdateTiltTo(tilt=$tilt)"
+  }
+}
+
+/**
+ * Bounds for the camera target. Null [bounds] lift the restriction, which
+ * is not the same as leaving this option out.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCameraTargetBounds (
+  val bounds: PgLatLngBounds? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCameraTargetBounds {
+      val bounds = pigeonVar_list[0] as PgLatLngBounds?
+      return PgCameraTargetBounds(bounds)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      bounds,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCameraTargetBounds
+    return MessagesPigeonUtils.deepEquals(this.bounds, other.bounds)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bounds)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCameraTargetBounds(bounds=$bounds)"
+  }
+}
+
+/**
+ * The zoom range of the camera. A null end leaves that side unbounded, which
+ * is not the same as leaving this option out.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgMinMaxZoomPreference (
+  val minZoom: Double? = null,
+  val maxZoom: Double? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgMinMaxZoomPreference {
+      val minZoom = pigeonVar_list[0] as Double?
+      val maxZoom = pigeonVar_list[1] as Double?
+      return PgMinMaxZoomPreference(minZoom, maxZoom)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      minZoom,
+      maxZoom,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgMinMaxZoomPreference
+    return MessagesPigeonUtils.deepEquals(this.minZoom, other.minZoom) && MessagesPigeonUtils.deepEquals(this.maxZoom, other.maxZoom)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.minZoom)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.maxZoom)
+    return result
+  }
+  override fun toString(): String {
+    return "PgMinMaxZoomPreference(minZoom=$minZoom, maxZoom=$maxZoom)"
+  }
+}
+
+/**
+ * The colors of the user location puck, the Dart `MyLocationStyle`. A null
+ * color keeps the platform default.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgMyLocationStyle (
+  val fillColor: Long? = null,
+  val bearingColor: Long? = null,
+  /** Only its red, green and blue channels are used. */
+  val accuracyColor: Long? = null,
+  val accuracyCircleEnabled: Boolean,
+  /** Null keeps the platform default. */
+  val pulseEnabled: Boolean? = null,
+  val pulseColor: Long? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgMyLocationStyle {
+      val fillColor = pigeonVar_list[0] as Long?
+      val bearingColor = pigeonVar_list[1] as Long?
+      val accuracyColor = pigeonVar_list[2] as Long?
+      val accuracyCircleEnabled = pigeonVar_list[3] as Boolean
+      val pulseEnabled = pigeonVar_list[4] as Boolean?
+      val pulseColor = pigeonVar_list[5] as Long?
+      return PgMyLocationStyle(fillColor, bearingColor, accuracyColor, accuracyCircleEnabled, pulseEnabled, pulseColor)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      fillColor,
+      bearingColor,
+      accuracyColor,
+      accuracyCircleEnabled,
+      pulseEnabled,
+      pulseColor,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgMyLocationStyle
+    return MessagesPigeonUtils.deepEquals(this.fillColor, other.fillColor) && MessagesPigeonUtils.deepEquals(this.bearingColor, other.bearingColor) && MessagesPigeonUtils.deepEquals(this.accuracyColor, other.accuracyColor) && MessagesPigeonUtils.deepEquals(this.accuracyCircleEnabled, other.accuracyCircleEnabled) && MessagesPigeonUtils.deepEquals(this.pulseEnabled, other.pulseEnabled) && MessagesPigeonUtils.deepEquals(this.pulseColor, other.pulseColor)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.fillColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bearingColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.accuracyColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.accuracyCircleEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.pulseEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.pulseColor)
+    return result
+  }
+  override fun toString(): String {
+    return "PgMyLocationStyle(fillColor=$fillColor, bearingColor=$bearingColor, accuracyColor=$accuracyColor, accuracyCircleEnabled=$accuracyCircleEnabled, pulseEnabled=$pulseEnabled, pulseColor=$pulseColor)"
+  }
+}
+
+/**
+ * The settings of the platform location engine. Dart fills only the fields
+ * of the platform it runs on: on Android [interval], [priority] and
+ * [displacement], on iOS [enableHighAccuracy], [displacement], [intervalMs]
+ * and [pulseWindowMs].
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgLocationEngineProperties (
+  /** Android: milliseconds between location updates. */
+  val interval: Long? = null,
+  /** Android. */
+  val priority: PgLocationPriority? = null,
+  /**
+   * Meters the device moves before an update. iOS reads it as the distance
+   * filter.
+   */
+  val displacement: Long? = null,
+  /** iOS: the best accuracy rather than a hundred meters. */
+  val enableHighAccuracy: Boolean? = null,
+  /** iOS: milliseconds between two GPS pulses, 0 for continuous updates. */
+  val intervalMs: Long? = null,
+  /** iOS: milliseconds the GPS stays on in each pulse. */
+  val pulseWindowMs: Long? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgLocationEngineProperties {
+      val interval = pigeonVar_list[0] as Long?
+      val priority = pigeonVar_list[1] as PgLocationPriority?
+      val displacement = pigeonVar_list[2] as Long?
+      val enableHighAccuracy = pigeonVar_list[3] as Boolean?
+      val intervalMs = pigeonVar_list[4] as Long?
+      val pulseWindowMs = pigeonVar_list[5] as Long?
+      return PgLocationEngineProperties(interval, priority, displacement, enableHighAccuracy, intervalMs, pulseWindowMs)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      interval,
+      priority,
+      displacement,
+      enableHighAccuracy,
+      intervalMs,
+      pulseWindowMs,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgLocationEngineProperties
+    return MessagesPigeonUtils.deepEquals(this.interval, other.interval) && MessagesPigeonUtils.deepEquals(this.priority, other.priority) && MessagesPigeonUtils.deepEquals(this.displacement, other.displacement) && MessagesPigeonUtils.deepEquals(this.enableHighAccuracy, other.enableHighAccuracy) && MessagesPigeonUtils.deepEquals(this.intervalMs, other.intervalMs) && MessagesPigeonUtils.deepEquals(this.pulseWindowMs, other.pulseWindowMs)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.interval)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.priority)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.displacement)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.enableHighAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.intervalMs)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.pulseWindowMs)
+    return result
+  }
+  override fun toString(): String {
+    return "PgLocationEngineProperties(interval=$interval, priority=$priority, displacement=$displacement, enableHighAccuracy=$enableHighAccuracy, intervalMs=$intervalMs, pulseWindowMs=$pulseWindowMs)"
+  }
+}
+
+/**
+ * The options of a map. On creation a null field keeps the platform
+ * default; in [MapLibreMapHostApi.mapUpdate] it leaves the option as it is,
+ * as Dart sends only the options that changed. Web-only options are not
+ * sent.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgMapOptions (
+  val compassEnabled: Boolean? = null,
+  val cameraTargetBounds: PgCameraTargetBounds? = null,
+  /** A style JSON, URL, file path or asset name. */
+  val styleString: String? = null,
+  val minMaxZoomPreference: PgMinMaxZoomPreference? = null,
+  val rotateGesturesEnabled: Boolean? = null,
+  val scrollGesturesEnabled: Boolean? = null,
+  val tiltGesturesEnabled: Boolean? = null,
+  val zoomGesturesEnabled: Boolean? = null,
+  val doubleClickZoomEnabled: Boolean? = null,
+  val panInertia: PgPanInertia? = null,
+  /** iOS only. */
+  val hapticFeedbackEnabled: Boolean? = null,
+  /**
+   * Whether the camera events and [MapLibreMapHostApi.mapUpdate] report the
+   * camera position.
+   */
+  val trackCameraPosition: Boolean? = null,
+  val myLocationEnabled: Boolean? = null,
+  val myLocationTrackingMode: PgMyLocationTrackingMode? = null,
+  val myLocationRenderMode: PgMyLocationRenderMode? = null,
+  val myLocationStyle: PgMyLocationStyle? = null,
+  val logoEnabled: Boolean? = null,
+  val logoViewPosition: PgOrnamentPosition? = null,
+  /** The horizontal and vertical margins, in logical pixels. */
+  val logoViewMargins: PgScreenPoint? = null,
+  val compassViewPosition: PgOrnamentPosition? = null,
+  /** The horizontal and vertical margins, in logical pixels. */
+  val compassViewMargins: PgScreenPoint? = null,
+  val attributionEnabled: Boolean? = null,
+  val attributionButtonPosition: PgOrnamentPosition? = null,
+  /** The horizontal and vertical margins, in logical pixels. */
+  val attributionButtonMargins: PgScreenPoint? = null,
+  /** ARGB. */
+  val attributionButtonColor: Long? = null,
+  val locationEngineProperties: PgLocationEngineProperties? = null,
+  val locationSource: PgLocationSource? = null,
+  /** Android only, ARGB. */
+  val foregroundLoadColor: Long? = null,
+  /** Android only. */
+  val translucentTextureSurface: Boolean? = null,
+  val featureTapsTriggersMapClick: Boolean? = null,
+  val symbolPlacementTransitionsEnabled: Boolean? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgMapOptions {
+      val compassEnabled = pigeonVar_list[0] as Boolean?
+      val cameraTargetBounds = pigeonVar_list[1] as PgCameraTargetBounds?
+      val styleString = pigeonVar_list[2] as String?
+      val minMaxZoomPreference = pigeonVar_list[3] as PgMinMaxZoomPreference?
+      val rotateGesturesEnabled = pigeonVar_list[4] as Boolean?
+      val scrollGesturesEnabled = pigeonVar_list[5] as Boolean?
+      val tiltGesturesEnabled = pigeonVar_list[6] as Boolean?
+      val zoomGesturesEnabled = pigeonVar_list[7] as Boolean?
+      val doubleClickZoomEnabled = pigeonVar_list[8] as Boolean?
+      val panInertia = pigeonVar_list[9] as PgPanInertia?
+      val hapticFeedbackEnabled = pigeonVar_list[10] as Boolean?
+      val trackCameraPosition = pigeonVar_list[11] as Boolean?
+      val myLocationEnabled = pigeonVar_list[12] as Boolean?
+      val myLocationTrackingMode = pigeonVar_list[13] as PgMyLocationTrackingMode?
+      val myLocationRenderMode = pigeonVar_list[14] as PgMyLocationRenderMode?
+      val myLocationStyle = pigeonVar_list[15] as PgMyLocationStyle?
+      val logoEnabled = pigeonVar_list[16] as Boolean?
+      val logoViewPosition = pigeonVar_list[17] as PgOrnamentPosition?
+      val logoViewMargins = pigeonVar_list[18] as PgScreenPoint?
+      val compassViewPosition = pigeonVar_list[19] as PgOrnamentPosition?
+      val compassViewMargins = pigeonVar_list[20] as PgScreenPoint?
+      val attributionEnabled = pigeonVar_list[21] as Boolean?
+      val attributionButtonPosition = pigeonVar_list[22] as PgOrnamentPosition?
+      val attributionButtonMargins = pigeonVar_list[23] as PgScreenPoint?
+      val attributionButtonColor = pigeonVar_list[24] as Long?
+      val locationEngineProperties = pigeonVar_list[25] as PgLocationEngineProperties?
+      val locationSource = pigeonVar_list[26] as PgLocationSource?
+      val foregroundLoadColor = pigeonVar_list[27] as Long?
+      val translucentTextureSurface = pigeonVar_list[28] as Boolean?
+      val featureTapsTriggersMapClick = pigeonVar_list[29] as Boolean?
+      val symbolPlacementTransitionsEnabled = pigeonVar_list[30] as Boolean?
+      return PgMapOptions(compassEnabled, cameraTargetBounds, styleString, minMaxZoomPreference, rotateGesturesEnabled, scrollGesturesEnabled, tiltGesturesEnabled, zoomGesturesEnabled, doubleClickZoomEnabled, panInertia, hapticFeedbackEnabled, trackCameraPosition, myLocationEnabled, myLocationTrackingMode, myLocationRenderMode, myLocationStyle, logoEnabled, logoViewPosition, logoViewMargins, compassViewPosition, compassViewMargins, attributionEnabled, attributionButtonPosition, attributionButtonMargins, attributionButtonColor, locationEngineProperties, locationSource, foregroundLoadColor, translucentTextureSurface, featureTapsTriggersMapClick, symbolPlacementTransitionsEnabled)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      compassEnabled,
+      cameraTargetBounds,
+      styleString,
+      minMaxZoomPreference,
+      rotateGesturesEnabled,
+      scrollGesturesEnabled,
+      tiltGesturesEnabled,
+      zoomGesturesEnabled,
+      doubleClickZoomEnabled,
+      panInertia,
+      hapticFeedbackEnabled,
+      trackCameraPosition,
+      myLocationEnabled,
+      myLocationTrackingMode,
+      myLocationRenderMode,
+      myLocationStyle,
+      logoEnabled,
+      logoViewPosition,
+      logoViewMargins,
+      compassViewPosition,
+      compassViewMargins,
+      attributionEnabled,
+      attributionButtonPosition,
+      attributionButtonMargins,
+      attributionButtonColor,
+      locationEngineProperties,
+      locationSource,
+      foregroundLoadColor,
+      translucentTextureSurface,
+      featureTapsTriggersMapClick,
+      symbolPlacementTransitionsEnabled,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgMapOptions
+    return MessagesPigeonUtils.deepEquals(this.compassEnabled, other.compassEnabled) && MessagesPigeonUtils.deepEquals(this.cameraTargetBounds, other.cameraTargetBounds) && MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.minMaxZoomPreference, other.minMaxZoomPreference) && MessagesPigeonUtils.deepEquals(this.rotateGesturesEnabled, other.rotateGesturesEnabled) && MessagesPigeonUtils.deepEquals(this.scrollGesturesEnabled, other.scrollGesturesEnabled) && MessagesPigeonUtils.deepEquals(this.tiltGesturesEnabled, other.tiltGesturesEnabled) && MessagesPigeonUtils.deepEquals(this.zoomGesturesEnabled, other.zoomGesturesEnabled) && MessagesPigeonUtils.deepEquals(this.doubleClickZoomEnabled, other.doubleClickZoomEnabled) && MessagesPigeonUtils.deepEquals(this.panInertia, other.panInertia) && MessagesPigeonUtils.deepEquals(this.hapticFeedbackEnabled, other.hapticFeedbackEnabled) && MessagesPigeonUtils.deepEquals(this.trackCameraPosition, other.trackCameraPosition) && MessagesPigeonUtils.deepEquals(this.myLocationEnabled, other.myLocationEnabled) && MessagesPigeonUtils.deepEquals(this.myLocationTrackingMode, other.myLocationTrackingMode) && MessagesPigeonUtils.deepEquals(this.myLocationRenderMode, other.myLocationRenderMode) && MessagesPigeonUtils.deepEquals(this.myLocationStyle, other.myLocationStyle) && MessagesPigeonUtils.deepEquals(this.logoEnabled, other.logoEnabled) && MessagesPigeonUtils.deepEquals(this.logoViewPosition, other.logoViewPosition) && MessagesPigeonUtils.deepEquals(this.logoViewMargins, other.logoViewMargins) && MessagesPigeonUtils.deepEquals(this.compassViewPosition, other.compassViewPosition) && MessagesPigeonUtils.deepEquals(this.compassViewMargins, other.compassViewMargins) && MessagesPigeonUtils.deepEquals(this.attributionEnabled, other.attributionEnabled) && MessagesPigeonUtils.deepEquals(this.attributionButtonPosition, other.attributionButtonPosition) && MessagesPigeonUtils.deepEquals(this.attributionButtonMargins, other.attributionButtonMargins) && MessagesPigeonUtils.deepEquals(this.attributionButtonColor, other.attributionButtonColor) && MessagesPigeonUtils.deepEquals(this.locationEngineProperties, other.locationEngineProperties) && MessagesPigeonUtils.deepEquals(this.locationSource, other.locationSource) && MessagesPigeonUtils.deepEquals(this.foregroundLoadColor, other.foregroundLoadColor) && MessagesPigeonUtils.deepEquals(this.translucentTextureSurface, other.translucentTextureSurface) && MessagesPigeonUtils.deepEquals(this.featureTapsTriggersMapClick, other.featureTapsTriggersMapClick) && MessagesPigeonUtils.deepEquals(this.symbolPlacementTransitionsEnabled, other.symbolPlacementTransitionsEnabled)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.compassEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.cameraTargetBounds)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.styleString)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.minMaxZoomPreference)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.rotateGesturesEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.scrollGesturesEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.tiltGesturesEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.zoomGesturesEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.doubleClickZoomEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.panInertia)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.hapticFeedbackEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.trackCameraPosition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.myLocationEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.myLocationTrackingMode)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.myLocationRenderMode)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.myLocationStyle)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.logoEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.logoViewPosition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.logoViewMargins)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.compassViewPosition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.compassViewMargins)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.attributionEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.attributionButtonPosition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.attributionButtonMargins)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.attributionButtonColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.locationEngineProperties)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.locationSource)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.foregroundLoadColor)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.translucentTextureSurface)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.featureTapsTriggersMapClick)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.symbolPlacementTransitionsEnabled)
+    return result
+  }
+  override fun toString(): String {
+    return "PgMapOptions(compassEnabled=$compassEnabled, cameraTargetBounds=$cameraTargetBounds, styleString=$styleString, minMaxZoomPreference=$minMaxZoomPreference, rotateGesturesEnabled=$rotateGesturesEnabled, scrollGesturesEnabled=$scrollGesturesEnabled, tiltGesturesEnabled=$tiltGesturesEnabled, zoomGesturesEnabled=$zoomGesturesEnabled, doubleClickZoomEnabled=$doubleClickZoomEnabled, panInertia=$panInertia, hapticFeedbackEnabled=$hapticFeedbackEnabled, trackCameraPosition=$trackCameraPosition, myLocationEnabled=$myLocationEnabled, myLocationTrackingMode=$myLocationTrackingMode, myLocationRenderMode=$myLocationRenderMode, myLocationStyle=$myLocationStyle, logoEnabled=$logoEnabled, logoViewPosition=$logoViewPosition, logoViewMargins=$logoViewMargins, compassViewPosition=$compassViewPosition, compassViewMargins=$compassViewMargins, attributionEnabled=$attributionEnabled, attributionButtonPosition=$attributionButtonPosition, attributionButtonMargins=$attributionButtonMargins, attributionButtonColor=$attributionButtonColor, locationEngineProperties=$locationEngineProperties, locationSource=$locationSource, foregroundLoadColor=$foregroundLoadColor, translucentTextureSurface=$translucentTextureSurface, featureTapsTriggersMapClick=$featureTapsTriggersMapClick, symbolPlacementTransitionsEnabled=$symbolPlacementTransitionsEnabled)"
+  }
+}
+
+/**
+ * What Dart hands the platform view of a map when it creates it, encoded
+ * with the codec of these messages (`MapLibreMapHostApi.pigeonChannelCodec`
+ * in Dart). The native platform view factories decode it with the same
+ * generated codec.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgCreationParams (
+  /**
+   * The style to create the map with: a style JSON, URL, file path or asset
+   * name. [options] carries the same value.
+   */
+  val styleString: String? = null,
+  /** The initial options. */
+  val options: PgMapOptions,
+  /** Null leaves the camera to the style, or to the platform default. */
+  val initialCameraPosition: PgCameraPosition? = null,
+  /** Whether the features of interactive layers can be dragged. */
+  val dragEnabled: Boolean,
+  /**
+   * iOS only: how long a press lasts before it is a long click, in
+   * milliseconds. Null keeps the platform default.
+   */
+  val iosLongClickDurationMs: Long? = null,
+  /**
+   * Android only: whether Flutter draws the map with hybrid composition.
+   * Always false on iOS.
+   */
+  val useHybridComposition: Boolean
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgCreationParams {
+      val styleString = pigeonVar_list[0] as String?
+      val options = pigeonVar_list[1] as PgMapOptions
+      val initialCameraPosition = pigeonVar_list[2] as PgCameraPosition?
+      val dragEnabled = pigeonVar_list[3] as Boolean
+      val iosLongClickDurationMs = pigeonVar_list[4] as Long?
+      val useHybridComposition = pigeonVar_list[5] as Boolean
+      return PgCreationParams(styleString, options, initialCameraPosition, dragEnabled, iosLongClickDurationMs, useHybridComposition)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      styleString,
+      options,
+      initialCameraPosition,
+      dragEnabled,
+      iosLongClickDurationMs,
+      useHybridComposition,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgCreationParams
+    return MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.options, other.options) && MessagesPigeonUtils.deepEquals(this.initialCameraPosition, other.initialCameraPosition) && MessagesPigeonUtils.deepEquals(this.dragEnabled, other.dragEnabled) && MessagesPigeonUtils.deepEquals(this.iosLongClickDurationMs, other.iosLongClickDurationMs) && MessagesPigeonUtils.deepEquals(this.useHybridComposition, other.useHybridComposition)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.styleString)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.options)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.initialCameraPosition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.dragEnabled)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.iosLongClickDurationMs)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.useHybridComposition)
+    return result
+  }
+  override fun toString(): String {
+    return "PgCreationParams(styleString=$styleString, options=$options, initialCameraPosition=$initialCameraPosition, dragEnabled=$dragEnabled, iosLongClickDurationMs=$iosLongClickDurationMs, useHybridComposition=$useHybridComposition)"
+  }
+}
+
+/**
+ * The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes
+ * the user location.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgManualLocationUpdate (
+  val position: PgLatLng,
+  /**
+   * Milliseconds since the epoch. Dart sends the time of the call when the
+   * app gives none.
+   */
+  val timestamp: Long,
+  /** Meters. Null when unknown, as are the fields below. */
+  val horizontalAccuracy: Double? = null,
+  /** Meters. */
+  val verticalAccuracy: Double? = null,
+  /** Meters. */
+  val altitude: Double? = null,
+  /** The direction of travel, in degrees clockwise from north. */
+  val bearing: Double? = null,
+  /** Meters per second. */
+  val speed: Double? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgManualLocationUpdate {
+      val position = pigeonVar_list[0] as PgLatLng
+      val timestamp = pigeonVar_list[1] as Long
+      val horizontalAccuracy = pigeonVar_list[2] as Double?
+      val verticalAccuracy = pigeonVar_list[3] as Double?
+      val altitude = pigeonVar_list[4] as Double?
+      val bearing = pigeonVar_list[5] as Double?
+      val speed = pigeonVar_list[6] as Double?
+      return PgManualLocationUpdate(position, timestamp, horizontalAccuracy, verticalAccuracy, altitude, bearing, speed)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      position,
+      timestamp,
+      horizontalAccuracy,
+      verticalAccuracy,
+      altitude,
+      bearing,
+      speed,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgManualLocationUpdate
+    return MessagesPigeonUtils.deepEquals(this.position, other.position) && MessagesPigeonUtils.deepEquals(this.timestamp, other.timestamp) && MessagesPigeonUtils.deepEquals(this.horizontalAccuracy, other.horizontalAccuracy) && MessagesPigeonUtils.deepEquals(this.verticalAccuracy, other.verticalAccuracy) && MessagesPigeonUtils.deepEquals(this.altitude, other.altitude) && MessagesPigeonUtils.deepEquals(this.bearing, other.bearing) && MessagesPigeonUtils.deepEquals(this.speed, other.speed)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.position)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.timestamp)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.horizontalAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.verticalAccuracy)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.altitude)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.bearing)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.speed)
+    return result
+  }
+  override fun toString(): String {
+    return "PgManualLocationUpdate(position=$position, timestamp=$timestamp, horizontalAccuracy=$horizontalAccuracy, verticalAccuracy=$verticalAccuracy, altitude=$altitude, bearing=$bearing, speed=$speed)"
+  }
+}
+
+/**
+ * The compass heading of a user location update. Only iOS sends one.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
@@ -493,13 +1781,11 @@ data class PgUserHeading (
 }
 
 /**
- * A user location update: the `userLocation` map of
- * `map#onUserLocationUpdated`.
+ * A user location update.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class PgUserLocation (
-  /** The legacy `position` list, `[latitude, longitude]`. */
   val position: PgLatLng,
   val altitude: Double? = null,
   val bearing: Double? = null,
@@ -562,17 +1848,16 @@ data class PgUserLocation (
 }
 
 /**
- * A tap on a feature of an interactive layer: the arguments of
- * `feature#onTap`.
+ * A tap on a feature of an interactive layer.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class PgFeatureTap (
   /** The feature id, as the SDK reports it. */
   val id: Any? = null,
-  /** The legacy `x` and `y`. */
+  /** Where the tap landed on the map view. */
   val point: PgScreenPoint,
-  /** The legacy `lat` and `lng`. */
+  /** Where the tap landed on the map. */
   val latLng: PgLatLng,
   val layerId: String? = null
 )
@@ -619,20 +1904,20 @@ data class PgFeatureTap (
 }
 
 /**
- * One step of a feature drag: the arguments of `feature#onDrag`.
+ * One step of a feature drag.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class PgFeatureDrag (
   /** The feature id, as the SDK reports it. */
   val id: Any? = null,
-  /** The legacy `x` and `y`. */
+  /** Where the finger is on the map view. */
   val point: PgScreenPoint,
-  /** The legacy `originLat` and `originLng`. */
+  /** Where the drag started on the map. */
   val origin: PgLatLng,
-  /** The legacy `currentLat` and `currentLng`. */
+  /** Where the finger is on the map. */
   val current: PgLatLng,
-  /** The legacy `deltaLat` and `deltaLng`. */
+  /** How far the finger moved since the previous step, in degrees. */
   val delta: PgLatLng,
   /** `start`, `drag` or `end`. */
   val eventType: String
@@ -693,41 +1978,181 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         }
       }
       130.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgCameraAnimationInterpolation.ofRaw(it.toInt())
+        }
+      }
+      131.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgMyLocationTrackingMode.ofRaw(it.toInt())
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgMyLocationRenderMode.ofRaw(it.toInt())
+        }
+      }
+      133.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgOrnamentPosition.ofRaw(it.toInt())
+        }
+      }
+      134.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgPanInertia.ofRaw(it.toInt())
+        }
+      }
+      135.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgLocationPriority.ofRaw(it.toInt())
+        }
+      }
+      136.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          PgLocationSource.ofRaw(it.toInt())
+        }
+      }
+      137.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgOfflineDownloadEvent.fromList(it)
         }
       }
-      131.toByte() -> {
+      138.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgLatLng.fromList(it)
         }
       }
-      132.toByte() -> {
+      139.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgLatLngBounds.fromList(it)
+        }
+      }
+      140.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgLatLngQuad.fromList(it)
+        }
+      }
+      141.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgScreenPoint.fromList(it)
         }
       }
-      133.toByte() -> {
+      142.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgEdgeInsets.fromList(it)
+        }
+      }
+      143.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgCameraPosition.fromList(it)
         }
       }
-      134.toByte() -> {
+      144.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateNewCameraPosition.fromList(it)
+        }
+      }
+      145.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateNewLatLng.fromList(it)
+        }
+      }
+      146.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateNewLatLngBounds.fromList(it)
+        }
+      }
+      147.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateNewLatLngZoom.fromList(it)
+        }
+      }
+      148.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateScrollBy.fromList(it)
+        }
+      }
+      149.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateZoomBy.fromList(it)
+        }
+      }
+      150.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateZoomIn.fromList(it)
+        }
+      }
+      151.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateZoomOut.fromList(it)
+        }
+      }
+      152.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateZoomTo.fromList(it)
+        }
+      }
+      153.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateBearingTo.fromList(it)
+        }
+      }
+      154.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraUpdateTiltTo.fromList(it)
+        }
+      }
+      155.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCameraTargetBounds.fromList(it)
+        }
+      }
+      156.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgMinMaxZoomPreference.fromList(it)
+        }
+      }
+      157.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgMyLocationStyle.fromList(it)
+        }
+      }
+      158.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgLocationEngineProperties.fromList(it)
+        }
+      }
+      159.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgMapOptions.fromList(it)
+        }
+      }
+      160.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgCreationParams.fromList(it)
+        }
+      }
+      161.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          PgManualLocationUpdate.fromList(it)
+        }
+      }
+      162.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgUserHeading.fromList(it)
         }
       }
-      135.toByte() -> {
+      163.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgUserLocation.fromList(it)
         }
       }
-      136.toByte() -> {
+      164.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgFeatureTap.fromList(it)
         }
       }
-      137.toByte() -> {
+      165.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
           PgFeatureDrag.fromList(it)
         }
@@ -741,36 +2166,148 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
-      is PgOfflineDownloadEvent -> {
+      is PgCameraAnimationInterpolation -> {
         stream.write(130)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgMyLocationTrackingMode -> {
+        stream.write(131)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgMyLocationRenderMode -> {
+        stream.write(132)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgOrnamentPosition -> {
+        stream.write(133)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgPanInertia -> {
+        stream.write(134)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgLocationPriority -> {
+        stream.write(135)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgLocationSource -> {
+        stream.write(136)
+        writeValue(stream, value.raw.toLong())
+      }
+      is PgOfflineDownloadEvent -> {
+        stream.write(137)
         writeValue(stream, value.toList())
       }
       is PgLatLng -> {
-        stream.write(131)
+        stream.write(138)
+        writeValue(stream, value.toList())
+      }
+      is PgLatLngBounds -> {
+        stream.write(139)
+        writeValue(stream, value.toList())
+      }
+      is PgLatLngQuad -> {
+        stream.write(140)
         writeValue(stream, value.toList())
       }
       is PgScreenPoint -> {
-        stream.write(132)
+        stream.write(141)
+        writeValue(stream, value.toList())
+      }
+      is PgEdgeInsets -> {
+        stream.write(142)
         writeValue(stream, value.toList())
       }
       is PgCameraPosition -> {
-        stream.write(133)
+        stream.write(143)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateNewCameraPosition -> {
+        stream.write(144)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateNewLatLng -> {
+        stream.write(145)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateNewLatLngBounds -> {
+        stream.write(146)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateNewLatLngZoom -> {
+        stream.write(147)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateScrollBy -> {
+        stream.write(148)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateZoomBy -> {
+        stream.write(149)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateZoomIn -> {
+        stream.write(150)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateZoomOut -> {
+        stream.write(151)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateZoomTo -> {
+        stream.write(152)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateBearingTo -> {
+        stream.write(153)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraUpdateTiltTo -> {
+        stream.write(154)
+        writeValue(stream, value.toList())
+      }
+      is PgCameraTargetBounds -> {
+        stream.write(155)
+        writeValue(stream, value.toList())
+      }
+      is PgMinMaxZoomPreference -> {
+        stream.write(156)
+        writeValue(stream, value.toList())
+      }
+      is PgMyLocationStyle -> {
+        stream.write(157)
+        writeValue(stream, value.toList())
+      }
+      is PgLocationEngineProperties -> {
+        stream.write(158)
+        writeValue(stream, value.toList())
+      }
+      is PgMapOptions -> {
+        stream.write(159)
+        writeValue(stream, value.toList())
+      }
+      is PgCreationParams -> {
+        stream.write(160)
+        writeValue(stream, value.toList())
+      }
+      is PgManualLocationUpdate -> {
+        stream.write(161)
         writeValue(stream, value.toList())
       }
       is PgUserHeading -> {
-        stream.write(134)
+        stream.write(162)
         writeValue(stream, value.toList())
       }
       is PgUserLocation -> {
-        stream.write(135)
+        stream.write(163)
         writeValue(stream, value.toList())
       }
       is PgFeatureTap -> {
-        stream.write(136)
+        stream.write(164)
         writeValue(stream, value.toList())
       }
       is PgFeatureDrag -> {
-        stream.write(137)
+        stream.write(165)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -1196,439 +2733,335 @@ class MapLibreOfflineDownloadFlutterApi(private val binaryMessenger: BinaryMesse
  * The calls of one map, from Dart to native. Each map has its own channels,
  * told apart by a message channel suffix: the platform view id of the map.
  *
- * Every method stands for one call of the method channel these messages
- * replace, named in the first line of its documentation. Its parameters are
- * named after the keys of that call's argument map, so native can rebuild
- * the call and run it through the handler it already has. The documentation
- * notes where a key was left out of the map when null, and where the
- * arguments were not a map. Answers that Dart parses further, such as maps
- * of features or camera positions, come back as [Object] in the shape the
- * handler already answers with.
+ * Every method answers once its work is done, or fails with the error code
+ * native reports. See the top of this file for the units, the filters and
+ * the features.
  *
  * Generated interface from Pigeon that represents a handler of messages from Flutter.
  */
 interface MapLibreMapHostApi {
-  /**
-   * map#waitForMap
-   *
-   * The legacy call had no arguments. Answers once the map is ready.
-   */
+  /** Answers once the native map is ready for the other calls. */
   fun mapWaitForMap(callback: (Result<Unit>) -> Unit)
   /**
-   * map#update
-   *
-   * Answers with the camera position map.
+   * Applies the options that are set and answers with the camera position,
+   * or with null when the map does not track the camera position.
    */
-  fun mapUpdate(options: Map<String, Any?>, callback: (Result<Any?>) -> Unit)
+  fun mapUpdate(options: PgMapOptions, callback: (Result<PgCameraPosition?>) -> Unit)
   /**
-   * camera#animate
-   *
-   * [duration] is in milliseconds and was sent as null when unset.
+   * Animates the camera to [cameraUpdate] over [duration] milliseconds, or
+   * over the platform default when it is null. Answers whether the move
+   * finished, false when something cut it short.
    */
-  fun cameraAnimate(cameraUpdate: List<Any?>, duration: Long?, callback: (Result<Boolean?>) -> Unit)
-  /** camera#move */
-  fun cameraMove(cameraUpdate: List<Any?>, callback: (Result<Boolean?>) -> Unit)
+  fun cameraAnimate(cameraUpdate: PgCameraUpdate, duration: Long?, callback: (Result<Boolean?>) -> Unit)
   /**
-   * map#updateMyLocationTrackingMode
-   *
-   * [mode] is the index of the Dart `MyLocationTrackingMode`.
+   * Moves the camera to [cameraUpdate] at once. Answers whether the move
+   * finished.
    */
-  fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit)
+  fun cameraMove(cameraUpdate: PgCameraUpdate, callback: (Result<Boolean?>) -> Unit)
+  /** Sets how the camera follows the user location. */
+  fun mapUpdateMyLocationTrackingMode(mode: PgMyLocationTrackingMode, callback: (Result<Unit>) -> Unit)
   /**
-   * locationComponent#setTrackingCameraOptions
-   *
-   * [duration] is in milliseconds and was sent as null when unset.
+   * Tilts the camera to [tilt] degrees while it tracks the user location,
+   * without ending the tracking, over [duration] milliseconds or the
+   * platform default when it is null. Answers whether the tilt landed.
    */
   fun locationComponentSetTrackingCameraOptions(tilt: Double, duration: Long?, callback: (Result<Boolean?>) -> Unit)
   /**
-   * locationComponent#setManualLocation
-   *
-   * The legacy arguments were [update] itself, not a map holding it under a
-   * key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
-   * always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
-   * `bearing` and `speed` only when set.
+   * Makes [update] the user location, for a map whose location source is
+   * [PgLocationSource.manual].
    */
-  fun locationComponentSetManualLocation(update: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /**
-   * map#matchMapLanguageWithDeviceDefault
-   *
-   * The legacy call had no arguments.
-   */
+  fun locationComponentSetManualLocation(update: PgManualLocationUpdate, callback: (Result<Unit>) -> Unit)
+  /** Shows the labels of the map in the language of the device. */
   fun mapMatchMapLanguageWithDeviceDefault(callback: (Result<Unit>) -> Unit)
   /**
-   * map#updateContentInsets
-   *
-   * [bounds] holds `top`, `left`, `bottom` and `right`.
+   * Sets the content insets of the map, the space along its edges that the
+   * camera keeps clear, animated or not.
    */
-  fun mapUpdateContentInsets(bounds: Map<String, Double>, animated: Boolean, callback: (Result<Unit>) -> Unit)
-  /** map#setMapLanguage */
+  fun mapUpdateContentInsets(insets: PgEdgeInsets, animated: Boolean, callback: (Result<Unit>) -> Unit)
+  /** Shows the labels of the map in [language], an ISO language code. */
   fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit)
-  /** map#setTelemetryEnabled */
+  /** Turns telemetry on or off where the SDK has it. */
   fun mapSetTelemetryEnabled(enabled: Boolean, callback: (Result<Unit>) -> Unit)
-  /**
-   * map#getTelemetryEnabled
-   *
-   * The legacy call had no arguments.
-   */
+  /** Answers whether telemetry is on. */
   fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit)
-  /** map#setMaximumFps */
+  /** Caps the frame rate of the map at [fps]. */
   fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit)
   /**
-   * map#forceOnlineMode
-   *
-   * The legacy call had no arguments.
+   * Tells the map it is online, so it loads from the network again. Android
+   * only: iOS has nothing to do.
    */
   fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit)
-  /**
-   * map#pause
-   *
-   * The legacy call had no arguments.
-   */
+  /** Stops the rendering and the location updates of the map. */
   fun mapPause(callback: (Result<Unit>) -> Unit)
-  /**
-   * map#resume
-   *
-   * The legacy call had no arguments.
-   */
+  /** Starts again what [mapPause] stopped. */
   fun mapResume(callback: (Result<Unit>) -> Unit)
   /**
-   * camera#ease
-   *
-   * [duration] is in milliseconds and was sent as null when unset.
-   * [interpolation] is the name of a Dart `CameraAnimationInterpolation`
-   * value, and was omitted from the legacy map when null.
+   * Eases the camera to [cameraUpdate] over [duration] milliseconds, or over
+   * the platform default when it is null or not positive, along
+   * [interpolation], or the platform default curve when it is null. Answers
+   * whether the move finished.
    */
-  fun cameraEase(cameraUpdate: List<Any?>, duration: Long?, interpolation: String?, callback: (Result<Boolean>) -> Unit)
+  fun cameraEase(cameraUpdate: PgCameraUpdate, duration: Long?, interpolation: PgCameraAnimationInterpolation?, callback: (Result<Boolean>) -> Unit)
+  /** Answers with the current camera position. */
+  fun mapQueryCameraPosition(callback: (Result<PgCameraPosition>) -> Unit)
   /**
-   * map#queryCameraPosition
-   *
-   * The legacy call had no arguments. Answers with the camera position map.
+   * Replaces the data of the GeoJSON source [id] with [data], GeoJSON text.
+   * Answers whether it did, false when there is no style or no such GeoJSON
+   * source, or when the SDK rejects the data.
    */
-  fun mapQueryCameraPosition(callback: (Result<Any?>) -> Unit)
+  fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Boolean>) -> Unit)
   /**
-   * map#editGeoJsonSource
-   *
-   * Answers with `{result: bool}`.
+   * Points the GeoJSON source [id] at [url]. Answers whether it did, false
+   * when there is no style or no such GeoJSON source, or when the SDK
+   * rejects the URL.
    */
-  fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit)
+  fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Boolean>) -> Unit)
   /**
-   * map#editGeoJsonUrl
-   *
-   * Answers with `{result: bool}`.
+   * Sets [filter], the JSON text of an expression, on the layer [id].
+   * Answers whether it did, false when there is no style or no such layer,
+   * when the layer takes no filter, or when the filter does not parse.
    */
-  fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Any?>) -> Unit)
+  fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Boolean>) -> Unit)
   /**
-   * map#setLayerFilter
-   *
-   * [filter] is the JSON string the caller passed. Answers with
-   * `{result: bool}`.
+   * Answers with the style of the map as JSON text, or with null when the
+   * map has no style.
    */
-  fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit)
+  fun mapGetStyle(callback: (Result<String?>) -> Unit)
   /**
-   * map#getStyle
-   *
-   * The legacy call had no arguments. Answers with `{result: bool, json:
-   * String?}`.
-   */
-  fun mapGetStyle(callback: (Result<Any?>) -> Unit)
-  /**
-   * map#setCustomHeaders
-   *
-   * [filter] holds URL patterns, not a style filter.
+   * Adds [headers] to the requests of the map whose URL matches one of the
+   * patterns in [filter], or to every request when [filter] is empty.
    */
   fun mapSetCustomHeaders(headers: Map<String, String>, filter: List<String>, callback: (Result<Unit>) -> Unit)
+  /** Answers with the headers [mapSetCustomHeaders] set. */
+  fun mapGetCustomHeaders(callback: (Result<Map<String, String>>) -> Unit)
   /**
-   * map#getCustomHeaders
-   *
-   * The legacy arguments were an empty map. Answers with the headers map.
+   * Answers with the features rendered at the point [x], [y] of the map
+   * view, on the layers [layerIds] or on all of them when it is empty, that
+   * match [filter].
    */
-  fun mapGetCustomHeaders(callback: (Result<Any?>) -> Unit)
+  fun mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: List<String>, filter: String?, callback: (Result<List<String>>) -> Unit)
   /**
-   * map#queryRenderedFeatures
-   *
-   * The point form of the call. [filter] is the expression as a list, not
-   * encoded. Answers with `{features: [String]}`, each feature a JSON string.
+   * Answers with the features rendered in the rectangle of the map view
+   * from [left], [top] to [right], [bottom], on the layers [layerIds] or on
+   * all of them when it is empty, that match [filter].
    */
-  fun mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: List<String>, filter: List<Any?>?, callback: (Result<Any?>) -> Unit)
+  fun mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: List<String>, filter: String?, callback: (Result<List<String>>) -> Unit)
   /**
-   * map#queryRenderedFeatures
-   *
-   * The rectangle form of the call. [filter] is the JSON string the caller
-   * passed. Answers with `{features: [String]}`, each feature a JSON string.
+   * Answers with the features of the source [sourceId], in its layer
+   * [sourceLayerId] for a vector source, that match [filter], rendered or
+   * not. A vector source without [sourceLayerId], or a source of another
+   * kind, answers none.
    */
-  fun mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: List<String>, filter: String?, callback: (Result<Any?>) -> Unit)
+  fun mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: String?, callback: (Result<List<String>>) -> Unit)
   /**
-   * map#querySourceFeatures
-   *
-   * [filter] is the expression as a list, not encoded. Answers with
-   * `{features: [String]}`, each feature a JSON string.
+   * Answers with the zoom at which the cluster [clusterId] of the GeoJSON
+   * source [sourceId] splits.
    */
-  fun mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: List<Any?>?, callback: (Result<Any?>) -> Unit)
-  /** source#getClusterExpansionZoom */
   fun sourceGetClusterExpansionZoom(sourceId: String, clusterId: Long, callback: (Result<Long>) -> Unit)
   /**
-   * source#getClusterChildren
-   *
-   * Answers with `{features: [String]}`, each feature a JSON string.
+   * Answers with the features one zoom level below the cluster [clusterId]
+   * of the GeoJSON source [sourceId].
    */
-  fun sourceGetClusterChildren(sourceId: String, clusterId: Long, callback: (Result<Any?>) -> Unit)
+  fun sourceGetClusterChildren(sourceId: String, clusterId: Long, callback: (Result<List<String>>) -> Unit)
   /**
-   * source#getClusterLeaves
-   *
-   * Answers with `{features: [String]}`, each feature a JSON string.
+   * Answers with the points of the cluster [clusterId] of the GeoJSON source
+   * [sourceId], [limit] of them after skipping [offset].
    */
-  fun sourceGetClusterLeaves(sourceId: String, clusterId: Long, limit: Long, offset: Long, callback: (Result<Any?>) -> Unit)
-  /**
-   * map#invalidateAmbientCache
-   *
-   * The legacy call had no arguments.
-   */
+  fun sourceGetClusterLeaves(sourceId: String, clusterId: Long, limit: Long, offset: Long, callback: (Result<List<String>>) -> Unit)
+  /** Marks the ambient cache as stale, so it is checked against the network. */
   fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit)
-  /**
-   * map#clearAmbientCache
-   *
-   * The legacy call had no arguments.
-   */
+  /** Empties the ambient cache. */
   fun mapClearAmbientCache(callback: (Result<Unit>) -> Unit)
   /**
-   * locationComponent#getLastLocation
-   *
-   * The legacy call had no arguments. Answers with `{latitude, longitude}`,
-   * or null when there is no location.
+   * Answers with the last known user location. Fails when there is none or
+   * the location is off.
    */
-  fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit)
+  fun locationComponentGetLastLocation(callback: (Result<PgLatLng>) -> Unit)
+  /** Answers with the region the map view shows. */
+  fun mapGetVisibleRegion(callback: (Result<PgLatLngBounds>) -> Unit)
   /**
-   * map#getVisibleRegion
-   *
-   * The legacy call had no arguments. Answers with `{sw: [latitude,
-   * longitude], ne: [latitude, longitude]}`.
-   */
-  fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit)
-  /**
-   * style#addImage
-   *
-   * [length] is the length of [bytes].
+   * Adds the image [bytes] to the style as [name], as a signed distance
+   * field image when [sdf] is true. [length] is the length of [bytes].
    */
   fun styleAddImage(name: String, bytes: ByteArray, length: Long, sdf: Boolean, callback: (Result<Unit>) -> Unit)
   /**
-   * style#addImageSource
-   *
-   * [length] is the length of [bytes]. [coordinates] holds the four corners,
-   * each a `[latitude, longitude]` list.
+   * Adds an image source [imageSourceId] that draws the image [bytes] on
+   * [coordinates]. [length] is the length of [bytes].
    */
-  fun styleAddImageSource(imageSourceId: String, bytes: ByteArray, length: Long, coordinates: List<Any?>, callback: (Result<Unit>) -> Unit)
+  fun styleAddImageSource(imageSourceId: String, bytes: ByteArray, length: Long, coordinates: PgLatLngQuad, callback: (Result<Unit>) -> Unit)
   /**
-   * style#updateImageSource
-   *
-   * [length] is the length of [bytes]. [coordinates] holds the four corners,
-   * each a `[latitude, longitude]` list. The null ones were sent as null.
+   * Changes the image, the corners, or both, of the image source
+   * [imageSourceId]. What is null stays as it is. [length] is the length of
+   * [bytes].
    */
-  fun styleUpdateImageSource(imageSourceId: String, bytes: ByteArray?, length: Long?, coordinates: List<Any?>?, callback: (Result<Unit>) -> Unit)
+  fun styleUpdateImageSource(imageSourceId: String, bytes: ByteArray?, length: Long?, coordinates: PgLatLngQuad?, callback: (Result<Unit>) -> Unit)
   /**
-   * map#toScreenLocation
-   *
-   * Answers with `{x, y}`.
+   * Answers with where the location [latitude], [longitude] is on the map
+   * view.
    */
-  fun mapToScreenLocation(latitude: Double, longitude: Double, callback: (Result<Any?>) -> Unit)
+  fun mapToScreenLocation(latitude: Double, longitude: Double, callback: (Result<PgScreenPoint>) -> Unit)
   /**
-   * map#toScreenLocationBatch
-   *
-   * [coordinates] holds latitude and longitude pairs, one after the other.
-   * Answers with x and y pairs in the same order.
+   * The batch form of [mapToScreenLocation]: [coordinates] holds latitude
+   * and longitude pairs one after the other, and the answer holds the x and
+   * y of each in the same order.
    */
   fun mapToScreenLocationBatch(coordinates: DoubleArray, callback: (Result<DoubleArray>) -> Unit)
-  /** style#removeSource */
+  /** Removes the source [sourceId] from the style. */
   fun styleRemoveSource(sourceId: String, callback: (Result<Unit>) -> Unit)
-  /** style#addLayer */
+  /**
+   * Adds a raster layer [imageLayerId] that draws the source
+   * [imageSourceId], on top of the others.
+   */
   fun styleAddLayer(imageLayerId: String, imageSourceId: String, minzoom: Double?, maxzoom: Double?, callback: (Result<Unit>) -> Unit)
-  /** style#addLayerBelow */
+  /**
+   * Adds a raster layer [imageLayerId] that draws the source
+   * [imageSourceId], below the layer [belowLayerId].
+   */
   fun styleAddLayerBelow(imageLayerId: String, imageSourceId: String, belowLayerId: String, minzoom: Double?, maxzoom: Double?, callback: (Result<Unit>) -> Unit)
-  /** style#removeLayer */
+  /** Removes the layer [layerId] from the style. */
   fun styleRemoveLayer(layerId: String, callback: (Result<Unit>) -> Unit)
   /**
-   * style#moveLayer
-   *
-   * [belowLayerId] was omitted from the legacy map when null.
+   * Moves the layer [layerId] below the layer [belowLayerId], or on top of
+   * the others when it is null.
    */
   fun styleMoveLayer(layerId: String, belowLayerId: String?, callback: (Result<Unit>) -> Unit)
   /**
-   * style#setFilter
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
+   * Sets [filter] on the layer [layerId], or removes its filter when
+   * [filter] is null.
    */
-  fun styleSetFilter(layerId: String, filter: String, callback: (Result<Unit>) -> Unit)
+  fun styleSetFilter(layerId: String, filter: String?, callback: (Result<Unit>) -> Unit)
   /**
-   * style#getFilter
-   *
-   * Answers with `{filter: String?}`, the expression as a JSON string.
+   * Answers with the filter of the layer [layerId] as JSON text, or with
+   * null when it has none.
    */
-  fun styleGetFilter(layerId: String, callback: (Result<Any?>) -> Unit)
+  fun styleGetFilter(layerId: String, callback: (Result<String?>) -> Unit)
+  /** Answers with the location at the point [x], [y] of the map view. */
+  fun mapToLatLng(x: Double, y: Double, callback: (Result<PgLatLng>) -> Unit)
   /**
-   * map#toLatLng
-   *
-   * Answers with `{latitude, longitude}`.
+   * Answers with the meters per pixel at [latitude] at the current zoom, as
+   * the SDK reports them.
    */
-  fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit)
-  /**
-   * map#getMetersPerPixelAtLatitude
-   *
-   * Answers with `{metersperpixel: double}`.
-   */
-  fun mapGetMetersPerPixelAtLatitude(latitude: Double, callback: (Result<Any?>) -> Unit)
-  /**
-   * source#addGeoJson
-   *
-   * [geojson] is the data encoded by Dart.
-   */
+  fun mapGetMetersPerPixelAtLatitude(latitude: Double, callback: (Result<Double>) -> Unit)
+  /** Adds a GeoJSON source [sourceId] holding [geojson], GeoJSON text. */
   fun sourceAddGeoJson(sourceId: String, geojson: String, callback: (Result<Unit>) -> Unit)
   /**
-   * source#setGeoJson
-   *
-   * [geojson] is the data encoded by Dart.
+   * Replaces the data of the GeoJSON source [sourceId] with [geojson],
+   * GeoJSON text.
    */
   fun sourceSetGeoJson(sourceId: String, geojson: String, callback: (Result<Unit>) -> Unit)
-  /** map#setCameraBounds */
+  /**
+   * Eases the camera to the bounds from [west], [south] to [east], [north],
+   * inset by [padding] logical pixels. Answers once the move starts.
+   */
   fun mapSetCameraBounds(west: Double, north: Double, south: Double, east: Double, padding: Long, callback: (Result<Unit>) -> Unit)
   /**
-   * symbolLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
+   * Adds a symbol layer. [properties] are its paint and layout properties
+   * in style-spec form. [enableInteraction] makes its features report taps
+   * and drags.
    */
-  fun symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  fun symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a line layer, as [symbolLayerAdd]. */
+  fun lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
   /**
-   * lineLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
+   * Sets the paint and layout [properties], in style-spec form, of the
+   * layer [layerId].
    */
-  fun lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** layer#setProperties */
   fun layerSetProperties(layerId: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a circle layer, as [symbolLayerAdd]. */
+  fun circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a fill layer, as [symbolLayerAdd]. */
+  fun fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a fill extrusion layer, as [symbolLayerAdd]. */
+  fun fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
   /**
-   * circleLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
-   */
-  fun circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /**
-   * fillLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
-   */
-  fun fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /**
-   * fillExtrusionLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
-   */
-  fun fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Boolean, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /**
-   * style#addSource
-   *
-   * [properties] is the source in style-spec form.
+   * Adds the source [sourceId]. [properties] is the source in style-spec
+   * form.
    */
   fun styleAddSource(sourceId: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** rasterLayer#add */
-  fun rasterLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** hillshadeLayer#add */
-  fun hillshadeLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** colorReliefLayer#add */
-  fun colorReliefLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** backgroundLayer#add */
-  fun backgroundLayerAdd(layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
   /**
-   * heatmapLayer#add
-   *
-   * [filter] is the expression encoded by Dart, the string `null` when there
-   * is none.
+   * Adds a raster layer. [properties] are its paint and layout properties
+   * in style-spec form.
    */
-  fun heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  fun rasterLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a hillshade layer, as [rasterLayerAdd]. */
+  fun hillshadeLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a color relief layer, as [rasterLayerAdd]. */
+  fun colorReliefLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a background layer, as [rasterLayerAdd] but without a source. */
+  fun backgroundLayerAdd(layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /** Adds a heatmap layer, as [symbolLayerAdd] but without interaction. */
+  fun heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, properties: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
   /**
-   * source#setFeature
-   *
-   * [geojsonFeature] is the feature encoded by Dart.
+   * Replaces the feature of the GeoJSON source [sourceId] that has the id
+   * of [geojsonFeature], GeoJSON text. Without such a feature nothing
+   * changes.
    */
   fun sourceSetFeature(sourceId: String, geojsonFeature: String, callback: (Result<Unit>) -> Unit)
   /**
-   * source#setFeatureState
-   *
-   * Android only: Dart rejects the call on iOS before sending it.
+   * Merges [state], app data of any shape, into the state of the feature
+   * [featureId]. Android only: Dart rejects the call on iOS before sending
+   * it.
    */
   fun sourceSetFeatureState(sourceId: String, featureId: String, state: Map<String, Any?>, sourceLayer: String?, callback: (Result<Unit>) -> Unit)
   /**
-   * source#removeFeatureState
-   *
-   * Android only: Dart rejects the call on iOS before sending it.
+   * Removes the key [stateKey] of the state of the feature [featureId], or
+   * the whole state of that feature without [stateKey], or the state of
+   * every feature of the source without [featureId]. Android only: Dart
+   * rejects the call on iOS before sending it.
    */
   fun sourceRemoveFeatureState(sourceId: String, featureId: String?, stateKey: String?, sourceLayer: String?, callback: (Result<Unit>) -> Unit)
   /**
-   * source#getFeatureState
-   *
-   * Android only: Dart rejects the call on iOS before sending it. Answers
-   * with `{state: String?}`, the state as a JSON string.
+   * Answers with the state of the feature [featureId] as JSON text, or with
+   * null when it has none. Android only: Dart rejects the call on iOS before
+   * sending it.
    */
-  fun sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, callback: (Result<Any?>) -> Unit)
+  fun sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, callback: (Result<String?>) -> Unit)
   /**
-   * style#setLight
-   *
-   * [light] is the light in style-spec form.
+   * Sets the light of the style. [light] holds the light properties in
+   * style-spec form. It stays a map because each property can be any value
+   * in Dart: native checks that each one is a constant of the right type.
    */
   fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
-  /** layer#setVisibility */
+  /** Shows or hides the layer [layerId]. */
   fun layerSetVisibility(layerId: String, visible: Boolean, callback: (Result<Unit>) -> Unit)
   /**
-   * layer#setVisibilityBatch
-   *
-   * Answers with the ids that matched no layer.
+   * Shows or hides the layers [layerIds]. Answers with the ids that matched
+   * no layer.
    */
   fun layerSetVisibilityBatch(layerIds: List<String>, visible: Boolean, callback: (Result<List<String>?>) -> Unit)
-  /** layer#setZoomRange */
+  /** Sets the zoom range of the layer [layerId]. */
   fun layerSetZoomRange(layerId: String, minzoom: Double, maxzoom: Double, callback: (Result<Unit>) -> Unit)
   /**
-   * layer#getVisibility
-   *
-   * Answers with null when there is no such layer.
+   * Answers whether the layer [layerId] is visible, or with null when there
+   * is no such layer.
    */
   fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit)
   /**
-   * map#takeSnapshot
-   *
-   * [width] and [height] are in logical pixels, and each was omitted from
-   * the legacy map when null. Answers with PNG bytes.
+   * Answers with a PNG of the map, [width] by [height] logical pixels, or
+   * the size of the map view for what is null.
    */
   fun mapTakeSnapshot(width: Long?, height: Long?, callback: (Result<ByteArray?>) -> Unit)
   /**
-   * style#getLayerIds
-   *
-   * The legacy call had no arguments. Answers with `{layers: [String]}`.
+   * Answers with the ids of the layers of the style, in the order of the
+   * style.
    */
-  fun styleGetLayerIds(callback: (Result<Any?>) -> Unit)
+  fun styleGetLayerIds(callback: (Result<List<String>>) -> Unit)
+  /** Answers with the ids of the sources of the style. */
+  fun styleGetSourceIds(callback: (Result<List<String>>) -> Unit)
   /**
-   * style#getSourceIds
-   *
-   * The legacy call had no arguments. Answers with `{sources: [String]}`.
+   * Answers with the layer [layerId] in style-spec form as JSON text, or
+   * with null when there is no such layer.
    */
-  fun styleGetSourceIds(callback: (Result<Any?>) -> Unit)
+  fun styleGetLayerProperties(layerId: String, callback: (Result<String?>) -> Unit)
   /**
-   * style#getLayerProperties
-   *
-   * Answers with `{properties: String}`, the layer as a JSON string, or
-   * without `properties` when there is no such layer.
+   * Answers with the source [sourceId] in style-spec form as JSON text, or
+   * with null when there is no such source.
    */
-  fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit)
+  fun styleGetSourceProperties(sourceId: String, callback: (Result<String?>) -> Unit)
   /**
-   * style#getSourceProperties
-   *
-   * Answers with `{properties: String}`, the source as a JSON string, or
-   * without `properties` when there is no such source.
+   * Replaces the style with [style]: a style JSON, URL, file path or asset
+   * name.
    */
-  fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit)
-  /** style#setStyle */
   fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit)
 
   companion object {
@@ -1662,8 +3095,8 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val optionsArg = args[0] as Map<String, Any?>
-            api.mapUpdate(optionsArg) { result: Result<Any?> ->
+            val optionsArg = args[0] as PgMapOptions
+            api.mapUpdate(optionsArg) { result: Result<PgCameraPosition?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -1682,7 +3115,7 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val cameraUpdateArg = args[0] as List<Any?>
+            val cameraUpdateArg = args[0] as PgCameraUpdate
             val durationArg = args[1] as Long?
             api.cameraAnimate(cameraUpdateArg, durationArg) { result: Result<Boolean?> ->
               val error = result.exceptionOrNull()
@@ -1703,7 +3136,7 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val cameraUpdateArg = args[0] as List<Any?>
+            val cameraUpdateArg = args[0] as PgCameraUpdate
             api.cameraMove(cameraUpdateArg) { result: Result<Boolean?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -1723,7 +3156,7 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val modeArg = args[0] as Long
+            val modeArg = args[0] as PgMyLocationTrackingMode
             api.mapUpdateMyLocationTrackingMode(modeArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -1763,7 +3196,7 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val updateArg = args[0] as Map<String, Any?>
+            val updateArg = args[0] as PgManualLocationUpdate
             api.locationComponentSetManualLocation(updateArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -1799,9 +3232,9 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val boundsArg = args[0] as Map<String, Double>
+            val insetsArg = args[0] as PgEdgeInsets
             val animatedArg = args[1] as Boolean
-            api.mapUpdateContentInsets(boundsArg, animatedArg) { result: Result<Unit> ->
+            api.mapUpdateContentInsets(insetsArg, animatedArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -1945,9 +3378,9 @@ interface MapLibreMapHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val cameraUpdateArg = args[0] as List<Any?>
+            val cameraUpdateArg = args[0] as PgCameraUpdate
             val durationArg = args[1] as Long?
-            val interpolationArg = args[2] as String?
+            val interpolationArg = args[2] as PgCameraAnimationInterpolation?
             api.cameraEase(cameraUpdateArg, durationArg, interpolationArg) { result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -1966,7 +3399,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.mapQueryCameraPosition{ result: Result<Any?> ->
+            api.mapQueryCameraPosition{ result: Result<PgCameraPosition> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -1987,7 +3420,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val idArg = args[0] as String
             val dataArg = args[1] as String
-            api.mapEditGeoJsonSource(idArg, dataArg) { result: Result<Any?> ->
+            api.mapEditGeoJsonSource(idArg, dataArg) { result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2008,7 +3441,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val idArg = args[0] as String
             val urlArg = args[1] as String
-            api.mapEditGeoJsonUrl(idArg, urlArg) { result: Result<Any?> ->
+            api.mapEditGeoJsonUrl(idArg, urlArg) { result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2029,7 +3462,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val idArg = args[0] as String
             val filterArg = args[1] as String
-            api.mapSetLayerFilter(idArg, filterArg) { result: Result<Any?> ->
+            api.mapSetLayerFilter(idArg, filterArg) { result: Result<Boolean> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2047,7 +3480,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.mapGetStyle{ result: Result<Any?> ->
+            api.mapGetStyle{ result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2085,7 +3518,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.mapGetCustomHeaders{ result: Result<Any?> ->
+            api.mapGetCustomHeaders{ result: Result<Map<String, String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2107,8 +3540,8 @@ interface MapLibreMapHostApi {
             val xArg = args[0] as Double
             val yArg = args[1] as Double
             val layerIdsArg = args[2] as List<String>
-            val filterArg = args[3] as List<Any?>?
-            api.mapQueryRenderedFeaturesAtPoint(xArg, yArg, layerIdsArg, filterArg) { result: Result<Any?> ->
+            val filterArg = args[3] as String?
+            api.mapQueryRenderedFeaturesAtPoint(xArg, yArg, layerIdsArg, filterArg) { result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2133,7 +3566,7 @@ interface MapLibreMapHostApi {
             val bottomArg = args[3] as Double
             val layerIdsArg = args[4] as List<String>
             val filterArg = args[5] as String?
-            api.mapQueryRenderedFeaturesInRect(leftArg, topArg, rightArg, bottomArg, layerIdsArg, filterArg) { result: Result<Any?> ->
+            api.mapQueryRenderedFeaturesInRect(leftArg, topArg, rightArg, bottomArg, layerIdsArg, filterArg) { result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2154,8 +3587,8 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val sourceIdArg = args[0] as String
             val sourceLayerIdArg = args[1] as String?
-            val filterArg = args[2] as List<Any?>?
-            api.mapQuerySourceFeatures(sourceIdArg, sourceLayerIdArg, filterArg) { result: Result<Any?> ->
+            val filterArg = args[2] as String?
+            api.mapQuerySourceFeatures(sourceIdArg, sourceLayerIdArg, filterArg) { result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2197,7 +3630,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val sourceIdArg = args[0] as String
             val clusterIdArg = args[1] as Long
-            api.sourceGetClusterChildren(sourceIdArg, clusterIdArg) { result: Result<Any?> ->
+            api.sourceGetClusterChildren(sourceIdArg, clusterIdArg) { result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2220,7 +3653,7 @@ interface MapLibreMapHostApi {
             val clusterIdArg = args[1] as Long
             val limitArg = args[2] as Long
             val offsetArg = args[3] as Long
-            api.sourceGetClusterLeaves(sourceIdArg, clusterIdArg, limitArg, offsetArg) { result: Result<Any?> ->
+            api.sourceGetClusterLeaves(sourceIdArg, clusterIdArg, limitArg, offsetArg) { result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2272,7 +3705,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.locationComponentGetLastLocation{ result: Result<Any?> ->
+            api.locationComponentGetLastLocation{ result: Result<PgLatLng> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2290,7 +3723,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.mapGetVisibleRegion{ result: Result<Any?> ->
+            api.mapGetVisibleRegion{ result: Result<PgLatLngBounds> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2334,7 +3767,7 @@ interface MapLibreMapHostApi {
             val imageSourceIdArg = args[0] as String
             val bytesArg = args[1] as ByteArray
             val lengthArg = args[2] as Long
-            val coordinatesArg = args[3] as List<Any?>
+            val coordinatesArg = args[3] as PgLatLngQuad
             api.styleAddImageSource(imageSourceIdArg, bytesArg, lengthArg, coordinatesArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -2356,7 +3789,7 @@ interface MapLibreMapHostApi {
             val imageSourceIdArg = args[0] as String
             val bytesArg = args[1] as ByteArray?
             val lengthArg = args[2] as Long?
-            val coordinatesArg = args[3] as List<Any?>?
+            val coordinatesArg = args[3] as PgLatLngQuad?
             api.styleUpdateImageSource(imageSourceIdArg, bytesArg, lengthArg, coordinatesArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -2377,7 +3810,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val latitudeArg = args[0] as Double
             val longitudeArg = args[1] as Double
-            api.mapToScreenLocation(latitudeArg, longitudeArg) { result: Result<Any?> ->
+            api.mapToScreenLocation(latitudeArg, longitudeArg) { result: Result<PgScreenPoint> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2520,7 +3953,7 @@ interface MapLibreMapHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val layerIdArg = args[0] as String
-            val filterArg = args[1] as String
+            val filterArg = args[1] as String?
             api.styleSetFilter(layerIdArg, filterArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
@@ -2540,7 +3973,7 @@ interface MapLibreMapHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val layerIdArg = args[0] as String
-            api.styleGetFilter(layerIdArg) { result: Result<Any?> ->
+            api.styleGetFilter(layerIdArg) { result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2561,7 +3994,7 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val xArg = args[0] as Double
             val yArg = args[1] as Double
-            api.mapToLatLng(xArg, yArg) { result: Result<Any?> ->
+            api.mapToLatLng(xArg, yArg) { result: Result<PgLatLng> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2581,7 +4014,7 @@ interface MapLibreMapHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val latitudeArg = args[0] as Double
-            api.mapGetMetersPerPixelAtLatitude(latitudeArg) { result: Result<Any?> ->
+            api.mapGetMetersPerPixelAtLatitude(latitudeArg) { result: Result<Double> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -2669,7 +4102,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val enableInteractionArg = args[7] as Boolean
             val propertiesArg = args[8] as Map<String, Any?>
             api.symbolLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
@@ -2696,7 +4129,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val enableInteractionArg = args[7] as Boolean
             val propertiesArg = args[8] as Map<String, Any?>
             api.lineLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
@@ -2743,7 +4176,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val enableInteractionArg = args[7] as Boolean
             val propertiesArg = args[8] as Map<String, Any?>
             api.circleLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
@@ -2770,7 +4203,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val enableInteractionArg = args[7] as Boolean
             val propertiesArg = args[8] as Map<String, Any?>
             api.fillLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
@@ -2797,7 +4230,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val enableInteractionArg = args[7] as Boolean
             val propertiesArg = args[8] as Map<String, Any?>
             api.fillExtrusionLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, enableInteractionArg, propertiesArg) { result: Result<Unit> ->
@@ -2939,7 +4372,7 @@ interface MapLibreMapHostApi {
             val sourceLayerArg = args[3] as String?
             val minzoomArg = args[4] as Double?
             val maxzoomArg = args[5] as Double?
-            val filterArg = args[6] as String
+            val filterArg = args[6] as String?
             val propertiesArg = args[7] as Map<String, Any?>
             api.heatmapLayerAdd(sourceIdArg, layerIdArg, belowLayerIdArg, sourceLayerArg, minzoomArg, maxzoomArg, filterArg, propertiesArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
@@ -3026,7 +4459,7 @@ interface MapLibreMapHostApi {
             val sourceIdArg = args[0] as String
             val featureIdArg = args[1] as String
             val sourceLayerArg = args[2] as String?
-            api.sourceGetFeatureState(sourceIdArg, featureIdArg, sourceLayerArg) { result: Result<Any?> ->
+            api.sourceGetFeatureState(sourceIdArg, featureIdArg, sourceLayerArg) { result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -3166,7 +4599,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.styleGetLayerIds{ result: Result<Any?> ->
+            api.styleGetLayerIds{ result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -3184,7 +4617,7 @@ interface MapLibreMapHostApi {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
-            api.styleGetSourceIds{ result: Result<Any?> ->
+            api.styleGetSourceIds{ result: Result<List<String>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -3204,7 +4637,7 @@ interface MapLibreMapHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val layerIdArg = args[0] as String
-            api.styleGetLayerProperties(layerIdArg) { result: Result<Any?> ->
+            api.styleGetLayerProperties(layerIdArg) { result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -3224,7 +4657,7 @@ interface MapLibreMapHostApi {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
             val sourceIdArg = args[0] as String
-            api.styleGetSourceProperties(sourceIdArg) { result: Result<Any?> ->
+            api.styleGetSourceProperties(sourceIdArg) { result: Result<String?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
@@ -3264,9 +4697,6 @@ interface MapLibreMapHostApi {
  * The events of one map, from native to Dart, on channels told apart by the
  * same suffix as [MapLibreMapHostApi].
  *
- * Every method stands for one call native made on the method channel these
- * messages replace, named in the first line of its documentation.
- *
  * Generated class from Pigeon that represents Flutter messages that can be called from Kotlin.
  */
 class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
@@ -3276,7 +4706,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       MessagesPigeonCodec()
     }
   }
-  /** feature#onTap */
+  /** The user tapped a feature of an interactive layer. */
   fun featureOnTap(tapArg: PgFeatureTap, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3294,7 +4724,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** feature#onDrag */
+  /** The user dragged a feature of an interactive layer. */
   fun featureOnDrag(dragArg: PgFeatureDrag, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3313,10 +4743,8 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
     }
   }
   /**
-   * camera#onMoveStarted
-   *
-   * [isGesture] is whether the SDK reports a gesture of the user as the
-   * cause of the move. The legacy call carried it on Android only.
+   * The camera started to move. [isGesture] is whether the SDK reports a
+   * gesture of the user as the cause.
    */
   fun cameraOnMoveStarted(isGestureArg: Boolean, callback: (Result<Unit>) -> Unit)
 {
@@ -3335,7 +4763,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** camera#onMove */
+  /** The camera moved, for a map that tracks the camera position. */
   fun cameraOnMove(positionArg: PgCameraPosition, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3354,9 +4782,8 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
     }
   }
   /**
-   * camera#onIdle
-   *
-   * [position] is null when the map does not track the camera position.
+   * The camera stopped. [position] is null when the map does not track the
+   * camera position.
    */
   fun cameraOnIdle(positionArg: PgCameraPosition?, callback: (Result<Unit>) -> Unit)
 {
@@ -3375,7 +4802,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** map#onStyleLoaded */
+  /** A style finished loading. */
   fun mapOnStyleLoaded(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3394,9 +4821,8 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
     }
   }
   /**
-   * map#onMapClick
-   *
-   * [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+   * The user tapped the map at [point] of the map view, [latLng] on the
+   * map.
    */
   fun mapOnMapClick(pointArg: PgScreenPoint, latLngArg: PgLatLng, callback: (Result<Unit>) -> Unit)
 {
@@ -3416,9 +4842,8 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
     }
   }
   /**
-   * map#onMapLongClick
-   *
-   * [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+   * The user long pressed the map at [point] of the map view, [latLng] on
+   * the map.
    */
   fun mapOnMapLongClick(pointArg: PgScreenPoint, latLngArg: PgLatLng, callback: (Result<Unit>) -> Unit)
 {
@@ -3437,12 +4862,8 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /**
-   * map#onCameraTrackingChanged
-   *
-   * [mode] is the index of the Dart `MyLocationTrackingMode`.
-   */
-  fun mapOnCameraTrackingChanged(modeArg: Long, callback: (Result<Unit>) -> Unit)
+  /** The way the camera follows the user location changed to [mode]. */
+  fun mapOnCameraTrackingChanged(modeArg: PgMyLocationTrackingMode, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
     val channelName = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingChanged$separatedMessageChannelSuffix"
@@ -3459,7 +4880,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** map#onCameraTrackingDismissed */
+  /** The camera stopped following the user location. */
   fun mapOnCameraTrackingDismissed(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3477,7 +4898,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** map#onIdle */
+  /** The map finished rendering and has nothing left to load or animate. */
   fun mapOnIdle(callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
@@ -3495,7 +4916,7 @@ class MapLibreMapFlutterApi(private val binaryMessenger: BinaryMessenger, privat
       } 
     }
   }
-  /** map#onUserLocationUpdated */
+  /** The user location changed, with the compass [heading] on iOS. */
   fun mapOnUserLocationUpdated(userLocationArg: PgUserLocation, headingArg: PgUserHeading?, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""

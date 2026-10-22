@@ -103,7 +103,8 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     <tr><td>Vector tiles</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Raster tiles</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Raster DEM</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Image source</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Limited</span></td></tr>
+    <tr><td>Image source</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Video source</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>PMTiles</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
   </tbody>
 </table>
@@ -126,8 +127,8 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
 !!! note "Tracking camera options on web"
     `setTrackingCameraOptions()` throws an `UnsupportedError` on web. MapLibre GL JS has no location component, and its `GeolocateControl` drops its follow lock on any programmatic camera change. See [User Location](../advanced/user-location.md).
 
-!!! note "Image sources on web"
-    A style-spec image source, added with `addSource()` and `ImageSourceProperties`, works on every platform. The byte-based calls, `addImageSource()` and `updateImageSource()`, are Android and iOS only: on web they throw `UnimplementedError`.
+!!! note "Video sources"
+    `VideoSourceProperties` works on web only. MapLibre Native has no video source, so on Android and iOS `addSource()` throws `UNSUPPORTED_SOURCE_TYPE`.
 
 !!! note "Pause and resume on web"
     `pauseMap()` and `resumeMap()` are no-ops on web rather than errors, so no `kIsWeb` guard is needed around them. See [Startup & Performance](../advanced/performance.md#pause-maps-that-are-off-screen).

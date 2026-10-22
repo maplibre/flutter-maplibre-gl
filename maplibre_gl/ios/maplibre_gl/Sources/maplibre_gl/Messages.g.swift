@@ -196,6 +196,66 @@ enum PgOfflineDownloadStatus: Int, CaseIterable {
   case error = 3
 }
 
+/// The timing curve of an eased camera move, the Dart
+/// `CameraAnimationInterpolation`. Android tells only [linear] apart: the
+/// others ease in and out there.
+enum PgCameraAnimationInterpolation: Int, CaseIterable {
+  case linear = 0
+  case easeInOut = 1
+  case easeOut = 2
+  case fastOutLinearIn = 3
+}
+
+/// How the camera follows the user location, the Dart
+/// `MyLocationTrackingMode`. The raw values are those of iOS
+/// `MLNUserTrackingMode`; on Android the cases match, in order, the camera
+/// modes NONE, TRACKING, TRACKING_COMPASS and TRACKING_GPS.
+enum PgMyLocationTrackingMode: Int, CaseIterable {
+  case none = 0
+  case tracking = 1
+  case trackingCompass = 2
+  case trackingGps = 3
+}
+
+/// How the user location is drawn, the Dart `MyLocationRenderMode`.
+enum PgMyLocationRenderMode: Int, CaseIterable {
+  case normal = 0
+  case compass = 1
+  case gps = 2
+}
+
+/// A corner of the map view, for the logo, the compass and the attribution
+/// button. The raw values are those of iOS `MLNOrnamentPosition`.
+enum PgOrnamentPosition: Int, CaseIterable {
+  case topLeft = 0
+  case topRight = 1
+  case bottomLeft = 2
+  case bottomRight = 3
+}
+
+/// How long the map glides after a pan, the Dart `PanInertia`.
+enum PgPanInertia: Int, CaseIterable {
+  case none = 0
+  case short = 1
+  case normal = 2
+}
+
+/// The Android location priority, the Dart `LocationPriority`. The raw values
+/// are those of the `LocationEngineRequest` priorities.
+enum PgLocationPriority: Int, CaseIterable {
+  case highAccuracy = 0
+  case balanced = 1
+  case lowPower = 2
+  case noPower = 3
+}
+
+/// Where the user location comes from: the platform location engine, or the
+/// app through [MapLibreMapHostApi.locationComponentSetManualLocation].
+enum PgLocationSource: Int, CaseIterable {
+  case platform = 0
+  case manual = 1
+}
+
 /// One event of an offline region download, sent for the download started
 /// with the same `downloadId`.
 ///
@@ -313,7 +373,104 @@ struct PgLatLng: Hashable, CustomStringConvertible {
   }
 }
 
-/// A point of the map view, in logical pixels from its top left corner.
+/// A rectangle of latitudes and longitudes, given by two of its corners.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgLatLngBounds: Hashable, CustomStringConvertible {
+  var southwest: PgLatLng
+  var northeast: PgLatLng
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgLatLngBounds? {
+    let southwest = pigeonVar_list[0] as! PgLatLng
+    let northeast = pigeonVar_list[1] as! PgLatLng
+
+    return PgLatLngBounds(
+      southwest: southwest,
+      northeast: northeast
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      southwest,
+      northeast,
+    ]
+  }
+  static func == (lhs: PgLatLngBounds, rhs: PgLatLngBounds) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.southwest, rhs.southwest) && MessagesPigeonInternal.deepEquals(lhs.northeast, rhs.northeast)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgLatLngBounds")
+    MessagesPigeonInternal.deepHash(value: southwest, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: northeast, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgLatLngBounds(southwest: \(String(describing: southwest)), northeast: \(String(describing: northeast)))"
+  }
+}
+
+/// Four geographical corners, which need not form a rectangle: where an
+/// image source is drawn.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgLatLngQuad: Hashable, CustomStringConvertible {
+  var topLeft: PgLatLng
+  var topRight: PgLatLng
+  var bottomRight: PgLatLng
+  var bottomLeft: PgLatLng
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgLatLngQuad? {
+    let topLeft = pigeonVar_list[0] as! PgLatLng
+    let topRight = pigeonVar_list[1] as! PgLatLng
+    let bottomRight = pigeonVar_list[2] as! PgLatLng
+    let bottomLeft = pigeonVar_list[3] as! PgLatLng
+
+    return PgLatLngQuad(
+      topLeft: topLeft,
+      topRight: topRight,
+      bottomRight: bottomRight,
+      bottomLeft: bottomLeft
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      topLeft,
+      topRight,
+      bottomRight,
+      bottomLeft,
+    ]
+  }
+  static func == (lhs: PgLatLngQuad, rhs: PgLatLngQuad) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.topLeft, rhs.topLeft) && MessagesPigeonInternal.deepEquals(lhs.topRight, rhs.topRight) && MessagesPigeonInternal.deepEquals(lhs.bottomRight, rhs.bottomRight) && MessagesPigeonInternal.deepEquals(lhs.bottomLeft, rhs.bottomLeft)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgLatLngQuad")
+    MessagesPigeonInternal.deepHash(value: topLeft, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: topRight, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bottomRight, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bottomLeft, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgLatLngQuad(topLeft: \(String(describing: topLeft)), topRight: \(String(describing: topRight)), bottomRight: \(String(describing: bottomRight)), bottomLeft: \(String(describing: bottomLeft)))"
+  }
+}
+
+/// A point of the map view, or an offset on screen, in logical pixels: x to
+/// the right and y down, from the top left corner of the map view for a
+/// point.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgScreenPoint: Hashable, CustomStringConvertible {
@@ -355,14 +512,69 @@ struct PgScreenPoint: Hashable, CustomStringConvertible {
   }
 }
 
-/// The camera of a map: the `position` map of `camera#onMove` and
-/// `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+/// A space along each edge of the map view, in logical pixels.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgEdgeInsets: Hashable, CustomStringConvertible {
+  var top: Double
+  var left: Double
+  var bottom: Double
+  var right: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgEdgeInsets? {
+    let top = pigeonVar_list[0] as! Double
+    let left = pigeonVar_list[1] as! Double
+    let bottom = pigeonVar_list[2] as! Double
+    let right = pigeonVar_list[3] as! Double
+
+    return PgEdgeInsets(
+      top: top,
+      left: left,
+      bottom: bottom,
+      right: right
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      top,
+      left,
+      bottom,
+      right,
+    ]
+  }
+  static func == (lhs: PgEdgeInsets, rhs: PgEdgeInsets) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.top, rhs.top) && MessagesPigeonInternal.deepEquals(lhs.left, rhs.left) && MessagesPigeonInternal.deepEquals(lhs.bottom, rhs.bottom) && MessagesPigeonInternal.deepEquals(lhs.right, rhs.right)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgEdgeInsets")
+    MessagesPigeonInternal.deepHash(value: top, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: left, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bottom, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: right, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgEdgeInsets(top: \(String(describing: top)), left: \(String(describing: left)), bottom: \(String(describing: bottom)), right: \(String(describing: right)))"
+  }
+}
+
+/// The camera of a map.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgCameraPosition: Hashable, CustomStringConvertible {
+  /// Degrees clockwise from north.
   var bearing: Double
+  /// The location at the center of the map view.
   var target: PgLatLng
+  /// Degrees from the nadir.
   var tilt: Double
+  /// The zoom level.
   var zoom: Double
 
 
@@ -408,8 +620,1004 @@ struct PgCameraPosition: Hashable, CustomStringConvertible {
   }
 }
 
-/// The compass heading of a user location update: the `heading` map of
-/// `map#onUserLocationUpdated`. Only iOS sends one.
+/// A change of the camera, one subclass per kind. Native reads it against
+/// the camera the map has when the call arrives.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+/// This protocol should not be extended by any user class outside of the generated file.
+protocol PgCameraUpdate {
+
+}
+
+/// Moves the camera to [cameraPosition].
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateNewCameraPosition: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var cameraPosition: PgCameraPosition
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateNewCameraPosition? {
+    let cameraPosition = pigeonVar_list[0] as! PgCameraPosition
+
+    return PgCameraUpdateNewCameraPosition(
+      cameraPosition: cameraPosition
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      cameraPosition
+    ]
+  }
+  static func == (lhs: PgCameraUpdateNewCameraPosition, rhs: PgCameraUpdateNewCameraPosition) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.cameraPosition, rhs.cameraPosition)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateNewCameraPosition")
+    MessagesPigeonInternal.deepHash(value: cameraPosition, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateNewCameraPosition(cameraPosition: \(String(describing: cameraPosition)))"
+  }
+}
+
+/// Centers the camera on [latLng], keeping the zoom, bearing and tilt.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateNewLatLng: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var latLng: PgLatLng
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateNewLatLng? {
+    let latLng = pigeonVar_list[0] as! PgLatLng
+
+    return PgCameraUpdateNewLatLng(
+      latLng: latLng
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      latLng
+    ]
+  }
+  static func == (lhs: PgCameraUpdateNewLatLng, rhs: PgCameraUpdateNewLatLng) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.latLng, rhs.latLng)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateNewLatLng")
+    MessagesPigeonInternal.deepHash(value: latLng, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateNewLatLng(latLng: \(String(describing: latLng)))"
+  }
+}
+
+/// Fits [bounds] in the map view inset by [padding], at the greatest zoom
+/// that shows them whole, keeping the bearing and tilt. The padding adds to
+/// the content insets of the map and does not stay on after the move.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateNewLatLngBounds: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var bounds: PgLatLngBounds
+  var padding: PgEdgeInsets
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateNewLatLngBounds? {
+    let bounds = pigeonVar_list[0] as! PgLatLngBounds
+    let padding = pigeonVar_list[1] as! PgEdgeInsets
+
+    return PgCameraUpdateNewLatLngBounds(
+      bounds: bounds,
+      padding: padding
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      bounds,
+      padding,
+    ]
+  }
+  static func == (lhs: PgCameraUpdateNewLatLngBounds, rhs: PgCameraUpdateNewLatLngBounds) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.bounds, rhs.bounds) && MessagesPigeonInternal.deepEquals(lhs.padding, rhs.padding)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateNewLatLngBounds")
+    MessagesPigeonInternal.deepHash(value: bounds, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: padding, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateNewLatLngBounds(bounds: \(String(describing: bounds)), padding: \(String(describing: padding)))"
+  }
+}
+
+/// Centers the camera on [latLng] at [zoom], keeping the bearing and tilt.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateNewLatLngZoom: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var latLng: PgLatLng
+  var zoom: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateNewLatLngZoom? {
+    let latLng = pigeonVar_list[0] as! PgLatLng
+    let zoom = pigeonVar_list[1] as! Double
+
+    return PgCameraUpdateNewLatLngZoom(
+      latLng: latLng,
+      zoom: zoom
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      latLng,
+      zoom,
+    ]
+  }
+  static func == (lhs: PgCameraUpdateNewLatLngZoom, rhs: PgCameraUpdateNewLatLngZoom) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.latLng, rhs.latLng) && MessagesPigeonInternal.deepEquals(lhs.zoom, rhs.zoom)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateNewLatLngZoom")
+    MessagesPigeonInternal.deepHash(value: latLng, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: zoom, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateNewLatLngZoom(latLng: \(String(describing: latLng)), zoom: \(String(describing: zoom)))"
+  }
+}
+
+/// Pans the view by [dx] and [dy] logical pixels: a positive [dx] moves the
+/// view east and a positive [dy] south, for a camera facing north.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateScrollBy: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var dx: Double
+  var dy: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateScrollBy? {
+    let dx = pigeonVar_list[0] as! Double
+    let dy = pigeonVar_list[1] as! Double
+
+    return PgCameraUpdateScrollBy(
+      dx: dx,
+      dy: dy
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      dx,
+      dy,
+    ]
+  }
+  static func == (lhs: PgCameraUpdateScrollBy, rhs: PgCameraUpdateScrollBy) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.dx, rhs.dx) && MessagesPigeonInternal.deepEquals(lhs.dy, rhs.dy)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateScrollBy")
+    MessagesPigeonInternal.deepHash(value: dx, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: dy, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateScrollBy(dx: \(String(describing: dx)), dy: \(String(describing: dy)))"
+  }
+}
+
+/// Changes the zoom by [amount]. With a [focus], the location under that
+/// point of the map view stays where it is on screen.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateZoomBy: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var amount: Double
+  var focus: PgScreenPoint? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateZoomBy? {
+    let amount = pigeonVar_list[0] as! Double
+    let focus: PgScreenPoint? = nilOrValue(pigeonVar_list[1])
+
+    return PgCameraUpdateZoomBy(
+      amount: amount,
+      focus: focus
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      amount,
+      focus,
+    ]
+  }
+  static func == (lhs: PgCameraUpdateZoomBy, rhs: PgCameraUpdateZoomBy) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.amount, rhs.amount) && MessagesPigeonInternal.deepEquals(lhs.focus, rhs.focus)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateZoomBy")
+    MessagesPigeonInternal.deepHash(value: amount, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: focus, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateZoomBy(amount: \(String(describing: amount)), focus: \(String(describing: focus)))"
+  }
+}
+
+/// Zooms in by one level.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateZoomIn: PgCameraUpdate, Hashable, CustomStringConvertible {
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateZoomIn? {
+
+    return PgCameraUpdateZoomIn(
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+    ]
+  }
+  static func == (lhs: PgCameraUpdateZoomIn, rhs: PgCameraUpdateZoomIn) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return true
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateZoomIn")
+  }
+
+  public var description: String {
+    return "PgCameraUpdateZoomIn()"
+  }
+}
+
+/// Zooms out by one level.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateZoomOut: PgCameraUpdate, Hashable, CustomStringConvertible {
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateZoomOut? {
+
+    return PgCameraUpdateZoomOut(
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+    ]
+  }
+  static func == (lhs: PgCameraUpdateZoomOut, rhs: PgCameraUpdateZoomOut) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return true
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateZoomOut")
+  }
+
+  public var description: String {
+    return "PgCameraUpdateZoomOut()"
+  }
+}
+
+/// Sets the zoom level to [zoom].
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateZoomTo: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var zoom: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateZoomTo? {
+    let zoom = pigeonVar_list[0] as! Double
+
+    return PgCameraUpdateZoomTo(
+      zoom: zoom
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      zoom
+    ]
+  }
+  static func == (lhs: PgCameraUpdateZoomTo, rhs: PgCameraUpdateZoomTo) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.zoom, rhs.zoom)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateZoomTo")
+    MessagesPigeonInternal.deepHash(value: zoom, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateZoomTo(zoom: \(String(describing: zoom)))"
+  }
+}
+
+/// Sets the bearing to [bearing] degrees clockwise from north.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateBearingTo: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var bearing: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateBearingTo? {
+    let bearing = pigeonVar_list[0] as! Double
+
+    return PgCameraUpdateBearingTo(
+      bearing: bearing
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      bearing
+    ]
+  }
+  static func == (lhs: PgCameraUpdateBearingTo, rhs: PgCameraUpdateBearingTo) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.bearing, rhs.bearing)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateBearingTo")
+    MessagesPigeonInternal.deepHash(value: bearing, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateBearingTo(bearing: \(String(describing: bearing)))"
+  }
+}
+
+/// Sets the tilt to [tilt] degrees from the nadir, keeping the zoom.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraUpdateTiltTo: PgCameraUpdate, Hashable, CustomStringConvertible {
+  var tilt: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraUpdateTiltTo? {
+    let tilt = pigeonVar_list[0] as! Double
+
+    return PgCameraUpdateTiltTo(
+      tilt: tilt
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      tilt
+    ]
+  }
+  static func == (lhs: PgCameraUpdateTiltTo, rhs: PgCameraUpdateTiltTo) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.tilt, rhs.tilt)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraUpdateTiltTo")
+    MessagesPigeonInternal.deepHash(value: tilt, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraUpdateTiltTo(tilt: \(String(describing: tilt)))"
+  }
+}
+
+/// Bounds for the camera target. Null [bounds] lift the restriction, which
+/// is not the same as leaving this option out.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCameraTargetBounds: Hashable, CustomStringConvertible {
+  var bounds: PgLatLngBounds? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCameraTargetBounds? {
+    let bounds: PgLatLngBounds? = nilOrValue(pigeonVar_list[0])
+
+    return PgCameraTargetBounds(
+      bounds: bounds
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      bounds
+    ]
+  }
+  static func == (lhs: PgCameraTargetBounds, rhs: PgCameraTargetBounds) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.bounds, rhs.bounds)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCameraTargetBounds")
+    MessagesPigeonInternal.deepHash(value: bounds, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCameraTargetBounds(bounds: \(String(describing: bounds)))"
+  }
+}
+
+/// The zoom range of the camera. A null end leaves that side unbounded, which
+/// is not the same as leaving this option out.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgMinMaxZoomPreference: Hashable, CustomStringConvertible {
+  var minZoom: Double? = nil
+  var maxZoom: Double? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgMinMaxZoomPreference? {
+    let minZoom: Double? = nilOrValue(pigeonVar_list[0])
+    let maxZoom: Double? = nilOrValue(pigeonVar_list[1])
+
+    return PgMinMaxZoomPreference(
+      minZoom: minZoom,
+      maxZoom: maxZoom
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      minZoom,
+      maxZoom,
+    ]
+  }
+  static func == (lhs: PgMinMaxZoomPreference, rhs: PgMinMaxZoomPreference) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.minZoom, rhs.minZoom) && MessagesPigeonInternal.deepEquals(lhs.maxZoom, rhs.maxZoom)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgMinMaxZoomPreference")
+    MessagesPigeonInternal.deepHash(value: minZoom, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: maxZoom, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgMinMaxZoomPreference(minZoom: \(String(describing: minZoom)), maxZoom: \(String(describing: maxZoom)))"
+  }
+}
+
+/// The colors of the user location puck, the Dart `MyLocationStyle`. A null
+/// color keeps the platform default.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgMyLocationStyle: Hashable, CustomStringConvertible {
+  var fillColor: Int64? = nil
+  var bearingColor: Int64? = nil
+  /// Only its red, green and blue channels are used.
+  var accuracyColor: Int64? = nil
+  var accuracyCircleEnabled: Bool
+  /// Null keeps the platform default.
+  var pulseEnabled: Bool? = nil
+  var pulseColor: Int64? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgMyLocationStyle? {
+    let fillColor: Int64? = nilOrValue(pigeonVar_list[0])
+    let bearingColor: Int64? = nilOrValue(pigeonVar_list[1])
+    let accuracyColor: Int64? = nilOrValue(pigeonVar_list[2])
+    let accuracyCircleEnabled = pigeonVar_list[3] as! Bool
+    let pulseEnabled: Bool? = nilOrValue(pigeonVar_list[4])
+    let pulseColor: Int64? = nilOrValue(pigeonVar_list[5])
+
+    return PgMyLocationStyle(
+      fillColor: fillColor,
+      bearingColor: bearingColor,
+      accuracyColor: accuracyColor,
+      accuracyCircleEnabled: accuracyCircleEnabled,
+      pulseEnabled: pulseEnabled,
+      pulseColor: pulseColor
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      fillColor,
+      bearingColor,
+      accuracyColor,
+      accuracyCircleEnabled,
+      pulseEnabled,
+      pulseColor,
+    ]
+  }
+  static func == (lhs: PgMyLocationStyle, rhs: PgMyLocationStyle) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.fillColor, rhs.fillColor) && MessagesPigeonInternal.deepEquals(lhs.bearingColor, rhs.bearingColor) && MessagesPigeonInternal.deepEquals(lhs.accuracyColor, rhs.accuracyColor) && MessagesPigeonInternal.deepEquals(lhs.accuracyCircleEnabled, rhs.accuracyCircleEnabled) && MessagesPigeonInternal.deepEquals(lhs.pulseEnabled, rhs.pulseEnabled) && MessagesPigeonInternal.deepEquals(lhs.pulseColor, rhs.pulseColor)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgMyLocationStyle")
+    MessagesPigeonInternal.deepHash(value: fillColor, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bearingColor, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: accuracyColor, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: accuracyCircleEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: pulseEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: pulseColor, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgMyLocationStyle(fillColor: \(String(describing: fillColor)), bearingColor: \(String(describing: bearingColor)), accuracyColor: \(String(describing: accuracyColor)), accuracyCircleEnabled: \(String(describing: accuracyCircleEnabled)), pulseEnabled: \(String(describing: pulseEnabled)), pulseColor: \(String(describing: pulseColor)))"
+  }
+}
+
+/// The settings of the platform location engine. Dart fills only the fields
+/// of the platform it runs on: on Android [interval], [priority] and
+/// [displacement], on iOS [enableHighAccuracy], [displacement], [intervalMs]
+/// and [pulseWindowMs].
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgLocationEngineProperties: Hashable, CustomStringConvertible {
+  /// Android: milliseconds between location updates.
+  var interval: Int64? = nil
+  /// Android.
+  var priority: PgLocationPriority? = nil
+  /// Meters the device moves before an update. iOS reads it as the distance
+  /// filter.
+  var displacement: Int64? = nil
+  /// iOS: the best accuracy rather than a hundred meters.
+  var enableHighAccuracy: Bool? = nil
+  /// iOS: milliseconds between two GPS pulses, 0 for continuous updates.
+  var intervalMs: Int64? = nil
+  /// iOS: milliseconds the GPS stays on in each pulse.
+  var pulseWindowMs: Int64? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgLocationEngineProperties? {
+    let interval: Int64? = nilOrValue(pigeonVar_list[0])
+    let priority: PgLocationPriority? = nilOrValue(pigeonVar_list[1])
+    let displacement: Int64? = nilOrValue(pigeonVar_list[2])
+    let enableHighAccuracy: Bool? = nilOrValue(pigeonVar_list[3])
+    let intervalMs: Int64? = nilOrValue(pigeonVar_list[4])
+    let pulseWindowMs: Int64? = nilOrValue(pigeonVar_list[5])
+
+    return PgLocationEngineProperties(
+      interval: interval,
+      priority: priority,
+      displacement: displacement,
+      enableHighAccuracy: enableHighAccuracy,
+      intervalMs: intervalMs,
+      pulseWindowMs: pulseWindowMs
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      interval,
+      priority,
+      displacement,
+      enableHighAccuracy,
+      intervalMs,
+      pulseWindowMs,
+    ]
+  }
+  static func == (lhs: PgLocationEngineProperties, rhs: PgLocationEngineProperties) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.interval, rhs.interval) && MessagesPigeonInternal.deepEquals(lhs.priority, rhs.priority) && MessagesPigeonInternal.deepEquals(lhs.displacement, rhs.displacement) && MessagesPigeonInternal.deepEquals(lhs.enableHighAccuracy, rhs.enableHighAccuracy) && MessagesPigeonInternal.deepEquals(lhs.intervalMs, rhs.intervalMs) && MessagesPigeonInternal.deepEquals(lhs.pulseWindowMs, rhs.pulseWindowMs)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgLocationEngineProperties")
+    MessagesPigeonInternal.deepHash(value: interval, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: priority, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: displacement, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: enableHighAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: intervalMs, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: pulseWindowMs, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgLocationEngineProperties(interval: \(String(describing: interval)), priority: \(String(describing: priority)), displacement: \(String(describing: displacement)), enableHighAccuracy: \(String(describing: enableHighAccuracy)), intervalMs: \(String(describing: intervalMs)), pulseWindowMs: \(String(describing: pulseWindowMs)))"
+  }
+}
+
+/// The options of a map. On creation a null field keeps the platform
+/// default; in [MapLibreMapHostApi.mapUpdate] it leaves the option as it is,
+/// as Dart sends only the options that changed. Web-only options are not
+/// sent.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgMapOptions: Hashable, CustomStringConvertible {
+  var compassEnabled: Bool? = nil
+  var cameraTargetBounds: PgCameraTargetBounds? = nil
+  /// A style JSON, URL, file path or asset name.
+  var styleString: String? = nil
+  var minMaxZoomPreference: PgMinMaxZoomPreference? = nil
+  var rotateGesturesEnabled: Bool? = nil
+  var scrollGesturesEnabled: Bool? = nil
+  var tiltGesturesEnabled: Bool? = nil
+  var zoomGesturesEnabled: Bool? = nil
+  var doubleClickZoomEnabled: Bool? = nil
+  var panInertia: PgPanInertia? = nil
+  /// iOS only.
+  var hapticFeedbackEnabled: Bool? = nil
+  /// Whether the camera events and [MapLibreMapHostApi.mapUpdate] report the
+  /// camera position.
+  var trackCameraPosition: Bool? = nil
+  var myLocationEnabled: Bool? = nil
+  var myLocationTrackingMode: PgMyLocationTrackingMode? = nil
+  var myLocationRenderMode: PgMyLocationRenderMode? = nil
+  var myLocationStyle: PgMyLocationStyle? = nil
+  var logoEnabled: Bool? = nil
+  var logoViewPosition: PgOrnamentPosition? = nil
+  /// The horizontal and vertical margins, in logical pixels.
+  var logoViewMargins: PgScreenPoint? = nil
+  var compassViewPosition: PgOrnamentPosition? = nil
+  /// The horizontal and vertical margins, in logical pixels.
+  var compassViewMargins: PgScreenPoint? = nil
+  var attributionEnabled: Bool? = nil
+  var attributionButtonPosition: PgOrnamentPosition? = nil
+  /// The horizontal and vertical margins, in logical pixels.
+  var attributionButtonMargins: PgScreenPoint? = nil
+  /// ARGB.
+  var attributionButtonColor: Int64? = nil
+  var locationEngineProperties: PgLocationEngineProperties? = nil
+  var locationSource: PgLocationSource? = nil
+  /// Android only, ARGB.
+  var foregroundLoadColor: Int64? = nil
+  /// Android only.
+  var translucentTextureSurface: Bool? = nil
+  var featureTapsTriggersMapClick: Bool? = nil
+  var symbolPlacementTransitionsEnabled: Bool? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgMapOptions? {
+    let compassEnabled: Bool? = nilOrValue(pigeonVar_list[0])
+    let cameraTargetBounds: PgCameraTargetBounds? = nilOrValue(pigeonVar_list[1])
+    let styleString: String? = nilOrValue(pigeonVar_list[2])
+    let minMaxZoomPreference: PgMinMaxZoomPreference? = nilOrValue(pigeonVar_list[3])
+    let rotateGesturesEnabled: Bool? = nilOrValue(pigeonVar_list[4])
+    let scrollGesturesEnabled: Bool? = nilOrValue(pigeonVar_list[5])
+    let tiltGesturesEnabled: Bool? = nilOrValue(pigeonVar_list[6])
+    let zoomGesturesEnabled: Bool? = nilOrValue(pigeonVar_list[7])
+    let doubleClickZoomEnabled: Bool? = nilOrValue(pigeonVar_list[8])
+    let panInertia: PgPanInertia? = nilOrValue(pigeonVar_list[9])
+    let hapticFeedbackEnabled: Bool? = nilOrValue(pigeonVar_list[10])
+    let trackCameraPosition: Bool? = nilOrValue(pigeonVar_list[11])
+    let myLocationEnabled: Bool? = nilOrValue(pigeonVar_list[12])
+    let myLocationTrackingMode: PgMyLocationTrackingMode? = nilOrValue(pigeonVar_list[13])
+    let myLocationRenderMode: PgMyLocationRenderMode? = nilOrValue(pigeonVar_list[14])
+    let myLocationStyle: PgMyLocationStyle? = nilOrValue(pigeonVar_list[15])
+    let logoEnabled: Bool? = nilOrValue(pigeonVar_list[16])
+    let logoViewPosition: PgOrnamentPosition? = nilOrValue(pigeonVar_list[17])
+    let logoViewMargins: PgScreenPoint? = nilOrValue(pigeonVar_list[18])
+    let compassViewPosition: PgOrnamentPosition? = nilOrValue(pigeonVar_list[19])
+    let compassViewMargins: PgScreenPoint? = nilOrValue(pigeonVar_list[20])
+    let attributionEnabled: Bool? = nilOrValue(pigeonVar_list[21])
+    let attributionButtonPosition: PgOrnamentPosition? = nilOrValue(pigeonVar_list[22])
+    let attributionButtonMargins: PgScreenPoint? = nilOrValue(pigeonVar_list[23])
+    let attributionButtonColor: Int64? = nilOrValue(pigeonVar_list[24])
+    let locationEngineProperties: PgLocationEngineProperties? = nilOrValue(pigeonVar_list[25])
+    let locationSource: PgLocationSource? = nilOrValue(pigeonVar_list[26])
+    let foregroundLoadColor: Int64? = nilOrValue(pigeonVar_list[27])
+    let translucentTextureSurface: Bool? = nilOrValue(pigeonVar_list[28])
+    let featureTapsTriggersMapClick: Bool? = nilOrValue(pigeonVar_list[29])
+    let symbolPlacementTransitionsEnabled: Bool? = nilOrValue(pigeonVar_list[30])
+
+    return PgMapOptions(
+      compassEnabled: compassEnabled,
+      cameraTargetBounds: cameraTargetBounds,
+      styleString: styleString,
+      minMaxZoomPreference: minMaxZoomPreference,
+      rotateGesturesEnabled: rotateGesturesEnabled,
+      scrollGesturesEnabled: scrollGesturesEnabled,
+      tiltGesturesEnabled: tiltGesturesEnabled,
+      zoomGesturesEnabled: zoomGesturesEnabled,
+      doubleClickZoomEnabled: doubleClickZoomEnabled,
+      panInertia: panInertia,
+      hapticFeedbackEnabled: hapticFeedbackEnabled,
+      trackCameraPosition: trackCameraPosition,
+      myLocationEnabled: myLocationEnabled,
+      myLocationTrackingMode: myLocationTrackingMode,
+      myLocationRenderMode: myLocationRenderMode,
+      myLocationStyle: myLocationStyle,
+      logoEnabled: logoEnabled,
+      logoViewPosition: logoViewPosition,
+      logoViewMargins: logoViewMargins,
+      compassViewPosition: compassViewPosition,
+      compassViewMargins: compassViewMargins,
+      attributionEnabled: attributionEnabled,
+      attributionButtonPosition: attributionButtonPosition,
+      attributionButtonMargins: attributionButtonMargins,
+      attributionButtonColor: attributionButtonColor,
+      locationEngineProperties: locationEngineProperties,
+      locationSource: locationSource,
+      foregroundLoadColor: foregroundLoadColor,
+      translucentTextureSurface: translucentTextureSurface,
+      featureTapsTriggersMapClick: featureTapsTriggersMapClick,
+      symbolPlacementTransitionsEnabled: symbolPlacementTransitionsEnabled
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      compassEnabled,
+      cameraTargetBounds,
+      styleString,
+      minMaxZoomPreference,
+      rotateGesturesEnabled,
+      scrollGesturesEnabled,
+      tiltGesturesEnabled,
+      zoomGesturesEnabled,
+      doubleClickZoomEnabled,
+      panInertia,
+      hapticFeedbackEnabled,
+      trackCameraPosition,
+      myLocationEnabled,
+      myLocationTrackingMode,
+      myLocationRenderMode,
+      myLocationStyle,
+      logoEnabled,
+      logoViewPosition,
+      logoViewMargins,
+      compassViewPosition,
+      compassViewMargins,
+      attributionEnabled,
+      attributionButtonPosition,
+      attributionButtonMargins,
+      attributionButtonColor,
+      locationEngineProperties,
+      locationSource,
+      foregroundLoadColor,
+      translucentTextureSurface,
+      featureTapsTriggersMapClick,
+      symbolPlacementTransitionsEnabled,
+    ]
+  }
+  static func == (lhs: PgMapOptions, rhs: PgMapOptions) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.compassEnabled, rhs.compassEnabled) && MessagesPigeonInternal.deepEquals(lhs.cameraTargetBounds, rhs.cameraTargetBounds) && MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.minMaxZoomPreference, rhs.minMaxZoomPreference) && MessagesPigeonInternal.deepEquals(lhs.rotateGesturesEnabled, rhs.rotateGesturesEnabled) && MessagesPigeonInternal.deepEquals(lhs.scrollGesturesEnabled, rhs.scrollGesturesEnabled) && MessagesPigeonInternal.deepEquals(lhs.tiltGesturesEnabled, rhs.tiltGesturesEnabled) && MessagesPigeonInternal.deepEquals(lhs.zoomGesturesEnabled, rhs.zoomGesturesEnabled) && MessagesPigeonInternal.deepEquals(lhs.doubleClickZoomEnabled, rhs.doubleClickZoomEnabled) && MessagesPigeonInternal.deepEquals(lhs.panInertia, rhs.panInertia) && MessagesPigeonInternal.deepEquals(lhs.hapticFeedbackEnabled, rhs.hapticFeedbackEnabled) && MessagesPigeonInternal.deepEquals(lhs.trackCameraPosition, rhs.trackCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.myLocationEnabled, rhs.myLocationEnabled) && MessagesPigeonInternal.deepEquals(lhs.myLocationTrackingMode, rhs.myLocationTrackingMode) && MessagesPigeonInternal.deepEquals(lhs.myLocationRenderMode, rhs.myLocationRenderMode) && MessagesPigeonInternal.deepEquals(lhs.myLocationStyle, rhs.myLocationStyle) && MessagesPigeonInternal.deepEquals(lhs.logoEnabled, rhs.logoEnabled) && MessagesPigeonInternal.deepEquals(lhs.logoViewPosition, rhs.logoViewPosition) && MessagesPigeonInternal.deepEquals(lhs.logoViewMargins, rhs.logoViewMargins) && MessagesPigeonInternal.deepEquals(lhs.compassViewPosition, rhs.compassViewPosition) && MessagesPigeonInternal.deepEquals(lhs.compassViewMargins, rhs.compassViewMargins) && MessagesPigeonInternal.deepEquals(lhs.attributionEnabled, rhs.attributionEnabled) && MessagesPigeonInternal.deepEquals(lhs.attributionButtonPosition, rhs.attributionButtonPosition) && MessagesPigeonInternal.deepEquals(lhs.attributionButtonMargins, rhs.attributionButtonMargins) && MessagesPigeonInternal.deepEquals(lhs.attributionButtonColor, rhs.attributionButtonColor) && MessagesPigeonInternal.deepEquals(lhs.locationEngineProperties, rhs.locationEngineProperties) && MessagesPigeonInternal.deepEquals(lhs.locationSource, rhs.locationSource) && MessagesPigeonInternal.deepEquals(lhs.foregroundLoadColor, rhs.foregroundLoadColor) && MessagesPigeonInternal.deepEquals(lhs.translucentTextureSurface, rhs.translucentTextureSurface) && MessagesPigeonInternal.deepEquals(lhs.featureTapsTriggersMapClick, rhs.featureTapsTriggersMapClick) && MessagesPigeonInternal.deepEquals(lhs.symbolPlacementTransitionsEnabled, rhs.symbolPlacementTransitionsEnabled)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgMapOptions")
+    MessagesPigeonInternal.deepHash(value: compassEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: cameraTargetBounds, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: styleString, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: minMaxZoomPreference, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: rotateGesturesEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: scrollGesturesEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: tiltGesturesEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: zoomGesturesEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: doubleClickZoomEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: panInertia, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: hapticFeedbackEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: trackCameraPosition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: myLocationEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: myLocationTrackingMode, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: myLocationRenderMode, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: myLocationStyle, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: logoEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: logoViewPosition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: logoViewMargins, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: compassViewPosition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: compassViewMargins, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: attributionEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: attributionButtonPosition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: attributionButtonMargins, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: attributionButtonColor, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: locationEngineProperties, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: locationSource, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: foregroundLoadColor, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: translucentTextureSurface, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: featureTapsTriggersMapClick, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: symbolPlacementTransitionsEnabled, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgMapOptions(compassEnabled: \(String(describing: compassEnabled)), cameraTargetBounds: \(String(describing: cameraTargetBounds)), styleString: \(String(describing: styleString)), minMaxZoomPreference: \(String(describing: minMaxZoomPreference)), rotateGesturesEnabled: \(String(describing: rotateGesturesEnabled)), scrollGesturesEnabled: \(String(describing: scrollGesturesEnabled)), tiltGesturesEnabled: \(String(describing: tiltGesturesEnabled)), zoomGesturesEnabled: \(String(describing: zoomGesturesEnabled)), doubleClickZoomEnabled: \(String(describing: doubleClickZoomEnabled)), panInertia: \(String(describing: panInertia)), hapticFeedbackEnabled: \(String(describing: hapticFeedbackEnabled)), trackCameraPosition: \(String(describing: trackCameraPosition)), myLocationEnabled: \(String(describing: myLocationEnabled)), myLocationTrackingMode: \(String(describing: myLocationTrackingMode)), myLocationRenderMode: \(String(describing: myLocationRenderMode)), myLocationStyle: \(String(describing: myLocationStyle)), logoEnabled: \(String(describing: logoEnabled)), logoViewPosition: \(String(describing: logoViewPosition)), logoViewMargins: \(String(describing: logoViewMargins)), compassViewPosition: \(String(describing: compassViewPosition)), compassViewMargins: \(String(describing: compassViewMargins)), attributionEnabled: \(String(describing: attributionEnabled)), attributionButtonPosition: \(String(describing: attributionButtonPosition)), attributionButtonMargins: \(String(describing: attributionButtonMargins)), attributionButtonColor: \(String(describing: attributionButtonColor)), locationEngineProperties: \(String(describing: locationEngineProperties)), locationSource: \(String(describing: locationSource)), foregroundLoadColor: \(String(describing: foregroundLoadColor)), translucentTextureSurface: \(String(describing: translucentTextureSurface)), featureTapsTriggersMapClick: \(String(describing: featureTapsTriggersMapClick)), symbolPlacementTransitionsEnabled: \(String(describing: symbolPlacementTransitionsEnabled)))"
+  }
+}
+
+/// What Dart hands the platform view of a map when it creates it, encoded
+/// with the codec of these messages (`MapLibreMapHostApi.pigeonChannelCodec`
+/// in Dart). The native platform view factories decode it with the same
+/// generated codec.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgCreationParams: Hashable, CustomStringConvertible {
+  /// The style to create the map with: a style JSON, URL, file path or asset
+  /// name. [options] carries the same value.
+  var styleString: String? = nil
+  /// The initial options.
+  var options: PgMapOptions
+  /// Null leaves the camera to the style, or to the platform default.
+  var initialCameraPosition: PgCameraPosition? = nil
+  /// Whether the features of interactive layers can be dragged.
+  var dragEnabled: Bool
+  /// iOS only: how long a press lasts before it is a long click, in
+  /// milliseconds. Null keeps the platform default.
+  var iosLongClickDurationMs: Int64? = nil
+  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Always false on iOS.
+  var useHybridComposition: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgCreationParams? {
+    let styleString: String? = nilOrValue(pigeonVar_list[0])
+    let options = pigeonVar_list[1] as! PgMapOptions
+    let initialCameraPosition: PgCameraPosition? = nilOrValue(pigeonVar_list[2])
+    let dragEnabled = pigeonVar_list[3] as! Bool
+    let iosLongClickDurationMs: Int64? = nilOrValue(pigeonVar_list[4])
+    let useHybridComposition = pigeonVar_list[5] as! Bool
+
+    return PgCreationParams(
+      styleString: styleString,
+      options: options,
+      initialCameraPosition: initialCameraPosition,
+      dragEnabled: dragEnabled,
+      iosLongClickDurationMs: iosLongClickDurationMs,
+      useHybridComposition: useHybridComposition
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      styleString,
+      options,
+      initialCameraPosition,
+      dragEnabled,
+      iosLongClickDurationMs,
+      useHybridComposition,
+    ]
+  }
+  static func == (lhs: PgCreationParams, rhs: PgCreationParams) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.options, rhs.options) && MessagesPigeonInternal.deepEquals(lhs.initialCameraPosition, rhs.initialCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.dragEnabled, rhs.dragEnabled) && MessagesPigeonInternal.deepEquals(lhs.iosLongClickDurationMs, rhs.iosLongClickDurationMs) && MessagesPigeonInternal.deepEquals(lhs.useHybridComposition, rhs.useHybridComposition)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgCreationParams")
+    MessagesPigeonInternal.deepHash(value: styleString, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: options, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: initialCameraPosition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: dragEnabled, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: iosLongClickDurationMs, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: useHybridComposition, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgCreationParams(styleString: \(String(describing: styleString)), options: \(String(describing: options)), initialCameraPosition: \(String(describing: initialCameraPosition)), dragEnabled: \(String(describing: dragEnabled)), iosLongClickDurationMs: \(String(describing: iosLongClickDurationMs)), useHybridComposition: \(String(describing: useHybridComposition)))"
+  }
+}
+
+/// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes
+/// the user location.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgManualLocationUpdate: Hashable, CustomStringConvertible {
+  var position: PgLatLng
+  /// Milliseconds since the epoch. Dart sends the time of the call when the
+  /// app gives none.
+  var timestamp: Int64
+  /// Meters. Null when unknown, as are the fields below.
+  var horizontalAccuracy: Double? = nil
+  /// Meters.
+  var verticalAccuracy: Double? = nil
+  /// Meters.
+  var altitude: Double? = nil
+  /// The direction of travel, in degrees clockwise from north.
+  var bearing: Double? = nil
+  /// Meters per second.
+  var speed: Double? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgManualLocationUpdate? {
+    let position = pigeonVar_list[0] as! PgLatLng
+    let timestamp = pigeonVar_list[1] as! Int64
+    let horizontalAccuracy: Double? = nilOrValue(pigeonVar_list[2])
+    let verticalAccuracy: Double? = nilOrValue(pigeonVar_list[3])
+    let altitude: Double? = nilOrValue(pigeonVar_list[4])
+    let bearing: Double? = nilOrValue(pigeonVar_list[5])
+    let speed: Double? = nilOrValue(pigeonVar_list[6])
+
+    return PgManualLocationUpdate(
+      position: position,
+      timestamp: timestamp,
+      horizontalAccuracy: horizontalAccuracy,
+      verticalAccuracy: verticalAccuracy,
+      altitude: altitude,
+      bearing: bearing,
+      speed: speed
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      position,
+      timestamp,
+      horizontalAccuracy,
+      verticalAccuracy,
+      altitude,
+      bearing,
+      speed,
+    ]
+  }
+  static func == (lhs: PgManualLocationUpdate, rhs: PgManualLocationUpdate) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.position, rhs.position) && MessagesPigeonInternal.deepEquals(lhs.timestamp, rhs.timestamp) && MessagesPigeonInternal.deepEquals(lhs.horizontalAccuracy, rhs.horizontalAccuracy) && MessagesPigeonInternal.deepEquals(lhs.verticalAccuracy, rhs.verticalAccuracy) && MessagesPigeonInternal.deepEquals(lhs.altitude, rhs.altitude) && MessagesPigeonInternal.deepEquals(lhs.bearing, rhs.bearing) && MessagesPigeonInternal.deepEquals(lhs.speed, rhs.speed)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgManualLocationUpdate")
+    MessagesPigeonInternal.deepHash(value: position, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: timestamp, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: horizontalAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: verticalAccuracy, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: altitude, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: bearing, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: speed, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgManualLocationUpdate(position: \(String(describing: position)), timestamp: \(String(describing: timestamp)), horizontalAccuracy: \(String(describing: horizontalAccuracy)), verticalAccuracy: \(String(describing: verticalAccuracy)), altitude: \(String(describing: altitude)), bearing: \(String(describing: bearing)), speed: \(String(describing: speed)))"
+  }
+}
+
+/// The compass heading of a user location update. Only iOS sends one.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgUserHeading: Hashable, CustomStringConvertible {
@@ -477,12 +1685,10 @@ struct PgUserHeading: Hashable, CustomStringConvertible {
   }
 }
 
-/// A user location update: the `userLocation` map of
-/// `map#onUserLocationUpdated`.
+/// A user location update.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgUserLocation: Hashable, CustomStringConvertible {
-  /// The legacy `position` list, `[latitude, longitude]`.
   var position: PgLatLng
   var altitude: Double? = nil
   var bearing: Double? = nil
@@ -548,16 +1754,15 @@ struct PgUserLocation: Hashable, CustomStringConvertible {
   }
 }
 
-/// A tap on a feature of an interactive layer: the arguments of
-/// `feature#onTap`.
+/// A tap on a feature of an interactive layer.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgFeatureTap: Hashable, CustomStringConvertible {
   /// The feature id, as the SDK reports it.
   var id: Any? = nil
-  /// The legacy `x` and `y`.
+  /// Where the tap landed on the map view.
   var point: PgScreenPoint
-  /// The legacy `lat` and `lng`.
+  /// Where the tap landed on the map.
   var latLng: PgLatLng
   var layerId: String? = nil
 
@@ -604,19 +1809,19 @@ struct PgFeatureTap: Hashable, CustomStringConvertible {
   }
 }
 
-/// One step of a feature drag: the arguments of `feature#onDrag`.
+/// One step of a feature drag.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct PgFeatureDrag: Hashable, CustomStringConvertible {
   /// The feature id, as the SDK reports it.
   var id: Any? = nil
-  /// The legacy `x` and `y`.
+  /// Where the finger is on the map view.
   var point: PgScreenPoint
-  /// The legacy `originLat` and `originLng`.
+  /// Where the drag started on the map.
   var origin: PgLatLng
-  /// The legacy `currentLat` and `currentLng`.
+  /// Where the finger is on the map.
   var current: PgLatLng
-  /// The legacy `deltaLat` and `deltaLng`.
+  /// How far the finger moved since the previous step, in degrees.
   var delta: PgLatLng
   /// `start`, `drag` or `end`.
   var eventType: String
@@ -682,20 +1887,104 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 130:
-      return PgOfflineDownloadEvent.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgCameraAnimationInterpolation(rawValue: enumResultAsInt)
+      }
+      return nil
     case 131:
-      return PgLatLng.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgMyLocationTrackingMode(rawValue: enumResultAsInt)
+      }
+      return nil
     case 132:
-      return PgScreenPoint.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgMyLocationRenderMode(rawValue: enumResultAsInt)
+      }
+      return nil
     case 133:
-      return PgCameraPosition.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgOrnamentPosition(rawValue: enumResultAsInt)
+      }
+      return nil
     case 134:
-      return PgUserHeading.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgPanInertia(rawValue: enumResultAsInt)
+      }
+      return nil
     case 135:
-      return PgUserLocation.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgLocationPriority(rawValue: enumResultAsInt)
+      }
+      return nil
     case 136:
-      return PgFeatureTap.fromList(self.readValue() as! [Any?])
+      let enumResultAsInt: Int? = nilOrValue(self.readValue() as! Int?)
+      if let enumResultAsInt = enumResultAsInt {
+        return PgLocationSource(rawValue: enumResultAsInt)
+      }
+      return nil
     case 137:
+      return PgOfflineDownloadEvent.fromList(self.readValue() as! [Any?])
+    case 138:
+      return PgLatLng.fromList(self.readValue() as! [Any?])
+    case 139:
+      return PgLatLngBounds.fromList(self.readValue() as! [Any?])
+    case 140:
+      return PgLatLngQuad.fromList(self.readValue() as! [Any?])
+    case 141:
+      return PgScreenPoint.fromList(self.readValue() as! [Any?])
+    case 142:
+      return PgEdgeInsets.fromList(self.readValue() as! [Any?])
+    case 143:
+      return PgCameraPosition.fromList(self.readValue() as! [Any?])
+    case 144:
+      return PgCameraUpdateNewCameraPosition.fromList(self.readValue() as! [Any?])
+    case 145:
+      return PgCameraUpdateNewLatLng.fromList(self.readValue() as! [Any?])
+    case 146:
+      return PgCameraUpdateNewLatLngBounds.fromList(self.readValue() as! [Any?])
+    case 147:
+      return PgCameraUpdateNewLatLngZoom.fromList(self.readValue() as! [Any?])
+    case 148:
+      return PgCameraUpdateScrollBy.fromList(self.readValue() as! [Any?])
+    case 149:
+      return PgCameraUpdateZoomBy.fromList(self.readValue() as! [Any?])
+    case 150:
+      return PgCameraUpdateZoomIn.fromList(self.readValue() as! [Any?])
+    case 151:
+      return PgCameraUpdateZoomOut.fromList(self.readValue() as! [Any?])
+    case 152:
+      return PgCameraUpdateZoomTo.fromList(self.readValue() as! [Any?])
+    case 153:
+      return PgCameraUpdateBearingTo.fromList(self.readValue() as! [Any?])
+    case 154:
+      return PgCameraUpdateTiltTo.fromList(self.readValue() as! [Any?])
+    case 155:
+      return PgCameraTargetBounds.fromList(self.readValue() as! [Any?])
+    case 156:
+      return PgMinMaxZoomPreference.fromList(self.readValue() as! [Any?])
+    case 157:
+      return PgMyLocationStyle.fromList(self.readValue() as! [Any?])
+    case 158:
+      return PgLocationEngineProperties.fromList(self.readValue() as! [Any?])
+    case 159:
+      return PgMapOptions.fromList(self.readValue() as! [Any?])
+    case 160:
+      return PgCreationParams.fromList(self.readValue() as! [Any?])
+    case 161:
+      return PgManualLocationUpdate.fromList(self.readValue() as! [Any?])
+    case 162:
+      return PgUserHeading.fromList(self.readValue() as! [Any?])
+    case 163:
+      return PgUserLocation.fromList(self.readValue() as! [Any?])
+    case 164:
+      return PgFeatureTap.fromList(self.readValue() as! [Any?])
+    case 165:
       return PgFeatureDrag.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
@@ -708,29 +1997,113 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
     if let value = value as? PgOfflineDownloadStatus {
       super.writeByte(129)
       super.writeValue(value.rawValue)
-    } else if let value = value as? PgOfflineDownloadEvent {
+    } else if let value = value as? PgCameraAnimationInterpolation {
       super.writeByte(130)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgMyLocationTrackingMode {
+      super.writeByte(131)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgMyLocationRenderMode {
+      super.writeByte(132)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgOrnamentPosition {
+      super.writeByte(133)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgPanInertia {
+      super.writeByte(134)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgLocationPriority {
+      super.writeByte(135)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgLocationSource {
+      super.writeByte(136)
+      super.writeValue(value.rawValue)
+    } else if let value = value as? PgOfflineDownloadEvent {
+      super.writeByte(137)
       super.writeValue(value.toList())
     } else if let value = value as? PgLatLng {
-      super.writeByte(131)
+      super.writeByte(138)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgLatLngBounds {
+      super.writeByte(139)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgLatLngQuad {
+      super.writeByte(140)
       super.writeValue(value.toList())
     } else if let value = value as? PgScreenPoint {
-      super.writeByte(132)
+      super.writeByte(141)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgEdgeInsets {
+      super.writeByte(142)
       super.writeValue(value.toList())
     } else if let value = value as? PgCameraPosition {
-      super.writeByte(133)
+      super.writeByte(143)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateNewCameraPosition {
+      super.writeByte(144)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateNewLatLng {
+      super.writeByte(145)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateNewLatLngBounds {
+      super.writeByte(146)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateNewLatLngZoom {
+      super.writeByte(147)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateScrollBy {
+      super.writeByte(148)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateZoomBy {
+      super.writeByte(149)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateZoomIn {
+      super.writeByte(150)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateZoomOut {
+      super.writeByte(151)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateZoomTo {
+      super.writeByte(152)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateBearingTo {
+      super.writeByte(153)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraUpdateTiltTo {
+      super.writeByte(154)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCameraTargetBounds {
+      super.writeByte(155)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgMinMaxZoomPreference {
+      super.writeByte(156)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgMyLocationStyle {
+      super.writeByte(157)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgLocationEngineProperties {
+      super.writeByte(158)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgMapOptions {
+      super.writeByte(159)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgCreationParams {
+      super.writeByte(160)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgManualLocationUpdate {
+      super.writeByte(161)
       super.writeValue(value.toList())
     } else if let value = value as? PgUserHeading {
-      super.writeByte(134)
+      super.writeByte(162)
       super.writeValue(value.toList())
     } else if let value = value as? PgUserLocation {
-      super.writeByte(135)
+      super.writeByte(163)
       super.writeValue(value.toList())
     } else if let value = value as? PgFeatureTap {
-      super.writeByte(136)
+      super.writeByte(164)
       super.writeValue(value.toList())
     } else if let value = value as? PgFeatureDrag {
-      super.writeByte(137)
+      super.writeByte(165)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -1132,318 +2505,236 @@ class MapLibreOfflineDownloadFlutterApi: MapLibreOfflineDownloadFlutterApiProtoc
 /// The calls of one map, from Dart to native. Each map has its own channels,
 /// told apart by a message channel suffix: the platform view id of the map.
 ///
-/// Every method stands for one call of the method channel these messages
-/// replace, named in the first line of its documentation. Its parameters are
-/// named after the keys of that call's argument map, so native can rebuild
-/// the call and run it through the handler it already has. The documentation
-/// notes where a key was left out of the map when null, and where the
-/// arguments were not a map. Answers that Dart parses further, such as maps
-/// of features or camera positions, come back as [Object] in the shape the
-/// handler already answers with.
+/// Every method answers once its work is done, or fails with the error code
+/// native reports. See the top of this file for the units, the filters and
+/// the features.
 ///
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
 protocol MapLibreMapHostApi {
-  /// map#waitForMap
-  ///
-  /// The legacy call had no arguments. Answers once the map is ready.
+  /// Answers once the native map is ready for the other calls.
   func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#update
-  ///
-  /// Answers with the camera position map.
-  func mapUpdate(options: [String: Any?], completion: @escaping (Result<Any?, Error>) -> Void)
-  /// camera#animate
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
-  func cameraAnimate(cameraUpdate: [Any?], duration: Int64?, completion: @escaping (Result<Bool?, Error>) -> Void)
-  /// camera#move
-  func cameraMove(cameraUpdate: [Any?], completion: @escaping (Result<Bool?, Error>) -> Void)
-  /// map#updateMyLocationTrackingMode
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
-  func mapUpdateMyLocationTrackingMode(mode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
-  /// locationComponent#setTrackingCameraOptions
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
+  /// Applies the options that are set and answers with the camera position,
+  /// or with null when the map does not track the camera position.
+  func mapUpdate(options: PgMapOptions, completion: @escaping (Result<PgCameraPosition?, Error>) -> Void)
+  /// Animates the camera to [cameraUpdate] over [duration] milliseconds, or
+  /// over the platform default when it is null. Answers whether the move
+  /// finished, false when something cut it short.
+  func cameraAnimate(cameraUpdate: PgCameraUpdate, duration: Int64?, completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// Moves the camera to [cameraUpdate] at once. Answers whether the move
+  /// finished.
+  func cameraMove(cameraUpdate: PgCameraUpdate, completion: @escaping (Result<Bool?, Error>) -> Void)
+  /// Sets how the camera follows the user location.
+  func mapUpdateMyLocationTrackingMode(mode: PgMyLocationTrackingMode, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Tilts the camera to [tilt] degrees while it tracks the user location,
+  /// without ending the tracking, over [duration] milliseconds or the
+  /// platform default when it is null. Answers whether the tilt landed.
   func locationComponentSetTrackingCameraOptions(tilt: Double, duration: Int64?, completion: @escaping (Result<Bool?, Error>) -> Void)
-  /// locationComponent#setManualLocation
-  ///
-  /// The legacy arguments were [update] itself, not a map holding it under a
-  /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
-  /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
-  /// `bearing` and `speed` only when set.
-  func locationComponentSetManualLocation(update: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#matchMapLanguageWithDeviceDefault
-  ///
-  /// The legacy call had no arguments.
+  /// Makes [update] the user location, for a map whose location source is
+  /// [PgLocationSource.manual].
+  func locationComponentSetManualLocation(update: PgManualLocationUpdate, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Shows the labels of the map in the language of the device.
   func mapMatchMapLanguageWithDeviceDefault(completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#updateContentInsets
-  ///
-  /// [bounds] holds `top`, `left`, `bottom` and `right`.
-  func mapUpdateContentInsets(bounds: [String: Double], animated: Bool, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#setMapLanguage
+  /// Sets the content insets of the map, the space along its edges that the
+  /// camera keeps clear, animated or not.
+  func mapUpdateContentInsets(insets: PgEdgeInsets, animated: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Shows the labels of the map in [language], an ISO language code.
   func mapSetMapLanguage(language: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#setTelemetryEnabled
+  /// Turns telemetry on or off where the SDK has it.
   func mapSetTelemetryEnabled(enabled: Bool, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#getTelemetryEnabled
-  ///
-  /// The legacy call had no arguments.
+  /// Answers whether telemetry is on.
   func mapGetTelemetryEnabled(completion: @escaping (Result<Bool, Error>) -> Void)
-  /// map#setMaximumFps
+  /// Caps the frame rate of the map at [fps].
   func mapSetMaximumFps(fps: Int64, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#forceOnlineMode
-  ///
-  /// The legacy call had no arguments.
+  /// Tells the map it is online, so it loads from the network again. Android
+  /// only: iOS has nothing to do.
   func mapForceOnlineMode(completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#pause
-  ///
-  /// The legacy call had no arguments.
+  /// Stops the rendering and the location updates of the map.
   func mapPause(completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#resume
-  ///
-  /// The legacy call had no arguments.
+  /// Starts again what [mapPause] stopped.
   func mapResume(completion: @escaping (Result<Void, Error>) -> Void)
-  /// camera#ease
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
-  /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
-  /// value, and was omitted from the legacy map when null.
-  func cameraEase(cameraUpdate: [Any?], duration: Int64?, interpolation: String?, completion: @escaping (Result<Bool, Error>) -> Void)
-  /// map#queryCameraPosition
-  ///
-  /// The legacy call had no arguments. Answers with the camera position map.
-  func mapQueryCameraPosition(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#editGeoJsonSource
-  ///
-  /// Answers with `{result: bool}`.
-  func mapEditGeoJsonSource(id: String, data: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#editGeoJsonUrl
-  ///
-  /// Answers with `{result: bool}`.
-  func mapEditGeoJsonUrl(id: String, url: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#setLayerFilter
-  ///
-  /// [filter] is the JSON string the caller passed. Answers with
-  /// `{result: bool}`.
-  func mapSetLayerFilter(id: String, filter: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#getStyle
-  ///
-  /// The legacy call had no arguments. Answers with `{result: bool, json:
-  /// String?}`.
-  func mapGetStyle(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#setCustomHeaders
-  ///
-  /// [filter] holds URL patterns, not a style filter.
+  /// Eases the camera to [cameraUpdate] over [duration] milliseconds, or over
+  /// the platform default when it is null or not positive, along
+  /// [interpolation], or the platform default curve when it is null. Answers
+  /// whether the move finished.
+  func cameraEase(cameraUpdate: PgCameraUpdate, duration: Int64?, interpolation: PgCameraAnimationInterpolation?, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// Answers with the current camera position.
+  func mapQueryCameraPosition(completion: @escaping (Result<PgCameraPosition, Error>) -> Void)
+  /// Replaces the data of the GeoJSON source [id] with [data], GeoJSON text.
+  /// Answers whether it did, false when there is no style or no such GeoJSON
+  /// source, or when the SDK rejects the data.
+  func mapEditGeoJsonSource(id: String, data: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// Points the GeoJSON source [id] at [url]. Answers whether it did, false
+  /// when there is no style or no such GeoJSON source, or when the SDK
+  /// rejects the URL.
+  func mapEditGeoJsonUrl(id: String, url: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// Sets [filter], the JSON text of an expression, on the layer [id].
+  /// Answers whether it did, false when there is no style or no such layer,
+  /// when the layer takes no filter, or when the filter does not parse.
+  func mapSetLayerFilter(id: String, filter: String, completion: @escaping (Result<Bool, Error>) -> Void)
+  /// Answers with the style of the map as JSON text, or with null when the
+  /// map has no style.
+  func mapGetStyle(completion: @escaping (Result<String?, Error>) -> Void)
+  /// Adds [headers] to the requests of the map whose URL matches one of the
+  /// patterns in [filter], or to every request when [filter] is empty.
   func mapSetCustomHeaders(headers: [String: String], filter: [String], completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#getCustomHeaders
-  ///
-  /// The legacy arguments were an empty map. Answers with the headers map.
-  func mapGetCustomHeaders(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#queryRenderedFeatures
-  ///
-  /// The point form of the call. [filter] is the expression as a list, not
-  /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
-  func mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: [String], filter: [Any?]?, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#queryRenderedFeatures
-  ///
-  /// The rectangle form of the call. [filter] is the JSON string the caller
-  /// passed. Answers with `{features: [String]}`, each feature a JSON string.
-  func mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: [String], filter: String?, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#querySourceFeatures
-  ///
-  /// [filter] is the expression as a list, not encoded. Answers with
-  /// `{features: [String]}`, each feature a JSON string.
-  func mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: [Any?]?, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// source#getClusterExpansionZoom
+  /// Answers with the headers [mapSetCustomHeaders] set.
+  func mapGetCustomHeaders(completion: @escaping (Result<[String: String], Error>) -> Void)
+  /// Answers with the features rendered at the point [x], [y] of the map
+  /// view, on the layers [layerIds] or on all of them when it is empty, that
+  /// match [filter].
+  func mapQueryRenderedFeaturesAtPoint(x: Double, y: Double, layerIds: [String], filter: String?, completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the features rendered in the rectangle of the map view
+  /// from [left], [top] to [right], [bottom], on the layers [layerIds] or on
+  /// all of them when it is empty, that match [filter].
+  func mapQueryRenderedFeaturesInRect(left: Double, top: Double, right: Double, bottom: Double, layerIds: [String], filter: String?, completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the features of the source [sourceId], in its layer
+  /// [sourceLayerId] for a vector source, that match [filter], rendered or
+  /// not. A vector source without [sourceLayerId], or a source of another
+  /// kind, answers none.
+  func mapQuerySourceFeatures(sourceId: String, sourceLayerId: String?, filter: String?, completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the zoom at which the cluster [clusterId] of the GeoJSON
+  /// source [sourceId] splits.
   func sourceGetClusterExpansionZoom(sourceId: String, clusterId: Int64, completion: @escaping (Result<Int64, Error>) -> Void)
-  /// source#getClusterChildren
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
-  func sourceGetClusterChildren(sourceId: String, clusterId: Int64, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// source#getClusterLeaves
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
-  func sourceGetClusterLeaves(sourceId: String, clusterId: Int64, limit: Int64, offset: Int64, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#invalidateAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Answers with the features one zoom level below the cluster [clusterId]
+  /// of the GeoJSON source [sourceId].
+  func sourceGetClusterChildren(sourceId: String, clusterId: Int64, completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the points of the cluster [clusterId] of the GeoJSON source
+  /// [sourceId], [limit] of them after skipping [offset].
+  func sourceGetClusterLeaves(sourceId: String, clusterId: Int64, limit: Int64, offset: Int64, completion: @escaping (Result<[String], Error>) -> Void)
+  /// Marks the ambient cache as stale, so it is checked against the network.
   func mapInvalidateAmbientCache(completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#clearAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Empties the ambient cache.
   func mapClearAmbientCache(completion: @escaping (Result<Void, Error>) -> Void)
-  /// locationComponent#getLastLocation
-  ///
-  /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
-  /// or null when there is no location.
-  func locationComponentGetLastLocation(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#getVisibleRegion
-  ///
-  /// The legacy call had no arguments. Answers with `{sw: [latitude,
-  /// longitude], ne: [latitude, longitude]}`.
-  func mapGetVisibleRegion(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#addImage
-  ///
-  /// [length] is the length of [bytes].
+  /// Answers with the last known user location. Fails when there is none or
+  /// the location is off.
+  func locationComponentGetLastLocation(completion: @escaping (Result<PgLatLng, Error>) -> Void)
+  /// Answers with the region the map view shows.
+  func mapGetVisibleRegion(completion: @escaping (Result<PgLatLngBounds, Error>) -> Void)
+  /// Adds the image [bytes] to the style as [name], as a signed distance
+  /// field image when [sdf] is true. [length] is the length of [bytes].
   func styleAddImage(name: String, bytes: FlutterStandardTypedData, length: Int64, sdf: Bool, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#addImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list.
-  func styleAddImageSource(imageSourceId: String, bytes: FlutterStandardTypedData, length: Int64, coordinates: [Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#updateImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list. The null ones were sent as null.
-  func styleUpdateImageSource(imageSourceId: String, bytes: FlutterStandardTypedData?, length: Int64?, coordinates: [Any?]?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#toScreenLocation
-  ///
-  /// Answers with `{x, y}`.
-  func mapToScreenLocation(latitude: Double, longitude: Double, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#toScreenLocationBatch
-  ///
-  /// [coordinates] holds latitude and longitude pairs, one after the other.
-  /// Answers with x and y pairs in the same order.
+  /// Adds an image source [imageSourceId] that draws the image [bytes] on
+  /// [coordinates]. [length] is the length of [bytes].
+  func styleAddImageSource(imageSourceId: String, bytes: FlutterStandardTypedData, length: Int64, coordinates: PgLatLngQuad, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Changes the image, the corners, or both, of the image source
+  /// [imageSourceId]. What is null stays as it is. [length] is the length of
+  /// [bytes].
+  func styleUpdateImageSource(imageSourceId: String, bytes: FlutterStandardTypedData?, length: Int64?, coordinates: PgLatLngQuad?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Answers with where the location [latitude], [longitude] is on the map
+  /// view.
+  func mapToScreenLocation(latitude: Double, longitude: Double, completion: @escaping (Result<PgScreenPoint, Error>) -> Void)
+  /// The batch form of [mapToScreenLocation]: [coordinates] holds latitude
+  /// and longitude pairs one after the other, and the answer holds the x and
+  /// y of each in the same order.
   func mapToScreenLocationBatch(coordinates: FlutterStandardTypedData, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void)
-  /// style#removeSource
+  /// Removes the source [sourceId] from the style.
   func styleRemoveSource(sourceId: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#addLayer
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], on top of the others.
   func styleAddLayer(imageLayerId: String, imageSourceId: String, minzoom: Double?, maxzoom: Double?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#addLayerBelow
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], below the layer [belowLayerId].
   func styleAddLayerBelow(imageLayerId: String, imageSourceId: String, belowLayerId: String, minzoom: Double?, maxzoom: Double?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#removeLayer
+  /// Removes the layer [layerId] from the style.
   func styleRemoveLayer(layerId: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#moveLayer
-  ///
-  /// [belowLayerId] was omitted from the legacy map when null.
+  /// Moves the layer [layerId] below the layer [belowLayerId], or on top of
+  /// the others when it is null.
   func styleMoveLayer(layerId: String, belowLayerId: String?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#setFilter
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func styleSetFilter(layerId: String, filter: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#getFilter
-  ///
-  /// Answers with `{filter: String?}`, the expression as a JSON string.
-  func styleGetFilter(layerId: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#toLatLng
-  ///
-  /// Answers with `{latitude, longitude}`.
-  func mapToLatLng(x: Double, y: Double, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// map#getMetersPerPixelAtLatitude
-  ///
-  /// Answers with `{metersperpixel: double}`.
-  func mapGetMetersPerPixelAtLatitude(latitude: Double, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// source#addGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Sets [filter] on the layer [layerId], or removes its filter when
+  /// [filter] is null.
+  func styleSetFilter(layerId: String, filter: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Answers with the filter of the layer [layerId] as JSON text, or with
+  /// null when it has none.
+  func styleGetFilter(layerId: String, completion: @escaping (Result<String?, Error>) -> Void)
+  /// Answers with the location at the point [x], [y] of the map view.
+  func mapToLatLng(x: Double, y: Double, completion: @escaping (Result<PgLatLng, Error>) -> Void)
+  /// Answers with the meters per pixel at [latitude] at the current zoom, as
+  /// the SDK reports them.
+  func mapGetMetersPerPixelAtLatitude(latitude: Double, completion: @escaping (Result<Double, Error>) -> Void)
+  /// Adds a GeoJSON source [sourceId] holding [geojson], GeoJSON text.
   func sourceAddGeoJson(sourceId: String, geojson: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// source#setGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Replaces the data of the GeoJSON source [sourceId] with [geojson],
+  /// GeoJSON text.
   func sourceSetGeoJson(sourceId: String, geojson: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// map#setCameraBounds
+  /// Eases the camera to the bounds from [west], [south] to [east], [north],
+  /// inset by [padding] logical pixels. Answers once the move starts.
   func mapSetCameraBounds(west: Double, north: Double, south: Double, east: Double, padding: Int64, completion: @escaping (Result<Void, Error>) -> Void)
-  /// symbolLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// lineLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// layer#setProperties
+  /// Adds a symbol layer. [properties] are its paint and layout properties
+  /// in style-spec form. [enableInteraction] makes its features report taps
+  /// and drags.
+  func symbolLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Adds a line layer, as [symbolLayerAdd].
+  func lineLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Sets the paint and layout [properties], in style-spec form, of the
+  /// layer [layerId].
   func layerSetProperties(layerId: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// circleLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// fillLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// fillExtrusionLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// style#addSource
-  ///
-  /// [properties] is the source in style-spec form.
+  /// Adds a circle layer, as [symbolLayerAdd].
+  func circleLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Adds a fill layer, as [symbolLayerAdd].
+  func fillLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Adds a fill extrusion layer, as [symbolLayerAdd].
+  func fillExtrusionLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, enableInteraction: Bool, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Adds the source [sourceId]. [properties] is the source in style-spec
+  /// form.
   func styleAddSource(sourceId: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// rasterLayer#add
+  /// Adds a raster layer. [properties] are its paint and layout properties
+  /// in style-spec form.
   func rasterLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// hillshadeLayer#add
+  /// Adds a hillshade layer, as [rasterLayerAdd].
   func hillshadeLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// colorReliefLayer#add
+  /// Adds a color relief layer, as [rasterLayerAdd].
   func colorReliefLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// backgroundLayer#add
+  /// Adds a background layer, as [rasterLayerAdd] but without a source.
   func backgroundLayerAdd(layerId: String, belowLayerId: String?, minzoom: Double?, maxzoom: Double?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// heatmapLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  func heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// source#setFeature
-  ///
-  /// [geojsonFeature] is the feature encoded by Dart.
+  /// Adds a heatmap layer, as [symbolLayerAdd] but without interaction.
+  func heatmapLayerAdd(sourceId: String, layerId: String, belowLayerId: String?, sourceLayer: String?, minzoom: Double?, maxzoom: Double?, filter: String?, properties: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Replaces the feature of the GeoJSON source [sourceId] that has the id
+  /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+  /// changes.
   func sourceSetFeature(sourceId: String, geojsonFeature: String, completion: @escaping (Result<Void, Error>) -> Void)
-  /// source#setFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Merges [state], app data of any shape, into the state of the feature
+  /// [featureId]. Android only: Dart rejects the call on iOS before sending
+  /// it.
   func sourceSetFeatureState(sourceId: String, featureId: String, state: [String: Any?], sourceLayer: String?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// source#removeFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Removes the key [stateKey] of the state of the feature [featureId], or
+  /// the whole state of that feature without [stateKey], or the state of
+  /// every feature of the source without [featureId]. Android only: Dart
+  /// rejects the call on iOS before sending it.
   func sourceRemoveFeatureState(sourceId: String, featureId: String?, stateKey: String?, sourceLayer: String?, completion: @escaping (Result<Void, Error>) -> Void)
-  /// source#getFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it. Answers
-  /// with `{state: String?}`, the state as a JSON string.
-  func sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#setLight
-  ///
-  /// [light] is the light in style-spec form.
+  /// Answers with the state of the feature [featureId] as JSON text, or with
+  /// null when it has none. Android only: Dart rejects the call on iOS before
+  /// sending it.
+  func sourceGetFeatureState(sourceId: String, featureId: String, sourceLayer: String?, completion: @escaping (Result<String?, Error>) -> Void)
+  /// Sets the light of the style. [light] holds the light properties in
+  /// style-spec form. It stays a map because each property can be any value
+  /// in Dart: native checks that each one is a constant of the right type.
   func styleSetLight(light: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
-  /// layer#setVisibility
+  /// Shows or hides the layer [layerId].
   func layerSetVisibility(layerId: String, visible: Bool, completion: @escaping (Result<Void, Error>) -> Void)
-  /// layer#setVisibilityBatch
-  ///
-  /// Answers with the ids that matched no layer.
+  /// Shows or hides the layers [layerIds]. Answers with the ids that matched
+  /// no layer.
   func layerSetVisibilityBatch(layerIds: [String], visible: Bool, completion: @escaping (Result<[String]?, Error>) -> Void)
-  /// layer#setZoomRange
+  /// Sets the zoom range of the layer [layerId].
   func layerSetZoomRange(layerId: String, minzoom: Double, maxzoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
-  /// layer#getVisibility
-  ///
-  /// Answers with null when there is no such layer.
+  /// Answers whether the layer [layerId] is visible, or with null when there
+  /// is no such layer.
   func layerGetVisibility(layerId: String, completion: @escaping (Result<Bool?, Error>) -> Void)
-  /// map#takeSnapshot
-  ///
-  /// [width] and [height] are in logical pixels, and each was omitted from
-  /// the legacy map when null. Answers with PNG bytes.
+  /// Answers with a PNG of the map, [width] by [height] logical pixels, or
+  /// the size of the map view for what is null.
   func mapTakeSnapshot(width: Int64?, height: Int64?, completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
-  /// style#getLayerIds
-  ///
-  /// The legacy call had no arguments. Answers with `{layers: [String]}`.
-  func styleGetLayerIds(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#getSourceIds
-  ///
-  /// The legacy call had no arguments. Answers with `{sources: [String]}`.
-  func styleGetSourceIds(completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#getLayerProperties
-  ///
-  /// Answers with `{properties: String}`, the layer as a JSON string, or
-  /// without `properties` when there is no such layer.
-  func styleGetLayerProperties(layerId: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#getSourceProperties
-  ///
-  /// Answers with `{properties: String}`, the source as a JSON string, or
-  /// without `properties` when there is no such source.
-  func styleGetSourceProperties(sourceId: String, completion: @escaping (Result<Any?, Error>) -> Void)
-  /// style#setStyle
+  /// Answers with the ids of the layers of the style, in the order of the
+  /// style.
+  func styleGetLayerIds(completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the ids of the sources of the style.
+  func styleGetSourceIds(completion: @escaping (Result<[String], Error>) -> Void)
+  /// Answers with the layer [layerId] in style-spec form as JSON text, or
+  /// with null when there is no such layer.
+  func styleGetLayerProperties(layerId: String, completion: @escaping (Result<String?, Error>) -> Void)
+  /// Answers with the source [sourceId] in style-spec form as JSON text, or
+  /// with null when there is no such source.
+  func styleGetSourceProperties(sourceId: String, completion: @escaping (Result<String?, Error>) -> Void)
+  /// Replaces the style with [style]: a style JSON, URL, file path or asset
+  /// name.
   func styleSetStyle(style: String, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
@@ -1453,9 +2744,7 @@ class MapLibreMapHostApiSetup {
   /// Sets up an instance of `MapLibreMapHostApi` to handle messages through the `binaryMessenger`.
   static func setUp(binaryMessenger: FlutterBinaryMessenger, api: MapLibreMapHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
-    /// map#waitForMap
-    ///
-    /// The legacy call had no arguments. Answers once the map is ready.
+    /// Answers once the native map is ready for the other calls.
     let mapWaitForMapChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapWaitForMap\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapWaitForMapChannel.setMessageHandler { _, reply in
@@ -1471,14 +2760,13 @@ class MapLibreMapHostApiSetup {
     } else {
       mapWaitForMapChannel.setMessageHandler(nil)
     }
-    /// map#update
-    ///
-    /// Answers with the camera position map.
+    /// Applies the options that are set and answers with the camera position,
+    /// or with null when the map does not track the camera position.
     let mapUpdateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapUpdateChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let optionsArg = args[0] as! [String: Any?]
+        let optionsArg = args[0] as! PgMapOptions
         api.mapUpdate(options: optionsArg) { result in
           switch result {
           case .success(let res):
@@ -1491,14 +2779,14 @@ class MapLibreMapHostApiSetup {
     } else {
       mapUpdateChannel.setMessageHandler(nil)
     }
-    /// camera#animate
-    ///
-    /// [duration] is in milliseconds and was sent as null when unset.
+    /// Animates the camera to [cameraUpdate] over [duration] milliseconds, or
+    /// over the platform default when it is null. Answers whether the move
+    /// finished, false when something cut it short.
     let cameraAnimateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraAnimate\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       cameraAnimateChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let cameraUpdateArg = args[0] as! [Any?]
+        let cameraUpdateArg = args[0] as! PgCameraUpdate
         let durationArg: Int64? = nilOrValue(args[1])
         api.cameraAnimate(cameraUpdate: cameraUpdateArg, duration: durationArg) { result in
           switch result {
@@ -1512,12 +2800,13 @@ class MapLibreMapHostApiSetup {
     } else {
       cameraAnimateChannel.setMessageHandler(nil)
     }
-    /// camera#move
+    /// Moves the camera to [cameraUpdate] at once. Answers whether the move
+    /// finished.
     let cameraMoveChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraMove\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       cameraMoveChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let cameraUpdateArg = args[0] as! [Any?]
+        let cameraUpdateArg = args[0] as! PgCameraUpdate
         api.cameraMove(cameraUpdate: cameraUpdateArg) { result in
           switch result {
           case .success(let res):
@@ -1530,14 +2819,12 @@ class MapLibreMapHostApiSetup {
     } else {
       cameraMoveChannel.setMessageHandler(nil)
     }
-    /// map#updateMyLocationTrackingMode
-    ///
-    /// [mode] is the index of the Dart `MyLocationTrackingMode`.
+    /// Sets how the camera follows the user location.
     let mapUpdateMyLocationTrackingModeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateMyLocationTrackingMode\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapUpdateMyLocationTrackingModeChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let modeArg = args[0] as! Int64
+        let modeArg = args[0] as! PgMyLocationTrackingMode
         api.mapUpdateMyLocationTrackingMode(mode: modeArg) { result in
           switch result {
           case .success:
@@ -1550,9 +2837,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapUpdateMyLocationTrackingModeChannel.setMessageHandler(nil)
     }
-    /// locationComponent#setTrackingCameraOptions
-    ///
-    /// [duration] is in milliseconds and was sent as null when unset.
+    /// Tilts the camera to [tilt] degrees while it tracks the user location,
+    /// without ending the tracking, over [duration] milliseconds or the
+    /// platform default when it is null. Answers whether the tilt landed.
     let locationComponentSetTrackingCameraOptionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetTrackingCameraOptions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       locationComponentSetTrackingCameraOptionsChannel.setMessageHandler { message, reply in
@@ -1571,17 +2858,13 @@ class MapLibreMapHostApiSetup {
     } else {
       locationComponentSetTrackingCameraOptionsChannel.setMessageHandler(nil)
     }
-    /// locationComponent#setManualLocation
-    ///
-    /// The legacy arguments were [update] itself, not a map holding it under a
-    /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
-    /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
-    /// `bearing` and `speed` only when set.
+    /// Makes [update] the user location, for a map whose location source is
+    /// [PgLocationSource.manual].
     let locationComponentSetManualLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetManualLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       locationComponentSetManualLocationChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let updateArg = args[0] as! [String: Any?]
+        let updateArg = args[0] as! PgManualLocationUpdate
         api.locationComponentSetManualLocation(update: updateArg) { result in
           switch result {
           case .success:
@@ -1594,9 +2877,7 @@ class MapLibreMapHostApiSetup {
     } else {
       locationComponentSetManualLocationChannel.setMessageHandler(nil)
     }
-    /// map#matchMapLanguageWithDeviceDefault
-    ///
-    /// The legacy call had no arguments.
+    /// Shows the labels of the map in the language of the device.
     let mapMatchMapLanguageWithDeviceDefaultChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapMatchMapLanguageWithDeviceDefault\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapMatchMapLanguageWithDeviceDefaultChannel.setMessageHandler { _, reply in
@@ -1612,16 +2893,15 @@ class MapLibreMapHostApiSetup {
     } else {
       mapMatchMapLanguageWithDeviceDefaultChannel.setMessageHandler(nil)
     }
-    /// map#updateContentInsets
-    ///
-    /// [bounds] holds `top`, `left`, `bottom` and `right`.
+    /// Sets the content insets of the map, the space along its edges that the
+    /// camera keeps clear, animated or not.
     let mapUpdateContentInsetsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateContentInsets\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapUpdateContentInsetsChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let boundsArg = args[0] as! [String: Double]
+        let insetsArg = args[0] as! PgEdgeInsets
         let animatedArg = args[1] as! Bool
-        api.mapUpdateContentInsets(bounds: boundsArg, animated: animatedArg) { result in
+        api.mapUpdateContentInsets(insets: insetsArg, animated: animatedArg) { result in
           switch result {
           case .success:
             reply(wrapResult(nil))
@@ -1633,7 +2913,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapUpdateContentInsetsChannel.setMessageHandler(nil)
     }
-    /// map#setMapLanguage
+    /// Shows the labels of the map in [language], an ISO language code.
     let mapSetMapLanguageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMapLanguage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetMapLanguageChannel.setMessageHandler { message, reply in
@@ -1651,7 +2931,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetMapLanguageChannel.setMessageHandler(nil)
     }
-    /// map#setTelemetryEnabled
+    /// Turns telemetry on or off where the SDK has it.
     let mapSetTelemetryEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetTelemetryEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetTelemetryEnabledChannel.setMessageHandler { message, reply in
@@ -1669,9 +2949,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetTelemetryEnabledChannel.setMessageHandler(nil)
     }
-    /// map#getTelemetryEnabled
-    ///
-    /// The legacy call had no arguments.
+    /// Answers whether telemetry is on.
     let mapGetTelemetryEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetTelemetryEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapGetTelemetryEnabledChannel.setMessageHandler { _, reply in
@@ -1687,7 +2965,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapGetTelemetryEnabledChannel.setMessageHandler(nil)
     }
-    /// map#setMaximumFps
+    /// Caps the frame rate of the map at [fps].
     let mapSetMaximumFpsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMaximumFps\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetMaximumFpsChannel.setMessageHandler { message, reply in
@@ -1705,9 +2983,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetMaximumFpsChannel.setMessageHandler(nil)
     }
-    /// map#forceOnlineMode
-    ///
-    /// The legacy call had no arguments.
+    /// Tells the map it is online, so it loads from the network again. Android
+    /// only: iOS has nothing to do.
     let mapForceOnlineModeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapForceOnlineMode\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapForceOnlineModeChannel.setMessageHandler { _, reply in
@@ -1723,9 +3000,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapForceOnlineModeChannel.setMessageHandler(nil)
     }
-    /// map#pause
-    ///
-    /// The legacy call had no arguments.
+    /// Stops the rendering and the location updates of the map.
     let mapPauseChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapPause\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapPauseChannel.setMessageHandler { _, reply in
@@ -1741,9 +3016,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapPauseChannel.setMessageHandler(nil)
     }
-    /// map#resume
-    ///
-    /// The legacy call had no arguments.
+    /// Starts again what [mapPause] stopped.
     let mapResumeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapResume\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapResumeChannel.setMessageHandler { _, reply in
@@ -1759,18 +3032,17 @@ class MapLibreMapHostApiSetup {
     } else {
       mapResumeChannel.setMessageHandler(nil)
     }
-    /// camera#ease
-    ///
-    /// [duration] is in milliseconds and was sent as null when unset.
-    /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
-    /// value, and was omitted from the legacy map when null.
+    /// Eases the camera to [cameraUpdate] over [duration] milliseconds, or over
+    /// the platform default when it is null or not positive, along
+    /// [interpolation], or the platform default curve when it is null. Answers
+    /// whether the move finished.
     let cameraEaseChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraEase\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       cameraEaseChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let cameraUpdateArg = args[0] as! [Any?]
+        let cameraUpdateArg = args[0] as! PgCameraUpdate
         let durationArg: Int64? = nilOrValue(args[1])
-        let interpolationArg: String? = nilOrValue(args[2])
+        let interpolationArg: PgCameraAnimationInterpolation? = nilOrValue(args[2])
         api.cameraEase(cameraUpdate: cameraUpdateArg, duration: durationArg, interpolation: interpolationArg) { result in
           switch result {
           case .success(let res):
@@ -1783,9 +3055,7 @@ class MapLibreMapHostApiSetup {
     } else {
       cameraEaseChannel.setMessageHandler(nil)
     }
-    /// map#queryCameraPosition
-    ///
-    /// The legacy call had no arguments. Answers with the camera position map.
+    /// Answers with the current camera position.
     let mapQueryCameraPositionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapQueryCameraPositionChannel.setMessageHandler { _, reply in
@@ -1801,9 +3071,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapQueryCameraPositionChannel.setMessageHandler(nil)
     }
-    /// map#editGeoJsonSource
-    ///
-    /// Answers with `{result: bool}`.
+    /// Replaces the data of the GeoJSON source [id] with [data], GeoJSON text.
+    /// Answers whether it did, false when there is no style or no such GeoJSON
+    /// source, or when the SDK rejects the data.
     let mapEditGeoJsonSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapEditGeoJsonSourceChannel.setMessageHandler { message, reply in
@@ -1822,9 +3092,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapEditGeoJsonSourceChannel.setMessageHandler(nil)
     }
-    /// map#editGeoJsonUrl
-    ///
-    /// Answers with `{result: bool}`.
+    /// Points the GeoJSON source [id] at [url]. Answers whether it did, false
+    /// when there is no style or no such GeoJSON source, or when the SDK
+    /// rejects the URL.
     let mapEditGeoJsonUrlChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonUrl\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapEditGeoJsonUrlChannel.setMessageHandler { message, reply in
@@ -1843,10 +3113,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapEditGeoJsonUrlChannel.setMessageHandler(nil)
     }
-    /// map#setLayerFilter
-    ///
-    /// [filter] is the JSON string the caller passed. Answers with
-    /// `{result: bool}`.
+    /// Sets [filter], the JSON text of an expression, on the layer [id].
+    /// Answers whether it did, false when there is no style or no such layer,
+    /// when the layer takes no filter, or when the filter does not parse.
     let mapSetLayerFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetLayerFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetLayerFilterChannel.setMessageHandler { message, reply in
@@ -1865,10 +3134,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetLayerFilterChannel.setMessageHandler(nil)
     }
-    /// map#getStyle
-    ///
-    /// The legacy call had no arguments. Answers with `{result: bool, json:
-    /// String?}`.
+    /// Answers with the style of the map as JSON text, or with null when the
+    /// map has no style.
     let mapGetStyleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapGetStyleChannel.setMessageHandler { _, reply in
@@ -1884,9 +3151,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapGetStyleChannel.setMessageHandler(nil)
     }
-    /// map#setCustomHeaders
-    ///
-    /// [filter] holds URL patterns, not a style filter.
+    /// Adds [headers] to the requests of the map whose URL matches one of the
+    /// patterns in [filter], or to every request when [filter] is empty.
     let mapSetCustomHeadersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCustomHeaders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetCustomHeadersChannel.setMessageHandler { message, reply in
@@ -1905,9 +3171,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetCustomHeadersChannel.setMessageHandler(nil)
     }
-    /// map#getCustomHeaders
-    ///
-    /// The legacy arguments were an empty map. Answers with the headers map.
+    /// Answers with the headers [mapSetCustomHeaders] set.
     let mapGetCustomHeadersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapGetCustomHeadersChannel.setMessageHandler { _, reply in
@@ -1923,10 +3187,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapGetCustomHeadersChannel.setMessageHandler(nil)
     }
-    /// map#queryRenderedFeatures
-    ///
-    /// The point form of the call. [filter] is the expression as a list, not
-    /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
+    /// Answers with the features rendered at the point [x], [y] of the map
+    /// view, on the layers [layerIds] or on all of them when it is empty, that
+    /// match [filter].
     let mapQueryRenderedFeaturesAtPointChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesAtPoint\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapQueryRenderedFeaturesAtPointChannel.setMessageHandler { message, reply in
@@ -1934,7 +3197,7 @@ class MapLibreMapHostApiSetup {
         let xArg = args[0] as! Double
         let yArg = args[1] as! Double
         let layerIdsArg = args[2] as! [String]
-        let filterArg: [Any?]? = nilOrValue(args[3])
+        let filterArg: String? = nilOrValue(args[3])
         api.mapQueryRenderedFeaturesAtPoint(x: xArg, y: yArg, layerIds: layerIdsArg, filter: filterArg) { result in
           switch result {
           case .success(let res):
@@ -1947,10 +3210,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapQueryRenderedFeaturesAtPointChannel.setMessageHandler(nil)
     }
-    /// map#queryRenderedFeatures
-    ///
-    /// The rectangle form of the call. [filter] is the JSON string the caller
-    /// passed. Answers with `{features: [String]}`, each feature a JSON string.
+    /// Answers with the features rendered in the rectangle of the map view
+    /// from [left], [top] to [right], [bottom], on the layers [layerIds] or on
+    /// all of them when it is empty, that match [filter].
     let mapQueryRenderedFeaturesInRectChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesInRect\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapQueryRenderedFeaturesInRectChannel.setMessageHandler { message, reply in
@@ -1973,17 +3235,17 @@ class MapLibreMapHostApiSetup {
     } else {
       mapQueryRenderedFeaturesInRectChannel.setMessageHandler(nil)
     }
-    /// map#querySourceFeatures
-    ///
-    /// [filter] is the expression as a list, not encoded. Answers with
-    /// `{features: [String]}`, each feature a JSON string.
+    /// Answers with the features of the source [sourceId], in its layer
+    /// [sourceLayerId] for a vector source, that match [filter], rendered or
+    /// not. A vector source without [sourceLayerId], or a source of another
+    /// kind, answers none.
     let mapQuerySourceFeaturesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQuerySourceFeatures\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapQuerySourceFeaturesChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let sourceIdArg = args[0] as! String
         let sourceLayerIdArg: String? = nilOrValue(args[1])
-        let filterArg: [Any?]? = nilOrValue(args[2])
+        let filterArg: String? = nilOrValue(args[2])
         api.mapQuerySourceFeatures(sourceId: sourceIdArg, sourceLayerId: sourceLayerIdArg, filter: filterArg) { result in
           switch result {
           case .success(let res):
@@ -1996,7 +3258,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapQuerySourceFeaturesChannel.setMessageHandler(nil)
     }
-    /// source#getClusterExpansionZoom
+    /// Answers with the zoom at which the cluster [clusterId] of the GeoJSON
+    /// source [sourceId] splits.
     let sourceGetClusterExpansionZoomChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterExpansionZoom\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceGetClusterExpansionZoomChannel.setMessageHandler { message, reply in
@@ -2015,9 +3278,8 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceGetClusterExpansionZoomChannel.setMessageHandler(nil)
     }
-    /// source#getClusterChildren
-    ///
-    /// Answers with `{features: [String]}`, each feature a JSON string.
+    /// Answers with the features one zoom level below the cluster [clusterId]
+    /// of the GeoJSON source [sourceId].
     let sourceGetClusterChildrenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterChildren\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceGetClusterChildrenChannel.setMessageHandler { message, reply in
@@ -2036,9 +3298,8 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceGetClusterChildrenChannel.setMessageHandler(nil)
     }
-    /// source#getClusterLeaves
-    ///
-    /// Answers with `{features: [String]}`, each feature a JSON string.
+    /// Answers with the points of the cluster [clusterId] of the GeoJSON source
+    /// [sourceId], [limit] of them after skipping [offset].
     let sourceGetClusterLeavesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetClusterLeaves\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceGetClusterLeavesChannel.setMessageHandler { message, reply in
@@ -2059,9 +3320,7 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceGetClusterLeavesChannel.setMessageHandler(nil)
     }
-    /// map#invalidateAmbientCache
-    ///
-    /// The legacy call had no arguments.
+    /// Marks the ambient cache as stale, so it is checked against the network.
     let mapInvalidateAmbientCacheChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapInvalidateAmbientCache\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapInvalidateAmbientCacheChannel.setMessageHandler { _, reply in
@@ -2077,9 +3336,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapInvalidateAmbientCacheChannel.setMessageHandler(nil)
     }
-    /// map#clearAmbientCache
-    ///
-    /// The legacy call had no arguments.
+    /// Empties the ambient cache.
     let mapClearAmbientCacheChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapClearAmbientCache\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapClearAmbientCacheChannel.setMessageHandler { _, reply in
@@ -2095,10 +3352,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapClearAmbientCacheChannel.setMessageHandler(nil)
     }
-    /// locationComponent#getLastLocation
-    ///
-    /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
-    /// or null when there is no location.
+    /// Answers with the last known user location. Fails when there is none or
+    /// the location is off.
     let locationComponentGetLastLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       locationComponentGetLastLocationChannel.setMessageHandler { _, reply in
@@ -2114,10 +3369,7 @@ class MapLibreMapHostApiSetup {
     } else {
       locationComponentGetLastLocationChannel.setMessageHandler(nil)
     }
-    /// map#getVisibleRegion
-    ///
-    /// The legacy call had no arguments. Answers with `{sw: [latitude,
-    /// longitude], ne: [latitude, longitude]}`.
+    /// Answers with the region the map view shows.
     let mapGetVisibleRegionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapGetVisibleRegionChannel.setMessageHandler { _, reply in
@@ -2133,9 +3385,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapGetVisibleRegionChannel.setMessageHandler(nil)
     }
-    /// style#addImage
-    ///
-    /// [length] is the length of [bytes].
+    /// Adds the image [bytes] to the style as [name], as a signed distance
+    /// field image when [sdf] is true. [length] is the length of [bytes].
     let styleAddImageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddImageChannel.setMessageHandler { message, reply in
@@ -2156,10 +3407,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleAddImageChannel.setMessageHandler(nil)
     }
-    /// style#addImageSource
-    ///
-    /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-    /// each a `[latitude, longitude]` list.
+    /// Adds an image source [imageSourceId] that draws the image [bytes] on
+    /// [coordinates]. [length] is the length of [bytes].
     let styleAddImageSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImageSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddImageSourceChannel.setMessageHandler { message, reply in
@@ -2167,7 +3416,7 @@ class MapLibreMapHostApiSetup {
         let imageSourceIdArg = args[0] as! String
         let bytesArg = args[1] as! FlutterStandardTypedData
         let lengthArg = args[2] as! Int64
-        let coordinatesArg = args[3] as! [Any?]
+        let coordinatesArg = args[3] as! PgLatLngQuad
         api.styleAddImageSource(imageSourceId: imageSourceIdArg, bytes: bytesArg, length: lengthArg, coordinates: coordinatesArg) { result in
           switch result {
           case .success:
@@ -2180,10 +3429,9 @@ class MapLibreMapHostApiSetup {
     } else {
       styleAddImageSourceChannel.setMessageHandler(nil)
     }
-    /// style#updateImageSource
-    ///
-    /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-    /// each a `[latitude, longitude]` list. The null ones were sent as null.
+    /// Changes the image, the corners, or both, of the image source
+    /// [imageSourceId]. What is null stays as it is. [length] is the length of
+    /// [bytes].
     let styleUpdateImageSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleUpdateImageSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleUpdateImageSourceChannel.setMessageHandler { message, reply in
@@ -2191,7 +3439,7 @@ class MapLibreMapHostApiSetup {
         let imageSourceIdArg = args[0] as! String
         let bytesArg: FlutterStandardTypedData? = nilOrValue(args[1])
         let lengthArg: Int64? = nilOrValue(args[2])
-        let coordinatesArg: [Any?]? = nilOrValue(args[3])
+        let coordinatesArg: PgLatLngQuad? = nilOrValue(args[3])
         api.styleUpdateImageSource(imageSourceId: imageSourceIdArg, bytes: bytesArg, length: lengthArg, coordinates: coordinatesArg) { result in
           switch result {
           case .success:
@@ -2204,9 +3452,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleUpdateImageSourceChannel.setMessageHandler(nil)
     }
-    /// map#toScreenLocation
-    ///
-    /// Answers with `{x, y}`.
+    /// Answers with where the location [latitude], [longitude] is on the map
+    /// view.
     let mapToScreenLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapToScreenLocationChannel.setMessageHandler { message, reply in
@@ -2225,10 +3472,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapToScreenLocationChannel.setMessageHandler(nil)
     }
-    /// map#toScreenLocationBatch
-    ///
-    /// [coordinates] holds latitude and longitude pairs, one after the other.
-    /// Answers with x and y pairs in the same order.
+    /// The batch form of [mapToScreenLocation]: [coordinates] holds latitude
+    /// and longitude pairs one after the other, and the answer holds the x and
+    /// y of each in the same order.
     let mapToScreenLocationBatchChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocationBatch\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapToScreenLocationBatchChannel.setMessageHandler { message, reply in
@@ -2246,7 +3492,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapToScreenLocationBatchChannel.setMessageHandler(nil)
     }
-    /// style#removeSource
+    /// Removes the source [sourceId] from the style.
     let styleRemoveSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleRemoveSourceChannel.setMessageHandler { message, reply in
@@ -2264,7 +3510,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleRemoveSourceChannel.setMessageHandler(nil)
     }
-    /// style#addLayer
+    /// Adds a raster layer [imageLayerId] that draws the source
+    /// [imageSourceId], on top of the others.
     let styleAddLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddLayerChannel.setMessageHandler { message, reply in
@@ -2285,7 +3532,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleAddLayerChannel.setMessageHandler(nil)
     }
-    /// style#addLayerBelow
+    /// Adds a raster layer [imageLayerId] that draws the source
+    /// [imageSourceId], below the layer [belowLayerId].
     let styleAddLayerBelowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddLayerBelow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddLayerBelowChannel.setMessageHandler { message, reply in
@@ -2307,7 +3555,7 @@ class MapLibreMapHostApiSetup {
     } else {
       styleAddLayerBelowChannel.setMessageHandler(nil)
     }
-    /// style#removeLayer
+    /// Removes the layer [layerId] from the style.
     let styleRemoveLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleRemoveLayerChannel.setMessageHandler { message, reply in
@@ -2325,9 +3573,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleRemoveLayerChannel.setMessageHandler(nil)
     }
-    /// style#moveLayer
-    ///
-    /// [belowLayerId] was omitted from the legacy map when null.
+    /// Moves the layer [layerId] below the layer [belowLayerId], or on top of
+    /// the others when it is null.
     let styleMoveLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleMoveLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleMoveLayerChannel.setMessageHandler { message, reply in
@@ -2346,16 +3593,14 @@ class MapLibreMapHostApiSetup {
     } else {
       styleMoveLayerChannel.setMessageHandler(nil)
     }
-    /// style#setFilter
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Sets [filter] on the layer [layerId], or removes its filter when
+    /// [filter] is null.
     let styleSetFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleSetFilterChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let layerIdArg = args[0] as! String
-        let filterArg = args[1] as! String
+        let filterArg: String? = nilOrValue(args[1])
         api.styleSetFilter(layerId: layerIdArg, filter: filterArg) { result in
           switch result {
           case .success:
@@ -2368,9 +3613,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleSetFilterChannel.setMessageHandler(nil)
     }
-    /// style#getFilter
-    ///
-    /// Answers with `{filter: String?}`, the expression as a JSON string.
+    /// Answers with the filter of the layer [layerId] as JSON text, or with
+    /// null when it has none.
     let styleGetFilterChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetFilter\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleGetFilterChannel.setMessageHandler { message, reply in
@@ -2388,9 +3632,7 @@ class MapLibreMapHostApiSetup {
     } else {
       styleGetFilterChannel.setMessageHandler(nil)
     }
-    /// map#toLatLng
-    ///
-    /// Answers with `{latitude, longitude}`.
+    /// Answers with the location at the point [x], [y] of the map view.
     let mapToLatLngChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToLatLng\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapToLatLngChannel.setMessageHandler { message, reply in
@@ -2409,9 +3651,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapToLatLngChannel.setMessageHandler(nil)
     }
-    /// map#getMetersPerPixelAtLatitude
-    ///
-    /// Answers with `{metersperpixel: double}`.
+    /// Answers with the meters per pixel at [latitude] at the current zoom, as
+    /// the SDK reports them.
     let mapGetMetersPerPixelAtLatitudeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetMetersPerPixelAtLatitude\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapGetMetersPerPixelAtLatitudeChannel.setMessageHandler { message, reply in
@@ -2429,9 +3670,7 @@ class MapLibreMapHostApiSetup {
     } else {
       mapGetMetersPerPixelAtLatitudeChannel.setMessageHandler(nil)
     }
-    /// source#addGeoJson
-    ///
-    /// [geojson] is the data encoded by Dart.
+    /// Adds a GeoJSON source [sourceId] holding [geojson], GeoJSON text.
     let sourceAddGeoJsonChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceAddGeoJson\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceAddGeoJsonChannel.setMessageHandler { message, reply in
@@ -2450,9 +3689,8 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceAddGeoJsonChannel.setMessageHandler(nil)
     }
-    /// source#setGeoJson
-    ///
-    /// [geojson] is the data encoded by Dart.
+    /// Replaces the data of the GeoJSON source [sourceId] with [geojson],
+    /// GeoJSON text.
     let sourceSetGeoJsonChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetGeoJson\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceSetGeoJsonChannel.setMessageHandler { message, reply in
@@ -2471,7 +3709,8 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceSetGeoJsonChannel.setMessageHandler(nil)
     }
-    /// map#setCameraBounds
+    /// Eases the camera to the bounds from [west], [south] to [east], [north],
+    /// inset by [padding] logical pixels. Answers once the move starts.
     let mapSetCameraBoundsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetCameraBounds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapSetCameraBoundsChannel.setMessageHandler { message, reply in
@@ -2493,10 +3732,9 @@ class MapLibreMapHostApiSetup {
     } else {
       mapSetCameraBoundsChannel.setMessageHandler(nil)
     }
-    /// symbolLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a symbol layer. [properties] are its paint and layout properties
+    /// in style-spec form. [enableInteraction] makes its features report taps
+    /// and drags.
     let symbolLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.symbolLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       symbolLayerAddChannel.setMessageHandler { message, reply in
@@ -2507,7 +3745,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let enableInteractionArg = args[7] as! Bool
         let propertiesArg = args[8] as! [String: Any?]
         api.symbolLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
@@ -2522,10 +3760,7 @@ class MapLibreMapHostApiSetup {
     } else {
       symbolLayerAddChannel.setMessageHandler(nil)
     }
-    /// lineLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a line layer, as [symbolLayerAdd].
     let lineLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.lineLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       lineLayerAddChannel.setMessageHandler { message, reply in
@@ -2536,7 +3771,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let enableInteractionArg = args[7] as! Bool
         let propertiesArg = args[8] as! [String: Any?]
         api.lineLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
@@ -2551,7 +3786,8 @@ class MapLibreMapHostApiSetup {
     } else {
       lineLayerAddChannel.setMessageHandler(nil)
     }
-    /// layer#setProperties
+    /// Sets the paint and layout [properties], in style-spec form, of the
+    /// layer [layerId].
     let layerSetPropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       layerSetPropertiesChannel.setMessageHandler { message, reply in
@@ -2570,10 +3806,7 @@ class MapLibreMapHostApiSetup {
     } else {
       layerSetPropertiesChannel.setMessageHandler(nil)
     }
-    /// circleLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a circle layer, as [symbolLayerAdd].
     let circleLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.circleLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       circleLayerAddChannel.setMessageHandler { message, reply in
@@ -2584,7 +3817,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let enableInteractionArg = args[7] as! Bool
         let propertiesArg = args[8] as! [String: Any?]
         api.circleLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
@@ -2599,10 +3832,7 @@ class MapLibreMapHostApiSetup {
     } else {
       circleLayerAddChannel.setMessageHandler(nil)
     }
-    /// fillLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a fill layer, as [symbolLayerAdd].
     let fillLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       fillLayerAddChannel.setMessageHandler { message, reply in
@@ -2613,7 +3843,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let enableInteractionArg = args[7] as! Bool
         let propertiesArg = args[8] as! [String: Any?]
         api.fillLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
@@ -2628,10 +3858,7 @@ class MapLibreMapHostApiSetup {
     } else {
       fillLayerAddChannel.setMessageHandler(nil)
     }
-    /// fillExtrusionLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a fill extrusion layer, as [symbolLayerAdd].
     let fillExtrusionLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.fillExtrusionLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       fillExtrusionLayerAddChannel.setMessageHandler { message, reply in
@@ -2642,7 +3869,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let enableInteractionArg = args[7] as! Bool
         let propertiesArg = args[8] as! [String: Any?]
         api.fillExtrusionLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, enableInteraction: enableInteractionArg, properties: propertiesArg) { result in
@@ -2657,9 +3884,8 @@ class MapLibreMapHostApiSetup {
     } else {
       fillExtrusionLayerAddChannel.setMessageHandler(nil)
     }
-    /// style#addSource
-    ///
-    /// [properties] is the source in style-spec form.
+    /// Adds the source [sourceId]. [properties] is the source in style-spec
+    /// form.
     let styleAddSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddSourceChannel.setMessageHandler { message, reply in
@@ -2678,7 +3904,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleAddSourceChannel.setMessageHandler(nil)
     }
-    /// rasterLayer#add
+    /// Adds a raster layer. [properties] are its paint and layout properties
+    /// in style-spec form.
     let rasterLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.rasterLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       rasterLayerAddChannel.setMessageHandler { message, reply in
@@ -2701,7 +3928,7 @@ class MapLibreMapHostApiSetup {
     } else {
       rasterLayerAddChannel.setMessageHandler(nil)
     }
-    /// hillshadeLayer#add
+    /// Adds a hillshade layer, as [rasterLayerAdd].
     let hillshadeLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.hillshadeLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       hillshadeLayerAddChannel.setMessageHandler { message, reply in
@@ -2724,7 +3951,7 @@ class MapLibreMapHostApiSetup {
     } else {
       hillshadeLayerAddChannel.setMessageHandler(nil)
     }
-    /// colorReliefLayer#add
+    /// Adds a color relief layer, as [rasterLayerAdd].
     let colorReliefLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.colorReliefLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       colorReliefLayerAddChannel.setMessageHandler { message, reply in
@@ -2747,7 +3974,7 @@ class MapLibreMapHostApiSetup {
     } else {
       colorReliefLayerAddChannel.setMessageHandler(nil)
     }
-    /// backgroundLayer#add
+    /// Adds a background layer, as [rasterLayerAdd] but without a source.
     let backgroundLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.backgroundLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       backgroundLayerAddChannel.setMessageHandler { message, reply in
@@ -2769,10 +3996,7 @@ class MapLibreMapHostApiSetup {
     } else {
       backgroundLayerAddChannel.setMessageHandler(nil)
     }
-    /// heatmapLayer#add
-    ///
-    /// [filter] is the expression encoded by Dart, the string `null` when there
-    /// is none.
+    /// Adds a heatmap layer, as [symbolLayerAdd] but without interaction.
     let heatmapLayerAddChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.heatmapLayerAdd\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       heatmapLayerAddChannel.setMessageHandler { message, reply in
@@ -2783,7 +4007,7 @@ class MapLibreMapHostApiSetup {
         let sourceLayerArg: String? = nilOrValue(args[3])
         let minzoomArg: Double? = nilOrValue(args[4])
         let maxzoomArg: Double? = nilOrValue(args[5])
-        let filterArg = args[6] as! String
+        let filterArg: String? = nilOrValue(args[6])
         let propertiesArg = args[7] as! [String: Any?]
         api.heatmapLayerAdd(sourceId: sourceIdArg, layerId: layerIdArg, belowLayerId: belowLayerIdArg, sourceLayer: sourceLayerArg, minzoom: minzoomArg, maxzoom: maxzoomArg, filter: filterArg, properties: propertiesArg) { result in
           switch result {
@@ -2797,9 +4021,9 @@ class MapLibreMapHostApiSetup {
     } else {
       heatmapLayerAddChannel.setMessageHandler(nil)
     }
-    /// source#setFeature
-    ///
-    /// [geojsonFeature] is the feature encoded by Dart.
+    /// Replaces the feature of the GeoJSON source [sourceId] that has the id
+    /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+    /// changes.
     let sourceSetFeatureChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceSetFeatureChannel.setMessageHandler { message, reply in
@@ -2818,9 +4042,9 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceSetFeatureChannel.setMessageHandler(nil)
     }
-    /// source#setFeatureState
-    ///
-    /// Android only: Dart rejects the call on iOS before sending it.
+    /// Merges [state], app data of any shape, into the state of the feature
+    /// [featureId]. Android only: Dart rejects the call on iOS before sending
+    /// it.
     let sourceSetFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceSetFeatureStateChannel.setMessageHandler { message, reply in
@@ -2841,9 +4065,10 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceSetFeatureStateChannel.setMessageHandler(nil)
     }
-    /// source#removeFeatureState
-    ///
-    /// Android only: Dart rejects the call on iOS before sending it.
+    /// Removes the key [stateKey] of the state of the feature [featureId], or
+    /// the whole state of that feature without [stateKey], or the state of
+    /// every feature of the source without [featureId]. Android only: Dart
+    /// rejects the call on iOS before sending it.
     let sourceRemoveFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceRemoveFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceRemoveFeatureStateChannel.setMessageHandler { message, reply in
@@ -2864,10 +4089,9 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceRemoveFeatureStateChannel.setMessageHandler(nil)
     }
-    /// source#getFeatureState
-    ///
-    /// Android only: Dart rejects the call on iOS before sending it. Answers
-    /// with `{state: String?}`, the state as a JSON string.
+    /// Answers with the state of the feature [featureId] as JSON text, or with
+    /// null when it has none. Android only: Dart rejects the call on iOS before
+    /// sending it.
     let sourceGetFeatureStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceGetFeatureState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       sourceGetFeatureStateChannel.setMessageHandler { message, reply in
@@ -2887,9 +4111,9 @@ class MapLibreMapHostApiSetup {
     } else {
       sourceGetFeatureStateChannel.setMessageHandler(nil)
     }
-    /// style#setLight
-    ///
-    /// [light] is the light in style-spec form.
+    /// Sets the light of the style. [light] holds the light properties in
+    /// style-spec form. It stays a map because each property can be any value
+    /// in Dart: native checks that each one is a constant of the right type.
     let styleSetLightChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetLight\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleSetLightChannel.setMessageHandler { message, reply in
@@ -2907,7 +4131,7 @@ class MapLibreMapHostApiSetup {
     } else {
       styleSetLightChannel.setMessageHandler(nil)
     }
-    /// layer#setVisibility
+    /// Shows or hides the layer [layerId].
     let layerSetVisibilityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       layerSetVisibilityChannel.setMessageHandler { message, reply in
@@ -2926,9 +4150,8 @@ class MapLibreMapHostApiSetup {
     } else {
       layerSetVisibilityChannel.setMessageHandler(nil)
     }
-    /// layer#setVisibilityBatch
-    ///
-    /// Answers with the ids that matched no layer.
+    /// Shows or hides the layers [layerIds]. Answers with the ids that matched
+    /// no layer.
     let layerSetVisibilityBatchChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibilityBatch\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       layerSetVisibilityBatchChannel.setMessageHandler { message, reply in
@@ -2947,7 +4170,7 @@ class MapLibreMapHostApiSetup {
     } else {
       layerSetVisibilityBatchChannel.setMessageHandler(nil)
     }
-    /// layer#setZoomRange
+    /// Sets the zoom range of the layer [layerId].
     let layerSetZoomRangeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetZoomRange\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       layerSetZoomRangeChannel.setMessageHandler { message, reply in
@@ -2967,9 +4190,8 @@ class MapLibreMapHostApiSetup {
     } else {
       layerSetZoomRangeChannel.setMessageHandler(nil)
     }
-    /// layer#getVisibility
-    ///
-    /// Answers with null when there is no such layer.
+    /// Answers whether the layer [layerId] is visible, or with null when there
+    /// is no such layer.
     let layerGetVisibilityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerGetVisibility\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       layerGetVisibilityChannel.setMessageHandler { message, reply in
@@ -2987,10 +4209,8 @@ class MapLibreMapHostApiSetup {
     } else {
       layerGetVisibilityChannel.setMessageHandler(nil)
     }
-    /// map#takeSnapshot
-    ///
-    /// [width] and [height] are in logical pixels, and each was omitted from
-    /// the legacy map when null. Answers with PNG bytes.
+    /// Answers with a PNG of the map, [width] by [height] logical pixels, or
+    /// the size of the map view for what is null.
     let mapTakeSnapshotChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapTakeSnapshotChannel.setMessageHandler { message, reply in
@@ -3009,9 +4229,8 @@ class MapLibreMapHostApiSetup {
     } else {
       mapTakeSnapshotChannel.setMessageHandler(nil)
     }
-    /// style#getLayerIds
-    ///
-    /// The legacy call had no arguments. Answers with `{layers: [String]}`.
+    /// Answers with the ids of the layers of the style, in the order of the
+    /// style.
     let styleGetLayerIdsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleGetLayerIdsChannel.setMessageHandler { _, reply in
@@ -3027,9 +4246,7 @@ class MapLibreMapHostApiSetup {
     } else {
       styleGetLayerIdsChannel.setMessageHandler(nil)
     }
-    /// style#getSourceIds
-    ///
-    /// The legacy call had no arguments. Answers with `{sources: [String]}`.
+    /// Answers with the ids of the sources of the style.
     let styleGetSourceIdsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleGetSourceIdsChannel.setMessageHandler { _, reply in
@@ -3045,10 +4262,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleGetSourceIdsChannel.setMessageHandler(nil)
     }
-    /// style#getLayerProperties
-    ///
-    /// Answers with `{properties: String}`, the layer as a JSON string, or
-    /// without `properties` when there is no such layer.
+    /// Answers with the layer [layerId] in style-spec form as JSON text, or
+    /// with null when there is no such layer.
     let styleGetLayerPropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleGetLayerPropertiesChannel.setMessageHandler { message, reply in
@@ -3066,10 +4281,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleGetLayerPropertiesChannel.setMessageHandler(nil)
     }
-    /// style#getSourceProperties
-    ///
-    /// Answers with `{properties: String}`, the source as a JSON string, or
-    /// without `properties` when there is no such source.
+    /// Answers with the source [sourceId] in style-spec form as JSON text, or
+    /// with null when there is no such source.
     let styleGetSourcePropertiesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceProperties\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleGetSourcePropertiesChannel.setMessageHandler { message, reply in
@@ -3087,7 +4300,8 @@ class MapLibreMapHostApiSetup {
     } else {
       styleGetSourcePropertiesChannel.setMessageHandler(nil)
     }
-    /// style#setStyle
+    /// Replaces the style with [style]: a style JSON, URL, file path or asset
+    /// name.
     let styleSetStyleChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetStyle\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleSetStyleChannel.setMessageHandler { message, reply in
@@ -3111,45 +4325,35 @@ class MapLibreMapHostApiSetup {
 /// The events of one map, from native to Dart, on channels told apart by the
 /// same suffix as [MapLibreMapHostApi].
 ///
-/// Every method stands for one call native made on the method channel these
-/// messages replace, named in the first line of its documentation.
-///
 /// Generated protocol from Pigeon that represents Flutter messages that can be called from Swift.
 protocol MapLibreMapFlutterApiProtocol {
-  /// feature#onTap
+  /// The user tapped a feature of an interactive layer.
   func featureOnTap(tap tapArg: PgFeatureTap, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// feature#onDrag
+  /// The user dragged a feature of an interactive layer.
   func featureOnDrag(drag dragArg: PgFeatureDrag, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// camera#onMoveStarted
-  ///
-  /// [isGesture] is whether the SDK reports a gesture of the user as the
-  /// cause of the move. The legacy call carried it on Android only.
+  /// The camera started to move. [isGesture] is whether the SDK reports a
+  /// gesture of the user as the cause.
   func cameraOnMoveStarted(isGesture isGestureArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// camera#onMove
+  /// The camera moved, for a map that tracks the camera position.
   func cameraOnMove(position positionArg: PgCameraPosition, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// camera#onIdle
-  ///
-  /// [position] is null when the map does not track the camera position.
+  /// The camera stopped. [position] is null when the map does not track the
+  /// camera position.
   func cameraOnIdle(position positionArg: PgCameraPosition?, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onStyleLoaded
+  /// A style finished loading.
   func mapOnStyleLoaded(completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onMapClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user tapped the map at [point] of the map view, [latLng] on the
+  /// map.
   func mapOnMapClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onMapLongClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user long pressed the map at [point] of the map view, [latLng] on
+  /// the map.
   func mapOnMapLongClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onCameraTrackingChanged
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
-  func mapOnCameraTrackingChanged(mode modeArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onCameraTrackingDismissed
+  /// The way the camera follows the user location changed to [mode].
+  func mapOnCameraTrackingChanged(mode modeArg: PgMyLocationTrackingMode, completion: @escaping (Result<Void, PigeonError>) -> Void)
+  /// The camera stopped following the user location.
   func mapOnCameraTrackingDismissed(completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onIdle
+  /// The map finished rendering and has nothing left to load or animate.
   func mapOnIdle(completion: @escaping (Result<Void, PigeonError>) -> Void)
-  /// map#onUserLocationUpdated
+  /// The user location changed, with the compass [heading] on iOS.
   func mapOnUserLocationUpdated(userLocation userLocationArg: PgUserLocation, heading headingArg: PgUserHeading?, completion: @escaping (Result<Void, PigeonError>) -> Void)
 }
 class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
@@ -3162,7 +4366,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
   var codec: MessagesPigeonCodec {
     return MessagesPigeonCodec.shared
   }
-  /// feature#onTap
+  /// The user tapped a feature of an interactive layer.
   func featureOnTap(tap tapArg: PgFeatureTap, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnTap\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3181,7 +4385,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// feature#onDrag
+  /// The user dragged a feature of an interactive layer.
   func featureOnDrag(drag dragArg: PgFeatureDrag, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnDrag\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3200,10 +4404,8 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// camera#onMoveStarted
-  ///
-  /// [isGesture] is whether the SDK reports a gesture of the user as the
-  /// cause of the move. The legacy call carried it on Android only.
+  /// The camera started to move. [isGesture] is whether the SDK reports a
+  /// gesture of the user as the cause.
   func cameraOnMoveStarted(isGesture isGestureArg: Bool, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMoveStarted\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3222,7 +4424,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// camera#onMove
+  /// The camera moved, for a map that tracks the camera position.
   func cameraOnMove(position positionArg: PgCameraPosition, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnMove\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3241,9 +4443,8 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// camera#onIdle
-  ///
-  /// [position] is null when the map does not track the camera position.
+  /// The camera stopped. [position] is null when the map does not track the
+  /// camera position.
   func cameraOnIdle(position positionArg: PgCameraPosition?, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.cameraOnIdle\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3262,7 +4463,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onStyleLoaded
+  /// A style finished loading.
   func mapOnStyleLoaded(completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnStyleLoaded\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3281,9 +4482,8 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onMapClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user tapped the map at [point] of the map view, [latLng] on the
+  /// map.
   func mapOnMapClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapClick\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3302,9 +4502,8 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onMapLongClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user long pressed the map at [point] of the map view, [latLng] on
+  /// the map.
   func mapOnMapLongClick(point pointArg: PgScreenPoint, latLng latLngArg: PgLatLng, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnMapLongClick\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3323,10 +4522,8 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onCameraTrackingChanged
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
-  func mapOnCameraTrackingChanged(mode modeArg: Int64, completion: @escaping (Result<Void, PigeonError>) -> Void) {
+  /// The way the camera follows the user location changed to [mode].
+  func mapOnCameraTrackingChanged(mode modeArg: PgMyLocationTrackingMode, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingChanged\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
     channel.sendMessage([modeArg] as [Any?]) { response in
@@ -3344,7 +4541,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onCameraTrackingDismissed
+  /// The camera stopped following the user location.
   func mapOnCameraTrackingDismissed(completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnCameraTrackingDismissed\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3363,7 +4560,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onIdle
+  /// The map finished rendering and has nothing left to load or animate.
   func mapOnIdle(completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnIdle\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)
@@ -3382,7 +4579,7 @@ class MapLibreMapFlutterApi: MapLibreMapFlutterApiProtocol {
       }
     }
   }
-  /// map#onUserLocationUpdated
+  /// The user location changed, with the compass [heading] on iOS.
   func mapOnUserLocationUpdated(userLocation userLocationArg: PgUserLocation, heading headingArg: PgUserHeading?, completion: @escaping (Result<Void, PigeonError>) -> Void) {
     let channelName: String = "dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.mapOnUserLocationUpdated\(messageChannelSuffix)"
     let channel = FlutterBasicMessageChannel(name: channelName, binaryMessenger: binaryMessenger, codec: codec)

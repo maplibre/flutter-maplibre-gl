@@ -20,6 +20,22 @@ class TileServer {
   /// Tiles served since the counter was last reset.
   int tilesServed = 0;
 
+  /// Tile requests received, answered or held.
+  int tileRequests = 0;
+
+  /// Open while tiles are answered; [holdTiles] closes it.
+  Completer<void>? _tileGate;
+
+  /// Leaves every tile request unanswered until [releaseTiles], so a test can
+  /// pause an offline download before any of its tiles arrives.
+  void holdTiles() => _tileGate ??= Completer<void>();
+
+  /// Answers the tile requests [holdTiles] held back, and every later one.
+  void releaseTiles() {
+    _tileGate?.complete();
+    _tileGate = null;
+  }
+
   String get styleUrl => '$_origin/style';
 
   String get _origin => 'http://${_server.address.host}:${_server.port}';
@@ -55,16 +71,33 @@ class TileServer {
       response.headers.contentType = ContentType.json;
       response.write(jsonEncode(style));
     } else if (request.uri.path.startsWith('/tiles/')) {
+      tileRequests++;
+      final gate = _tileGate;
+      if (gate == null) {
+        unawaited(_sendTile(response));
+      } else {
+        unawaited(gate.future.then((_) => _sendTile(response)));
+      }
+      return;
+    } else {
+      response.statusCode = HttpStatus.notFound;
+    }
+    unawaited(response.close());
+  }
+
+  Future<void> _sendTile(HttpResponse response) async {
+    try {
       tilesServed++;
       response.headers.contentType = ContentType('image', 'png');
       // Long-lived, so the SDK stores the tile rather than treating it as
       // uncacheable.
       response.headers.set(HttpHeaders.cacheControlHeader, 'max-age=86400');
       response.add(_tile);
-    } else {
-      response.statusCode = HttpStatus.notFound;
+      await response.close();
+    } on Object {
+      // The SDK dropped the request while it was held: a paused download
+      // cancels the requests it has in flight.
     }
-    unawaited(response.close());
   }
 }
 

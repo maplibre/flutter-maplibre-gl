@@ -1,96 +1,99 @@
 import Flutter
 
+/// The errors the style, source and layer calls fail with. Codes and messages
+/// are the ones Android and web answer for the same case.
 enum MethodCallError: Error {
-    case genericError(details: String)
     case invalidLayerType(details: String)
-    case invalidSourceType(details: String)
-    case invalidExpression
-    /// A filter the engine rejected, with its reason.
+    /// A source whose type the call cannot work with.
+    case unsupportedSourceType(message: String)
+    /// An argument the call cannot use, with what is wrong with it.
+    case invalidArgument(message: String)
+    /// A filter that is not JSON or that the engine rejected, with why.
     case invalidFilter(reason: String)
+    /// A layer property value the engine rejected: INVALID_EXPRESSION for an
+    /// expression, INVALID_ARGUMENT for any other value.
+    case invalidLayerProperty(layerId: String, property: String, isExpression: Bool, reason: String)
+    /// GeoJSON that MapLibre cannot read, or that is not what the call takes.
+    case invalidGeoJson(message: String)
     case sourceNotFound(sourceId: String)
     case layerNotFound(layerId: String)
-    case styleNotFound
+    /// A call that needs a style while none is loaded.
+    case styleNotReady
     case sourceAlreadyExists(sourceId: String)
     case layerAlreadyExists(layerId: String)
-    case geojsonParseError(sourceId: String)
 
     var code: String {
         switch self {
-        case .genericError:
-            return "genericError"
         case .invalidLayerType:
             return "INVALID_LAYER_TYPE"
-        case .invalidSourceType:
-            return "invalidSourceType"
-        case .invalidExpression, .invalidFilter:
+        case .unsupportedSourceType:
+            return "UNSUPPORTED_SOURCE_TYPE"
+        case .invalidArgument:
+            return "INVALID_ARGUMENT"
+        case .invalidFilter:
             return "INVALID_EXPRESSION"
+        case let .invalidLayerProperty(_, _, isExpression, _):
+            return isExpression ? "INVALID_EXPRESSION" : "INVALID_ARGUMENT"
+        case .invalidGeoJson:
+            return "INVALID_GEOJSON"
         case .sourceNotFound:
-            return "sourceNotFound"
+            return "SOURCE_NOT_FOUND"
         case .layerNotFound:
             return "LAYER_NOT_FOUND_ERROR"
-        case .styleNotFound:
-            return "styleNotFound"
+        case .styleNotReady:
+            return "STYLE_NOT_READY"
         case .sourceAlreadyExists:
             return "SOURCE_ALREADY_EXISTS"
         case .layerAlreadyExists:
             return "LAYER_ALREADY_EXISTS"
-        case .geojsonParseError:
-            return "parseError"
-
         }
     }
 
     var message: String {
         switch self {
-        case .genericError:
-            return "Generic error"
         case .invalidLayerType:
             return "Invalid layer type"
-        case .invalidSourceType:
-            return "Invalid source type"
-        case .invalidExpression:
-            return "Invalid expression"
+        case let .unsupportedSourceType(message):
+            return message
+        case let .invalidArgument(message):
+            return message
         case let .invalidFilter(reason):
             return "Invalid filter: \(reason)"
-        case .sourceNotFound:
-            return "Source not found"
+        case let .invalidLayerProperty(layerId, property, isExpression, reason):
+            return "\(isExpression ? "Invalid expression" : "Invalid value") for property "
+                + "'\(property)' of layer '\(layerId)': \(reason)"
+        case let .invalidGeoJson(message):
+            return message
+        case let .sourceNotFound(sourceId):
+            return "Source '\(sourceId)' does not exist in the current style."
         case .layerNotFound:
             return "Layer not found"
-        case .styleNotFound:
-            return "Style not found"
+        case .styleNotReady:
+            return "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?"
         case .sourceAlreadyExists:
             return "Source already exists"
         case .layerAlreadyExists:
             return "Layer already exists"
-        case .geojsonParseError:
-            return "Geojson parse error"
         }
     }
 
-    var details: String {
+    var details: String? {
         switch self {
-        case let .genericError(details):
-            return details
         case let .invalidLayerType(details):
             return details
-        case let .invalidSourceType(details):
-            return details
-        case .invalidExpression:
-            return "Could not parse expression."
         case let .invalidFilter(reason):
             return reason
-        case let .sourceNotFound(sourceId):
-            return "Source with id \(sourceId) not found."
+        case let .invalidLayerProperty(_, _, _, reason):
+            return reason
         case let .layerNotFound(layerId):
             return "Layer with id \(layerId) not found."
-        case .styleNotFound:
-            return "Style not found."
         case let .sourceAlreadyExists(sourceId):
             return "Source with id \(sourceId) already exists."
         case let .layerAlreadyExists(layerId):
             return "Layer with id \(layerId) already exists."
-        case let .geojsonParseError(sourceId):
-            return "Geojson parse error for source with id \(sourceId)."
+        case .unsupportedSourceType, .invalidArgument, .invalidGeoJson, .sourceNotFound,
+             .styleNotReady:
+            return nil
         }
     }
 

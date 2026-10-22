@@ -228,9 +228,7 @@ void main() {
 
     test('answers and errors of native pass through', () async {
       answer('styleGetLayerIds', [
-        <Object?, Object?>{
-          'layers': ['road'],
-        },
+        <Object?>['road'],
       ]);
       expect(await map.getLayerIds(), ['road']);
 
@@ -261,11 +259,7 @@ void main() {
 
       expect(result, isTrue);
       expect(api.calls, [
-        [
-          'cameraAnimate',
-          ['zoomTo', 5.0],
-          300,
-        ],
+        ['cameraAnimate', PgCameraUpdateZoomTo(zoom: 5), 300],
       ]);
     });
 
@@ -273,11 +267,7 @@ void main() {
       await platform.animateCamera(CameraUpdate.zoomIn());
 
       expect(api.calls, [
-        [
-          'cameraAnimate',
-          ['zoomIn'],
-          null,
-        ],
+        ['cameraAnimate', PgCameraUpdateZoomIn(), null],
       ]);
     });
 
@@ -292,15 +282,12 @@ void main() {
       expect(api.calls, [
         [
           'cameraMove',
-          [
-            'newLatLng',
-            [1.0, 2.0],
-          ],
+          PgCameraUpdateNewLatLng(latLng: PgLatLng(latitude: 1, longitude: 2)),
         ],
       ]);
     });
 
-    test('easeCamera sends the interpolation by name', () async {
+    test('easeCamera sends the interpolation', () async {
       api.replies['cameraEase'] = true;
 
       final result = await platform.easeCamera(
@@ -313,9 +300,9 @@ void main() {
       expect(api.calls, [
         [
           'cameraEase',
-          ['bearingTo', 90.0],
+          PgCameraUpdateBearingTo(bearing: 90),
           200,
-          'fastOutLinearIn',
+          PgCameraAnimationInterpolation.fastOutLinearIn,
         ],
       ]);
     });
@@ -326,23 +313,107 @@ void main() {
       await platform.easeCamera(CameraUpdate.zoomOut());
 
       expect(api.calls, [
-        [
-          'cameraEase',
-          ['zoomOut'],
-          null,
-          null,
-        ],
+        ['cameraEase', PgCameraUpdateZoomOut(), null, null],
       ]);
     });
 
-    test('queryCameraPosition reads the camera map', () async {
-      api.replies['mapQueryCameraPosition'] = <Object?, Object?>{
-        'bearing': 10.0,
-        // An integral value may arrive as an int after a JSON round trip.
-        'target': <Object?>[45, 9.5],
-        'tilt': 20.0,
-        'zoom': 11.0,
-      };
+    test('every kind of update reaches native as its own class', () async {
+      PgLatLng latLng(double latitude, double longitude) =>
+          PgLatLng(latitude: latitude, longitude: longitude);
+      final updates = <(CameraUpdate, PgCameraUpdate)>[
+        (
+          CameraUpdate.newCameraPosition(
+            const CameraPosition(
+              bearing: 10,
+              target: LatLng(45, 9),
+              tilt: 20,
+              zoom: 11,
+            ),
+          ),
+          PgCameraUpdateNewCameraPosition(
+            cameraPosition: PgCameraPosition(
+              bearing: 10,
+              target: latLng(45, 9),
+              tilt: 20,
+              zoom: 11,
+            ),
+          ),
+        ),
+        (
+          CameraUpdate.newLatLng(const LatLng(1, 2)),
+          PgCameraUpdateNewLatLng(latLng: latLng(1, 2)),
+        ),
+        (
+          CameraUpdate.newLatLngBounds(
+            LatLngBounds(
+              southwest: const LatLng(1, 2),
+              northeast: const LatLng(3, 4),
+            ),
+            left: 5,
+            top: 6,
+            right: 7,
+            bottom: 8,
+          ),
+          PgCameraUpdateNewLatLngBounds(
+            bounds: PgLatLngBounds(
+              southwest: latLng(1, 2),
+              northeast: latLng(3, 4),
+            ),
+            padding: PgEdgeInsets(top: 6, left: 5, bottom: 8, right: 7),
+          ),
+        ),
+        (
+          CameraUpdate.newLatLngZoom(const LatLng(1, 2), 3),
+          PgCameraUpdateNewLatLngZoom(latLng: latLng(1, 2), zoom: 3),
+        ),
+        (CameraUpdate.scrollBy(4, -5), PgCameraUpdateScrollBy(dx: 4, dy: -5)),
+        (CameraUpdate.zoomBy(2), PgCameraUpdateZoomBy(amount: 2)),
+        (
+          CameraUpdate.zoomBy(-1, const Offset(10, 20)),
+          PgCameraUpdateZoomBy(
+            amount: -1,
+            focus: PgScreenPoint(x: 10, y: 20),
+          ),
+        ),
+        (CameraUpdate.zoomIn(), PgCameraUpdateZoomIn()),
+        (CameraUpdate.zoomOut(), PgCameraUpdateZoomOut()),
+        (CameraUpdate.zoomTo(12), PgCameraUpdateZoomTo(zoom: 12)),
+        (CameraUpdate.bearingTo(90), PgCameraUpdateBearingTo(bearing: 90)),
+        (CameraUpdate.tiltTo(30), PgCameraUpdateTiltTo(tilt: 30)),
+      ];
+
+      for (final (update, _) in updates) {
+        await platform.moveCamera(update);
+      }
+
+      expect(api.calls, [
+        for (final (_, typed) in updates) ['cameraMove', typed],
+      ]);
+    });
+
+    test('an update of no known kind fails without reaching native', () {
+      expect(
+        platform.animateCamera(_UnknownCameraUpdate()),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_ARGUMENT')
+              .having(
+                (e) => e.message,
+                'message',
+                'Cannot interpret [bogus] as CameraUpdate.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('queryCameraPosition reads the camera', () async {
+      api.replies['mapQueryCameraPosition'] = PgCameraPosition(
+        bearing: 10,
+        target: PgLatLng(latitude: 45, longitude: 9.5),
+        tilt: 20,
+        zoom: 11,
+      );
 
       final position = await platform.queryCameraPosition();
 
@@ -394,7 +465,7 @@ void main() {
       ]);
     });
 
-    test('addLineLayer sends the string null without a filter', () async {
+    test('addLineLayer sends a null filter without one', () async {
       await platform.addLineLayer(
         'source',
         'lines',
@@ -402,7 +473,7 @@ void main() {
         enableInteraction: false,
       );
 
-      expect(api.calls.single[7], 'null');
+      expect(api.calls.single[7], isNull);
     });
 
     test('addHeatmapLayer encodes the filter', () async {
@@ -454,17 +525,17 @@ void main() {
     });
 
     test('getLayerIds reads the layers', () async {
-      api.replies['styleGetLayerIds'] = <Object?, Object?>{
-        'layers': <Object?>['water', 'roads'],
-      };
+      api.replies['styleGetLayerIds'] = <String>['water', 'roads'];
 
-      expect(await platform.getLayerIds(), ['water', 'roads']);
+      final ids = await platform.getLayerIds();
+
+      expect(ids, ['water', 'roads']);
+      // A growable list of its own.
+      ids.add('more');
     });
 
     test('getLayerProperties decodes and shapes the layer', () async {
-      api.replies['styleGetLayerProperties'] = <Object?, Object?>{
-        'properties': '{"id":"water","minzoom":4.0}',
-      };
+      api.replies['styleGetLayerProperties'] = '{"id":"water","minzoom":4.0}';
 
       expect(await platform.getLayerProperties('water'), {
         'id': 'water',
@@ -476,8 +547,6 @@ void main() {
     });
 
     test('getLayerProperties is null for a missing layer', () async {
-      api.replies['styleGetLayerProperties'] = <Object?, Object?>{};
-
       expect(await platform.getLayerProperties('none'), isNull);
     });
   });
@@ -536,12 +605,115 @@ void main() {
       await platform.setFeatureForGeoJsonSource('source', {
         'type': 'Feature',
         'properties': <String, dynamic>{},
+        'geometry': null,
       });
 
       expect(api.calls.map((call) => call.first), [
         'sourceSetGeoJson',
         'sourceSetFeature',
       ]);
+    });
+
+    // Checked before anything reaches native, as on web.
+    test('data that is not GeoJSON fails with INVALID_GEOJSON', () async {
+      final notGeoJson = {
+        'type': 'FeatureCollection',
+        'features': [
+          {'type': 'Feature', 'properties': <String, dynamic>{}},
+        ],
+      };
+      final invalid = isA<PlatformException>()
+          .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+          .having(
+            (e) => e.message,
+            'message',
+            "The data for source 'source' is not GeoJSON: Feature 0: A "
+                'Feature must have a "geometry" member.',
+          );
+
+      await expectLater(
+        platform.addGeoJsonSource('source', notGeoJson),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setGeoJsonSource('source', notGeoJson),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.addSource(
+          'source',
+          GeojsonSourceProperties(data: notGeoJson),
+        ),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.editGeoJsonSource('source', jsonEncode(notGeoJson)),
+        throwsA(invalid),
+      );
+      await expectLater(
+        platform.setFeatureForGeoJsonSource('source', {
+          'type': 'Point',
+          'coordinates': [0, 0],
+        }),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.message,
+                'message',
+                "The feature for source 'source' is not a GeoJSON Feature: "
+                    'It is a Point, not a Feature.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('text that is not JSON fails editGeoJsonSource', () async {
+      await expectLater(
+        platform.editGeoJsonSource('source', 'not json'),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.message,
+                'message',
+                "The data for source 'source' is not GeoJSON: Not valid JSON.",
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    // A payload above the offload thresholds is checked on the other isolate,
+    // with the same answer.
+    test('a large payload is checked too', () async {
+      final big = line(40000);
+      ((big['features'] as List).single as Map)['properties'] = 'none';
+
+      await expectLater(
+        platform.setGeoJsonSource('source', big),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.details,
+                'details',
+                'Feature 0: The "properties" of a Feature must be an object '
+                    'or null.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('a url as the data of addSource is not checked', () async {
+      await platform.addSource(
+        'source',
+        const GeojsonSourceProperties(data: 'https://example.com/a.json'),
+      );
+
+      expect(api.calls.single.take(2), ['styleAddSource', 'source']);
     });
 
     test('addSource rejects the custom raster-dem encoding', () {
@@ -562,10 +734,10 @@ void main() {
   group('queries', () {
     setUp(init);
 
-    test('queryRenderedFeatures sends the filter list and decodes', () async {
-      api.replies['mapQueryRenderedFeaturesAtPoint'] = <Object?, Object?>{
-        'features': <Object?>['{"id":1,"type":"Feature"}'],
-      };
+    test('queryRenderedFeatures encodes the filter and decodes', () async {
+      api.replies['mapQueryRenderedFeaturesAtPoint'] = <String>[
+        '{"id":1,"type":"Feature"}',
+      ];
 
       final features = await platform.queryRenderedFeatures(
         const Point(10, 20),
@@ -586,19 +758,13 @@ void main() {
           10.0,
           20.0,
           ['layer'],
-          [
-            '==',
-            ['get', 'kind'],
-            'cafe',
-          ],
+          '["==",["get","kind"],"cafe"]',
         ],
       ]);
     });
 
     test('queryRenderedFeaturesInRect sends the filter string', () async {
-      api.replies['mapQueryRenderedFeaturesInRect'] = <Object?, Object?>{
-        'features': <Object?>[],
-      };
+      api.replies['mapQueryRenderedFeaturesInRect'] = <String>[];
 
       final features = await platform.queryRenderedFeaturesInRect(
         const Rect.fromLTRB(1, 2, 3, 4),
@@ -621,9 +787,7 @@ void main() {
     });
 
     test('getClusterLeaves sends the paging and decodes', () async {
-      api.replies['sourceGetClusterLeaves'] = <Object?, Object?>{
-        'features': <Object?>['{"id":"a"}'],
-      };
+      api.replies['sourceGetClusterLeaves'] = <String>['{"id":"a"}'];
 
       final leaves = await platform.getClusterLeaves(
         'points',
@@ -641,10 +805,10 @@ void main() {
     });
 
     test('getVisibleRegion reads the corners', () async {
-      api.replies['mapGetVisibleRegion'] = <Object?, Object?>{
-        'sw': <Object?>[10.0, 20.0],
-        'ne': <Object?>[30.0, 40.0],
-      };
+      api.replies['mapGetVisibleRegion'] = PgLatLngBounds(
+        southwest: PgLatLng(latitude: 10, longitude: 20),
+        northeast: PgLatLng(latitude: 30, longitude: 40),
+      );
 
       final region = await platform.getVisibleRegion();
 
@@ -676,10 +840,7 @@ void main() {
     });
 
     test('toLatLng sends doubles for an int point', () async {
-      api.replies['mapToLatLng'] = <Object?, Object?>{
-        'latitude': 1.5,
-        'longitude': 2.5,
-      };
+      api.replies['mapToLatLng'] = PgLatLng(latitude: 1.5, longitude: 2.5);
 
       final latLng = await platform.toLatLng(const Point(3, 4));
 
@@ -698,9 +859,7 @@ void main() {
     });
 
     test('getFeatureState decodes the state', () async {
-      api.replies['sourceGetFeatureState'] = <Object?, Object?>{
-        'state': '{"hover":true}',
-      };
+      api.replies['sourceGetFeatureState'] = '{"hover":true}';
 
       final state = await platform.getFeatureState(
         'source',
@@ -902,10 +1061,12 @@ void main() {
       platform.onCameraTrackingChangedPlatform.add(modes.add);
       platform.onCameraTrackingDismissedPlatform.add((_) => dismissals++);
 
-      await events().mapOnCameraTrackingChanged(2);
+      await events().mapOnCameraTrackingChanged(
+        PgMyLocationTrackingMode.trackingCompass,
+      );
       await events().mapOnCameraTrackingDismissed();
 
-      expect(modes, [MyLocationTrackingMode.values[2]]);
+      expect(modes, [MyLocationTrackingMode.trackingCompass]);
       expect(dismissals, 1);
     });
 
@@ -1065,12 +1226,12 @@ void main() {
     setUp(init);
 
     test('updateMapOptions sends the update and reads the camera', () async {
-      api.replies['mapUpdate'] = <Object?, Object?>{
-        'bearing': 1.0,
-        'target': <Object?>[10.0, 20.0],
-        'tilt': 2.0,
-        'zoom': 3.0,
-      };
+      api.replies['mapUpdate'] = PgCameraPosition(
+        bearing: 1,
+        target: PgLatLng(latitude: 10, longitude: 20),
+        tilt: 2,
+        zoom: 3,
+      );
 
       final position = await platform.updateMapOptions({
         'compassEnabled': false,
@@ -1086,9 +1247,161 @@ void main() {
         ),
       );
       expect(api.calls, [
+        ['mapUpdate', PgMapOptions(compassEnabled: false)],
+      ]);
+    });
+
+    test('updateMapOptions types every option', () async {
+      final options = MapLibreMapOptions(
+        compassEnabled: true,
+        cameraTargetBounds: CameraTargetBounds(
+          LatLngBounds(
+            southwest: const LatLng(1, 2),
+            northeast: const LatLng(3, 4),
+          ),
+        ),
+        styleString: 'https://example.com/style.json',
+        minMaxZoomPreference: const MinMaxZoomPreference(2, null),
+        rotateGesturesEnabled: false,
+        scrollGesturesEnabled: true,
+        tiltGesturesEnabled: false,
+        zoomGesturesEnabled: true,
+        doubleClickZoomEnabled: false,
+        panInertia: PanInertia.short,
+        hapticFeedbackEnabled: true,
+        trackCameraPosition: true,
+        myLocationEnabled: true,
+        myLocationTrackingMode: MyLocationTrackingMode.trackingGps,
+        myLocationRenderMode: MyLocationRenderMode.compass,
+        myLocationStyle: const MyLocationStyle(
+          fillColor: Color(0xFF112233),
+          accuracyCircleEnabled: false,
+          pulseEnabled: true,
+        ),
+        logoEnabled: false,
+        logoViewPosition: LogoViewPosition.bottomRight,
+        logoViewMargins: const Point(1, 2),
+        compassViewPosition: CompassViewPosition.topLeft,
+        compassViewMargins: const Point(3, 4),
+        attributionEnabled: true,
+        attributionButtonPosition: AttributionButtonPosition.bottomLeft,
+        attributionButtonMargins: const Point(5.5, 6),
+        attributionButtonColor: const Color(0xFF445566),
+        // Web only, and dropped.
+        scaleControlEnabled: true,
+        scaleControlPosition: ScaleControlPosition.topRight,
+        scaleControlUnit: ScaleControlUnit.nautical,
+        locationEnginePlatforms: const LocationEnginePlatforms.android(
+          enableHighAccuracy: true,
+          interval: 500,
+          displacement: 10,
+        ),
+        locationSource: const ManualLocationSource(),
+        foregroundLoadColor: const Color(0xFF778899),
+        translucentTextureSurface: true,
+        featureTapsTriggersMapClick: true,
+        symbolPlacementTransitionsEnabled: false,
+      );
+
+      await platform.updateMapOptions(options.toMap());
+
+      expect(api.calls, [
         [
           'mapUpdate',
-          {'compassEnabled': false},
+          PgMapOptions(
+            compassEnabled: true,
+            cameraTargetBounds: PgCameraTargetBounds(
+              bounds: PgLatLngBounds(
+                southwest: PgLatLng(latitude: 1, longitude: 2),
+                northeast: PgLatLng(latitude: 3, longitude: 4),
+              ),
+            ),
+            styleString: 'https://example.com/style.json',
+            minMaxZoomPreference: PgMinMaxZoomPreference(minZoom: 2),
+            rotateGesturesEnabled: false,
+            scrollGesturesEnabled: true,
+            tiltGesturesEnabled: false,
+            zoomGesturesEnabled: true,
+            doubleClickZoomEnabled: false,
+            panInertia: PgPanInertia.short,
+            hapticFeedbackEnabled: true,
+            trackCameraPosition: true,
+            myLocationEnabled: true,
+            myLocationTrackingMode: PgMyLocationTrackingMode.trackingGps,
+            myLocationRenderMode: PgMyLocationRenderMode.compass,
+            myLocationStyle: PgMyLocationStyle(
+              fillColor: 0xFF112233,
+              accuracyCircleEnabled: false,
+              pulseEnabled: true,
+            ),
+            logoEnabled: false,
+            logoViewPosition: PgOrnamentPosition.bottomRight,
+            logoViewMargins: PgScreenPoint(x: 1, y: 2),
+            compassViewPosition: PgOrnamentPosition.topLeft,
+            compassViewMargins: PgScreenPoint(x: 3, y: 4),
+            attributionEnabled: true,
+            attributionButtonPosition: PgOrnamentPosition.bottomLeft,
+            attributionButtonMargins: PgScreenPoint(x: 5.5, y: 6),
+            attributionButtonColor: 0xFF445566,
+            locationEngineProperties: PgLocationEngineProperties(
+              interval: 500,
+              priority: PgLocationPriority.highAccuracy,
+              displacement: 10,
+            ),
+            locationSource: PgLocationSource.manual,
+            foregroundLoadColor: 0xFF778899,
+            translucentTextureSurface: true,
+            featureTapsTriggersMapClick: true,
+            symbolPlacementTransitionsEnabled: false,
+          ),
+        ],
+      ]);
+    });
+
+    test('updateMapOptions sends the unbounded values', () async {
+      await platform.updateMapOptions({
+        'cameraTargetBounds': CameraTargetBounds.unbounded.toJson(),
+        'minMaxZoomPreference': MinMaxZoomPreference.unbounded.toJson(),
+        'locationSource': 'platform',
+      });
+
+      expect(api.calls, [
+        [
+          'mapUpdate',
+          PgMapOptions(
+            cameraTargetBounds: PgCameraTargetBounds(),
+            minMaxZoomPreference: PgMinMaxZoomPreference(),
+            locationSource: PgLocationSource.platform,
+          ),
+        ],
+      ]);
+    });
+
+    test('updateMapOptions sends the iOS location engine settings', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      const engine = LocationEnginePlatforms.iOS(
+        enableHighAccuracy: true,
+        displacement: 5,
+        intervalMs: 1000,
+        pulseWindowMs: 2000,
+      );
+
+      await platform.updateMapOptions({
+        'locationEngineProperties': engine.toList(),
+      });
+
+      expect(api.calls, [
+        [
+          'mapUpdate',
+          PgMapOptions(
+            locationEngineProperties: PgLocationEngineProperties(
+              enableHighAccuracy: true,
+              displacement: 5,
+              intervalMs: 1000,
+              pulseWindowMs: 2000,
+            ),
+          ),
         ],
       ]);
     });
@@ -1097,13 +1410,16 @@ void main() {
       expect(await platform.updateMapOptions(const {}), isNull);
     });
 
-    test('updateMyLocationTrackingMode sends the index', () async {
+    test('updateMyLocationTrackingMode sends the mode', () async {
       await platform.updateMyLocationTrackingMode(
         MyLocationTrackingMode.trackingCompass,
       );
 
       expect(api.calls, [
-        ['mapUpdateMyLocationTrackingMode', 2],
+        [
+          'mapUpdateMyLocationTrackingMode',
+          PgMyLocationTrackingMode.trackingCompass,
+        ],
       ]);
     });
 
@@ -1130,7 +1446,7 @@ void main() {
       ]);
     });
 
-    test('setManualLocation sends the update map', () async {
+    test('setManualLocation sends the update', () async {
       await platform.setManualLocation(
         ManualLocationUpdate(
           target: const LatLng(1, 2),
@@ -1142,11 +1458,11 @@ void main() {
       expect(api.calls, [
         [
           'locationComponentSetManualLocation',
-          {
-            'position': [1.0, 2.0],
-            'timestamp': 1000,
-            'horizontalAccuracy': 5.0,
-          },
+          PgManualLocationUpdate(
+            position: PgLatLng(latitude: 1, longitude: 2),
+            timestamp: 1000,
+            horizontalAccuracy: 5,
+          ),
         ],
       ]);
     });
@@ -1195,7 +1511,7 @@ void main() {
       expect(api.calls, [
         [
           'mapUpdateContentInsets',
-          {'top': 2.0, 'left': 1.0, 'bottom': 4.0, 'right': 3.0},
+          PgEdgeInsets(top: 2, left: 1, bottom: 4, right: 3),
           true,
         ],
       ]);
@@ -1227,49 +1543,30 @@ void main() {
       ]);
     });
 
-    test('getCustomHeaders turns keys and values into strings', () async {
-      api.replies['mapGetCustomHeaders'] = <Object?, Object?>{
-        'X-Key': 'v',
-        'X-Count': 2,
-      };
+    test('getCustomHeaders returns a copy of the headers', () async {
+      final headers = {'X-Key': 'v'};
+      api.replies['mapGetCustomHeaders'] = headers;
 
-      expect(await platform.getCustomHeaders(), {
-        'X-Key': 'v',
-        'X-Count': '2',
-      });
+      final result = await platform.getCustomHeaders();
+      result['X-Other'] = 'w';
+
+      expect(result, {'X-Key': 'v', 'X-Other': 'w'});
+      expect(headers, {'X-Key': 'v'});
       expect(api.calls, [
         ['mapGetCustomHeaders'],
       ]);
     });
 
-    test('getCustomHeaders is empty for a null answer', () async {
-      expect(await platform.getCustomHeaders(), isEmpty);
-    });
-
     test('requestMyLocationLatLng reads the coordinates', () async {
-      api.replies['locationComponentGetLastLocation'] = <Object?, Object?>{
-        'latitude': 45.5,
-        // An int, as a JSON round trip may give.
-        'longitude': 9,
-      };
+      api.replies['locationComponentGetLastLocation'] = PgLatLng(
+        latitude: 45.5,
+        longitude: 9,
+      );
 
       expect(await platform.requestMyLocationLatLng(), const LatLng(45.5, 9));
       expect(api.calls, [
         ['locationComponentGetLastLocation'],
       ]);
-    });
-
-    test('requestMyLocationLatLng is null without a location', () async {
-      expect(await platform.requestMyLocationLatLng(), isNull);
-    });
-
-    test('requestMyLocationLatLng reads a missing coordinate as 0', () async {
-      api.replies['locationComponentGetLastLocation'] = <Object?, Object?>{
-        'latitude': null,
-        'longitude': 9.5,
-      };
-
-      expect(await platform.requestMyLocationLatLng(), const LatLng(0, 9.5));
     });
   });
 
@@ -1277,10 +1574,7 @@ void main() {
     setUp(init);
 
     test('getStyle returns the JSON when native has it', () async {
-      api.replies['mapGetStyle'] = <Object?, Object?>{
-        'result': true,
-        'json': '{"version":8}',
-      };
+      api.replies['mapGetStyle'] = '{"version":8}';
 
       expect(await platform.getStyle(), '{"version":8}');
       expect(api.calls, [
@@ -1289,19 +1583,21 @@ void main() {
     });
 
     test('getStyle is null when native has no style', () async {
-      api.replies['mapGetStyle'] = <Object?, Object?>{'result': false};
-      expect(await platform.getStyle(), isNull);
-
-      api.replies['mapGetStyle'] = <Object?, Object?>{};
       expect(await platform.getStyle(), isNull);
     });
 
     test('the edit calls send their arguments and read the result', () async {
-      api.replies['mapEditGeoJsonSource'] = <Object?, Object?>{'result': true};
-      api.replies['mapEditGeoJsonUrl'] = <Object?, Object?>{'result': false};
-      api.replies['mapSetLayerFilter'] = <Object?, Object?>{'result': true};
+      api.replies['mapEditGeoJsonSource'] = true;
+      api.replies['mapEditGeoJsonUrl'] = false;
+      api.replies['mapSetLayerFilter'] = true;
 
-      expect(await platform.editGeoJsonSource('source', '{}'), isTrue);
+      expect(
+        await platform.editGeoJsonSource(
+          'source',
+          '{"type":"Point","coordinates":[1,2]}',
+        ),
+        isTrue,
+      );
       expect(
         await platform.editGeoJsonUrl('source', 'https://example.com/a.json'),
         isFalse,
@@ -1310,18 +1606,14 @@ void main() {
       // ignore: deprecated_member_use
       expect(await platform.setLayerFilter('layer', '["has","a"]'), isTrue);
       expect(api.calls, [
-        ['mapEditGeoJsonSource', 'source', '{}'],
+        [
+          'mapEditGeoJsonSource',
+          'source',
+          '{"type":"Point","coordinates":[1,2]}',
+        ],
         ['mapEditGeoJsonUrl', 'source', 'https://example.com/a.json'],
         ['mapSetLayerFilter', 'layer', '["has","a"]'],
       ]);
-    });
-
-    // As it did when the method channel reply was assigned to a map.
-    test('a call that always answers a map fails on a null answer', () {
-      expect(
-        platform.editGeoJsonSource('source', '{}'),
-        throwsA(isA<TypeError>()),
-      );
     });
 
     test('addSource sends the properties', () async {
@@ -1370,22 +1662,22 @@ void main() {
       ]);
     });
 
-    test('getSourceIds reads the sources as strings', () async {
-      api.replies['styleGetSourceIds'] = <Object?, Object?>{
-        'sources': <Object?>['water', 7],
-      };
+    test('getSourceIds reads the sources', () async {
+      api.replies['styleGetSourceIds'] = <String>['water', 'roads'];
 
-      expect(await platform.getSourceIds(), ['water', '7']);
+      final ids = await platform.getSourceIds();
+
+      expect(ids, ['water', 'roads']);
+      // A growable list of its own.
+      ids.add('more');
       expect(api.calls, [
         ['styleGetSourceIds'],
       ]);
     });
 
     test('getSourceProperties decodes and shapes the source', () async {
-      api.replies['styleGetSourceProperties'] = <Object?, Object?>{
-        'properties':
-            '{"type":"vector","maxzoom":14.0,"bounds":[-180.0,-85.5,180.0,85.5]}',
-      };
+      api.replies['styleGetSourceProperties'] =
+          '{"type":"vector","maxzoom":14.0,"bounds":[-180.0,-85.5,180.0,85.5]}';
 
       final properties = await platform.getSourceProperties('vector');
 
@@ -1401,8 +1693,6 @@ void main() {
     });
 
     test('getSourceProperties is null for a missing source', () async {
-      api.replies['styleGetSourceProperties'] = <Object?, Object?>{};
-
       expect(await platform.getSourceProperties('none'), isNull);
     });
   });
@@ -1416,12 +1706,12 @@ void main() {
       bottomRight: LatLng(3, 2),
       bottomLeft: LatLng(3, 1),
     );
-    final quadList = [
-      [4.0, 1.0],
-      [4.0, 2.0],
-      [3.0, 2.0],
-      [3.0, 1.0],
-    ];
+    final pgQuad = PgLatLngQuad(
+      topLeft: PgLatLng(latitude: 4, longitude: 1),
+      topRight: PgLatLng(latitude: 4, longitude: 2),
+      bottomRight: PgLatLng(latitude: 3, longitude: 2),
+      bottomLeft: PgLatLng(latitude: 3, longitude: 1),
+    );
 
     test('addImage sends the bytes, their length and sdf', () async {
       final bytes = Uint8List.fromList([1, 2, 3]);
@@ -1435,13 +1725,13 @@ void main() {
       ]);
     });
 
-    test('addImageSource sends the coordinates as lists', () async {
+    test('addImageSource sends the corners', () async {
       final bytes = Uint8List.fromList([1, 2]);
 
       await platform.addImageSource('image', bytes, quad);
 
       expect(api.calls, [
-        ['styleAddImageSource', 'image', bytes, 2, quadList],
+        ['styleAddImageSource', 'image', bytes, 2, pgQuad],
       ]);
     });
 
@@ -1452,7 +1742,7 @@ void main() {
       await platform.updateImageSource('image', null, null);
 
       expect(api.calls, [
-        ['styleUpdateImageSource', 'image', bytes, 1, quadList],
+        ['styleUpdateImageSource', 'image', bytes, 1, pgQuad],
         ['styleUpdateImageSource', 'image', null, null, null],
       ]);
     });
@@ -1537,7 +1827,7 @@ void main() {
           'building',
           null,
           null,
-          'null',
+          null,
           true,
           properties,
         ],
@@ -1638,9 +1928,7 @@ void main() {
     });
 
     test('setFilter encodes the filter and getFilter decodes it', () async {
-      api.replies['styleGetFilter'] = <Object?, Object?>{
-        'filter': '["==",["get","kind"],"cafe"]',
-      };
+      api.replies['styleGetFilter'] = '["==",["get","kind"],"cafe"]';
 
       await platform.setFilter('a', [
         '==',
@@ -1660,9 +1948,15 @@ void main() {
       ]);
     });
 
-    test('getFilter is null for a layer without a filter', () async {
-      api.replies['styleGetFilter'] = <Object?, Object?>{'filter': null};
+    test('setFilter sends null to remove the filter', () async {
+      await platform.setFilter('a', null);
 
+      expect(api.calls, [
+        ['styleSetFilter', 'a', null],
+      ]);
+    });
+
+    test('getFilter is null for a layer without a filter', () async {
       expect(await platform.getFilter('a'), isNull);
     });
   });
@@ -1695,12 +1989,8 @@ void main() {
         'a small GeometryCollection',
         {
           'type': 'GeometryCollection',
-          'geometries': [lineString(2), 'not a geometry'],
+          'geometries': [lineString(2), lineString(3)],
         },
-      ),
-      (
-        'a GeometryCollection without a geometries list',
-        {'type': 'GeometryCollection', 'geometries': 'none'},
       ),
       ('a feature without a geometry', null),
     ]) {
@@ -1714,15 +2004,45 @@ void main() {
         ]);
       });
     }
+
+    // The size check runs first and must not trip on what is not GeoJSON,
+    // which then fails the call without reaching native.
+    for (final (name, geometry) in [
+      (
+        'a GeometryCollection holding something else',
+        {
+          'type': 'GeometryCollection',
+          'geometries': [lineString(2), 'not a geometry'],
+        },
+      ),
+      (
+        'a GeometryCollection without a geometries list',
+        {'type': 'GeometryCollection', 'geometries': 'none'},
+      ),
+    ]) {
+      test('setFeatureForGeoJsonSource rejects $name', () async {
+        await expectLater(
+          platform.setFeatureForGeoJsonSource('source', feature(geometry)),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'INVALID_GEOJSON',
+            ),
+          ),
+        );
+        expect(api.calls, isEmpty);
+      });
+    }
   });
 
   group('conversions, clusters and feature state', () {
     setUp(init);
 
-    test('querySourceFeatures sends the filter and decodes', () async {
-      api.replies['mapQuerySourceFeatures'] = <Object?, Object?>{
-        'features': <Object?>['{"id":"a","properties":{"n":[1,2]}}'],
-      };
+    test('querySourceFeatures encodes the filter and decodes', () async {
+      api.replies['mapQuerySourceFeatures'] = <String>[
+        '{"id":"a","properties":{"n":[1,2]}}',
+      ];
 
       final features = await platform.querySourceFeatures('source', 'layer', [
         'has',
@@ -1738,19 +2058,12 @@ void main() {
         },
       ]);
       expect(api.calls, [
-        [
-          'mapQuerySourceFeatures',
-          'source',
-          'layer',
-          ['has', 'n'],
-        ],
+        ['mapQuerySourceFeatures', 'source', 'layer', '["has","n"]'],
       ]);
     });
 
     test('querySourceFeatures sends null for what is unset', () async {
-      api.replies['mapQuerySourceFeatures'] = <Object?, Object?>{
-        'features': <Object?>[],
-      };
+      api.replies['mapQuerySourceFeatures'] = <String>[];
 
       expect(await platform.querySourceFeatures('source', null, null), isEmpty);
       expect(api.calls, [
@@ -1768,9 +2081,9 @@ void main() {
     });
 
     test('getClusterChildren decodes the features', () async {
-      api.replies['sourceGetClusterChildren'] = <Object?, Object?>{
-        'features': <Object?>['{"id":1,"properties":{"cluster":true}}'],
-      };
+      api.replies['sourceGetClusterChildren'] = <String>[
+        '{"id":1,"properties":{"cluster":true}}',
+      ];
 
       final children = await platform.getClusterChildren('points', 12);
 
@@ -1786,12 +2099,14 @@ void main() {
       ]);
     });
 
-    test('getClusterChildren is empty for a null answer', () async {
+    test('getClusterChildren is empty without children', () async {
+      api.replies['sourceGetClusterChildren'] = <String>[];
+
       expect(await platform.getClusterChildren('points', 12), isEmpty);
     });
 
     test('getClusterLeaves pages from the start by default', () async {
-      api.replies['sourceGetClusterLeaves'] = <Object?, Object?>{};
+      api.replies['sourceGetClusterLeaves'] = <String>[];
 
       expect(await platform.getClusterLeaves('points', 12), isEmpty);
       expect(api.calls, [
@@ -1800,10 +2115,7 @@ void main() {
     });
 
     test('toScreenLocation sends the coordinates and reads x and y', () async {
-      api.replies['mapToScreenLocation'] = <Object?, Object?>{
-        'x': 100.5,
-        'y': 200.0,
-      };
+      api.replies['mapToScreenLocation'] = PgScreenPoint(x: 100.5, y: 200);
 
       final point = await platform.toScreenLocation(const LatLng(45, 9));
 
@@ -1814,9 +2126,7 @@ void main() {
     });
 
     test('getMetersPerPixelAtLatitude reads the answer', () async {
-      api.replies['mapGetMetersPerPixelAtLatitude'] = <Object?, Object?>{
-        'metersperpixel': 1.25,
-      };
+      api.replies['mapGetMetersPerPixelAtLatitude'] = 1.25;
 
       expect(await platform.getMetersPerPixelAtLatitude(45), 1.25);
       expect(api.calls, [
@@ -1852,11 +2162,7 @@ void main() {
     test('getFeatureState is null when the feature has no state', () async {
       expect(await platform.getFeatureState('source', '1'), isNull);
 
-      api.replies['sourceGetFeatureState'] = <Object?, Object?>{'state': null};
-      expect(await platform.getFeatureState('source', '1'), isNull);
-
       expect(api.calls, [
-        ['sourceGetFeatureState', 'source', '1', null],
         ['sourceGetFeatureState', 'source', '1', null],
       ]);
     });
@@ -1930,12 +2236,21 @@ void main() {
 
   group('buildView', () {
     const viewType = 'plugins.flutter.io/maplibre_gl';
+    const codec = MapLibreMapHostApi.pigeonChannelCodec;
 
     tearDown(() => MapLibreMap.useHybridComposition = false);
 
     Map<String, dynamic> creationParams() => {
       'options': <String, dynamic>{'compassEnabled': true},
     };
+
+    /// What [creationParams] becomes, with the Android flag.
+    PgCreationParams typed({bool useHybridComposition = false}) =>
+        PgCreationParams(
+          options: PgMapOptions(compassEnabled: true),
+          dragEnabled: true,
+          useHybridComposition: useHybridComposition,
+        );
 
     void onPlatform(TargetPlatform target) {
       debugDefaultTargetPlatformOverride = target;
@@ -1956,7 +2271,12 @@ void main() {
         view,
         isA<AndroidView>()
             .having((v) => v.viewType, 'viewType', viewType)
-            .having((v) => v.creationParams, 'creationParams', same(params))
+            .having((v) => v.creationParams, 'creationParams', typed())
+            .having(
+              (v) => v.creationParamsCodec,
+              'creationParamsCodec',
+              same(codec),
+            )
             .having(
               (v) => v.onPlatformViewCreated,
               'onPlatformViewCreated',
@@ -1968,18 +2288,25 @@ void main() {
               same(recognizers),
             ),
       );
-      expect(params['options'], {
-        'compassEnabled': true,
-        'useHybridComposition': false,
-      });
+      // The map of the caller is left as it was.
+      expect(params, creationParams());
     });
 
     test('Android copes with creation params without options', () {
       onPlatform(TargetPlatform.android);
-      final params = <String, dynamic>{};
 
-      expect(platform.buildView(params, (_) {}, null), isA<AndroidView>());
-      expect(params, isEmpty);
+      expect(
+        platform.buildView(<String, dynamic>{}, (_) {}, null),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          PgCreationParams(
+            options: PgMapOptions(),
+            dragEnabled: true,
+            useHybridComposition: false,
+          ),
+        ),
+      );
     });
 
     testWidgets(
@@ -2012,26 +2339,25 @@ void main() {
             null,
           ),
         );
-        final params = creationParams();
         final created = <int>[];
 
         await tester.pumpWidget(
           Directionality(
             textDirection: TextDirection.ltr,
-            child: platform.buildView(params, created.add, null),
+            child: platform.buildView(creationParams(), created.add, null),
           ),
         );
         await tester.pump();
 
-        expect(params['options']['useHybridComposition'], isTrue);
         final create = viewCalls.singleWhere((c) => c.method == 'create');
         final args = create.arguments as Map;
         expect(args['viewType'], viewType);
+        // Encoded with the codec of the messages, which native decodes with.
         expect(
-          const StandardMessageCodec().decodeMessage(
+          codec.decodeMessage(
             ByteData.sublistView(args['params'] as Uint8List),
           ),
-          params,
+          typed(useHybridComposition: true),
         );
         expect(created, [args['id']]);
         expect(find.byType(AndroidViewSurface), findsOneWidget);
@@ -2057,23 +2383,69 @@ void main() {
     test('iOS builds a UiKitView without the Android flag', () {
       onPlatform(TargetPlatform.iOS);
       MapLibreMap.useHybridComposition = true;
-      final params = creationParams();
       void onCreated(int id) {}
 
-      final view = platform.buildView(params, onCreated, null);
+      final view = platform.buildView(creationParams(), onCreated, null);
 
       expect(
         view,
         isA<UiKitView>()
             .having((v) => v.viewType, 'viewType', viewType)
-            .having((v) => v.creationParams, 'creationParams', same(params))
+            .having((v) => v.creationParams, 'creationParams', typed())
+            .having(
+              (v) => v.creationParamsCodec,
+              'creationParamsCodec',
+              same(codec),
+            )
             .having(
               (v) => v.onPlatformViewCreated,
               'onPlatformViewCreated',
               same(onCreated),
             ),
       );
-      expect(params['options'], {'compassEnabled': true});
+    });
+
+    test('the creation params of a map are typed', () {
+      onPlatform(TargetPlatform.android);
+      const camera = CameraPosition(
+        bearing: 10,
+        target: LatLng(45, 9),
+        tilt: 20,
+        zoom: 11,
+      );
+
+      final view = platform.buildView(
+        {
+          'initialCameraPosition': camera.toMap(),
+          'styleString': 'https://example.com/style.json',
+          'options': <String, dynamic>{
+            'styleString': 'https://example.com/style.json',
+          },
+          'dragEnabled': false,
+          'iosLongClickDurationMilliseconds': 300,
+          // Web only, and dropped.
+          'webPreserveDrawingBuffer': true,
+        },
+        (_) {},
+        null,
+      );
+
+      expect(
+        (view as AndroidView).creationParams,
+        PgCreationParams(
+          styleString: 'https://example.com/style.json',
+          options: PgMapOptions(styleString: 'https://example.com/style.json'),
+          initialCameraPosition: PgCameraPosition(
+            bearing: 10,
+            target: PgLatLng(latitude: 45, longitude: 9),
+            tilt: 20,
+            zoom: 11,
+          ),
+          dragEnabled: false,
+          iosLongClickDurationMs: 300,
+          useHybridComposition: false,
+        ),
+      );
     });
 
     test('other platforms get a message instead of a map', () {
@@ -2122,19 +2494,19 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   }
 
   @override
-  Future<Object?> mapUpdate(Map<String, Object?> options) =>
+  Future<PgCameraPosition?> mapUpdate(PgMapOptions options) =>
       _call('mapUpdate', [options]);
 
   @override
-  Future<bool?> cameraAnimate(List<Object?> cameraUpdate, int? duration) =>
+  Future<bool?> cameraAnimate(PgCameraUpdate cameraUpdate, int? duration) =>
       _call('cameraAnimate', [cameraUpdate, duration]);
 
   @override
-  Future<bool?> cameraMove(List<Object?> cameraUpdate) =>
+  Future<bool?> cameraMove(PgCameraUpdate cameraUpdate) =>
       _call('cameraMove', [cameraUpdate]);
 
   @override
-  Future<void> mapUpdateMyLocationTrackingMode(int mode) =>
+  Future<void> mapUpdateMyLocationTrackingMode(PgMyLocationTrackingMode mode) =>
       _call('mapUpdateMyLocationTrackingMode', [mode]);
 
   @override
@@ -2145,7 +2517,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
 
   @override
   Future<void> locationComponentSetManualLocation(
-    Map<String, Object?> update,
+    PgManualLocationUpdate update,
   ) => _call('locationComponentSetManualLocation', [update]);
 
   @override
@@ -2153,10 +2525,8 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('mapMatchMapLanguageWithDeviceDefault');
 
   @override
-  Future<void> mapUpdateContentInsets(
-    Map<String, double> bounds,
-    bool animated,
-  ) => _call('mapUpdateContentInsets', [bounds, animated]);
+  Future<void> mapUpdateContentInsets(PgEdgeInsets insets, bool animated) =>
+      _call('mapUpdateContentInsets', [insets, animated]);
 
   @override
   Future<void> mapSetMapLanguage(String language) =>
@@ -2183,28 +2553,29 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
 
   @override
   Future<bool> cameraEase(
-    List<Object?> cameraUpdate,
+    PgCameraUpdate cameraUpdate,
     int? duration,
-    String? interpolation,
+    PgCameraAnimationInterpolation? interpolation,
   ) => _call('cameraEase', [cameraUpdate, duration, interpolation]);
 
   @override
-  Future<Object?> mapQueryCameraPosition() => _call('mapQueryCameraPosition');
+  Future<PgCameraPosition> mapQueryCameraPosition() =>
+      _call('mapQueryCameraPosition');
 
   @override
-  Future<Object?> mapEditGeoJsonSource(String id, String data) =>
+  Future<bool> mapEditGeoJsonSource(String id, String data) =>
       _call('mapEditGeoJsonSource', [id, data]);
 
   @override
-  Future<Object?> mapEditGeoJsonUrl(String id, String url) =>
+  Future<bool> mapEditGeoJsonUrl(String id, String url) =>
       _call('mapEditGeoJsonUrl', [id, url]);
 
   @override
-  Future<Object?> mapSetLayerFilter(String id, String filter) =>
+  Future<bool> mapSetLayerFilter(String id, String filter) =>
       _call('mapSetLayerFilter', [id, filter]);
 
   @override
-  Future<Object?> mapGetStyle() => _call('mapGetStyle');
+  Future<String?> mapGetStyle() => _call('mapGetStyle');
 
   @override
   Future<void> mapSetCustomHeaders(
@@ -2213,18 +2584,19 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ) => _call('mapSetCustomHeaders', [headers, filter]);
 
   @override
-  Future<Object?> mapGetCustomHeaders() => _call('mapGetCustomHeaders');
+  Future<Map<String, String>> mapGetCustomHeaders() =>
+      _call('mapGetCustomHeaders');
 
   @override
-  Future<Object?> mapQueryRenderedFeaturesAtPoint(
+  Future<List<String>> mapQueryRenderedFeaturesAtPoint(
     double x,
     double y,
     List<String> layerIds,
-    List<Object?>? filter,
+    String? filter,
   ) => _call('mapQueryRenderedFeaturesAtPoint', [x, y, layerIds, filter]);
 
   @override
-  Future<Object?> mapQueryRenderedFeaturesInRect(
+  Future<List<String>> mapQueryRenderedFeaturesInRect(
     double left,
     double top,
     double right,
@@ -2241,10 +2613,10 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ]);
 
   @override
-  Future<Object?> mapQuerySourceFeatures(
+  Future<List<String>> mapQuerySourceFeatures(
     String sourceId,
     String? sourceLayerId,
-    List<Object?>? filter,
+    String? filter,
   ) => _call('mapQuerySourceFeatures', [sourceId, sourceLayerId, filter]);
 
   @override
@@ -2252,11 +2624,13 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('sourceGetClusterExpansionZoom', [sourceId, clusterId]);
 
   @override
-  Future<Object?> sourceGetClusterChildren(String sourceId, int clusterId) =>
-      _call('sourceGetClusterChildren', [sourceId, clusterId]);
+  Future<List<String>> sourceGetClusterChildren(
+    String sourceId,
+    int clusterId,
+  ) => _call('sourceGetClusterChildren', [sourceId, clusterId]);
 
   @override
-  Future<Object?> sourceGetClusterLeaves(
+  Future<List<String>> sourceGetClusterLeaves(
     String sourceId,
     int clusterId,
     int limit,
@@ -2271,11 +2645,11 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   Future<void> mapClearAmbientCache() => _call('mapClearAmbientCache');
 
   @override
-  Future<Object?> locationComponentGetLastLocation() =>
+  Future<PgLatLng> locationComponentGetLastLocation() =>
       _call('locationComponentGetLastLocation');
 
   @override
-  Future<Object?> mapGetVisibleRegion() => _call('mapGetVisibleRegion');
+  Future<PgLatLngBounds> mapGetVisibleRegion() => _call('mapGetVisibleRegion');
 
   @override
   Future<void> styleAddImage(
@@ -2290,7 +2664,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String imageSourceId,
     Uint8List bytes,
     int length,
-    List<Object?> coordinates,
+    PgLatLngQuad coordinates,
   ) => _call('styleAddImageSource', [
     imageSourceId,
     bytes,
@@ -2303,7 +2677,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String imageSourceId,
     Uint8List? bytes,
     int? length,
-    List<Object?>? coordinates,
+    PgLatLngQuad? coordinates,
   ) => _call('styleUpdateImageSource', [
     imageSourceId,
     bytes,
@@ -2312,8 +2686,10 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ]);
 
   @override
-  Future<Object?> mapToScreenLocation(double latitude, double longitude) =>
-      _call('mapToScreenLocation', [latitude, longitude]);
+  Future<PgScreenPoint> mapToScreenLocation(
+    double latitude,
+    double longitude,
+  ) => _call('mapToScreenLocation', [latitude, longitude]);
 
   @override
   Future<Float64List> mapToScreenLocationBatch(Float64List coordinates) =>
@@ -2355,19 +2731,19 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('styleMoveLayer', [layerId, belowLayerId]);
 
   @override
-  Future<void> styleSetFilter(String layerId, String filter) =>
+  Future<void> styleSetFilter(String layerId, String? filter) =>
       _call('styleSetFilter', [layerId, filter]);
 
   @override
-  Future<Object?> styleGetFilter(String layerId) =>
+  Future<String?> styleGetFilter(String layerId) =>
       _call('styleGetFilter', [layerId]);
 
   @override
-  Future<Object?> mapToLatLng(double x, double y) =>
+  Future<PgLatLng> mapToLatLng(double x, double y) =>
       _call('mapToLatLng', [x, y]);
 
   @override
-  Future<Object?> mapGetMetersPerPixelAtLatitude(double latitude) =>
+  Future<double> mapGetMetersPerPixelAtLatitude(double latitude) =>
       _call('mapGetMetersPerPixelAtLatitude', [latitude]);
 
   @override
@@ -2395,7 +2771,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) => _call('symbolLayerAdd', [
@@ -2418,7 +2794,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) => _call('lineLayerAdd', [
@@ -2447,7 +2823,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) => _call('circleLayerAdd', [
@@ -2470,7 +2846,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) => _call('fillLayerAdd', [
@@ -2493,7 +2869,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) => _call('fillExtrusionLayerAdd', [
@@ -2588,7 +2964,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     Map<String, Object?> properties,
   ) => _call('heatmapLayerAdd', [
     sourceId,
@@ -2628,7 +3004,7 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   ]);
 
   @override
-  Future<Object?> sourceGetFeatureState(
+  Future<String?> sourceGetFeatureState(
     String sourceId,
     String featureId,
     String? sourceLayer,
@@ -2664,17 +3040,17 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('mapTakeSnapshot', [width, height]);
 
   @override
-  Future<Object?> styleGetLayerIds() => _call('styleGetLayerIds');
+  Future<List<String>> styleGetLayerIds() => _call('styleGetLayerIds');
 
   @override
-  Future<Object?> styleGetSourceIds() => _call('styleGetSourceIds');
+  Future<List<String>> styleGetSourceIds() => _call('styleGetSourceIds');
 
   @override
-  Future<Object?> styleGetLayerProperties(String layerId) =>
+  Future<String?> styleGetLayerProperties(String layerId) =>
       _call('styleGetLayerProperties', [layerId]);
 
   @override
-  Future<Object?> styleGetSourceProperties(String sourceId) =>
+  Future<String?> styleGetSourceProperties(String sourceId) =>
       _call('styleGetSourceProperties', [sourceId]);
 
   @override
@@ -2694,4 +3070,13 @@ class _AppMethodChannel extends MapLibreMethodChannel {
     OnPlatformViewCreatedCallback onPlatformViewCreated,
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) => const SizedBox(key: viewKey);
+}
+
+/// An update of a kind the native platform does not know, as a subclass
+/// that changed `toJson` could make.
+class _UnknownCameraUpdate extends CameraUpdate {
+  _UnknownCameraUpdate() : super.zoomIn();
+
+  @override
+  dynamic toJson() => ['bogus'];
 }

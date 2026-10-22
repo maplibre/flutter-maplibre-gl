@@ -548,6 +548,251 @@ class LayerPropertyConverter {
         return expression
     }
 
+    /// The kind of constant each property takes, by name: see
+    /// `buildConstantKinds` in scripts/lib/generate.dart.
+    private static let constantKinds: [String: String] = [
+        "background-color": "color",
+        "background-opacity": "number",
+        "background-pattern": "string",
+        "circle-blur": "number",
+        "circle-color": "color",
+        "circle-opacity": "number",
+        "circle-pitch-alignment": "enum:map|viewport",
+        "circle-pitch-scale": "enum:map|viewport",
+        "circle-radius": "number",
+        "circle-sort-key": "number",
+        "circle-stroke-color": "color",
+        "circle-stroke-opacity": "number",
+        "circle-stroke-width": "number",
+        "circle-translate": "array:2:number",
+        "circle-translate-anchor": "enum:map|viewport",
+        "color-relief-color": "color",
+        "color-relief-opacity": "number",
+        "fill-antialias": "boolean",
+        "fill-color": "color",
+        "fill-extrusion-base": "number",
+        "fill-extrusion-color": "color",
+        "fill-extrusion-height": "number",
+        "fill-extrusion-opacity": "number",
+        "fill-extrusion-pattern": "string",
+        "fill-extrusion-rounded-corner-distance": "number",
+        "fill-extrusion-translate": "array:2:number",
+        "fill-extrusion-translate-anchor": "enum:map|viewport",
+        "fill-extrusion-vertical-gradient": "boolean",
+        "fill-layer-opacity": "number",
+        "fill-opacity": "number",
+        "fill-outline-color": "color",
+        "fill-pattern": "string",
+        "fill-sort-key": "number",
+        "fill-translate": "array:2:number",
+        "fill-translate-anchor": "enum:map|viewport",
+        "heatmap-color": "color",
+        "heatmap-intensity": "number",
+        "heatmap-opacity": "number",
+        "heatmap-radius": "number",
+        "heatmap-weight": "number",
+        "hillshade-accent-color": "color",
+        "hillshade-exaggeration": "number",
+        "hillshade-illumination-anchor": "enum:map|viewport",
+        "hillshade-method": "enum:standard|basic|combined|igor|multidirectional",
+        "icon-allow-overlap": "boolean",
+        "icon-anchor": "enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "icon-color": "color",
+        "icon-halo-blur": "number",
+        "icon-halo-color": "color",
+        "icon-halo-width": "number",
+        "icon-ignore-placement": "boolean",
+        "icon-image": "string",
+        "icon-keep-upright": "boolean",
+        "icon-offset": "array:2:number",
+        "icon-opacity": "number",
+        "icon-optional": "boolean",
+        "icon-overlap": "enum:never|always|cooperative",
+        "icon-pitch-alignment": "enum:map|viewport|auto",
+        "icon-rotate": "number",
+        "icon-rotation-alignment": "enum:map|viewport|auto",
+        "icon-size": "number",
+        "icon-text-fit": "enum:none|width|height|both",
+        "icon-text-fit-padding": "array:4:number",
+        "icon-translate": "array:2:number",
+        "icon-translate-anchor": "enum:map|viewport",
+        "line-blur": "number",
+        "line-cap": "enum:butt|round|square",
+        "line-color": "color",
+        "line-dasharray": "array:*:number",
+        "line-gap-width": "number",
+        "line-gradient": "color",
+        "line-join": "enum:bevel|round|miter",
+        "line-layer-opacity": "number",
+        "line-miter-limit": "number",
+        "line-offset": "number",
+        "line-opacity": "number",
+        "line-pattern": "string",
+        "line-round-limit": "number",
+        "line-sort-key": "number",
+        "line-translate": "array:2:number",
+        "line-translate-anchor": "enum:map|viewport",
+        "line-width": "number",
+        "raster-brightness-max": "number",
+        "raster-brightness-min": "number",
+        "raster-contrast": "number",
+        "raster-fade-duration": "number",
+        "raster-hue-rotate": "number",
+        "raster-opacity": "number",
+        "raster-resampling": "enum:linear|nearest",
+        "raster-saturation": "number",
+        "resampling": "enum:linear|nearest",
+        "symbol-avoid-edges": "boolean",
+        "symbol-height-anchor": "enum:ground|absolute",
+        "symbol-height-offset": "number",
+        "symbol-placement": "enum:point|line|line-center",
+        "symbol-sort-key": "number",
+        "symbol-spacing": "number",
+        "symbol-z-order": "enum:auto|viewport-y|source",
+        "text-allow-overlap": "boolean",
+        "text-anchor": "enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "text-color": "color",
+        "text-font": "array:*:string",
+        "text-halo-blur": "number",
+        "text-halo-color": "color",
+        "text-halo-width": "number",
+        "text-ignore-placement": "boolean",
+        "text-justify": "enum:auto|left|center|right",
+        "text-keep-upright": "boolean",
+        "text-letter-spacing": "number",
+        "text-line-height": "number",
+        "text-max-angle": "number",
+        "text-max-width": "number",
+        "text-offset": "array:2:number",
+        "text-opacity": "number",
+        "text-optional": "boolean",
+        "text-overlap": "enum:never|always|cooperative",
+        "text-padding": "number",
+        "text-pitch-alignment": "enum:map|viewport|auto",
+        "text-radial-offset": "number",
+        "text-rotate": "number",
+        "text-rotation-alignment": "enum:map|viewport|viewport-glyph|auto",
+        "text-size": "number",
+        "text-transform": "enum:none|uppercase|lowercase",
+        "text-translate": "array:2:number",
+        "text-translate-anchor": "enum:map|viewport",
+        "text-variable-anchor": "array:*:enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "text-writing-mode": "array:*:enum:horizontal|vertical",
+        "visibility": "enum:visible|none",
+    ]
+
+    /// Why `value`, a constant rather than an expression, is not of the kind
+    /// `propertyName` takes, or nil. MapLibre on iOS does not check it: a
+    /// string where a number goes reads as 0, and a color it cannot parse as
+    /// black.
+    class func constantError(propertyName: String, value: Any) -> String? {
+        guard let kind = constantKinds[propertyName] else { return nil }
+        return kindError(kind, value)
+    }
+
+    private class func kindError(_ kind: String, _ value: Any) -> String? {
+        if kind.hasPrefix("array:") {
+            let parts = kind.split(separator: ":", maxSplits: 2).map(String.init)
+            guard let items = value as? [Any] else {
+                return "Expected an array, found \(describe(value))."
+            }
+            if parts[1] != "*", let length = Int(parts[1]), items.count != length {
+                return "Expected an array of \(length) items, found \(items.count)."
+            }
+            for item in items {
+                if let error = kindError(parts[2], item) { return error }
+            }
+            return nil
+        }
+        if kind.hasPrefix("enum:") {
+            let values = kind.dropFirst("enum:".count).split(separator: "|").map(String.init)
+            guard let string = value as? String, values.contains(string) else {
+                return "Expected one of \(values.joined(separator: ", ")), found \(describe(value))."
+            }
+            return nil
+        }
+        let matches: Bool
+        switch kind {
+        case "number": matches = isNumber(value)
+        case "boolean": matches = isBoolean(value)
+        case "string": matches = value is String
+        case "color":
+            if let color = value as? String {
+                return isColor(color) ? nil : "Could not parse color from value '\(color)'."
+            }
+            matches = false
+        default: matches = true
+        }
+        return matches ? nil : "Expected a \(kind), found \(describe(value))."
+    }
+
+    /// Whether `css` is a color MapLibre Native reads: a CSS color name, a hex
+    /// color, or an rgb, rgba, hsl or hsla function. Like MapLibre Native, it
+    /// ignores spaces and case, and leaves the numbers to MapLibre.
+    class func isColor(_ css: String) -> Bool {
+        let color = css.replacingOccurrences(of: " ", with: "").lowercased()
+        if cssColorNames.contains(color) { return true }
+        if color.hasPrefix("#") { return [4, 5, 7, 9].contains(color.count) }
+        guard let open = color.firstIndex(of: "("), color.hasSuffix(")") else { return false }
+        let name = color[..<open]
+        let count = color[color.index(after: open)..<color.index(before: color.endIndex)]
+            .split(separator: ",", omittingEmptySubsequences: false).count
+        switch name {
+        case "rgb", "hsl": return count == 3
+        case "rgba", "hsla": return count == 4
+        default: return false
+        }
+    }
+
+    private static let cssColorNames: Set<String> = [
+        "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
+        "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
+        "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue",
+        "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+        "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon",
+        "darkseagreen", "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise",
+        "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "firebrick",
+        "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+        "gray", "green", "greenyellow", "grey", "honeydew", "hotpink", "indianred", "indigo",
+        "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
+        "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey",
+        "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray",
+        "lightslategrey", "lightsteelblue", "lightyellow", "lime", "limegreen", "linen", "magenta",
+        "maroon", "mediumaquamarine", "mediumblue", "mediumorchid", "mediumpurple",
+        "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+        "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite",
+        "navy", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
+        "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink",
+        "plum", "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
+        "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver",
+        "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue", "tan",
+        "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white",
+        "whitesmoke", "yellow", "yellowgreen",
+    ]
+
+    /// Whether `value` is a number. The channel hands booleans over as
+    /// NSNumbers too.
+    private class func isNumber(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) != CFBooleanGetTypeID()
+    }
+
+    private class func isBoolean(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) == CFBooleanGetTypeID()
+    }
+
+    private class func describe(_ value: Any) -> String {
+        switch value {
+        case is String: return "a string"
+        case let number as NSNumber:
+            return CFGetTypeID(number) == CFBooleanGetTypeID() ? "a boolean" : "a number"
+        case is [Any]: return "an array"
+        case is [String: Any]: return "an object"
+        default: return "\(type(of: value))"
+        }
+    }
+
     private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {
         let isColor = propertyName.contains("color");
         let isOffset = propertyName.contains("offset");

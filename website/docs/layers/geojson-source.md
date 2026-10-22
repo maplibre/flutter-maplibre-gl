@@ -65,6 +65,11 @@ await controller.addGeoJsonSource('my-source', {
 });
 ```
 
+Data that is not valid GeoJSON (a FeatureCollection, Feature or geometry, with
+a feature `id` that is a string or a number) throws a `PlatformException` with
+code `INVALID_GEOJSON` and changes nothing. `setGeoJsonSource()` and
+`setGeoJsonFeature()` check their data the same way.
+
 ### Remote URL
 
 ```dart

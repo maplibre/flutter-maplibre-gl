@@ -47,8 +47,31 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 | `invalidLayerType` | `INVALID_LAYER_TYPE` |
 | `sourceAlreadyExists`, `duplicateSource` | `SOURCE_ALREADY_EXISTS` |
 | `layerAlreadyExists`, `duplicateLayer` | `LAYER_ALREADY_EXISTS` |
+| `styleNotFound` | `STYLE_NOT_READY` |
+| `sourceNotFound`, `noSuchSource` | `SOURCE_NOT_FOUND` |
+| `invalidSourceType` | `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source |
+| `parseError` | `INVALID_GEOJSON` |
 
 On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
+
+The error codes of the offline calls and of the download `Error` events are renamed, on Android and iOS alike. See [Errors](advanced/offline-regions.md#errors) for when each code fires:
+
+| Before | 0.28.0 |
+|---|---|
+| `invalidRegionDefinition` | `INVALID_REGION_DEFINITION` |
+| `tileCountLimitExceeded` | `TILE_COUNT_LIMIT_EXCEEDED` |
+| `RegionDeleted` | `REGION_DELETED` |
+| `RegionReplaced` | `REGION_REPLACED` |
+| `DatabaseReset` | `DATABASE_RESET` |
+| `UpdateMetadataError`, `DeleteRegionError`, `PauseRegionError`, `ResumeRegionError`, `GetRegionStatusError` for an id no region has | `REGION_NOT_FOUND` |
+| `mergeOfflineRegions Error`, `RegionListError`, `ResetDatabaseError`, and the five codes above for any other failure of the database | `OFFLINE_DATABASE_ERROR` |
+| `ClearAmbientCacheError`, `SetMaximumAmbientCacheSizeError` | `AMBIENT_CACHE_ERROR` |
+| `SetOfflineTileCountLimitError` and `SetMaximumAmbientCacheSizeError` for a negative value (iOS), `InvalidMaxRequests`, `InvalidMaxRequestsPerHost` (Android), `UpdateMetadataError` for metadata that is not JSON-encodable (iOS) | `INVALID_ARGUMENT` |
+| `SetHttpHeadersError`, `SetMaxConcurrentRequestsError` (Android) | `HTTP_CLIENT_ERROR` |
+
+Android now rejects a negative `setOfflineTileCountLimit` with `INVALID_ARGUMENT`, as iOS did, and iOS rejects a `setOfflineMaxConcurrentRequests` value below 1, as Android did.
+
+On Android, `resumeOfflineRegionDownload` resumes a region that no download of the current app session follows, for example one paused before the app restarted, as iOS does. It used to fail with `ResumeRegionError`. Such a download sends no events, so follow it with `getOfflineRegionStatus`. Resuming a region that is already complete does nothing on either platform.
 
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
@@ -57,6 +80,11 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
 * `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
 * `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
+* A layer whose type cannot draw its source, such as a raster layer on a GeoJSON source, throws `UNSUPPORTED_SOURCE_TYPE`. iOS crashed, Android threw a generic error, and web added nothing or a layer that drew nothing.
+* A layer property value MapLibre rejects throws `INVALID_EXPRESSION` (an expression) or `INVALID_ARGUMENT` (any other value) from the layer adds and `setLayerProperties`, and the call changes nothing. Android ignored the value, iOS crashed or misread it, and web dropped the layer.
+* Data that is not a valid GeoJSON FeatureCollection, Feature or geometry throws `INVALID_GEOJSON` from `addGeoJsonSource`, `setGeoJsonSource`, `setGeoJsonFeature`, `editGeoJsonSource` and `addSource`, where Android and web left the source empty. A feature with `"id": null` counts as invalid: MapLibre Native cannot read it.
+* `addSource` throws `INVALID_ARGUMENT` for an image source without a `url` or four corners, and for a tiled source without `url` or `tiles` or a GeoJSON source without `data`, which web used to add. For image bytes, use `addImageSource`.
+* On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
 
 ### Android: numeric feature ids
 

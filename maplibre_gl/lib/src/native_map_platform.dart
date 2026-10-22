@@ -4,9 +4,8 @@ part of '../maplibre_gl.dart';
 /// native map through the messages generated from `pigeons/messages.dart`.
 ///
 /// The messages of each map travel on their own channels, told apart by the
-/// platform view id [initPlatform] receives. Native answers each call with
-/// the payload the method channel these messages replace answered with, so
-/// the replies are parsed here exactly as they were there.
+/// platform view id [initPlatform] receives. This class turns the values of
+/// the public API into their typed arguments, and their answers back.
 class _MapLibreNativePlatform extends MapLibrePlatform
     implements MapLibreMapFlutterApi {
   _MapLibreNativePlatform([this._hostApiFactory]);
@@ -64,7 +63,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       // MapLibreMap.useHybridComposition has always stored it there.
       // ignore: deprecated_member_use
       final useHybridComposition = MapLibreMethodChannel.useHybridComposition;
-      creationParams['options']?['useHybridComposition'] = useHybridComposition;
+      final params = _creationParams(
+        creationParams,
+        useHybridComposition: useHybridComposition,
+      );
       if (useHybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
@@ -77,18 +79,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
               hitTestBehavior: PlatformViewHitTestBehavior.opaque,
             );
           },
-          onCreatePlatformView: (params) {
+          onCreatePlatformView: (viewParams) {
             final controller = PlatformViewsService.initAndroidView(
-              id: params.id,
+              id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
-              creationParams: creationParams,
-              creationParamsCodec: const StandardMessageCodec(),
-              onFocus: () => params.onFocusChanged(true),
+              creationParams: params,
+              creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
+              onFocus: () => viewParams.onFocusChanged(true),
             );
 
             controller.addOnPlatformViewCreatedListener(
-              params.onPlatformViewCreated,
+              viewParams.onPlatformViewCreated,
             );
             controller.addOnPlatformViewCreatedListener(onPlatformViewCreated);
 
@@ -101,8 +103,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
           viewType: 'plugins.flutter.io/maplibre_gl',
           onPlatformViewCreated: onPlatformViewCreated,
           gestureRecognizers: gestureRecognizers,
-          creationParams: creationParams,
-          creationParamsCodec: const StandardMessageCodec(),
+          creationParams: params,
+          creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
         );
       }
     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -110,12 +112,160 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         viewType: 'plugins.flutter.io/maplibre_gl',
         onPlatformViewCreated: onPlatformViewCreated,
         gestureRecognizers: gestureRecognizers,
-        creationParams: creationParams,
-        creationParamsCodec: const StandardMessageCodec(),
+        creationParams: _creationParams(
+          creationParams,
+          useHybridComposition: false,
+        ),
+        creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
       );
     }
     return Text(
       '$defaultTargetPlatform is not yet supported by the maps plugin',
+    );
+  }
+
+  /// The creation params of the platform view, from the map [MapLibreMap]
+  /// builds. Native decodes them with the generated codec.
+  static PgCreationParams _creationParams(
+    Map<String, dynamic> params, {
+    required bool useHybridComposition,
+  }) {
+    final options = params['options'] as Map<dynamic, dynamic>?;
+    final camera = params['initialCameraPosition'] as Map<dynamic, dynamic>?;
+    return PgCreationParams(
+      styleString: params['styleString'] as String?,
+      options: _mapOptions(options?.cast<String, dynamic>() ?? const {}),
+      initialCameraPosition: camera == null ? null : _pgCameraPosition(camera),
+      // The default of MapLibreMap.dragEnabled, and of both platforms.
+      dragEnabled: params['dragEnabled'] as bool? ?? true,
+      iosLongClickDurationMs:
+          params['iosLongClickDurationMilliseconds'] as int?,
+      useHybridComposition: useHybridComposition,
+    );
+  }
+
+  /// The options of the map, from the map `MapLibreMapOptions.toMap` writes.
+  /// What the map leaves out stays null, which native reads as "keep as it
+  /// is". The web-only options have no field and are dropped.
+  static PgMapOptions _mapOptions(Map<String, dynamic> options) {
+    bool? flag(String key) => options[key] as bool?;
+    T? enumAt<T>(List<T> values, String key) {
+      final index = options[key] as int?;
+      return index == null ? null : values[index];
+    }
+
+    PgScreenPoint? margins(String key) {
+      final margins = options[key] as List<dynamic>?;
+      return margins == null ? null : _pgScreenPoint(margins);
+    }
+
+    // `[bounds]`, where null bounds lift the restriction.
+    final targetBounds = options['cameraTargetBounds'] as List<dynamic>?;
+    // `[minZoom, maxZoom]`, where a null end leaves that side unbounded.
+    final zoomRange = options['minMaxZoomPreference'] as List<dynamic>?;
+    final puckStyle = options['myLocationStyle'] as Map<dynamic, dynamic>?;
+    final engine = options['locationEngineProperties'] as List<dynamic>?;
+    final locationSource = options['locationSource'] as String?;
+    return PgMapOptions(
+      compassEnabled: flag('compassEnabled'),
+      cameraTargetBounds:
+          targetBounds == null
+              ? null
+              : PgCameraTargetBounds(
+                bounds:
+                    targetBounds.first == null
+                        ? null
+                        : _pgLatLngBounds(targetBounds.first as List<dynamic>),
+              ),
+      styleString: options['styleString'] as String?,
+      minMaxZoomPreference:
+          zoomRange == null
+              ? null
+              : PgMinMaxZoomPreference(
+                minZoom: (zoomRange[0] as num?)?.toDouble(),
+                maxZoom: (zoomRange[1] as num?)?.toDouble(),
+              ),
+      rotateGesturesEnabled: flag('rotateGesturesEnabled'),
+      scrollGesturesEnabled: flag('scrollGesturesEnabled'),
+      tiltGesturesEnabled: flag('tiltGesturesEnabled'),
+      zoomGesturesEnabled: flag('zoomGesturesEnabled'),
+      doubleClickZoomEnabled: flag('doubleClickZoomEnabled'),
+      panInertia: enumAt(PgPanInertia.values, 'panInertia'),
+      hapticFeedbackEnabled: flag('hapticFeedbackEnabled'),
+      trackCameraPosition: flag('trackCameraPosition'),
+      myLocationEnabled: flag('myLocationEnabled'),
+      myLocationTrackingMode: enumAt(
+        PgMyLocationTrackingMode.values,
+        'myLocationTrackingMode',
+      ),
+      myLocationRenderMode: enumAt(
+        PgMyLocationRenderMode.values,
+        'myLocationRenderMode',
+      ),
+      myLocationStyle:
+          puckStyle == null
+              ? null
+              : PgMyLocationStyle(
+                fillColor: puckStyle['fillColor'] as int?,
+                bearingColor: puckStyle['bearingColor'] as int?,
+                accuracyColor: puckStyle['accuracyColor'] as int?,
+                accuracyCircleEnabled:
+                    puckStyle['accuracyCircleEnabled'] as bool? ?? true,
+                pulseEnabled: puckStyle['pulseEnabled'] as bool?,
+                pulseColor: puckStyle['pulseColor'] as int?,
+              ),
+      logoEnabled: flag('logoEnabled'),
+      logoViewPosition: enumAt(PgOrnamentPosition.values, 'logoViewPosition'),
+      logoViewMargins: margins('logoViewMargins'),
+      compassViewPosition: enumAt(
+        PgOrnamentPosition.values,
+        'compassViewPosition',
+      ),
+      compassViewMargins: margins('compassViewMargins'),
+      attributionEnabled: flag('attributionEnabled'),
+      attributionButtonPosition: enumAt(
+        PgOrnamentPosition.values,
+        'attributionButtonPosition',
+      ),
+      attributionButtonMargins: margins('attributionButtonMargins'),
+      attributionButtonColor: options['attributionButtonColor'] as int?,
+      locationEngineProperties:
+          engine == null ? null : _locationEngineProperties(engine),
+      locationSource:
+          locationSource == null
+              ? null
+              : PgLocationSource.values.byName(locationSource),
+      foregroundLoadColor: options['foregroundLoadColor'] as int?,
+      translucentTextureSurface: flag('translucentTextureSurface'),
+      featureTapsTriggersMapClick: flag('featureTapsTriggersMapClick'),
+      symbolPlacementTransitionsEnabled: flag(
+        'symbolPlacementTransitionsEnabled',
+      ),
+    );
+  }
+
+  /// The location engine settings, from the list
+  /// `LocationEnginePlatforms.toList` writes for the platform it runs on:
+  /// `[interval, priority, displacement]` on Android, and
+  /// `[enableHighAccuracy, displacement, intervalMs, pulseWindowMs]` on iOS,
+  /// with the flag as 1 or 0. Elsewhere the list is empty.
+  static PgLocationEngineProperties? _locationEngineProperties(
+    List<dynamic> values,
+  ) {
+    if (values.isEmpty) return null;
+    int at(int index) => values[index] as int;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return PgLocationEngineProperties(
+        enableHighAccuracy: at(0) == 1,
+        displacement: at(1),
+        intervalMs: at(2),
+        pulseWindowMs: at(3),
+      );
+    }
+    return PgLocationEngineProperties(
+      interval: at(0),
+      priority: PgLocationPriority.values[at(1)],
+      displacement: at(2),
     );
   }
 
@@ -182,8 +332,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<void> mapOnCameraTrackingChanged(int mode) async {
-    onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode]);
+  Future<void> mapOnCameraTrackingChanged(PgMyLocationTrackingMode mode) async {
+    onCameraTrackingChangedPlatform(MyLocationTrackingMode.values[mode.index]);
   }
 
   @override
@@ -239,29 +389,115 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         zoom: position.zoom,
       );
 
-  /// The map native answers with, for the calls that always answer one. A
-  /// null answer fails here, as it did when the method channel reply was
-  /// assigned to a map.
-  static Map<dynamic, dynamic> _replyMap(Object? reply) =>
-      reply! as Map<dynamic, dynamic>;
+  static PgLatLng _toPgLatLng(LatLng latLng) =>
+      PgLatLng(latitude: latLng.latitude, longitude: latLng.longitude);
 
-  /// Reads a camera position map, the answer of `map#update` and
-  /// `map#queryCameraPosition`, as `CameraPosition.fromMap` does.
-  static CameraPosition? _cameraPositionFromMap(Object? reply) {
-    if (reply == null) return null;
-    final json = reply as Map<dynamic, dynamic>;
-    final target = json['target'] as List<dynamic>;
-    return CameraPosition(
-      bearing: json['bearing'],
-      // A JSON round trip may turn 60.0 into 60, hence num.
-      target: LatLng(
-        (target[0] as num).toDouble(),
-        (target[1] as num).toDouble(),
-      ),
-      tilt: json['tilt'],
-      zoom: json['zoom'],
+  static PgLatLngQuad _pgLatLngQuad(LatLngQuad quad) => PgLatLngQuad(
+    topLeft: _toPgLatLng(quad.topLeft),
+    topRight: _toPgLatLng(quad.topRight),
+    bottomRight: _toPgLatLng(quad.bottomRight),
+    bottomLeft: _toPgLatLng(quad.bottomLeft),
+  );
+
+  // The readers below take the JSON-like values the public classes write,
+  // such as `LatLng.toJson`, where a number may be an int.
+
+  /// A `[latitude, longitude]` list.
+  static PgLatLng _pgLatLng(Object? json) {
+    final latLng = json! as List<dynamic>;
+    return PgLatLng(
+      latitude: (latLng[0] as num).toDouble(),
+      longitude: (latLng[1] as num).toDouble(),
     );
   }
+
+  /// A `[southwest, northeast]` list, as `LatLngBounds.toList` writes it.
+  static PgLatLngBounds _pgLatLngBounds(List<dynamic> json) => PgLatLngBounds(
+    southwest: _pgLatLng(json[0]),
+    northeast: _pgLatLng(json[1]),
+  );
+
+  /// An `[x, y]` list.
+  static PgScreenPoint _pgScreenPoint(List<dynamic> json) => PgScreenPoint(
+    x: (json[0] as num).toDouble(),
+    y: (json[1] as num).toDouble(),
+  );
+
+  /// A camera position map, as `CameraPosition.toMap` writes it.
+  static PgCameraPosition _pgCameraPosition(Map<dynamic, dynamic> json) =>
+      PgCameraPosition(
+        bearing: (json['bearing'] as num).toDouble(),
+        target: _pgLatLng(json['target']),
+        tilt: (json['tilt'] as num).toDouble(),
+        zoom: (json['zoom'] as num).toDouble(),
+      );
+
+  /// [update] as the subclass of [PgCameraUpdate] of its kind, read from
+  /// `CameraUpdate.toJson`, the only way into its value.
+  ///
+  /// Throws INVALID_ARGUMENT for an update of no known kind, such as one from
+  /// a subclass that overrides `toJson`.
+  static PgCameraUpdate _pgCameraUpdate(CameraUpdate update) {
+    final json = update.toJson();
+    try {
+      final values = json as List<dynamic>;
+      double at(int index) => (values[index] as num).toDouble();
+      switch (values.first) {
+        case 'newCameraPosition':
+          return PgCameraUpdateNewCameraPosition(
+            cameraPosition: _pgCameraPosition(values[1] as Map),
+          );
+        case 'newLatLng':
+          return PgCameraUpdateNewLatLng(latLng: _pgLatLng(values[1]));
+        case 'newLatLngBounds':
+          return PgCameraUpdateNewLatLngBounds(
+            bounds: _pgLatLngBounds(values[1] as List<dynamic>),
+            padding: PgEdgeInsets(
+              left: at(2),
+              top: at(3),
+              right: at(4),
+              bottom: at(5),
+            ),
+          );
+        case 'newLatLngZoom':
+          return PgCameraUpdateNewLatLngZoom(
+            latLng: _pgLatLng(values[1]),
+            zoom: at(2),
+          );
+        case 'scrollBy':
+          return PgCameraUpdateScrollBy(dx: at(1), dy: at(2));
+        case 'zoomBy':
+          return PgCameraUpdateZoomBy(
+            amount: at(1),
+            focus:
+                values.length > 2
+                    ? _pgScreenPoint(values[2] as List<dynamic>)
+                    : null,
+          );
+        case 'zoomIn':
+          return PgCameraUpdateZoomIn();
+        case 'zoomOut':
+          return PgCameraUpdateZoomOut();
+        case 'zoomTo':
+          return PgCameraUpdateZoomTo(zoom: at(1));
+        case 'bearingTo':
+          return PgCameraUpdateBearingTo(bearing: at(1));
+        case 'tiltTo':
+          return PgCameraUpdateTiltTo(tilt: at(1));
+      }
+    } on Object {
+      // A value of the wrong type or a missing one, reported below.
+    }
+    throw PlatformException(
+      code: 'INVALID_ARGUMENT',
+      message: 'Cannot interpret $json as CameraUpdate.',
+    );
+  }
+
+  /// [filter], an expression, as the JSON text native takes, or null when
+  /// there is no filter.
+  static String? _encodeFilter(Object? filter) =>
+      filter == null ? null : jsonEncode(filter);
 
   // Calls to native.
 
@@ -269,7 +505,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   Future<CameraPosition?> updateMapOptions(
     Map<String, dynamic> optionsUpdate,
   ) async {
-    return _cameraPositionFromMap(await _api.mapUpdate(optionsUpdate));
+    final position = await _api.mapUpdate(_mapOptions(optionsUpdate));
+    return position == null ? null : _cameraPosition(position);
   }
 
   @override
@@ -277,19 +514,24 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     CameraUpdate cameraUpdate, {
     Duration? duration,
   }) async {
-    return _api.cameraAnimate(cameraUpdate.toJson(), duration?.inMilliseconds);
+    return _api.cameraAnimate(
+      _pgCameraUpdate(cameraUpdate),
+      duration?.inMilliseconds,
+    );
   }
 
   @override
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
-    return _api.cameraMove(cameraUpdate.toJson());
+    return _api.cameraMove(_pgCameraUpdate(cameraUpdate));
   }
 
   @override
   Future<void> updateMyLocationTrackingMode(
     MyLocationTrackingMode myLocationTrackingMode,
   ) async {
-    await _api.mapUpdateMyLocationTrackingMode(myLocationTrackingMode.index);
+    await _api.mapUpdateMyLocationTrackingMode(
+      PgMyLocationTrackingMode.values[myLocationTrackingMode.index],
+    );
   }
 
   @override
@@ -306,7 +548,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
-    await _api.locationComponentSetManualLocation(update.toMap());
+    await _api.locationComponentSetManualLocation(
+      PgManualLocationUpdate(
+        position: _toPgLatLng(update.target),
+        // As ManualLocationUpdate.toMap: the time of the call when unset.
+        timestamp: (update.timestamp ?? DateTime.now()).millisecondsSinceEpoch,
+        horizontalAccuracy: update.horizontalAccuracy,
+        verticalAccuracy: update.verticalAccuracy,
+        altitude: update.altitude,
+        bearing: update.bearing,
+        speed: update.speed,
+      ),
+    );
   }
 
   @override
@@ -316,12 +569,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> updateContentInsets(EdgeInsets insets, bool animated) async {
-    await _api.mapUpdateContentInsets(<String, double>{
-      'top': insets.top,
-      'left': insets.left,
-      'bottom': insets.bottom,
-      'right': insets.right,
-    }, animated);
+    await _api.mapUpdateContentInsets(
+      PgEdgeInsets(
+        top: insets.top,
+        left: insets.left,
+        bottom: insets.bottom,
+        right: insets.right,
+      ),
+      animated,
+    );
   }
 
   @override
@@ -366,43 +622,42 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     CameraAnimationInterpolation? interpolation,
   }) async {
     return _api.cameraEase(
-      cameraUpdate.toJson(),
+      _pgCameraUpdate(cameraUpdate),
       duration?.inMilliseconds,
-      interpolation?.name,
+      interpolation == null
+          ? null
+          : PgCameraAnimationInterpolation.values[interpolation.index],
     );
   }
 
   @override
   Future<CameraPosition?> queryCameraPosition() async {
-    return _cameraPositionFromMap(await _api.mapQueryCameraPosition());
+    return _cameraPosition(await _api.mapQueryCameraPosition());
   }
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    final reply = _replyMap(await _api.mapEditGeoJsonSource(id, data));
-    return reply['result'] == true;
+    final reason =
+        data.length > _geoJsonTextOffloadLength
+            ? await compute(geoJsonTextError, data)
+            : geoJsonTextError(data);
+    if (reason != null) throw invalidGeoJson(id, reason);
+    return _api.mapEditGeoJsonSource(id, data);
   }
 
   @override
   Future<bool> editGeoJsonUrl(String id, String url) async {
-    final reply = _replyMap(await _api.mapEditGeoJsonUrl(id, url));
-    return reply['result'] == true;
+    return _api.mapEditGeoJsonUrl(id, url);
   }
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    final reply = _replyMap(await _api.mapSetLayerFilter(layerId, filter));
-    return reply['result'] == true;
+    return _api.mapSetLayerFilter(layerId, filter);
   }
 
   @override
   Future<String?> getStyle() async {
-    final reply = _replyMap(await _api.mapGetStyle());
-    final result = reply['result'] as bool?;
-    if (result ?? false) {
-      return reply['json'] as String?;
-    }
-    return null;
+    return _api.mapGetStyle();
   }
 
   @override
@@ -415,12 +670,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<Map<String, String>> getCustomHeaders() async {
-    final result = await _api.mapGetCustomHeaders() as Map<dynamic, dynamic>?;
-    return result?.map(
-          (key, value) =>
-              MapEntry<String, String>(key.toString(), value.toString()),
-        ) ??
-        <String, String>{};
+    // A map of its own, which the caller may change.
+    return Map<String, String>.of(await _api.mapGetCustomHeaders());
   }
 
   @override
@@ -429,15 +680,13 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     List<String> layerIds,
     List<Object>? filter,
   ) async {
-    final reply = _replyMap(
-      await _api.mapQueryRenderedFeaturesAtPoint(
-        point.x,
-        point.y,
-        layerIds,
-        filter,
-      ),
+    final features = await _api.mapQueryRenderedFeaturesAtPoint(
+      point.x,
+      point.y,
+      layerIds,
+      _encodeFilter(filter),
     );
-    return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    return features.map(jsonDecode).toList();
   }
 
   @override
@@ -446,17 +695,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     List<String> layerIds,
     String? filter,
   ) async {
-    final reply = _replyMap(
-      await _api.mapQueryRenderedFeaturesInRect(
-        rect.left,
-        rect.top,
-        rect.right,
-        rect.bottom,
-        layerIds,
-        filter,
-      ),
+    // The filter comes encoded already.
+    final features = await _api.mapQueryRenderedFeaturesInRect(
+      rect.left,
+      rect.top,
+      rect.right,
+      rect.bottom,
+      layerIds,
+      filter,
     );
-    return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    return features.map(jsonDecode).toList();
   }
 
   @override
@@ -465,10 +713,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? sourceLayerId,
     List<Object>? filter,
   ) async {
-    final reply = _replyMap(
-      await _api.mapQuerySourceFeatures(sourceId, sourceLayerId, filter),
+    final features = await _api.mapQuerySourceFeatures(
+      sourceId,
+      sourceLayerId,
+      _encodeFilter(filter),
     );
-    return reply['features'].map((feature) => jsonDecode(feature)).toList();
+    return features.map(jsonDecode).toList();
   }
 
   @override
@@ -498,15 +748,11 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     );
   }
 
-  /// Decodes a `{'features': [json, ...]}` reply, the shape the native sides
-  /// use to keep nested GeoJSON intact on the way to Dart.
-  static List<Map<String, dynamic>> _decodeFeatures(Object? reply) {
-    final features = (reply as Map?)?['features'] as List? ?? const [];
+  /// Decodes features, each one GeoJSON text so that nested properties keep
+  /// their shape on the way to Dart.
+  static List<Map<String, dynamic>> _decodeFeatures(List<String> features) {
     return features
-        .map(
-          (feature) =>
-              (jsonDecode(feature as String) as Map).cast<String, dynamic>(),
-        )
+        .map((feature) => (jsonDecode(feature) as Map).cast<String, dynamic>())
         .toList();
   }
 
@@ -523,20 +769,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<LatLng?> requestMyLocationLatLng() async {
     try {
-      final reply = await _api.locationComponentGetLastLocation();
-      if (reply == null) {
-        return null;
-      }
-      final data = reply as Map<dynamic, dynamic>;
-      var latitude = 0.0;
-      var longitude = 0.0;
-      if (data.containsKey('latitude') && data['latitude'] != null) {
-        latitude = double.parse(data['latitude'].toString());
-      }
-      if (data.containsKey('longitude') && data['longitude'] != null) {
-        longitude = double.parse(data['longitude'].toString());
-      }
-      return LatLng(latitude, longitude);
+      return _latLng(await _api.locationComponentGetLastLocation());
     } on PlatformException {
       // A failed lookup has always read as no known location.
       return null;
@@ -545,12 +778,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<LatLngBounds> getVisibleRegion() async {
-    final reply = _replyMap(await _api.mapGetVisibleRegion());
-    final southwest = reply['sw'] as List<dynamic>;
-    final northeast = reply['ne'] as List<dynamic>;
+    final region = await _api.mapGetVisibleRegion();
     return LatLngBounds(
-      southwest: LatLng(southwest[0], southwest[1]),
-      northeast: LatLng(northeast[0], northeast[1]),
+      southwest: _latLng(region.southwest),
+      northeast: _latLng(region.northeast),
     );
   }
 
@@ -573,7 +804,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       imageSourceId,
       bytes,
       bytes.length,
-      coordinates.toList(),
+      _pgLatLngQuad(coordinates),
     );
   }
 
@@ -587,16 +818,17 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       imageSourceId,
       bytes,
       bytes?.length,
-      coordinates?.toList(),
+      coordinates == null ? null : _pgLatLngQuad(coordinates),
     );
   }
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
-    final screenPosMap = _replyMap(
-      await _api.mapToScreenLocation(latLng.latitude, latLng.longitude),
+    final point = await _api.mapToScreenLocation(
+      latLng.latitude,
+      latLng.longitude,
     );
-    return Point(screenPosMap['x'], screenPosMap['y']);
+    return Point<num>(point.x, point.y);
   }
 
   @override
@@ -657,33 +889,28 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
-    await _api.styleSetFilter(layerId, jsonEncode(filter));
+    await _api.styleSetFilter(layerId, _encodeFilter(filter));
   }
 
   @override
   Future<dynamic> getFilter(String layerId) async {
-    final reply = _replyMap(await _api.styleGetFilter(layerId));
-    final filter = reply['filter'];
+    final filter = await _api.styleGetFilter(layerId);
     return filter != null ? jsonDecode(filter) : null;
   }
 
   @override
   Future<LatLng> toLatLng(Point screenLocation) async {
-    final latLngMap = _replyMap(
+    return _latLng(
       await _api.mapToLatLng(
         screenLocation.x.toDouble(),
         screenLocation.y.toDouble(),
       ),
     );
-    return LatLng(latLngMap['latitude'], latLngMap['longitude']);
   }
 
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
-    final reply = _replyMap(
-      await _api.mapGetMetersPerPixelAtLatitude(latitude),
-    );
-    return reply['metersperpixel'];
+    return _api.mapGetMetersPerPixelAtLatitude(latitude);
   }
 
   @override
@@ -693,14 +920,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? promoteId,
   }) {
     return _writeGeoJson(sourceId, () async {
-      await _api.sourceAddGeoJson(sourceId, await _encodeGeoJson(geojson));
+      await _api.sourceAddGeoJson(
+        sourceId,
+        await _encodeGeoJson(geojson, sourceId),
+      );
     });
   }
 
   @override
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson) {
     return _writeGeoJson(sourceId, () async {
-      await _api.sourceSetGeoJson(sourceId, await _encodeGeoJson(geojson));
+      await _api.sourceSetGeoJson(
+        sourceId,
+        await _encodeGeoJson(geojson, sourceId),
+      );
     });
   }
 
@@ -712,7 +945,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetFeature(
         sourceId,
-        await _encodeGeoJson(geojsonFeature),
+        await _encodeGeoJson(geojsonFeature, sourceId, feature: true),
       );
     });
   }
@@ -763,14 +996,47 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   static const _geoJsonOffloadFeatureCount = 100;
   static const _geoJsonOffloadPositionCount = 2000;
 
-  /// Encodes [geojson] to a JSON string, offloading to a background isolate
-  /// when the payload is large enough to be worth it. See [_isLargeGeoJson].
-  static Future<String> _encodeGeoJson(Map<String, dynamic> geojson) {
-    if (_isLargeGeoJson(geojson)) {
-      return compute(jsonEncode, geojson);
+  /// Checks [geojson], the data of the source [sourceId] or with [feature] one
+  /// of its features, and encodes it to a JSON string, on a background
+  /// isolate when the payload is large (see [_isLargeGeoJson]). Throws
+  /// `INVALID_GEOJSON` for data that is not valid GeoJSON.
+  static Future<String> _encodeGeoJson(
+    Map<String, dynamic> geojson,
+    String sourceId, {
+    bool feature = false,
+  }) async {
+    final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
+    final (json, reason) =
+        _isLargeGeoJson(geojson)
+            ? await compute(encode, geojson)
+            : encode(geojson);
+    if (reason != null) {
+      throw feature
+          ? invalidGeoJsonFeature(sourceId, reason)
+          : invalidGeoJson(sourceId, reason);
     }
-    return Future.value(jsonEncode(geojson));
+    return json!;
   }
+
+  /// [geojson] as JSON text, or why it is not GeoJSON.
+  static (String?, String?) _checkAndEncodeGeoJson(
+    Map<String, dynamic> geojson,
+  ) {
+    final reason = geoJsonError(geojson);
+    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+  }
+
+  /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
+  static (String?, String?) _checkAndEncodeFeature(
+    Map<String, dynamic> geojson,
+  ) {
+    final reason = geoJsonFeatureError(geojson);
+    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+  }
+
+  /// The length of JSON text above which [editGeoJsonSource] checks it on a
+  /// background isolate.
+  static const _geoJsonTextOffloadLength = 100000;
 
   /// Whether [geojson] is large enough that encoding it should move off the
   /// main isolate.
@@ -863,7 +1129,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       enableInteraction,
       properties,
     );
@@ -888,7 +1154,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       enableInteraction,
       properties,
     );
@@ -921,7 +1187,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       enableInteraction,
       properties,
     );
@@ -946,7 +1212,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       enableInteraction,
       properties,
     );
@@ -971,7 +1237,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       enableInteraction,
       properties,
     );
@@ -980,7 +1246,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
     _ensureDemEncodingSupported(properties);
-    await _api.styleAddSource(sourceId, properties.toJson());
+    final json = properties.toJson();
+    // A string is the url of the data.
+    final data = json['data'];
+    if (properties is GeojsonSourceProperties &&
+        data != null &&
+        data is! String) {
+      final reason = geoJsonError(data);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+    }
+    await _api.styleAddSource(sourceId, json);
   }
 
   /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre
@@ -1100,7 +1375,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceLayer,
       minzoom,
       maxzoom,
-      jsonEncode(filter),
+      _encodeFilter(filter),
       properties,
     );
   }
@@ -1153,17 +1428,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? sourceLayer,
   }) async {
     _ensureFeatureStateAvailable('getFeatureState');
-    final reply = await _api.sourceGetFeatureState(
+    // Native sends the state as JSON text, so nested values arrive intact,
+    // and sends null, not an empty object, when the feature has no state,
+    // because callers tell the two apart.
+    final state = await _api.sourceGetFeatureState(
       sourceId,
       featureId,
       sourceLayer,
     );
-    // Native sends the state as a JSON string, so nested values arrive
-    // intact, and sends null, not an empty map, when the feature has no
-    // state, because callers tell the two apart.
-    final state = (reply as Map?)?['state'];
     if (state == null) return null;
-    return (jsonDecode(state as String) as Map).cast<String, dynamic>();
+    return (jsonDecode(state) as Map).cast<String, dynamic>();
   }
 
   @override
@@ -1268,14 +1542,13 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
-    final reply = _replyMap(await _api.styleGetLayerIds());
-    return reply['layers'].map((it) => it.toString()).toList();
+    // A growable list of its own, which the caller may change.
+    return <dynamic>[...await _api.styleGetLayerIds()];
   }
 
   @override
   Future<List> getSourceIds() async {
-    final reply = _replyMap(await _api.styleGetSourceIds());
-    return reply['sources'].map((it) => it.toString()).toList();
+    return <dynamic>[...await _api.styleGetSourceIds()];
   }
 
   @override
@@ -1292,13 +1565,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// Reads the answer of [getLayerProperties] and [getSourceProperties].
   ///
-  /// Native serializes the layer or source to a style-spec JSON string, so
-  /// nested expressions arrive intact, and sends it under `properties`, or
-  /// leaves `properties` out when the object does not exist.
-  static Map<String, dynamic>? _styleObjectProperties(Object? reply) {
-    final properties = (reply as Map?)?['properties'];
+  /// Native serializes the layer or source to style-spec JSON text, so
+  /// nested expressions arrive intact, and sends null when the object does
+  /// not exist.
+  static Map<String, dynamic>? _styleObjectProperties(String? properties) {
     if (properties == null) return null;
-    return shapeStyleProperties(jsonDecode(properties as String) as Map);
+    return shapeStyleProperties(jsonDecode(properties) as Map);
   }
 
   @override

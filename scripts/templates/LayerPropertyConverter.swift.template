@@ -74,6 +74,126 @@ class LayerPropertyConverter {
         return expression
     }
 
+    /// The kind of constant each property takes, by name: see
+    /// `buildConstantKinds` in scripts/lib/generate.dart.
+    private static let constantKinds: [String: String] = [
+        {{#constantKinds}}
+        "{{{name}}}": "{{{kind}}}",
+        {{/constantKinds}}
+    ]
+
+    /// Why `value`, a constant rather than an expression, is not of the kind
+    /// `propertyName` takes, or nil. MapLibre on iOS does not check it: a
+    /// string where a number goes reads as 0, and a color it cannot parse as
+    /// black.
+    class func constantError(propertyName: String, value: Any) -> String? {
+        guard let kind = constantKinds[propertyName] else { return nil }
+        return kindError(kind, value)
+    }
+
+    private class func kindError(_ kind: String, _ value: Any) -> String? {
+        if kind.hasPrefix("array:") {
+            let parts = kind.split(separator: ":", maxSplits: 2).map(String.init)
+            guard let items = value as? [Any] else {
+                return "Expected an array, found \(describe(value))."
+            }
+            if parts[1] != "*", let length = Int(parts[1]), items.count != length {
+                return "Expected an array of \(length) items, found \(items.count)."
+            }
+            for item in items {
+                if let error = kindError(parts[2], item) { return error }
+            }
+            return nil
+        }
+        if kind.hasPrefix("enum:") {
+            let values = kind.dropFirst("enum:".count).split(separator: "|").map(String.init)
+            guard let string = value as? String, values.contains(string) else {
+                return "Expected one of \(values.joined(separator: ", ")), found \(describe(value))."
+            }
+            return nil
+        }
+        let matches: Bool
+        switch kind {
+        case "number": matches = isNumber(value)
+        case "boolean": matches = isBoolean(value)
+        case "string": matches = value is String
+        case "color":
+            if let color = value as? String {
+                return isColor(color) ? nil : "Could not parse color from value '\(color)'."
+            }
+            matches = false
+        default: matches = true
+        }
+        return matches ? nil : "Expected a \(kind), found \(describe(value))."
+    }
+
+    /// Whether `css` is a color MapLibre Native reads: a CSS color name, a hex
+    /// color, or an rgb, rgba, hsl or hsla function. Like MapLibre Native, it
+    /// ignores spaces and case, and leaves the numbers to MapLibre.
+    class func isColor(_ css: String) -> Bool {
+        let color = css.replacingOccurrences(of: " ", with: "").lowercased()
+        if cssColorNames.contains(color) { return true }
+        if color.hasPrefix("#") { return [4, 5, 7, 9].contains(color.count) }
+        guard let open = color.firstIndex(of: "("), color.hasSuffix(")") else { return false }
+        let name = color[..<open]
+        let count = color[color.index(after: open)..<color.index(before: color.endIndex)]
+            .split(separator: ",", omittingEmptySubsequences: false).count
+        switch name {
+        case "rgb", "hsl": return count == 3
+        case "rgba", "hsla": return count == 4
+        default: return false
+        }
+    }
+
+    private static let cssColorNames: Set<String> = [
+        "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
+        "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
+        "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue",
+        "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+        "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon",
+        "darkseagreen", "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise",
+        "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "firebrick",
+        "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+        "gray", "green", "greenyellow", "grey", "honeydew", "hotpink", "indianred", "indigo",
+        "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
+        "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey",
+        "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray",
+        "lightslategrey", "lightsteelblue", "lightyellow", "lime", "limegreen", "linen", "magenta",
+        "maroon", "mediumaquamarine", "mediumblue", "mediumorchid", "mediumpurple",
+        "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+        "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite",
+        "navy", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
+        "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink",
+        "plum", "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
+        "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver",
+        "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue", "tan",
+        "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white",
+        "whitesmoke", "yellow", "yellowgreen",
+    ]
+
+    /// Whether `value` is a number. The channel hands booleans over as
+    /// NSNumbers too.
+    private class func isNumber(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) != CFBooleanGetTypeID()
+    }
+
+    private class func isBoolean(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) == CFBooleanGetTypeID()
+    }
+
+    private class func describe(_ value: Any) -> String {
+        switch value {
+        case is String: return "a string"
+        case let number as NSNumber:
+            return CFGetTypeID(number) == CFBooleanGetTypeID() ? "a boolean" : "a number"
+        case is [Any]: return "an array"
+        case is [String: Any]: return "an object"
+        default: return "\(type(of: value))"
+        }
+    }
+
     private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {
         let isColor = propertyName.contains("color");
         let isOffset = propertyName.contains("offset");

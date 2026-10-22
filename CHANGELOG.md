@@ -10,17 +10,25 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
-* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111):
+* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119):
   * **iOS**: `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
   * **iOS**: `invalidExpression` is now `INVALID_EXPRESSION`
   * **iOS**: `invalidLayerType` is now `INVALID_LAYER_TYPE`
   * **iOS**: `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
   * **iOS**: `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
   * **Android**: `MAPBOX CACHE ERROR` from the controller's `invalidateAmbientCache` and `clearAmbientCache` is now `AMBIENT_CACHE_ERROR`
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068):
+  * **iOS**: `styleNotFound` is now `STYLE_NOT_READY`
+  * **iOS**: `sourceNotFound` and `noSuchSource` are now `SOURCE_NOT_FOUND`
+  * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
+  * **iOS**: `parseError` is now `INVALID_GEOJSON`
+  * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
+  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error.
+  * **Android, Web**: `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
+  * Data MapLibre cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. Android and web ignored these, iOS crashed on some.
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Only integer ids come back the same on every platform: see the migration guide (#1073).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 
@@ -38,6 +46,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
+* **Web**: `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).
@@ -46,7 +55,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: MapLibre Native upgraded from 6.28.0 to 6.31.0 ([6.29.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.29.0), [6.30.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.30.0), [6.31.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v6.31.0)). It repaints symbol paint properties driven by feature state, fixes missing symbols and glyphs, and supports the `split` and `join` expressions like Android (#1082).
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 * **Android, iOS**: the plugin reaches native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, starting with the plugin-wide calls: offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`. `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`; their value was always `null` (#1114).
-* **Android, iOS**: the calls and events of each map (taps, drags, camera moves, style loads, location updates) move to Pigeon too, which completes the switch (#465). `MapLibreMethodChannel` is deprecated and no longer reaches native code (#1115, #1117).
+* **Android, iOS**: the calls and events of each map (taps, drags, camera moves, style loads, location updates) move to Pigeon too, which completes the switch (#465). `MapLibreMethodChannel` is deprecated and no longer reaches native code (#1115, #1117, #1119).
 * **Android, iOS, Web**: feature drags and taps work the same on every platform (#1044, #1051, #1077, #1079):
   * A drag starts only after the finger or mouse moves a little, so a tap or click on a draggable feature stays a tap, with no drag events, and `start` has a zero delta. On Android it no longer fires `onMapLongClick`.
   * A second finger ends the drag with an `end` event and lets the map pinch.
@@ -60,6 +69,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call. MapLibre GL JS has no offline storage (#937).
   * **Android, iOS**: a call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`.
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
+* **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web can play video sources (#1119).
+* **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -93,7 +104,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a feature drag interrupted by the system (a call, Control Center, the app going to the background) now ends, instead of leaving the feature grabbed so the next pan drags it (#1054).
 * **iOS**: a feature drag no longer turns scroll gestures back on when the app disabled them, and picks the feature where the finger came down, so a quick grab on a small feature no longer misses it (#1054).
 * **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
-* **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `UpdateMetadataError` for an unknown id like Android (#1087).
+* **iOS**: `updateOfflineRegionMetadata` works instead of throwing `MissingPluginException`, and fails with `REGION_NOT_FOUND` for an unknown id like Android (#1087).
 * **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list, and the other offline calls no longer miss a stored region then (#1087).
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 * **Web**: removing an interactive layer also removes its hover and drag listeners, so a layer added again, or rebuilt by an annotation manager, fires each callback once instead of once per add (#1089).
@@ -112,7 +123,16 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: with `myLocationEnabled`, the GPS no longer stays on after the app goes to the background, so `onUserLocationUpdated` stops there as on iOS; use a background location plugin if you need positions then. On Android and iOS, `pauseMap()` also stops location updates until `resumeMap()` (#1105).
 * Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
 * **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1114).
-* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `invalidRegionDefinition`, like Android, instead of a `TypeError` (#1114).
+* **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `INVALID_REGION_DEFINITION`, like Android, instead of a `TypeError` (#1114).
+* Android, iOS and web give the same answer in more cases (#1119):
+  * No crash on a query filter MapLibre rejects (Android, iOS), nor on an invalid property expression, a layer on a source it cannot draw or an image source with missing corners (iOS). Such queries throw `INVALID_EXPRESSION`.
+  * **iOS**: `getLayerIds` and `getSourceIds` before the style loads, `editGeoJsonSource` and `editGeoJsonUrl` without a style, and the image source calls with bytes that are not an image answer instead of never completing.
+  * `setLayerProperties` applies all the values or none.
+  * `getSourceProperties` returns the same shape for image sources on every platform.
+  * A layer added below a layer the style does not have goes on top.
+  * `setGeoJsonFeature` works after `editGeoJsonSource` and `editGeoJsonUrl`, and on a source that holds a single Feature.
+  * **Web**: `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, and `updateImageSource` moves the corners at once.
+  * **Android**: query filters keep their numbers exact, and camera values keep double precision.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

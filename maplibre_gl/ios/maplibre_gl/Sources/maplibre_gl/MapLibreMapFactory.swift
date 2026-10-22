@@ -8,8 +8,10 @@ class MapLibreMapFactory: NSObject, FlutterPlatformViewFactory {
         super.init()
     }
 
+    /// The creation params are a `PgCreationParams`, encoded with the Pigeon
+    /// message codec.
     func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
-        return FlutterStandardMessageCodec.sharedInstance()
+        return MessagesPigeonCodec.shared
     }
 
     func create(withFrame frame: CGRect, viewIdentifier viewId: Int64,

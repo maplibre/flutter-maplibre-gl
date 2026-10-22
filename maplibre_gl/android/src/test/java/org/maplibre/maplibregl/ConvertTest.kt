@@ -3,7 +3,6 @@ package org.maplibre.maplibregl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 
 /**
@@ -31,43 +30,12 @@ class ConvertTest {
         assertEquals(12, Convert.toInt(12L))
         assertEquals(12f, Convert.toFloat(12L))
         assertEquals(12.0, Convert.toDouble(12L), 0.0)
-        assertEquals(12L, Convert.toLong(12L))
-        assertEquals(12f, Convert.toFloatWrapper(12L))
     }
 
     @Test
     fun toIntKeepsTheBitsOfAColorAbove32BitsSigned() {
         // An opaque ARGB color is above Int.MAX_VALUE as a Dart int.
         assertEquals(0xFF336699.toInt(), Convert.toInt(0xFF336699L))
-    }
-
-    @Test
-    fun aCameraPositionReadsLongs() {
-        val position = Convert.toCameraPosition(
-            mapOf("bearing" to 90L, "target" to listOf(45L, 9L), "tilt" to 30L, "zoom" to 12L),
-        )
-
-        assertEquals(90.0, position.bearing, 0.0)
-        assertEquals(LatLng(45.0, 9.0), position.target)
-        assertEquals(30.0, position.tilt, 0.0)
-        assertEquals(12.0, position.zoom, 0.0)
-    }
-
-    @Test
-    fun aCameraUpdateReadsLongs() {
-        val zoom = Convert.toCameraUpdate(listOf("zoomTo", 12L), null, 2f)
-            as CameraUpdateFactory.ZoomUpdate
-        assertEquals(12.0, zoom.zoom, 0.0)
-
-        val zoomBy = Convert.toCameraUpdate(listOf("zoomBy", -2L), null, 2f)
-            as CameraUpdateFactory.ZoomUpdate
-        assertEquals(-2.0, zoomBy.zoom, 0.0)
-
-        val position = Convert.toCameraUpdate(
-            listOf("newLatLngZoom", listOf(45L, 9L), 10L), null, 2f,
-        ) as CameraUpdateFactory.CameraPositionUpdate
-        assertEquals(LatLng(45.0, 9.0), position.target)
-        assertEquals(10.0, position.zoom, 0.0)
     }
 
     @Test

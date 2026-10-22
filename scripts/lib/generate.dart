@@ -115,9 +115,17 @@ Future<void> main() async {
           "type": type.replaceAll("_", "-"),
           "typePascal": ReCase(type).pascalCase,
           "properties": buildSourceProperties(styleJson, "source_$type"),
+          "classDocSplit": [
+            for (final line in buildClassDocSplit(sourceClassDocs[type]))
+              {"part": line},
+          ],
         },
     ],
     'expressions': buildExpressionProperties(styleJson),
+    'constantKinds': [
+      for (final entry in buildConstantKinds(styleJson).entries)
+        {"name": entry.key, "kind": entry.value},
+    ],
   };
 
   // required for deduplication
@@ -360,16 +368,101 @@ Map<String, dynamic> buildStyleProperty(
   };
 }
 
+/// Class docs of the source properties, one paragraph per entry.
+const Map<String, List<String>> sourceClassDocs = {
+  "video": [_videoSourceDoc, _videoSourceSupport],
+  "image": [_imageSourceDoc],
+};
+
+const _videoSourceDoc = "A video drawn over four corners of the map.";
+
+const _videoSourceSupport =
+    "**Platform support**: web only. On Android and iOS "
+    "`MapLibreMapController.addSource` throws `UNSUPPORTED_SOURCE_TYPE`.";
+
+const _imageSourceDoc =
+    "An image drawn from a url over four corners of the map. For image bytes, "
+    "use `MapLibreMapController.addImageSource`.";
+
+/// The lines of the doc of a source property class, from [paragraphs], or no
+/// lines without any.
+List<String> buildClassDocSplit(List<String>? paragraphs) => [
+  for (final (i, paragraph) in (paragraphs ?? const <String>[]).indexed) ...[
+    if (i > 0) "",
+    ...splitIntoChunks(paragraph, 76),
+  ],
+];
+
+/// The kind of constant each layer property takes, by name, for the Swift
+/// converter, which checks constants MapLibre on iOS does not: `number`,
+/// `boolean`, `string`, `color`, `enum:` with its values joined by `|`, or
+/// `array:`, the length (`*` for any) and the kind of its items. Kinds that
+/// are not checked are left out.
+Map<String, String> buildConstantKinds(Map<String, dynamic> styleJson) {
+  final kinds = <String, String>{};
+  for (final section in styleJson.entries) {
+    if (!section.key.startsWith('paint_') &&
+        !section.key.startsWith('layout_')) {
+      continue;
+    }
+    for (final property in (section.value as Map<String, dynamic>).entries) {
+      final kind = constantKind(property.value as Map<String, dynamic>);
+      if (kind != null) kinds[property.key] = kind;
+    }
+  }
+  return Map.fromEntries(
+    kinds.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
+  );
+}
+
+/// The kind of constant a property of [spec] takes. See [buildConstantKinds].
+String? constantKind(Map<String, dynamic> spec) {
+  String? itemKind(Object? type) => switch (type) {
+    'number' => 'number',
+    'boolean' => 'boolean',
+    'string' || 'resolvedImage' => 'string',
+    'color' => 'color',
+    'enum' => 'enum:${(spec['values'] as Map).keys.join('|')}',
+    _ => null,
+  };
+  if (spec['type'] != 'array') return itemKind(spec['type']);
+  final value = spec['value'];
+  final item = itemKind(value is Map ? value['type'] : value);
+  if (item == null) return null;
+  return 'array:${spec['length'] ?? '*'}:$item';
+}
+
+/// Source property docs that replace the spec's, by spec section and
+/// property. The spec makes the url of an image source optional, but
+/// MapLibre Native cannot build one without it.
+const sourcePropertyDocOverrides = {
+  "source_image": {
+    "url":
+        "URL that points to an image. Required: `addSource` throws "
+        "`INVALID_ARGUMENT` without it.",
+    "coordinates":
+        "Corners of the image as [longitude, latitude]: top left, top right, "
+        "bottom right, bottom left. Required: `addSource` throws "
+        "`INVALID_ARGUMENT` without four valid corners.",
+  },
+};
+
 /// Build the list of source properties (excluding generic wildcard entries).
 List<Map<String, dynamic>> buildSourceProperties(
   Map<String, dynamic> styleJson,
   String key,
 ) {
   final Map<String, dynamic> items = styleJson[key];
+  final overrides = sourcePropertyDocOverrides[key] ?? const {};
 
   return items.entries
       .where((e) => e.key != "*" && e.key != "type")
-      .map((e) => buildSourceProperty(e.key, e.value))
+      .map(
+        (e) => buildSourceProperty(e.key, {
+          ...e.value as Map<String, dynamic>,
+          if (overrides[e.key] case final doc?) "doc": doc,
+        }),
+      )
       .toList();
 }
 

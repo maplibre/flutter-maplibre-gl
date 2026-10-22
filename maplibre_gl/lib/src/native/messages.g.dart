@@ -114,6 +114,40 @@ int _deepHash(Object? value) {
 /// Where an offline region download stands.
 enum PgOfflineDownloadStatus { start, progress, success, error }
 
+/// The timing curve of an eased camera move, the Dart
+/// `CameraAnimationInterpolation`. Android tells only [linear] apart: the
+/// others ease in and out there.
+enum PgCameraAnimationInterpolation {
+  linear,
+  easeInOut,
+  easeOut,
+  fastOutLinearIn,
+}
+
+/// How the camera follows the user location, the Dart
+/// `MyLocationTrackingMode`. The raw values are those of iOS
+/// `MLNUserTrackingMode`; on Android the cases match, in order, the camera
+/// modes NONE, TRACKING, TRACKING_COMPASS and TRACKING_GPS.
+enum PgMyLocationTrackingMode { none, tracking, trackingCompass, trackingGps }
+
+/// How the user location is drawn, the Dart `MyLocationRenderMode`.
+enum PgMyLocationRenderMode { normal, compass, gps }
+
+/// A corner of the map view, for the logo, the compass and the attribution
+/// button. The raw values are those of iOS `MLNOrnamentPosition`.
+enum PgOrnamentPosition { topLeft, topRight, bottomLeft, bottomRight }
+
+/// How long the map glides after a pan, the Dart `PanInertia`.
+enum PgPanInertia { none, short, normal }
+
+/// The Android location priority, the Dart `LocationPriority`. The raw values
+/// are those of the `LocationEngineRequest` priorities.
+enum PgLocationPriority { highAccuracy, balanced, lowPower, noPower }
+
+/// Where the user location comes from: the platform location engine, or the
+/// app through [MapLibreMapHostApi.locationComponentSetManualLocation].
+enum PgLocationSource { platform, manual }
+
 /// One event of an offline region download, sent for the download started
 /// with the same `downloadId`.
 class PgOfflineDownloadEvent {
@@ -259,7 +293,128 @@ class PgLatLng {
   }
 }
 
-/// A point of the map view, in logical pixels from its top left corner.
+/// A rectangle of latitudes and longitudes, given by two of its corners.
+class PgLatLngBounds {
+  PgLatLngBounds({
+    required this.southwest,
+    required this.northeast,
+  });
+
+  PgLatLng southwest;
+
+  PgLatLng northeast;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      southwest,
+      northeast,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgLatLngBounds decode(Object result) {
+    result as List<Object?>;
+    return PgLatLngBounds(
+      southwest: result[0]! as PgLatLng,
+      northeast: result[1]! as PgLatLng,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgLatLngBounds || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(southwest, other.southwest) &&
+        _deepEquals(northeast, other.northeast);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgLatLngBounds(southwest: $southwest, northeast: $northeast)';
+  }
+}
+
+/// Four geographical corners, which need not form a rectangle: where an
+/// image source is drawn.
+class PgLatLngQuad {
+  PgLatLngQuad({
+    required this.topLeft,
+    required this.topRight,
+    required this.bottomRight,
+    required this.bottomLeft,
+  });
+
+  PgLatLng topLeft;
+
+  PgLatLng topRight;
+
+  PgLatLng bottomRight;
+
+  PgLatLng bottomLeft;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      topLeft,
+      topRight,
+      bottomRight,
+      bottomLeft,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgLatLngQuad decode(Object result) {
+    result as List<Object?>;
+    return PgLatLngQuad(
+      topLeft: result[0]! as PgLatLng,
+      topRight: result[1]! as PgLatLng,
+      bottomRight: result[2]! as PgLatLng,
+      bottomLeft: result[3]! as PgLatLng,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgLatLngQuad || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(topLeft, other.topLeft) &&
+        _deepEquals(topRight, other.topRight) &&
+        _deepEquals(bottomRight, other.bottomRight) &&
+        _deepEquals(bottomLeft, other.bottomLeft);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgLatLngQuad(topLeft: $topLeft, topRight: $topRight, bottomRight: $bottomRight, bottomLeft: $bottomLeft)';
+  }
+}
+
+/// A point of the map view, or an offset on screen, in logical pixels: x to
+/// the right and y down, from the top left corner of the map view for a
+/// point.
 class PgScreenPoint {
   PgScreenPoint({
     required this.x,
@@ -311,8 +466,72 @@ class PgScreenPoint {
   }
 }
 
-/// The camera of a map: the `position` map of `camera#onMove` and
-/// `camera#onIdle`, whose `target` was a `[latitude, longitude]` list.
+/// A space along each edge of the map view, in logical pixels.
+class PgEdgeInsets {
+  PgEdgeInsets({
+    required this.top,
+    required this.left,
+    required this.bottom,
+    required this.right,
+  });
+
+  double top;
+
+  double left;
+
+  double bottom;
+
+  double right;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      top,
+      left,
+      bottom,
+      right,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgEdgeInsets decode(Object result) {
+    result as List<Object?>;
+    return PgEdgeInsets(
+      top: result[0]! as double,
+      left: result[1]! as double,
+      bottom: result[2]! as double,
+      right: result[3]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgEdgeInsets || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(top, other.top) &&
+        _deepEquals(left, other.left) &&
+        _deepEquals(bottom, other.bottom) &&
+        _deepEquals(right, other.right);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgEdgeInsets(top: $top, left: $left, bottom: $bottom, right: $right)';
+  }
+}
+
+/// The camera of a map.
 class PgCameraPosition {
   PgCameraPosition({
     required this.bearing,
@@ -321,12 +540,16 @@ class PgCameraPosition {
     required this.zoom,
   });
 
+  /// Degrees clockwise from north.
   double bearing;
 
+  /// The location at the center of the map view.
   PgLatLng target;
 
+  /// Degrees from the nadir.
   double tilt;
 
+  /// The zoom level.
   double zoom;
 
   List<Object?> _toList() {
@@ -377,8 +600,1236 @@ class PgCameraPosition {
   }
 }
 
-/// The compass heading of a user location update: the `heading` map of
-/// `map#onUserLocationUpdated`. Only iOS sends one.
+/// A change of the camera, one subclass per kind. Native reads it against
+/// the camera the map has when the call arrives.
+sealed class PgCameraUpdate {}
+
+/// Moves the camera to [cameraPosition].
+class PgCameraUpdateNewCameraPosition extends PgCameraUpdate {
+  PgCameraUpdateNewCameraPosition({
+    required this.cameraPosition,
+  });
+
+  PgCameraPosition cameraPosition;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      cameraPosition,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateNewCameraPosition decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateNewCameraPosition(
+      cameraPosition: result[0]! as PgCameraPosition,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateNewCameraPosition ||
+        other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(cameraPosition, other.cameraPosition);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateNewCameraPosition(cameraPosition: $cameraPosition)';
+  }
+}
+
+/// Centers the camera on [latLng], keeping the zoom, bearing and tilt.
+class PgCameraUpdateNewLatLng extends PgCameraUpdate {
+  PgCameraUpdateNewLatLng({
+    required this.latLng,
+  });
+
+  PgLatLng latLng;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      latLng,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateNewLatLng decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateNewLatLng(
+      latLng: result[0]! as PgLatLng,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateNewLatLng || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(latLng, other.latLng);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateNewLatLng(latLng: $latLng)';
+  }
+}
+
+/// Fits [bounds] in the map view inset by [padding], at the greatest zoom
+/// that shows them whole, keeping the bearing and tilt. The padding adds to
+/// the content insets of the map and does not stay on after the move.
+class PgCameraUpdateNewLatLngBounds extends PgCameraUpdate {
+  PgCameraUpdateNewLatLngBounds({
+    required this.bounds,
+    required this.padding,
+  });
+
+  PgLatLngBounds bounds;
+
+  PgEdgeInsets padding;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      bounds,
+      padding,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateNewLatLngBounds decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateNewLatLngBounds(
+      bounds: result[0]! as PgLatLngBounds,
+      padding: result[1]! as PgEdgeInsets,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateNewLatLngBounds ||
+        other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(bounds, other.bounds) &&
+        _deepEquals(padding, other.padding);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateNewLatLngBounds(bounds: $bounds, padding: $padding)';
+  }
+}
+
+/// Centers the camera on [latLng] at [zoom], keeping the bearing and tilt.
+class PgCameraUpdateNewLatLngZoom extends PgCameraUpdate {
+  PgCameraUpdateNewLatLngZoom({
+    required this.latLng,
+    required this.zoom,
+  });
+
+  PgLatLng latLng;
+
+  double zoom;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      latLng,
+      zoom,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateNewLatLngZoom decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateNewLatLngZoom(
+      latLng: result[0]! as PgLatLng,
+      zoom: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateNewLatLngZoom ||
+        other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(latLng, other.latLng) && _deepEquals(zoom, other.zoom);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateNewLatLngZoom(latLng: $latLng, zoom: $zoom)';
+  }
+}
+
+/// Pans the view by [dx] and [dy] logical pixels: a positive [dx] moves the
+/// view east and a positive [dy] south, for a camera facing north.
+class PgCameraUpdateScrollBy extends PgCameraUpdate {
+  PgCameraUpdateScrollBy({
+    required this.dx,
+    required this.dy,
+  });
+
+  double dx;
+
+  double dy;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      dx,
+      dy,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateScrollBy decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateScrollBy(
+      dx: result[0]! as double,
+      dy: result[1]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateScrollBy || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(dx, other.dx) && _deepEquals(dy, other.dy);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateScrollBy(dx: $dx, dy: $dy)';
+  }
+}
+
+/// Changes the zoom by [amount]. With a [focus], the location under that
+/// point of the map view stays where it is on screen.
+class PgCameraUpdateZoomBy extends PgCameraUpdate {
+  PgCameraUpdateZoomBy({
+    required this.amount,
+    this.focus,
+  });
+
+  double amount;
+
+  PgScreenPoint? focus;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      amount,
+      focus,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateZoomBy decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateZoomBy(
+      amount: result[0]! as double,
+      focus: result[1] as PgScreenPoint?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateZoomBy || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(amount, other.amount) && _deepEquals(focus, other.focus);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateZoomBy(amount: $amount, focus: $focus)';
+  }
+}
+
+/// Zooms in by one level.
+class PgCameraUpdateZoomIn extends PgCameraUpdate {
+  PgCameraUpdateZoomIn();
+
+  List<Object?> _toList() {
+    return <Object?>[];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateZoomIn decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateZoomIn();
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateZoomIn || other.runtimeType != runtimeType) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateZoomIn()';
+  }
+}
+
+/// Zooms out by one level.
+class PgCameraUpdateZoomOut extends PgCameraUpdate {
+  PgCameraUpdateZoomOut();
+
+  List<Object?> _toList() {
+    return <Object?>[];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateZoomOut decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateZoomOut();
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateZoomOut || other.runtimeType != runtimeType) {
+      return false;
+    }
+    return true;
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateZoomOut()';
+  }
+}
+
+/// Sets the zoom level to [zoom].
+class PgCameraUpdateZoomTo extends PgCameraUpdate {
+  PgCameraUpdateZoomTo({
+    required this.zoom,
+  });
+
+  double zoom;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      zoom,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateZoomTo decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateZoomTo(
+      zoom: result[0]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateZoomTo || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(zoom, other.zoom);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateZoomTo(zoom: $zoom)';
+  }
+}
+
+/// Sets the bearing to [bearing] degrees clockwise from north.
+class PgCameraUpdateBearingTo extends PgCameraUpdate {
+  PgCameraUpdateBearingTo({
+    required this.bearing,
+  });
+
+  double bearing;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      bearing,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateBearingTo decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateBearingTo(
+      bearing: result[0]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateBearingTo || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(bearing, other.bearing);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateBearingTo(bearing: $bearing)';
+  }
+}
+
+/// Sets the tilt to [tilt] degrees from the nadir, keeping the zoom.
+class PgCameraUpdateTiltTo extends PgCameraUpdate {
+  PgCameraUpdateTiltTo({
+    required this.tilt,
+  });
+
+  double tilt;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      tilt,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraUpdateTiltTo decode(Object result) {
+    result as List<Object?>;
+    return PgCameraUpdateTiltTo(
+      tilt: result[0]! as double,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraUpdateTiltTo || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(tilt, other.tilt);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraUpdateTiltTo(tilt: $tilt)';
+  }
+}
+
+/// Bounds for the camera target. Null [bounds] lift the restriction, which
+/// is not the same as leaving this option out.
+class PgCameraTargetBounds {
+  PgCameraTargetBounds({
+    this.bounds,
+  });
+
+  PgLatLngBounds? bounds;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      bounds,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCameraTargetBounds decode(Object result) {
+    result as List<Object?>;
+    return PgCameraTargetBounds(
+      bounds: result[0] as PgLatLngBounds?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCameraTargetBounds || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(bounds, other.bounds);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCameraTargetBounds(bounds: $bounds)';
+  }
+}
+
+/// The zoom range of the camera. A null end leaves that side unbounded, which
+/// is not the same as leaving this option out.
+class PgMinMaxZoomPreference {
+  PgMinMaxZoomPreference({
+    this.minZoom,
+    this.maxZoom,
+  });
+
+  double? minZoom;
+
+  double? maxZoom;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      minZoom,
+      maxZoom,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgMinMaxZoomPreference decode(Object result) {
+    result as List<Object?>;
+    return PgMinMaxZoomPreference(
+      minZoom: result[0] as double?,
+      maxZoom: result[1] as double?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgMinMaxZoomPreference || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(minZoom, other.minZoom) &&
+        _deepEquals(maxZoom, other.maxZoom);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgMinMaxZoomPreference(minZoom: $minZoom, maxZoom: $maxZoom)';
+  }
+}
+
+/// The colors of the user location puck, the Dart `MyLocationStyle`. A null
+/// color keeps the platform default.
+class PgMyLocationStyle {
+  PgMyLocationStyle({
+    this.fillColor,
+    this.bearingColor,
+    this.accuracyColor,
+    required this.accuracyCircleEnabled,
+    this.pulseEnabled,
+    this.pulseColor,
+  });
+
+  int? fillColor;
+
+  int? bearingColor;
+
+  /// Only its red, green and blue channels are used.
+  int? accuracyColor;
+
+  bool accuracyCircleEnabled;
+
+  /// Null keeps the platform default.
+  bool? pulseEnabled;
+
+  int? pulseColor;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      fillColor,
+      bearingColor,
+      accuracyColor,
+      accuracyCircleEnabled,
+      pulseEnabled,
+      pulseColor,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgMyLocationStyle decode(Object result) {
+    result as List<Object?>;
+    return PgMyLocationStyle(
+      fillColor: result[0] as int?,
+      bearingColor: result[1] as int?,
+      accuracyColor: result[2] as int?,
+      accuracyCircleEnabled: result[3]! as bool,
+      pulseEnabled: result[4] as bool?,
+      pulseColor: result[5] as int?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgMyLocationStyle || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(fillColor, other.fillColor) &&
+        _deepEquals(bearingColor, other.bearingColor) &&
+        _deepEquals(accuracyColor, other.accuracyColor) &&
+        _deepEquals(accuracyCircleEnabled, other.accuracyCircleEnabled) &&
+        _deepEquals(pulseEnabled, other.pulseEnabled) &&
+        _deepEquals(pulseColor, other.pulseColor);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgMyLocationStyle(fillColor: $fillColor, bearingColor: $bearingColor, accuracyColor: $accuracyColor, accuracyCircleEnabled: $accuracyCircleEnabled, pulseEnabled: $pulseEnabled, pulseColor: $pulseColor)';
+  }
+}
+
+/// The settings of the platform location engine. Dart fills only the fields
+/// of the platform it runs on: on Android [interval], [priority] and
+/// [displacement], on iOS [enableHighAccuracy], [displacement], [intervalMs]
+/// and [pulseWindowMs].
+class PgLocationEngineProperties {
+  PgLocationEngineProperties({
+    this.interval,
+    this.priority,
+    this.displacement,
+    this.enableHighAccuracy,
+    this.intervalMs,
+    this.pulseWindowMs,
+  });
+
+  /// Android: milliseconds between location updates.
+  int? interval;
+
+  /// Android.
+  PgLocationPriority? priority;
+
+  /// Meters the device moves before an update. iOS reads it as the distance
+  /// filter.
+  int? displacement;
+
+  /// iOS: the best accuracy rather than a hundred meters.
+  bool? enableHighAccuracy;
+
+  /// iOS: milliseconds between two GPS pulses, 0 for continuous updates.
+  int? intervalMs;
+
+  /// iOS: milliseconds the GPS stays on in each pulse.
+  int? pulseWindowMs;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      interval,
+      priority,
+      displacement,
+      enableHighAccuracy,
+      intervalMs,
+      pulseWindowMs,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgLocationEngineProperties decode(Object result) {
+    result as List<Object?>;
+    return PgLocationEngineProperties(
+      interval: result[0] as int?,
+      priority: result[1] as PgLocationPriority?,
+      displacement: result[2] as int?,
+      enableHighAccuracy: result[3] as bool?,
+      intervalMs: result[4] as int?,
+      pulseWindowMs: result[5] as int?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgLocationEngineProperties ||
+        other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(interval, other.interval) &&
+        _deepEquals(priority, other.priority) &&
+        _deepEquals(displacement, other.displacement) &&
+        _deepEquals(enableHighAccuracy, other.enableHighAccuracy) &&
+        _deepEquals(intervalMs, other.intervalMs) &&
+        _deepEquals(pulseWindowMs, other.pulseWindowMs);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgLocationEngineProperties(interval: $interval, priority: $priority, displacement: $displacement, enableHighAccuracy: $enableHighAccuracy, intervalMs: $intervalMs, pulseWindowMs: $pulseWindowMs)';
+  }
+}
+
+/// The options of a map. On creation a null field keeps the platform
+/// default; in [MapLibreMapHostApi.mapUpdate] it leaves the option as it is,
+/// as Dart sends only the options that changed. Web-only options are not
+/// sent.
+class PgMapOptions {
+  PgMapOptions({
+    this.compassEnabled,
+    this.cameraTargetBounds,
+    this.styleString,
+    this.minMaxZoomPreference,
+    this.rotateGesturesEnabled,
+    this.scrollGesturesEnabled,
+    this.tiltGesturesEnabled,
+    this.zoomGesturesEnabled,
+    this.doubleClickZoomEnabled,
+    this.panInertia,
+    this.hapticFeedbackEnabled,
+    this.trackCameraPosition,
+    this.myLocationEnabled,
+    this.myLocationTrackingMode,
+    this.myLocationRenderMode,
+    this.myLocationStyle,
+    this.logoEnabled,
+    this.logoViewPosition,
+    this.logoViewMargins,
+    this.compassViewPosition,
+    this.compassViewMargins,
+    this.attributionEnabled,
+    this.attributionButtonPosition,
+    this.attributionButtonMargins,
+    this.attributionButtonColor,
+    this.locationEngineProperties,
+    this.locationSource,
+    this.foregroundLoadColor,
+    this.translucentTextureSurface,
+    this.featureTapsTriggersMapClick,
+    this.symbolPlacementTransitionsEnabled,
+  });
+
+  bool? compassEnabled;
+
+  PgCameraTargetBounds? cameraTargetBounds;
+
+  /// A style JSON, URL, file path or asset name.
+  String? styleString;
+
+  PgMinMaxZoomPreference? minMaxZoomPreference;
+
+  bool? rotateGesturesEnabled;
+
+  bool? scrollGesturesEnabled;
+
+  bool? tiltGesturesEnabled;
+
+  bool? zoomGesturesEnabled;
+
+  bool? doubleClickZoomEnabled;
+
+  PgPanInertia? panInertia;
+
+  /// iOS only.
+  bool? hapticFeedbackEnabled;
+
+  /// Whether the camera events and [MapLibreMapHostApi.mapUpdate] report the
+  /// camera position.
+  bool? trackCameraPosition;
+
+  bool? myLocationEnabled;
+
+  PgMyLocationTrackingMode? myLocationTrackingMode;
+
+  PgMyLocationRenderMode? myLocationRenderMode;
+
+  PgMyLocationStyle? myLocationStyle;
+
+  bool? logoEnabled;
+
+  PgOrnamentPosition? logoViewPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? logoViewMargins;
+
+  PgOrnamentPosition? compassViewPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? compassViewMargins;
+
+  bool? attributionEnabled;
+
+  PgOrnamentPosition? attributionButtonPosition;
+
+  /// The horizontal and vertical margins, in logical pixels.
+  PgScreenPoint? attributionButtonMargins;
+
+  /// ARGB.
+  int? attributionButtonColor;
+
+  PgLocationEngineProperties? locationEngineProperties;
+
+  PgLocationSource? locationSource;
+
+  /// Android only, ARGB.
+  int? foregroundLoadColor;
+
+  /// Android only.
+  bool? translucentTextureSurface;
+
+  bool? featureTapsTriggersMapClick;
+
+  bool? symbolPlacementTransitionsEnabled;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      compassEnabled,
+      cameraTargetBounds,
+      styleString,
+      minMaxZoomPreference,
+      rotateGesturesEnabled,
+      scrollGesturesEnabled,
+      tiltGesturesEnabled,
+      zoomGesturesEnabled,
+      doubleClickZoomEnabled,
+      panInertia,
+      hapticFeedbackEnabled,
+      trackCameraPosition,
+      myLocationEnabled,
+      myLocationTrackingMode,
+      myLocationRenderMode,
+      myLocationStyle,
+      logoEnabled,
+      logoViewPosition,
+      logoViewMargins,
+      compassViewPosition,
+      compassViewMargins,
+      attributionEnabled,
+      attributionButtonPosition,
+      attributionButtonMargins,
+      attributionButtonColor,
+      locationEngineProperties,
+      locationSource,
+      foregroundLoadColor,
+      translucentTextureSurface,
+      featureTapsTriggersMapClick,
+      symbolPlacementTransitionsEnabled,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgMapOptions decode(Object result) {
+    result as List<Object?>;
+    return PgMapOptions(
+      compassEnabled: result[0] as bool?,
+      cameraTargetBounds: result[1] as PgCameraTargetBounds?,
+      styleString: result[2] as String?,
+      minMaxZoomPreference: result[3] as PgMinMaxZoomPreference?,
+      rotateGesturesEnabled: result[4] as bool?,
+      scrollGesturesEnabled: result[5] as bool?,
+      tiltGesturesEnabled: result[6] as bool?,
+      zoomGesturesEnabled: result[7] as bool?,
+      doubleClickZoomEnabled: result[8] as bool?,
+      panInertia: result[9] as PgPanInertia?,
+      hapticFeedbackEnabled: result[10] as bool?,
+      trackCameraPosition: result[11] as bool?,
+      myLocationEnabled: result[12] as bool?,
+      myLocationTrackingMode: result[13] as PgMyLocationTrackingMode?,
+      myLocationRenderMode: result[14] as PgMyLocationRenderMode?,
+      myLocationStyle: result[15] as PgMyLocationStyle?,
+      logoEnabled: result[16] as bool?,
+      logoViewPosition: result[17] as PgOrnamentPosition?,
+      logoViewMargins: result[18] as PgScreenPoint?,
+      compassViewPosition: result[19] as PgOrnamentPosition?,
+      compassViewMargins: result[20] as PgScreenPoint?,
+      attributionEnabled: result[21] as bool?,
+      attributionButtonPosition: result[22] as PgOrnamentPosition?,
+      attributionButtonMargins: result[23] as PgScreenPoint?,
+      attributionButtonColor: result[24] as int?,
+      locationEngineProperties: result[25] as PgLocationEngineProperties?,
+      locationSource: result[26] as PgLocationSource?,
+      foregroundLoadColor: result[27] as int?,
+      translucentTextureSurface: result[28] as bool?,
+      featureTapsTriggersMapClick: result[29] as bool?,
+      symbolPlacementTransitionsEnabled: result[30] as bool?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgMapOptions || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(compassEnabled, other.compassEnabled) &&
+        _deepEquals(cameraTargetBounds, other.cameraTargetBounds) &&
+        _deepEquals(styleString, other.styleString) &&
+        _deepEquals(minMaxZoomPreference, other.minMaxZoomPreference) &&
+        _deepEquals(rotateGesturesEnabled, other.rotateGesturesEnabled) &&
+        _deepEquals(scrollGesturesEnabled, other.scrollGesturesEnabled) &&
+        _deepEquals(tiltGesturesEnabled, other.tiltGesturesEnabled) &&
+        _deepEquals(zoomGesturesEnabled, other.zoomGesturesEnabled) &&
+        _deepEquals(doubleClickZoomEnabled, other.doubleClickZoomEnabled) &&
+        _deepEquals(panInertia, other.panInertia) &&
+        _deepEquals(hapticFeedbackEnabled, other.hapticFeedbackEnabled) &&
+        _deepEquals(trackCameraPosition, other.trackCameraPosition) &&
+        _deepEquals(myLocationEnabled, other.myLocationEnabled) &&
+        _deepEquals(myLocationTrackingMode, other.myLocationTrackingMode) &&
+        _deepEquals(myLocationRenderMode, other.myLocationRenderMode) &&
+        _deepEquals(myLocationStyle, other.myLocationStyle) &&
+        _deepEquals(logoEnabled, other.logoEnabled) &&
+        _deepEquals(logoViewPosition, other.logoViewPosition) &&
+        _deepEquals(logoViewMargins, other.logoViewMargins) &&
+        _deepEquals(compassViewPosition, other.compassViewPosition) &&
+        _deepEquals(compassViewMargins, other.compassViewMargins) &&
+        _deepEquals(attributionEnabled, other.attributionEnabled) &&
+        _deepEquals(
+          attributionButtonPosition,
+          other.attributionButtonPosition,
+        ) &&
+        _deepEquals(attributionButtonMargins, other.attributionButtonMargins) &&
+        _deepEquals(attributionButtonColor, other.attributionButtonColor) &&
+        _deepEquals(locationEngineProperties, other.locationEngineProperties) &&
+        _deepEquals(locationSource, other.locationSource) &&
+        _deepEquals(foregroundLoadColor, other.foregroundLoadColor) &&
+        _deepEquals(
+          translucentTextureSurface,
+          other.translucentTextureSurface,
+        ) &&
+        _deepEquals(
+          featureTapsTriggersMapClick,
+          other.featureTapsTriggersMapClick,
+        ) &&
+        _deepEquals(
+          symbolPlacementTransitionsEnabled,
+          other.symbolPlacementTransitionsEnabled,
+        );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgMapOptions(compassEnabled: $compassEnabled, cameraTargetBounds: $cameraTargetBounds, styleString: $styleString, minMaxZoomPreference: $minMaxZoomPreference, rotateGesturesEnabled: $rotateGesturesEnabled, scrollGesturesEnabled: $scrollGesturesEnabled, tiltGesturesEnabled: $tiltGesturesEnabled, zoomGesturesEnabled: $zoomGesturesEnabled, doubleClickZoomEnabled: $doubleClickZoomEnabled, panInertia: $panInertia, hapticFeedbackEnabled: $hapticFeedbackEnabled, trackCameraPosition: $trackCameraPosition, myLocationEnabled: $myLocationEnabled, myLocationTrackingMode: $myLocationTrackingMode, myLocationRenderMode: $myLocationRenderMode, myLocationStyle: $myLocationStyle, logoEnabled: $logoEnabled, logoViewPosition: $logoViewPosition, logoViewMargins: $logoViewMargins, compassViewPosition: $compassViewPosition, compassViewMargins: $compassViewMargins, attributionEnabled: $attributionEnabled, attributionButtonPosition: $attributionButtonPosition, attributionButtonMargins: $attributionButtonMargins, attributionButtonColor: $attributionButtonColor, locationEngineProperties: $locationEngineProperties, locationSource: $locationSource, foregroundLoadColor: $foregroundLoadColor, translucentTextureSurface: $translucentTextureSurface, featureTapsTriggersMapClick: $featureTapsTriggersMapClick, symbolPlacementTransitionsEnabled: $symbolPlacementTransitionsEnabled)';
+  }
+}
+
+/// What Dart hands the platform view of a map when it creates it, encoded
+/// with the codec of these messages (`MapLibreMapHostApi.pigeonChannelCodec`
+/// in Dart). The native platform view factories decode it with the same
+/// generated codec.
+class PgCreationParams {
+  PgCreationParams({
+    this.styleString,
+    required this.options,
+    this.initialCameraPosition,
+    required this.dragEnabled,
+    this.iosLongClickDurationMs,
+    required this.useHybridComposition,
+  });
+
+  /// The style to create the map with: a style JSON, URL, file path or asset
+  /// name. [options] carries the same value.
+  String? styleString;
+
+  /// The initial options.
+  PgMapOptions options;
+
+  /// Null leaves the camera to the style, or to the platform default.
+  PgCameraPosition? initialCameraPosition;
+
+  /// Whether the features of interactive layers can be dragged.
+  bool dragEnabled;
+
+  /// iOS only: how long a press lasts before it is a long click, in
+  /// milliseconds. Null keeps the platform default.
+  int? iosLongClickDurationMs;
+
+  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Always false on iOS.
+  bool useHybridComposition;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      styleString,
+      options,
+      initialCameraPosition,
+      dragEnabled,
+      iosLongClickDurationMs,
+      useHybridComposition,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgCreationParams decode(Object result) {
+    result as List<Object?>;
+    return PgCreationParams(
+      styleString: result[0] as String?,
+      options: result[1]! as PgMapOptions,
+      initialCameraPosition: result[2] as PgCameraPosition?,
+      dragEnabled: result[3]! as bool,
+      iosLongClickDurationMs: result[4] as int?,
+      useHybridComposition: result[5]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgCreationParams || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(styleString, other.styleString) &&
+        _deepEquals(options, other.options) &&
+        _deepEquals(initialCameraPosition, other.initialCameraPosition) &&
+        _deepEquals(dragEnabled, other.dragEnabled) &&
+        _deepEquals(iosLongClickDurationMs, other.iosLongClickDurationMs) &&
+        _deepEquals(useHybridComposition, other.useHybridComposition);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgCreationParams(styleString: $styleString, options: $options, initialCameraPosition: $initialCameraPosition, dragEnabled: $dragEnabled, iosLongClickDurationMs: $iosLongClickDurationMs, useHybridComposition: $useHybridComposition)';
+  }
+}
+
+/// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes
+/// the user location.
+class PgManualLocationUpdate {
+  PgManualLocationUpdate({
+    required this.position,
+    required this.timestamp,
+    this.horizontalAccuracy,
+    this.verticalAccuracy,
+    this.altitude,
+    this.bearing,
+    this.speed,
+  });
+
+  PgLatLng position;
+
+  /// Milliseconds since the epoch. Dart sends the time of the call when the
+  /// app gives none.
+  int timestamp;
+
+  /// Meters. Null when unknown, as are the fields below.
+  double? horizontalAccuracy;
+
+  /// Meters.
+  double? verticalAccuracy;
+
+  /// Meters.
+  double? altitude;
+
+  /// The direction of travel, in degrees clockwise from north.
+  double? bearing;
+
+  /// Meters per second.
+  double? speed;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      position,
+      timestamp,
+      horizontalAccuracy,
+      verticalAccuracy,
+      altitude,
+      bearing,
+      speed,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgManualLocationUpdate decode(Object result) {
+    result as List<Object?>;
+    return PgManualLocationUpdate(
+      position: result[0]! as PgLatLng,
+      timestamp: result[1]! as int,
+      horizontalAccuracy: result[2] as double?,
+      verticalAccuracy: result[3] as double?,
+      altitude: result[4] as double?,
+      bearing: result[5] as double?,
+      speed: result[6] as double?,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgManualLocationUpdate || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(position, other.position) &&
+        _deepEquals(timestamp, other.timestamp) &&
+        _deepEquals(horizontalAccuracy, other.horizontalAccuracy) &&
+        _deepEquals(verticalAccuracy, other.verticalAccuracy) &&
+        _deepEquals(altitude, other.altitude) &&
+        _deepEquals(bearing, other.bearing) &&
+        _deepEquals(speed, other.speed);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgManualLocationUpdate(position: $position, timestamp: $timestamp, horizontalAccuracy: $horizontalAccuracy, verticalAccuracy: $verticalAccuracy, altitude: $altitude, bearing: $bearing, speed: $speed)';
+  }
+}
+
+/// The compass heading of a user location update. Only iOS sends one.
 class PgUserHeading {
   PgUserHeading({
     this.magneticHeading,
@@ -462,8 +1913,7 @@ class PgUserHeading {
   }
 }
 
-/// A user location update: the `userLocation` map of
-/// `map#onUserLocationUpdated`.
+/// A user location update.
 class PgUserLocation {
   PgUserLocation({
     required this.position,
@@ -475,7 +1925,6 @@ class PgUserLocation {
     required this.timestamp,
   });
 
-  /// The legacy `position` list, `[latitude, longitude]`.
   PgLatLng position;
 
   double? altitude;
@@ -549,8 +1998,7 @@ class PgUserLocation {
   }
 }
 
-/// A tap on a feature of an interactive layer: the arguments of
-/// `feature#onTap`.
+/// A tap on a feature of an interactive layer.
 class PgFeatureTap {
   PgFeatureTap({
     this.id,
@@ -562,10 +2010,10 @@ class PgFeatureTap {
   /// The feature id, as the SDK reports it.
   Object? id;
 
-  /// The legacy `x` and `y`.
+  /// Where the tap landed on the map view.
   PgScreenPoint point;
 
-  /// The legacy `lat` and `lng`.
+  /// Where the tap landed on the map.
   PgLatLng latLng;
 
   String? layerId;
@@ -618,7 +2066,7 @@ class PgFeatureTap {
   }
 }
 
-/// One step of a feature drag: the arguments of `feature#onDrag`.
+/// One step of a feature drag.
 class PgFeatureDrag {
   PgFeatureDrag({
     this.id,
@@ -632,16 +2080,16 @@ class PgFeatureDrag {
   /// The feature id, as the SDK reports it.
   Object? id;
 
-  /// The legacy `x` and `y`.
+  /// Where the finger is on the map view.
   PgScreenPoint point;
 
-  /// The legacy `originLat` and `originLng`.
+  /// Where the drag started on the map.
   PgLatLng origin;
 
-  /// The legacy `currentLat` and `currentLng`.
+  /// Where the finger is on the map.
   PgLatLng current;
 
-  /// The legacy `deltaLat` and `deltaLng`.
+  /// How far the finger moved since the previous step, in degrees.
   PgLatLng delta;
 
   /// `start`, `drag` or `end`.
@@ -711,29 +2159,113 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PgOfflineDownloadStatus) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is PgOfflineDownloadEvent) {
+    } else if (value is PgCameraAnimationInterpolation) {
       buffer.putUint8(130);
+      writeValue(buffer, value.index);
+    } else if (value is PgMyLocationTrackingMode) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.index);
+    } else if (value is PgMyLocationRenderMode) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.index);
+    } else if (value is PgOrnamentPosition) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.index);
+    } else if (value is PgPanInertia) {
+      buffer.putUint8(134);
+      writeValue(buffer, value.index);
+    } else if (value is PgLocationPriority) {
+      buffer.putUint8(135);
+      writeValue(buffer, value.index);
+    } else if (value is PgLocationSource) {
+      buffer.putUint8(136);
+      writeValue(buffer, value.index);
+    } else if (value is PgOfflineDownloadEvent) {
+      buffer.putUint8(137);
       writeValue(buffer, value.encode());
     } else if (value is PgLatLng) {
-      buffer.putUint8(131);
+      buffer.putUint8(138);
+      writeValue(buffer, value.encode());
+    } else if (value is PgLatLngBounds) {
+      buffer.putUint8(139);
+      writeValue(buffer, value.encode());
+    } else if (value is PgLatLngQuad) {
+      buffer.putUint8(140);
       writeValue(buffer, value.encode());
     } else if (value is PgScreenPoint) {
-      buffer.putUint8(132);
+      buffer.putUint8(141);
+      writeValue(buffer, value.encode());
+    } else if (value is PgEdgeInsets) {
+      buffer.putUint8(142);
       writeValue(buffer, value.encode());
     } else if (value is PgCameraPosition) {
-      buffer.putUint8(133);
+      buffer.putUint8(143);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateNewCameraPosition) {
+      buffer.putUint8(144);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateNewLatLng) {
+      buffer.putUint8(145);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateNewLatLngBounds) {
+      buffer.putUint8(146);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateNewLatLngZoom) {
+      buffer.putUint8(147);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateScrollBy) {
+      buffer.putUint8(148);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateZoomBy) {
+      buffer.putUint8(149);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateZoomIn) {
+      buffer.putUint8(150);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateZoomOut) {
+      buffer.putUint8(151);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateZoomTo) {
+      buffer.putUint8(152);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateBearingTo) {
+      buffer.putUint8(153);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraUpdateTiltTo) {
+      buffer.putUint8(154);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCameraTargetBounds) {
+      buffer.putUint8(155);
+      writeValue(buffer, value.encode());
+    } else if (value is PgMinMaxZoomPreference) {
+      buffer.putUint8(156);
+      writeValue(buffer, value.encode());
+    } else if (value is PgMyLocationStyle) {
+      buffer.putUint8(157);
+      writeValue(buffer, value.encode());
+    } else if (value is PgLocationEngineProperties) {
+      buffer.putUint8(158);
+      writeValue(buffer, value.encode());
+    } else if (value is PgMapOptions) {
+      buffer.putUint8(159);
+      writeValue(buffer, value.encode());
+    } else if (value is PgCreationParams) {
+      buffer.putUint8(160);
+      writeValue(buffer, value.encode());
+    } else if (value is PgManualLocationUpdate) {
+      buffer.putUint8(161);
       writeValue(buffer, value.encode());
     } else if (value is PgUserHeading) {
-      buffer.putUint8(134);
+      buffer.putUint8(162);
       writeValue(buffer, value.encode());
     } else if (value is PgUserLocation) {
-      buffer.putUint8(135);
+      buffer.putUint8(163);
       writeValue(buffer, value.encode());
     } else if (value is PgFeatureTap) {
-      buffer.putUint8(136);
+      buffer.putUint8(164);
       writeValue(buffer, value.encode());
     } else if (value is PgFeatureDrag) {
-      buffer.putUint8(137);
+      buffer.putUint8(165);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -747,20 +2279,85 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : PgOfflineDownloadStatus.values[value];
       case 130:
-        return PgOfflineDownloadEvent.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null
+            ? null
+            : PgCameraAnimationInterpolation.values[value];
       case 131:
-        return PgLatLng.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgMyLocationTrackingMode.values[value];
       case 132:
-        return PgScreenPoint.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgMyLocationRenderMode.values[value];
       case 133:
-        return PgCameraPosition.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgOrnamentPosition.values[value];
       case 134:
-        return PgUserHeading.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgPanInertia.values[value];
       case 135:
-        return PgUserLocation.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgLocationPriority.values[value];
       case 136:
-        return PgFeatureTap.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : PgLocationSource.values[value];
       case 137:
+        return PgOfflineDownloadEvent.decode(readValue(buffer)!);
+      case 138:
+        return PgLatLng.decode(readValue(buffer)!);
+      case 139:
+        return PgLatLngBounds.decode(readValue(buffer)!);
+      case 140:
+        return PgLatLngQuad.decode(readValue(buffer)!);
+      case 141:
+        return PgScreenPoint.decode(readValue(buffer)!);
+      case 142:
+        return PgEdgeInsets.decode(readValue(buffer)!);
+      case 143:
+        return PgCameraPosition.decode(readValue(buffer)!);
+      case 144:
+        return PgCameraUpdateNewCameraPosition.decode(readValue(buffer)!);
+      case 145:
+        return PgCameraUpdateNewLatLng.decode(readValue(buffer)!);
+      case 146:
+        return PgCameraUpdateNewLatLngBounds.decode(readValue(buffer)!);
+      case 147:
+        return PgCameraUpdateNewLatLngZoom.decode(readValue(buffer)!);
+      case 148:
+        return PgCameraUpdateScrollBy.decode(readValue(buffer)!);
+      case 149:
+        return PgCameraUpdateZoomBy.decode(readValue(buffer)!);
+      case 150:
+        return PgCameraUpdateZoomIn.decode(readValue(buffer)!);
+      case 151:
+        return PgCameraUpdateZoomOut.decode(readValue(buffer)!);
+      case 152:
+        return PgCameraUpdateZoomTo.decode(readValue(buffer)!);
+      case 153:
+        return PgCameraUpdateBearingTo.decode(readValue(buffer)!);
+      case 154:
+        return PgCameraUpdateTiltTo.decode(readValue(buffer)!);
+      case 155:
+        return PgCameraTargetBounds.decode(readValue(buffer)!);
+      case 156:
+        return PgMinMaxZoomPreference.decode(readValue(buffer)!);
+      case 157:
+        return PgMyLocationStyle.decode(readValue(buffer)!);
+      case 158:
+        return PgLocationEngineProperties.decode(readValue(buffer)!);
+      case 159:
+        return PgMapOptions.decode(readValue(buffer)!);
+      case 160:
+        return PgCreationParams.decode(readValue(buffer)!);
+      case 161:
+        return PgManualLocationUpdate.decode(readValue(buffer)!);
+      case 162:
+        return PgUserHeading.decode(readValue(buffer)!);
+      case 163:
+        return PgUserLocation.decode(readValue(buffer)!);
+      case 164:
+        return PgFeatureTap.decode(readValue(buffer)!);
+      case 165:
         return PgFeatureDrag.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -1206,14 +2803,9 @@ abstract class MapLibreOfflineDownloadFlutterApi {
 /// The calls of one map, from Dart to native. Each map has its own channels,
 /// told apart by a message channel suffix: the platform view id of the map.
 ///
-/// Every method stands for one call of the method channel these messages
-/// replace, named in the first line of its documentation. Its parameters are
-/// named after the keys of that call's argument map, so native can rebuild
-/// the call and run it through the handler it already has. The documentation
-/// notes where a key was left out of the map when null, and where the
-/// arguments were not a map. Answers that Dart parses further, such as maps
-/// of features or camera positions, come back as [Object] in the shape the
-/// handler already answers with.
+/// Every method answers once its work is done, or fails with the error code
+/// native reports. See the top of this file for the units, the filters and
+/// the features.
 class MapLibreMapHostApi {
   /// Constructor for [MapLibreMapHostApi]. The [binaryMessenger] named argument is
   /// available for dependency injection. If it is left null, the default
@@ -1230,9 +2822,7 @@ class MapLibreMapHostApi {
 
   final String pigeonVar_messageChannelSuffix;
 
-  /// map#waitForMap
-  ///
-  /// The legacy call had no arguments. Answers once the map is ready.
+  /// Answers once the native map is ready for the other calls.
   Future<void> mapWaitForMap() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapWaitForMap$pigeonVar_messageChannelSuffix';
@@ -1251,10 +2841,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#update
-  ///
-  /// Answers with the camera position map.
-  Future<Object?> mapUpdate(Map<String, Object?> options) async {
+  /// Applies the options that are set and answers with the camera position,
+  /// or with null when the map does not track the camera position.
+  Future<PgCameraPosition?> mapUpdate(PgMapOptions options) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdate$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1272,13 +2861,16 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as PgCameraPosition?;
   }
 
-  /// camera#animate
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
-  Future<bool?> cameraAnimate(List<Object?> cameraUpdate, int? duration) async {
+  /// Animates the camera to [cameraUpdate] over [duration] milliseconds, or
+  /// over the platform default when it is null. Answers whether the move
+  /// finished, false when something cut it short.
+  Future<bool?> cameraAnimate(
+    PgCameraUpdate cameraUpdate,
+    int? duration,
+  ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraAnimate$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1299,8 +2891,9 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue as bool?;
   }
 
-  /// camera#move
-  Future<bool?> cameraMove(List<Object?> cameraUpdate) async {
+  /// Moves the camera to [cameraUpdate] at once. Answers whether the move
+  /// finished.
+  Future<bool?> cameraMove(PgCameraUpdate cameraUpdate) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraMove$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1321,10 +2914,10 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue as bool?;
   }
 
-  /// map#updateMyLocationTrackingMode
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
-  Future<void> mapUpdateMyLocationTrackingMode(int mode) async {
+  /// Sets how the camera follows the user location.
+  Future<void> mapUpdateMyLocationTrackingMode(
+    PgMyLocationTrackingMode mode,
+  ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapUpdateMyLocationTrackingMode$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1344,9 +2937,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// locationComponent#setTrackingCameraOptions
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
+  /// Tilts the camera to [tilt] degrees while it tracks the user location,
+  /// without ending the tracking, over [duration] milliseconds or the
+  /// platform default when it is null. Answers whether the tilt landed.
   Future<bool?> locationComponentSetTrackingCameraOptions(
     double tilt,
     int? duration,
@@ -1371,14 +2964,10 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue as bool?;
   }
 
-  /// locationComponent#setManualLocation
-  ///
-  /// The legacy arguments were [update] itself, not a map holding it under a
-  /// key: `position` (`[latitude, longitude]`) and `timestamp` (milliseconds)
-  /// always, and `horizontalAccuracy`, `verticalAccuracy`, `altitude`,
-  /// `bearing` and `speed` only when set.
+  /// Makes [update] the user location, for a map whose location source is
+  /// [PgLocationSource.manual].
   Future<void> locationComponentSetManualLocation(
-    Map<String, Object?> update,
+    PgManualLocationUpdate update,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentSetManualLocation$pigeonVar_messageChannelSuffix';
@@ -1399,9 +2988,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#matchMapLanguageWithDeviceDefault
-  ///
-  /// The legacy call had no arguments.
+  /// Shows the labels of the map in the language of the device.
   Future<void> mapMatchMapLanguageWithDeviceDefault() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapMatchMapLanguageWithDeviceDefault$pigeonVar_messageChannelSuffix';
@@ -1420,11 +3007,10 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#updateContentInsets
-  ///
-  /// [bounds] holds `top`, `left`, `bottom` and `right`.
+  /// Sets the content insets of the map, the space along its edges that the
+  /// camera keeps clear, animated or not.
   Future<void> mapUpdateContentInsets(
-    Map<String, double> bounds,
+    PgEdgeInsets insets,
     bool animated,
   ) async {
     final pigeonVar_channelName =
@@ -1435,7 +3021,7 @@ class MapLibreMapHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[bounds, animated],
+      <Object?>[insets, animated],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
@@ -1446,7 +3032,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#setMapLanguage
+  /// Shows the labels of the map in [language], an ISO language code.
   Future<void> mapSetMapLanguage(String language) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMapLanguage$pigeonVar_messageChannelSuffix';
@@ -1467,7 +3053,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#setTelemetryEnabled
+  /// Turns telemetry on or off where the SDK has it.
   Future<void> mapSetTelemetryEnabled(bool enabled) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetTelemetryEnabled$pigeonVar_messageChannelSuffix';
@@ -1488,9 +3074,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#getTelemetryEnabled
-  ///
-  /// The legacy call had no arguments.
+  /// Answers whether telemetry is on.
   Future<bool> mapGetTelemetryEnabled() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetTelemetryEnabled$pigeonVar_messageChannelSuffix';
@@ -1510,7 +3094,7 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  /// map#setMaximumFps
+  /// Caps the frame rate of the map at [fps].
   Future<void> mapSetMaximumFps(int fps) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetMaximumFps$pigeonVar_messageChannelSuffix';
@@ -1531,9 +3115,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#forceOnlineMode
-  ///
-  /// The legacy call had no arguments.
+  /// Tells the map it is online, so it loads from the network again. Android
+  /// only: iOS has nothing to do.
   Future<void> mapForceOnlineMode() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapForceOnlineMode$pigeonVar_messageChannelSuffix';
@@ -1552,9 +3135,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#pause
-  ///
-  /// The legacy call had no arguments.
+  /// Stops the rendering and the location updates of the map.
   Future<void> mapPause() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapPause$pigeonVar_messageChannelSuffix';
@@ -1573,9 +3154,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#resume
-  ///
-  /// The legacy call had no arguments.
+  /// Starts again what [mapPause] stopped.
   Future<void> mapResume() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapResume$pigeonVar_messageChannelSuffix';
@@ -1594,15 +3173,14 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// camera#ease
-  ///
-  /// [duration] is in milliseconds and was sent as null when unset.
-  /// [interpolation] is the name of a Dart `CameraAnimationInterpolation`
-  /// value, and was omitted from the legacy map when null.
+  /// Eases the camera to [cameraUpdate] over [duration] milliseconds, or over
+  /// the platform default when it is null or not positive, along
+  /// [interpolation], or the platform default curve when it is null. Answers
+  /// whether the move finished.
   Future<bool> cameraEase(
-    List<Object?> cameraUpdate,
+    PgCameraUpdate cameraUpdate,
     int? duration,
-    String? interpolation,
+    PgCameraAnimationInterpolation? interpolation,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.cameraEase$pigeonVar_messageChannelSuffix';
@@ -1624,10 +3202,8 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue! as bool;
   }
 
-  /// map#queryCameraPosition
-  ///
-  /// The legacy call had no arguments. Answers with the camera position map.
-  Future<Object?> mapQueryCameraPosition() async {
+  /// Answers with the current camera position.
+  Future<PgCameraPosition> mapQueryCameraPosition() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryCameraPosition$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1641,15 +3217,15 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as PgCameraPosition;
   }
 
-  /// map#editGeoJsonSource
-  ///
-  /// Answers with `{result: bool}`.
-  Future<Object?> mapEditGeoJsonSource(String id, String data) async {
+  /// Replaces the data of the GeoJSON source [id] with [data], GeoJSON text.
+  /// Answers whether it did, false when there is no style or no such GeoJSON
+  /// source, or when the SDK rejects the data.
+  Future<bool> mapEditGeoJsonSource(String id, String data) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonSource$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1665,15 +3241,15 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as bool;
   }
 
-  /// map#editGeoJsonUrl
-  ///
-  /// Answers with `{result: bool}`.
-  Future<Object?> mapEditGeoJsonUrl(String id, String url) async {
+  /// Points the GeoJSON source [id] at [url]. Answers whether it did, false
+  /// when there is no style or no such GeoJSON source, or when the SDK
+  /// rejects the URL.
+  Future<bool> mapEditGeoJsonUrl(String id, String url) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapEditGeoJsonUrl$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1689,16 +3265,15 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as bool;
   }
 
-  /// map#setLayerFilter
-  ///
-  /// [filter] is the JSON string the caller passed. Answers with
-  /// `{result: bool}`.
-  Future<Object?> mapSetLayerFilter(String id, String filter) async {
+  /// Sets [filter], the JSON text of an expression, on the layer [id].
+  /// Answers whether it did, false when there is no style or no such layer,
+  /// when the layer takes no filter, or when the filter does not parse.
+  Future<bool> mapSetLayerFilter(String id, String filter) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapSetLayerFilter$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1714,16 +3289,14 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as bool;
   }
 
-  /// map#getStyle
-  ///
-  /// The legacy call had no arguments. Answers with `{result: bool, json:
-  /// String?}`.
-  Future<Object?> mapGetStyle() async {
+  /// Answers with the style of the map as JSON text, or with null when the
+  /// map has no style.
+  Future<String?> mapGetStyle() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetStyle$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1739,12 +3312,11 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as String?;
   }
 
-  /// map#setCustomHeaders
-  ///
-  /// [filter] holds URL patterns, not a style filter.
+  /// Adds [headers] to the requests of the map whose URL matches one of the
+  /// patterns in [filter], or to every request when [filter] is empty.
   Future<void> mapSetCustomHeaders(
     Map<String, String> headers,
     List<String> filter,
@@ -1768,10 +3340,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#getCustomHeaders
-  ///
-  /// The legacy arguments were an empty map. Answers with the headers map.
-  Future<Object?> mapGetCustomHeaders() async {
+  /// Answers with the headers [mapSetCustomHeaders] set.
+  Future<Map<String, String>> mapGetCustomHeaders() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetCustomHeaders$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -1785,20 +3355,20 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as Map<Object?, Object?>)
+        .cast<String, String>();
   }
 
-  /// map#queryRenderedFeatures
-  ///
-  /// The point form of the call. [filter] is the expression as a list, not
-  /// encoded. Answers with `{features: [String]}`, each feature a JSON string.
-  Future<Object?> mapQueryRenderedFeaturesAtPoint(
+  /// Answers with the features rendered at the point [x], [y] of the map
+  /// view, on the layers [layerIds] or on all of them when it is empty, that
+  /// match [filter].
+  Future<List<String>> mapQueryRenderedFeaturesAtPoint(
     double x,
     double y,
     List<String> layerIds,
-    List<Object?>? filter,
+    String? filter,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQueryRenderedFeaturesAtPoint$pigeonVar_messageChannelSuffix';
@@ -1815,16 +3385,15 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// map#queryRenderedFeatures
-  ///
-  /// The rectangle form of the call. [filter] is the JSON string the caller
-  /// passed. Answers with `{features: [String]}`, each feature a JSON string.
-  Future<Object?> mapQueryRenderedFeaturesInRect(
+  /// Answers with the features rendered in the rectangle of the map view
+  /// from [left], [top] to [right], [bottom], on the layers [layerIds] or on
+  /// all of them when it is empty, that match [filter].
+  Future<List<String>> mapQueryRenderedFeaturesInRect(
     double left,
     double top,
     double right,
@@ -1847,19 +3416,19 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// map#querySourceFeatures
-  ///
-  /// [filter] is the expression as a list, not encoded. Answers with
-  /// `{features: [String]}`, each feature a JSON string.
-  Future<Object?> mapQuerySourceFeatures(
+  /// Answers with the features of the source [sourceId], in its layer
+  /// [sourceLayerId] for a vector source, that match [filter], rendered or
+  /// not. A vector source without [sourceLayerId], or a source of another
+  /// kind, answers none.
+  Future<List<String>> mapQuerySourceFeatures(
     String sourceId,
     String? sourceLayerId,
-    List<Object?>? filter,
+    String? filter,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapQuerySourceFeatures$pigeonVar_messageChannelSuffix';
@@ -1876,12 +3445,13 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// source#getClusterExpansionZoom
+  /// Answers with the zoom at which the cluster [clusterId] of the GeoJSON
+  /// source [sourceId] splits.
   Future<int> sourceGetClusterExpansionZoom(
     String sourceId,
     int clusterId,
@@ -1906,10 +3476,9 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue! as int;
   }
 
-  /// source#getClusterChildren
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
-  Future<Object?> sourceGetClusterChildren(
+  /// Answers with the features one zoom level below the cluster [clusterId]
+  /// of the GeoJSON source [sourceId].
+  Future<List<String>> sourceGetClusterChildren(
     String sourceId,
     int clusterId,
   ) async {
@@ -1928,15 +3497,14 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// source#getClusterLeaves
-  ///
-  /// Answers with `{features: [String]}`, each feature a JSON string.
-  Future<Object?> sourceGetClusterLeaves(
+  /// Answers with the points of the cluster [clusterId] of the GeoJSON source
+  /// [sourceId], [limit] of them after skipping [offset].
+  Future<List<String>> sourceGetClusterLeaves(
     String sourceId,
     int clusterId,
     int limit,
@@ -1957,14 +3525,12 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// map#invalidateAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Marks the ambient cache as stale, so it is checked against the network.
   Future<void> mapInvalidateAmbientCache() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapInvalidateAmbientCache$pigeonVar_messageChannelSuffix';
@@ -1983,9 +3549,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#clearAmbientCache
-  ///
-  /// The legacy call had no arguments.
+  /// Empties the ambient cache.
   Future<void> mapClearAmbientCache() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapClearAmbientCache$pigeonVar_messageChannelSuffix';
@@ -2004,11 +3568,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// locationComponent#getLastLocation
-  ///
-  /// The legacy call had no arguments. Answers with `{latitude, longitude}`,
-  /// or null when there is no location.
-  Future<Object?> locationComponentGetLastLocation() async {
+  /// Answers with the last known user location. Fails when there is none or
+  /// the location is off.
+  Future<PgLatLng> locationComponentGetLastLocation() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.locationComponentGetLastLocation$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2022,16 +3584,13 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as PgLatLng;
   }
 
-  /// map#getVisibleRegion
-  ///
-  /// The legacy call had no arguments. Answers with `{sw: [latitude,
-  /// longitude], ne: [latitude, longitude]}`.
-  Future<Object?> mapGetVisibleRegion() async {
+  /// Answers with the region the map view shows.
+  Future<PgLatLngBounds> mapGetVisibleRegion() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetVisibleRegion$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2045,14 +3604,13 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as PgLatLngBounds;
   }
 
-  /// style#addImage
-  ///
-  /// [length] is the length of [bytes].
+  /// Adds the image [bytes] to the style as [name], as a signed distance
+  /// field image when [sdf] is true. [length] is the length of [bytes].
   Future<void> styleAddImage(
     String name,
     Uint8List bytes,
@@ -2078,15 +3636,13 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#addImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list.
+  /// Adds an image source [imageSourceId] that draws the image [bytes] on
+  /// [coordinates]. [length] is the length of [bytes].
   Future<void> styleAddImageSource(
     String imageSourceId,
     Uint8List bytes,
     int length,
-    List<Object?> coordinates,
+    PgLatLngQuad coordinates,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImageSource$pigeonVar_messageChannelSuffix';
@@ -2107,15 +3663,14 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#updateImageSource
-  ///
-  /// [length] is the length of [bytes]. [coordinates] holds the four corners,
-  /// each a `[latitude, longitude]` list. The null ones were sent as null.
+  /// Changes the image, the corners, or both, of the image source
+  /// [imageSourceId]. What is null stays as it is. [length] is the length of
+  /// [bytes].
   Future<void> styleUpdateImageSource(
     String imageSourceId,
     Uint8List? bytes,
     int? length,
-    List<Object?>? coordinates,
+    PgLatLngQuad? coordinates,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleUpdateImageSource$pigeonVar_messageChannelSuffix';
@@ -2136,10 +3691,12 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#toScreenLocation
-  ///
-  /// Answers with `{x, y}`.
-  Future<Object?> mapToScreenLocation(double latitude, double longitude) async {
+  /// Answers with where the location [latitude], [longitude] is on the map
+  /// view.
+  Future<PgScreenPoint> mapToScreenLocation(
+    double latitude,
+    double longitude,
+  ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocation$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2155,15 +3712,14 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as PgScreenPoint;
   }
 
-  /// map#toScreenLocationBatch
-  ///
-  /// [coordinates] holds latitude and longitude pairs, one after the other.
-  /// Answers with x and y pairs in the same order.
+  /// The batch form of [mapToScreenLocation]: [coordinates] holds latitude
+  /// and longitude pairs one after the other, and the answer holds the x and
+  /// y of each in the same order.
   Future<Float64List> mapToScreenLocationBatch(Float64List coordinates) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToScreenLocationBatch$pigeonVar_messageChannelSuffix';
@@ -2185,7 +3741,7 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue! as Float64List;
   }
 
-  /// style#removeSource
+  /// Removes the source [sourceId] from the style.
   Future<void> styleRemoveSource(String sourceId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveSource$pigeonVar_messageChannelSuffix';
@@ -2206,7 +3762,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#addLayer
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], on top of the others.
   Future<void> styleAddLayer(
     String imageLayerId,
     String imageSourceId,
@@ -2232,7 +3789,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#addLayerBelow
+  /// Adds a raster layer [imageLayerId] that draws the source
+  /// [imageSourceId], below the layer [belowLayerId].
   Future<void> styleAddLayerBelow(
     String imageLayerId,
     String imageSourceId,
@@ -2259,7 +3817,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#removeLayer
+  /// Removes the layer [layerId] from the style.
   Future<void> styleRemoveLayer(String layerId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleRemoveLayer$pigeonVar_messageChannelSuffix';
@@ -2280,9 +3838,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#moveLayer
-  ///
-  /// [belowLayerId] was omitted from the legacy map when null.
+  /// Moves the layer [layerId] below the layer [belowLayerId], or on top of
+  /// the others when it is null.
   Future<void> styleMoveLayer(String layerId, String? belowLayerId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleMoveLayer$pigeonVar_messageChannelSuffix';
@@ -2303,11 +3860,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#setFilter
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
-  Future<void> styleSetFilter(String layerId, String filter) async {
+  /// Sets [filter] on the layer [layerId], or removes its filter when
+  /// [filter] is null.
+  Future<void> styleSetFilter(String layerId, String? filter) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetFilter$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2327,10 +3882,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#getFilter
-  ///
-  /// Answers with `{filter: String?}`, the expression as a JSON string.
-  Future<Object?> styleGetFilter(String layerId) async {
+  /// Answers with the filter of the layer [layerId] as JSON text, or with
+  /// null when it has none.
+  Future<String?> styleGetFilter(String layerId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetFilter$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2348,13 +3902,11 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as String?;
   }
 
-  /// map#toLatLng
-  ///
-  /// Answers with `{latitude, longitude}`.
-  Future<Object?> mapToLatLng(double x, double y) async {
+  /// Answers with the location at the point [x], [y] of the map view.
+  Future<PgLatLng> mapToLatLng(double x, double y) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapToLatLng$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2370,15 +3922,14 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as PgLatLng;
   }
 
-  /// map#getMetersPerPixelAtLatitude
-  ///
-  /// Answers with `{metersperpixel: double}`.
-  Future<Object?> mapGetMetersPerPixelAtLatitude(double latitude) async {
+  /// Answers with the meters per pixel at [latitude] at the current zoom, as
+  /// the SDK reports them.
+  Future<double> mapGetMetersPerPixelAtLatitude(double latitude) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapGetMetersPerPixelAtLatitude$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -2394,14 +3945,12 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue! as double;
   }
 
-  /// source#addGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Adds a GeoJSON source [sourceId] holding [geojson], GeoJSON text.
   Future<void> sourceAddGeoJson(String sourceId, String geojson) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceAddGeoJson$pigeonVar_messageChannelSuffix';
@@ -2422,9 +3971,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// source#setGeoJson
-  ///
-  /// [geojson] is the data encoded by Dart.
+  /// Replaces the data of the GeoJSON source [sourceId] with [geojson],
+  /// GeoJSON text.
   Future<void> sourceSetGeoJson(String sourceId, String geojson) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetGeoJson$pigeonVar_messageChannelSuffix';
@@ -2445,7 +3993,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// map#setCameraBounds
+  /// Eases the camera to the bounds from [west], [south] to [east], [north],
+  /// inset by [padding] logical pixels. Answers once the move starts.
   Future<void> mapSetCameraBounds(
     double west,
     double north,
@@ -2472,10 +4021,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// symbolLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a symbol layer. [properties] are its paint and layout properties
+  /// in style-spec form. [enableInteraction] makes its features report taps
+  /// and drags.
   Future<void> symbolLayerAdd(
     String sourceId,
     String layerId,
@@ -2483,7 +4031,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) async {
@@ -2516,10 +4064,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// lineLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a line layer, as [symbolLayerAdd].
   Future<void> lineLayerAdd(
     String sourceId,
     String layerId,
@@ -2527,7 +4072,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) async {
@@ -2560,7 +4105,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// layer#setProperties
+  /// Sets the paint and layout [properties], in style-spec form, of the
+  /// layer [layerId].
   Future<void> layerSetProperties(
     String layerId,
     Map<String, Object?> properties,
@@ -2584,10 +4130,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// circleLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a circle layer, as [symbolLayerAdd].
   Future<void> circleLayerAdd(
     String sourceId,
     String layerId,
@@ -2595,7 +4138,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) async {
@@ -2628,10 +4171,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// fillLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a fill layer, as [symbolLayerAdd].
   Future<void> fillLayerAdd(
     String sourceId,
     String layerId,
@@ -2639,7 +4179,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) async {
@@ -2672,10 +4212,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// fillExtrusionLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a fill extrusion layer, as [symbolLayerAdd].
   Future<void> fillExtrusionLayerAdd(
     String sourceId,
     String layerId,
@@ -2683,7 +4220,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     bool enableInteraction,
     Map<String, Object?> properties,
   ) async {
@@ -2716,9 +4253,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// style#addSource
-  ///
-  /// [properties] is the source in style-spec form.
+  /// Adds the source [sourceId]. [properties] is the source in style-spec
+  /// form.
   Future<void> styleAddSource(
     String sourceId,
     Map<String, Object?> properties,
@@ -2742,7 +4278,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// rasterLayer#add
+  /// Adds a raster layer. [properties] are its paint and layout properties
+  /// in style-spec form.
   Future<void> rasterLayerAdd(
     String sourceId,
     String layerId,
@@ -2770,7 +4307,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// hillshadeLayer#add
+  /// Adds a hillshade layer, as [rasterLayerAdd].
   Future<void> hillshadeLayerAdd(
     String sourceId,
     String layerId,
@@ -2798,7 +4335,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// colorReliefLayer#add
+  /// Adds a color relief layer, as [rasterLayerAdd].
   Future<void> colorReliefLayerAdd(
     String sourceId,
     String layerId,
@@ -2826,7 +4363,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// backgroundLayer#add
+  /// Adds a background layer, as [rasterLayerAdd] but without a source.
   Future<void> backgroundLayerAdd(
     String layerId,
     String? belowLayerId,
@@ -2853,10 +4390,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// heatmapLayer#add
-  ///
-  /// [filter] is the expression encoded by Dart, the string `null` when there
-  /// is none.
+  /// Adds a heatmap layer, as [symbolLayerAdd] but without interaction.
   Future<void> heatmapLayerAdd(
     String sourceId,
     String layerId,
@@ -2864,7 +4398,7 @@ class MapLibreMapHostApi {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
-    String filter,
+    String? filter,
     Map<String, Object?> properties,
   ) async {
     final pigeonVar_channelName =
@@ -2895,9 +4429,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// source#setFeature
-  ///
-  /// [geojsonFeature] is the feature encoded by Dart.
+  /// Replaces the feature of the GeoJSON source [sourceId] that has the id
+  /// of [geojsonFeature], GeoJSON text. Without such a feature nothing
+  /// changes.
   Future<void> sourceSetFeature(String sourceId, String geojsonFeature) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.sourceSetFeature$pigeonVar_messageChannelSuffix';
@@ -2918,9 +4452,9 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// source#setFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Merges [state], app data of any shape, into the state of the feature
+  /// [featureId]. Android only: Dart rejects the call on iOS before sending
+  /// it.
   Future<void> sourceSetFeatureState(
     String sourceId,
     String featureId,
@@ -2946,9 +4480,10 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// source#removeFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it.
+  /// Removes the key [stateKey] of the state of the feature [featureId], or
+  /// the whole state of that feature without [stateKey], or the state of
+  /// every feature of the source without [featureId]. Android only: Dart
+  /// rejects the call on iOS before sending it.
   Future<void> sourceRemoveFeatureState(
     String sourceId,
     String? featureId,
@@ -2974,11 +4509,10 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// source#getFeatureState
-  ///
-  /// Android only: Dart rejects the call on iOS before sending it. Answers
-  /// with `{state: String?}`, the state as a JSON string.
-  Future<Object?> sourceGetFeatureState(
+  /// Answers with the state of the feature [featureId] as JSON text, or with
+  /// null when it has none. Android only: Dart rejects the call on iOS before
+  /// sending it.
+  Future<String?> sourceGetFeatureState(
     String sourceId,
     String featureId,
     String? sourceLayer,
@@ -3000,12 +4534,12 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as String?;
   }
 
-  /// style#setLight
-  ///
-  /// [light] is the light in style-spec form.
+  /// Sets the light of the style. [light] holds the light properties in
+  /// style-spec form. It stays a map because each property can be any value
+  /// in Dart: native checks that each one is a constant of the right type.
   Future<void> styleSetLight(Map<String, Object?> light) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetLight$pigeonVar_messageChannelSuffix';
@@ -3026,7 +4560,7 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// layer#setVisibility
+  /// Shows or hides the layer [layerId].
   Future<void> layerSetVisibility(String layerId, bool visible) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility$pigeonVar_messageChannelSuffix';
@@ -3047,9 +4581,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// layer#setVisibilityBatch
-  ///
-  /// Answers with the ids that matched no layer.
+  /// Shows or hides the layers [layerIds]. Answers with the ids that matched
+  /// no layer.
   Future<List<String>?> layerSetVisibilityBatch(
     List<String> layerIds,
     bool visible,
@@ -3074,7 +4607,7 @@ class MapLibreMapHostApi {
     return (pigeonVar_replyValue as List<Object?>?)?.cast<String>();
   }
 
-  /// layer#setZoomRange
+  /// Sets the zoom range of the layer [layerId].
   Future<void> layerSetZoomRange(
     String layerId,
     double minzoom,
@@ -3099,9 +4632,8 @@ class MapLibreMapHostApi {
     );
   }
 
-  /// layer#getVisibility
-  ///
-  /// Answers with null when there is no such layer.
+  /// Answers whether the layer [layerId] is visible, or with null when there
+  /// is no such layer.
   Future<bool?> layerGetVisibility(String layerId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerGetVisibility$pigeonVar_messageChannelSuffix';
@@ -3123,10 +4655,8 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue as bool?;
   }
 
-  /// map#takeSnapshot
-  ///
-  /// [width] and [height] are in logical pixels, and each was omitted from
-  /// the legacy map when null. Answers with PNG bytes.
+  /// Answers with a PNG of the map, [width] by [height] logical pixels, or
+  /// the size of the map view for what is null.
   Future<Uint8List?> mapTakeSnapshot(int? width, int? height) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot$pigeonVar_messageChannelSuffix';
@@ -3148,10 +4678,9 @@ class MapLibreMapHostApi {
     return pigeonVar_replyValue as Uint8List?;
   }
 
-  /// style#getLayerIds
-  ///
-  /// The legacy call had no arguments. Answers with `{layers: [String]}`.
-  Future<Object?> styleGetLayerIds() async {
+  /// Answers with the ids of the layers of the style, in the order of the
+  /// style.
+  Future<List<String>> styleGetLayerIds() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerIds$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -3165,15 +4694,13 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// style#getSourceIds
-  ///
-  /// The legacy call had no arguments. Answers with `{sources: [String]}`.
-  Future<Object?> styleGetSourceIds() async {
+  /// Answers with the ids of the sources of the style.
+  Future<List<String>> styleGetSourceIds() async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceIds$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -3187,16 +4714,14 @@ class MapLibreMapHostApi {
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
       pigeonVar_replyList,
       pigeonVar_channelName,
-      isNullValid: true,
+      isNullValid: false,
     );
-    return pigeonVar_replyValue;
+    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
   }
 
-  /// style#getLayerProperties
-  ///
-  /// Answers with `{properties: String}`, the layer as a JSON string, or
-  /// without `properties` when there is no such layer.
-  Future<Object?> styleGetLayerProperties(String layerId) async {
+  /// Answers with the layer [layerId] in style-spec form as JSON text, or
+  /// with null when there is no such layer.
+  Future<String?> styleGetLayerProperties(String layerId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetLayerProperties$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -3214,14 +4739,12 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as String?;
   }
 
-  /// style#getSourceProperties
-  ///
-  /// Answers with `{properties: String}`, the source as a JSON string, or
-  /// without `properties` when there is no such source.
-  Future<Object?> styleGetSourceProperties(String sourceId) async {
+  /// Answers with the source [sourceId] in style-spec form as JSON text, or
+  /// with null when there is no such source.
+  Future<String?> styleGetSourceProperties(String sourceId) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetSourceProperties$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -3239,10 +4762,11 @@ class MapLibreMapHostApi {
       pigeonVar_channelName,
       isNullValid: true,
     );
-    return pigeonVar_replyValue;
+    return pigeonVar_replyValue as String?;
   }
 
-  /// style#setStyle
+  /// Replaces the style with [style]: a style JSON, URL, file path or asset
+  /// name.
   Future<void> styleSetStyle(String style) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetStyle$pigeonVar_messageChannelSuffix';
@@ -3266,57 +4790,47 @@ class MapLibreMapHostApi {
 
 /// The events of one map, from native to Dart, on channels told apart by the
 /// same suffix as [MapLibreMapHostApi].
-///
-/// Every method stands for one call native made on the method channel these
-/// messages replace, named in the first line of its documentation.
 abstract class MapLibreMapFlutterApi {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  /// feature#onTap
+  /// The user tapped a feature of an interactive layer.
   Future<void> featureOnTap(PgFeatureTap tap);
 
-  /// feature#onDrag
+  /// The user dragged a feature of an interactive layer.
   Future<void> featureOnDrag(PgFeatureDrag drag);
 
-  /// camera#onMoveStarted
-  ///
-  /// [isGesture] is whether the SDK reports a gesture of the user as the
-  /// cause of the move. The legacy call carried it on Android only.
+  /// The camera started to move. [isGesture] is whether the SDK reports a
+  /// gesture of the user as the cause.
   Future<void> cameraOnMoveStarted(bool isGesture);
 
-  /// camera#onMove
+  /// The camera moved, for a map that tracks the camera position.
   Future<void> cameraOnMove(PgCameraPosition position);
 
-  /// camera#onIdle
-  ///
-  /// [position] is null when the map does not track the camera position.
+  /// The camera stopped. [position] is null when the map does not track the
+  /// camera position.
   Future<void> cameraOnIdle(PgCameraPosition? position);
 
-  /// map#onStyleLoaded
+  /// A style finished loading.
   Future<void> mapOnStyleLoaded();
 
-  /// map#onMapClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user tapped the map at [point] of the map view, [latLng] on the
+  /// map.
   Future<void> mapOnMapClick(PgScreenPoint point, PgLatLng latLng);
 
-  /// map#onMapLongClick
-  ///
-  /// [point] is the legacy `x` and `y`, [latLng] the legacy `lat` and `lng`.
+  /// The user long pressed the map at [point] of the map view, [latLng] on
+  /// the map.
   Future<void> mapOnMapLongClick(PgScreenPoint point, PgLatLng latLng);
 
-  /// map#onCameraTrackingChanged
-  ///
-  /// [mode] is the index of the Dart `MyLocationTrackingMode`.
-  Future<void> mapOnCameraTrackingChanged(int mode);
+  /// The way the camera follows the user location changed to [mode].
+  Future<void> mapOnCameraTrackingChanged(PgMyLocationTrackingMode mode);
 
-  /// map#onCameraTrackingDismissed
+  /// The camera stopped following the user location.
   Future<void> mapOnCameraTrackingDismissed();
 
-  /// map#onIdle
+  /// The map finished rendering and has nothing left to load or animate.
   Future<void> mapOnIdle();
 
-  /// map#onUserLocationUpdated
+  /// The user location changed, with the compass [heading] on iOS.
   Future<void> mapOnUserLocationUpdated(
     PgUserLocation userLocation,
     PgUserHeading? heading,
@@ -3540,7 +5054,8 @@ abstract class MapLibreMapFlutterApi {
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           final List<Object?> args = message! as List<Object?>;
-          final int arg_mode = args[0]! as int;
+          final PgMyLocationTrackingMode arg_mode =
+              args[0]! as PgMyLocationTrackingMode;
           try {
             await api.mapOnCameraTrackingChanged(arg_mode);
             return wrapResponse(empty: true);

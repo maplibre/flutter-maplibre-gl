@@ -4,8 +4,8 @@ import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Answers a Pigeon callback from code written against [MethodChannel.Result]:
- * the offline and HTTP helpers, and the calls of a map. [convert] turns the
+ * Answers a Pigeon callback from code written against [MethodChannel.Result],
+ * such as the offline and HTTP helpers and the map calls. [convert] turns the
  * success value into the type the Pigeon method returns.
  *
  * Only the first answer is delivered: a second one would be a second reply to

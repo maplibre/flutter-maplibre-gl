@@ -22,20 +22,23 @@ struct LocationPuckStyle: Equatable {
         self == LocationPuckStyle()
     }
 
-    /// Reads the map written by `MyLocationStyle.toJson`.
-    init(json: [String: Any] = [:]) {
-        fillColor = Self.color(json["fillColor"])
-        bearingColor = Self.color(json["bearingColor"])
+    /// The SDK's own look.
+    init() {}
+
+    /// Reads the `MyLocationStyle` Dart sends.
+    init(_ style: PgMyLocationStyle) {
+        fillColor = Self.color(style.fillColor)
+        bearingColor = Self.color(style.bearingColor)
         // The circle keeps the SDK's own translucency, as on Android and web,
         // so only the color channels are used.
-        accuracyColor = Self.color(json["accuracyColor"])?.withAlphaComponent(1)
-        accuracyCircleEnabled = json["accuracyCircleEnabled"] as? Bool ?? true
-        pulseEnabled = json["pulseEnabled"] as? Bool
-        pulseColor = Self.color(json["pulseColor"])
+        accuracyColor = Self.color(style.accuracyColor)?.withAlphaComponent(1)
+        accuracyCircleEnabled = style.accuracyCircleEnabled
+        pulseEnabled = style.pulseEnabled
+        pulseColor = Self.color(style.pulseColor)
     }
 
-    private static func color(_ value: Any?) -> UIColor? {
-        guard let argb = (value as? NSNumber)?.intValue else { return nil }
+    private static func color(_ argb: Int64?) -> UIColor? {
+        guard let argb = argb else { return nil }
         return UIColor(
             red: CGFloat((argb >> 16) & 0xFF) / 255.0,
             green: CGFloat((argb >> 8) & 0xFF) / 255.0,
