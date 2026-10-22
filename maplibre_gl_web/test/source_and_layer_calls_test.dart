@@ -350,6 +350,29 @@ void main() {
     });
   });
 
+  group('removeSource', () {
+    test('keeps a source a layer still uses, with the data '
+        'setGeoJsonFeature changes', () async {
+      await controller.addGeoJsonSource('points', _collection([_point(1, 1)]));
+      await controller.addCircleLayer(
+        'points',
+        'circles',
+        const {},
+        enableInteraction: false,
+      );
+
+      await controller.removeSource('points');
+
+      expect(map.sources, contains('points'));
+      await controller.setFeatureForGeoJsonSource('points', _point(1, 5));
+      expect(map.data('points'), _collection([_point(1, 5)]));
+
+      await controller.removeLayer('circles');
+      await controller.removeSource('points');
+      expect(map.sources, isNot(contains('points')));
+    });
+  });
+
   group('image sources from bytes', () {
     test('load from an object URL that is revoked once the source no longer '
         'shows it', () async {

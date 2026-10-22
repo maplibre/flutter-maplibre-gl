@@ -1220,11 +1220,14 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> removeSource(String sourceId) async {
     _ensureStyleReady();
-    if (_map.getSource(sourceId) != null) {
-      _map.removeSource(sourceId);
-      _forgetImageUrl(sourceId);
-      _addedFeaturesByLayer.remove(sourceId);
-    }
+    if (_map.getSource(sourceId) == null) return;
+    _map.removeSource(sourceId);
+    // maplibre-gl-js keeps a source a layer still uses, as MapLibre Native
+    // does, and only reports it in an error event. What is known about the
+    // source stays with it.
+    if (_map.getSource(sourceId) != null) return;
+    _forgetImageUrl(sourceId);
+    _addedFeaturesByLayer.remove(sourceId);
   }
 
   /// Camera position for the streaming paths (e.g. reporting the position after
