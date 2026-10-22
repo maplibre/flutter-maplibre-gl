@@ -105,6 +105,8 @@ await controller.setLayerFilter('pois', ['==', ['id'], 2]);
 
 Ids come back as they are in the data on every platform: `2` and `2.5` as numbers, `"2"` and `"poi-12"` as strings. The exception is GeoJSON loaded from a URL or declared in the style, which does not pass through the plugin: on Android and web only its integer ids are sure to come back the same.
 
+A source added with `addSource` and `generateId: true` now numbers its features by their index on Android and iOS too, where they had no id.
+
 ### Android and iOS: Pigeon messages
 
 The plugin now talks to Android and iOS through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon), instead of hand-written method channels. Your map code keeps working as before, with these differences:
