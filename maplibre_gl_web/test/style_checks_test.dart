@@ -277,4 +277,55 @@ void main() {
       );
     });
   });
+
+  group('filterReason', () {
+    test('reads the reason of an error about the filter under the key', () {
+      expect(
+        filterReason(
+          'layers.my.layer.filter[0]: Unknown expression "x".',
+          'layers.my.layer',
+        ),
+        'Unknown expression "x".',
+      );
+      expect(
+        filterReason(
+          'layers.points.filter: Expected an array.',
+          'layers.points',
+        ),
+        'Expected an array.',
+      );
+      expect(
+        filterReason(
+          'queryRenderedFeatures.filter[1]: Expected a number.',
+          'queryRenderedFeatures',
+        ),
+        'Expected a number.',
+      );
+    });
+
+    test('is null for an error about something else', () {
+      expect(
+        filterReason(
+          'layers.points.paint.circle-radius: Expected a number.',
+          'layers.points',
+        ),
+        isNull,
+      );
+      expect(
+        filterReason(
+          'layers.other.filter: Expected an array.',
+          'layers.points',
+        ),
+        isNull,
+      );
+      expect(
+        filterReason(
+          'layersXpoints.filter: Expected an array.',
+          'layers.points',
+        ),
+        isNull,
+        reason: 'the key is matched as it is written',
+      );
+    });
+  });
 }

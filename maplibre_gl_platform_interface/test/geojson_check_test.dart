@@ -374,6 +374,17 @@ void main() {
       expect(geoJsonTextError('not json'), 'Not valid JSON.');
       expect(geoJsonTextError('"text"'), 'GeoJSON must be an object.');
     });
+
+    test('decodeGeoJson keeps the data it checked', () {
+      final point = decodeGeoJson('{"type":"Point","coordinates":[1,2]}');
+      expect(point.data, _point());
+      expect(point.error, isNull);
+      expect(decodeGeoJson('not json'), (data: null, error: 'Not valid JSON.'));
+      expect(decodeGeoJson('"text"'), (
+        data: 'text',
+        error: 'GeoJSON must be an object.',
+      ));
+    });
   });
 
   test('the exceptions name the source and the reason', () {

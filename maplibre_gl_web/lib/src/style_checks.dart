@@ -77,6 +77,17 @@ PlatformException layerNotAdded(String layerId, String? reason) =>
       details: reason,
     );
 
+/// The reason in [message], an error event maplibre-gl-js fired while it
+/// validated the filter under [key], such as `layers.<layer id>` or
+/// `queryRenderedFeatures`, or null for an error about something else.
+String? filterReason(String message, String key) {
+  // An index can follow the key, as in "layers.points.filter[0]: ".
+  final match = RegExp(
+    '^${RegExp.escape(key)}\\.filter[^:]*: ',
+  ).firstMatch(message);
+  return match == null ? null : message.substring(match.end);
+}
+
 /// Whether [value], a layer property value, reads as an expression: an array
 /// that starts with a string. Every platform picks INVALID_EXPRESSION or
 /// INVALID_ARGUMENT this way, whatever reason its engine gives.

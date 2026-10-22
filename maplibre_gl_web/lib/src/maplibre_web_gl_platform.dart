@@ -744,18 +744,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    final Object? geojson;
-    try {
-      geojson = jsonDecode(data);
-    } on FormatException {
-      throw invalidGeoJson(id, _filterNotJson);
-    }
-    final reason = geoJsonError(geojson);
-    if (reason != null) throw invalidGeoJson(id, reason);
+    final (data: geojson, :error) = decodeGeoJson(data);
+    if (error != null) throw invalidGeoJson(id, error);
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
     await source.setData(
-      _rememberGeoJson(id, Map<String, dynamic>.from(geojson! as Map)),
+      _rememberGeoJson(id, geojson! as Map<String, dynamic>),
     );
     return true;
   }
@@ -775,11 +769,16 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   /// The GeoJSON source [id], or null without a style or such a source.
-  GeoJsonSource? _editableGeoJsonSource(String id) {
-    if (!_styleReady) return null;
-    final source = _map.getSource(id);
-    if (source is! GeoJsonSource || _sourceType(id) != 'geojson') return null;
-    return source;
+  GeoJsonSource? _editableGeoJsonSource(String id) =>
+      _styleReady ? _geoJsonSourceOrNull(id) : null;
+
+  /// The GeoJSON source [sourceId], or null without such a source.
+  GeoJsonSource? _geoJsonSourceOrNull(String sourceId) {
+    final source = _jsSource(sourceId);
+    if (source?.getProperty<JSString?>('type'.toJS)?.toDart != 'geojson') {
+      return null;
+    }
+    return GeoJsonSource.fromJsObject(source! as GeoJsonSourceJsImpl);
   }
 
   @override
@@ -993,18 +992,15 @@ class MapLibreMapController extends MapLibrePlatform
         thrownStack = stack;
       }
     });
-    // The key before the reason names the filter, such as
-    // "queryRenderedFeatures.filter[0]: ".
-    final key = RegExp('^${RegExp.escape(method)}\\.filter[^:]*: ');
     String? reason;
     for (final message in errors) {
-      final match = key.firstMatch(message);
-      if (match == null) {
+      final filterReason = checks.filterReason(message, method);
+      if (filterReason == null) {
         // Not about the filter: logged, as maplibre-gl-js does without a
         // listener.
         web.console.error(message.toJS);
       } else {
-        reason ??= message.substring(match.end);
+        reason ??= filterReason;
       }
     }
     if (reason != null) throw _invalidFilter(reason);
@@ -1050,14 +1046,12 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
-    final source = _map.getSource(sourceId);
-    if (source == null) {
-      throw PlatformException(
-        code: 'SOURCE_NOT_FOUND',
-        message: "Source '$sourceId' does not exist in the current style.",
-      );
-    }
-    if (source is! GeoJsonSource || !source.hasClusterInspection) {
+    final jsSource = _jsSource(sourceId);
+    if (jsSource == null) throw _sourceNotFound(sourceId);
+    final source = GeoJsonSource.fromJsObject(
+      jsSource as GeoJsonSourceJsImpl,
+    );
+    if (!source.hasClusterInspection) {
       throw PlatformException(
         code: 'UNSUPPORTED_SOURCE_TYPE',
         message:
@@ -1980,9 +1974,9 @@ class MapLibreMapController extends MapLibrePlatform
     // throwing, so listen for it while the filter is set.
     final errors = _mapErrorsDuring(() => _map.setFilter(layerId, filter));
     if (errors.isNotEmpty) {
-      // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+      final message = errors.first;
       throw _invalidFilter(
-        errors.first.replaceFirst(RegExp(r'^layers\.[^:]*: '), ''),
+        checks.filterReason(message, 'layers.$layerId') ?? message,
       );
     }
   }
@@ -2078,11 +2072,7 @@ class MapLibreMapController extends MapLibrePlatform
   /// and `SOURCE_NOT_FOUND` without such a source.
   GeoJsonSource _geoJsonSource(String sourceId) {
     _ensureStyleReady();
-    final source = _map.getSource(sourceId);
-    if (source is! GeoJsonSource || _sourceType(sourceId) != 'geojson') {
-      throw _sourceNotFound(sourceId);
-    }
-    return source;
+    return _geoJsonSourceOrNull(sourceId) ?? (throw _sourceNotFound(sourceId));
   }
 
   @override
@@ -2551,15 +2541,14 @@ class MapLibreMapController extends MapLibrePlatform
         if (filter != null) 'filter': filter,
       };
       final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
-      final filterKey = RegExp(r'^layers\..*?\.filter[^:]*: ');
       String? filterReason;
       checks.PropertyError? propertyError;
       final unknown = <String>{};
       final others = <String>[];
       for (final message in errors) {
-        final filterMatch = filterKey.firstMatch(message);
-        if (filterMatch != null) {
-          filterReason ??= message.substring(filterMatch.end);
+        final reason = checks.filterReason(message, 'layers.$layerId');
+        if (reason != null) {
+          filterReason ??= reason;
           continue;
         }
         final error = checks.propertyError(message);

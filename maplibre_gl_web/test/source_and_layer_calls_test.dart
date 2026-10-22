@@ -285,6 +285,32 @@ void main() {
       expect(map.data('points'), _collection([_point(2, 5)]));
     });
 
+    test('editGeoJsonSource reads the text once and keeps the data for '
+        'setGeoJsonFeature', () async {
+      await controller.addGeoJsonSource('points', _collection([]));
+
+      expect(
+        await controller.editGeoJsonSource(
+          'points',
+          jsonEncode(_collection([_point(1, 1)])),
+        ),
+        isTrue,
+      );
+      await controller.setFeatureForGeoJsonSource('points', _point(1, 5));
+
+      expect(map.data('points'), _collection([_point(1, 5)]));
+      await expectLater(
+        controller.editGeoJsonSource('points', 'not json'),
+        throwsA(
+          platformError('INVALID_GEOJSON').having(
+            (e) => e.message,
+            'message',
+            "The data for source 'points' is not GeoJSON: Not valid JSON.",
+          ),
+        ),
+      );
+    });
+
     // Android and iOS send what jsonEncode writes, and it writes an object
     // through its toJson().
     test('objects with toJson() go in as what toJson() returns', () async {

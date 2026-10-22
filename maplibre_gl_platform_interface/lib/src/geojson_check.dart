@@ -34,14 +34,18 @@ String? geoJsonError(Object? data) {
 
 /// Why [text] is not the JSON text of a GeoJSON object MapLibre can read, or
 /// null when it is. See [geoJsonError].
-String? geoJsonTextError(String text) {
+String? geoJsonTextError(String text) => decodeGeoJson(text).error;
+
+/// [text] decoded, and why it is not the JSON text of a GeoJSON object
+/// MapLibre can read, or a null error when it is. See [geoJsonError].
+({Object? data, String? error}) decodeGeoJson(String text) {
   final Object? data;
   try {
     data = jsonDecode(text);
   } on FormatException {
-    return 'Not valid JSON.';
+    return (data: null, error: 'Not valid JSON.');
   }
-  return geoJsonError(data);
+  return (data: data, error: geoJsonError(data));
 }
 
 /// Why [data] is not a GeoJSON Feature MapLibre can read, or null when it is.
