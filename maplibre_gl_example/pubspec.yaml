@@ -68,6 +68,8 @@ flutter:
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png
     - assets/symbols/custom-marker.png
+    # Integration tests: add_image_size_test.dart.
+    - assets/icon_size/
     - assets/style.json
     - assets/translucent_style.json
     - assets/raster_style.json
