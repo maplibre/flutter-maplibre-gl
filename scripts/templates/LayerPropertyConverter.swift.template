@@ -55,6 +55,28 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `{{typeCamel}}Layer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func get{{typePascal}}Property(
+        _ {{typeCamel}}Layer: MLN{{typePascal}}StyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            {{#paint_properties_ios}}
+            case "{{{value}}}":
+                return {{typeCamel}}Layer.{{iosName}}
+            {{/paint_properties_ios}}
+            {{#layout_properties_ios}}
+            {{^isVisibilityProperty}}
+            case "{{{value}}}":
+                return {{typeCamel}}Layer.{{iosName}}
+            {{/isVisibilityProperty}}
+            {{/layout_properties_ios}}
+            default:
+                return nil
+        }
+    }
+
 {{/layerTypes}}
     /// Sets `propertyName` of `layer` to `expression`, which
     /// `propertyExpression(_:value:)` made from `value`. False for a layer
@@ -75,6 +97,107 @@ class LayerPropertyConverter {
             return false
         }
         return true
+    }
+
+    /// The paint and layout properties `propertyValue(_:of:)` reads on
+    /// `layer`, all but `visibility`, or nil for a layer type this converter
+    /// does not know.
+    class func readableProperties(of layer: MLNStyleLayer) -> (paint: [String], layout: [String])? {
+        switch layer {
+        {{#layerTypes}}
+        case is MLN{{typePascal}}StyleLayer:
+            return (
+                paint: [
+                    {{#paint_properties_ios}}
+                    "{{{value}}}",
+                    {{/paint_properties_ios}}
+                ],
+                layout: [
+                    {{#layout_properties_ios}}
+                    {{^isVisibilityProperty}}
+                    "{{{value}}}",
+                    {{/isVisibilityProperty}}
+                    {{/layout_properties_ios}}
+                ]
+            )
+        {{/layerTypes}}
+        default:
+            return nil
+        }
+    }
+
+    /// The value `layer` holds for `propertyName`, or nil for a property this
+    /// converter does not read. MapLibre reads a property that was never set
+    /// as its default value, and may raise an Objective-C exception.
+    class func propertyValue(_ propertyName: String, of layer: MLNStyleLayer) -> NSExpression? {
+        switch layer {
+        {{#layerTypes}}
+        case let {{typeCamel}}Layer as MLN{{typePascal}}StyleLayer:
+            return get{{typePascal}}Property({{typeCamel}}Layer, propertyName)
+        {{/layerTypes}}
+        default:
+            return nil
+        }
+    }
+
+    /// The style-spec JSON of `expression`, a value `propertyValue(_:of:)`
+    /// read, in the shape Android answers: a constant as a plain value, with
+    /// a color as `rgba(r,g,b,a)` text, and anything else as an expression,
+    /// with a color as `["rgba", r, g, b, a]`. MapLibre may raise an
+    /// Objective-C exception for an expression it has no JSON for.
+    class func styleJSON(_ expression: NSExpression) -> Any? {
+        let json: Any = expression.mgl_jsonExpressionObject
+        if json is NSNull { return nil }
+        let isConstant = expression.expressionType == .constantValue
+            || expression.expressionType == .aggregate
+        return styleValue(json, isConstant: isConstant)
+    }
+
+    private class func styleValue(_ json: Any, isConstant: Bool) -> Any {
+        if let number = json as? NSNumber {
+            // A Float would read as 0.10000000149011612 rather than 0.1.
+            if String(cString: number.objCType) == "f" {
+                return Double(String(number.floatValue)) ?? number
+            }
+            return number
+        }
+        if let object = json as? [String: Any] {
+            return object.mapValues { styleValue($0, isConstant: isConstant) }
+        }
+        guard let array = json as? [Any] else { return json }
+        if let rgba = colorComponents(array) {
+            if isConstant {
+                return "rgba(" + rgba.map(cssNumber).joined(separator: ",") + ")"
+            }
+            return ["rgba", rgba[0], rgba[1], rgba[2], rgba[3]] as [Any]
+        }
+        // MapLibre wraps a constant array in a literal expression.
+        if isConstant, array.count == 2, array[0] as? String == "literal" {
+            return styleValue(array[1], isConstant: true)
+        }
+        return array.map { styleValue($0, isConstant: isConstant) }
+    }
+
+    /// The red, green, blue and alpha of a color MapLibre wrote as
+    /// `["rgb", r, g, b]` or `["rgba", r, g, b, a]`, or nil for any other
+    /// array. Like Android, the alpha keeps two decimals; the channels keep
+    /// three, which drops the noise of the Float MapLibre stores them in.
+    private class func colorComponents(_ array: [Any]) -> [Double]? {
+        guard let operation = array.first as? String,
+              operation == "rgb" && array.count == 4 || operation == "rgba" && array.count == 5
+        else { return nil }
+        var rgba: [Double] = []
+        for item in array.dropFirst() {
+            guard let number = item as? NSNumber, isNumber(number) else { return nil }
+            rgba.append(number.doubleValue)
+        }
+        let channels = rgba.prefix(3).map { ($0 * 1000).rounded() / 1000 }
+        let alpha = rgba.count == 4 ? (rgba[3] * 100).rounded() / 100 : 1
+        return channels + [alpha]
+    }
+
+    private class func cssNumber(_ value: Double) -> String {
+        return value == value.rounded() ? String(Int(value)) : String(value)
     }
 
     /// The expression `value` sets `propertyName` to, or nil for NSNull, which

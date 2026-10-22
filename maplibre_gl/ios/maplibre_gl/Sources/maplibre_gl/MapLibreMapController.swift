@@ -65,8 +65,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// Layers never added to a style, one per layer type, that layer property
     /// values are tried on first.
     private var propertyCheckLayers: [String: MLNStyleLayer] = [:]
+    /// What this plugin changed on each layer since the style loaded, by
+    /// layer id. MapLibre on iOS reads a property that was never set as its
+    /// default value, and a filter back through NSPredicate, which rewrites it.
+    private var layerChanges: [String: LayerChanges] = [:]
+    /// The attribution each source this plugin added was given, by source id.
+    /// MapLibre on iOS keeps it rewritten as HTML of its own.
+    private var sourceAttributions: [String: String] = [:]
     /// Whether the current style was set as JSON rather than by URL.
     private var styleIsJSON = false
+
+    private struct LayerChanges {
+        /// Whether this plugin added the layer, rather than the style.
+        var isAdded = false
+        /// The names of the paint and layout properties set on the layer.
+        var propertyNames: Set<String> = []
+        /// The filter as it was set, NSNull for none, or nil for the style's.
+        var filter: Any? = nil
+    }
 
     // GPS pulse: start/stop location updates on a timer to save battery.
     private var locationPulseTimer: Timer?
@@ -1208,6 +1224,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // it stays with it.
         if style.source(withIdentifier: sourceId) == nil {
             addedShapesByLayer.removeValue(forKey: sourceId)
+            sourceAttributions.removeValue(forKey: sourceId)
         }
         result(nil)
     }
@@ -1259,6 +1276,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return
         }
         interactiveFeatureLayerIds.remove(layerId)
+        layerChanges.removeValue(forKey: layerId)
         style.removeLayer(layer)
         result(nil)
     }
@@ -1322,13 +1340,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // A layer without a filter answers nil, not an empty string.
         var currentLayerFilter: String?
         if let vectorLayer = layer as? MLNVectorStyleLayer {
-            if let layerFilter = vectorLayer.predicate {
-
-                let jsonExpression = layerFilter.mgl_jsonExpressionObject
-                if let data = try? JSONSerialization.data(withJSONObject: jsonExpression, options: .fragmentsAllowed),
-                   let json = String(data: data, encoding: String.Encoding.utf8) {
-                    currentLayerFilter = json
-                }
+            if let filter = layerFilter(of: vectorLayer, loaded: loadedStyleLayer(layerId)),
+               let data = try? JSONSerialization.data(withJSONObject: filter, options: .fragmentsAllowed)
+            {
+                currentLayerFilter = String(data: data, encoding: .utf8)
             }
         } else {
             result(MethodCallError.invalidLayerType(
@@ -1454,33 +1469,99 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func styleGetLayerProperties(layerId: String, result: @escaping FlutterResult) {
         // Nil would read as "no such layer".
-        guard mapView.style != nil else {
+        guard let style = mapView.style else {
             result(styleNotReadyError())
             return
         }
-        // Read the serialized style and pluck the layer entry, rather than
-        // enumerating every NSExpression property. This guarantees the
-        // result matches the MapLibre style spec, like Android and web.
-        let styleObject = currentStyleObject()
         // Nil when there is no such layer.
-        var properties: String?
-        if let layers = styleObject?["layers"] as? [[String: Any]],
-           var layer = layers.first(where: { ($0["id"] as? String) == layerId })
-        {
-            // The serialized style is the style as loaded, so the zoom
-            // range is read from the live layer: setLayerZoomRange may
-            // have changed it since. Like Android, the spec defaults (0
-            // and 24) are left out. Going through the shortest Float text
-            // keeps 0.1 from reading back as 0.10000000149011612.
-            if let live = mapView.style?.layer(withIdentifier: layerId) {
-                let minzoom = live.minimumZoomLevel
-                let maxzoom = live.maximumZoomLevel
-                layer["minzoom"] = minzoom > 0 ? Double(String(minzoom)) : nil
-                layer["maxzoom"] = maxzoom < 24 ? Double(String(maxzoom)) : nil
-            }
-            properties = jsonString(from: layer)
+        result(style.layer(withIdentifier: layerId).flatMap(layerProperties).flatMap(jsonString))
+    }
+
+    /// The style-spec entry of `layer`, read from the layer as on Android, so
+    /// it follows every change since the style loaded. A paint or layout
+    /// property is there once it is set, and `visibility` always is. What
+    /// MapLibre cannot read back stays as the style wrote it.
+    private func layerProperties(_ layer: MLNStyleLayer) -> [String: Any]? {
+        let changes = layerChanges[layer.identifier]
+        let loaded = changes?.isAdded == true ? nil : loadedStyleLayer(layer.identifier)
+        guard let type = Self.layerType(of: layer),
+              let readable = LayerPropertyConverter.readableProperties(of: layer)
+        else {
+            // Not a style-spec layer type, such as a custom layer.
+            return loaded
         }
-        result(properties)
+        var properties: [String: Any] = ["id": layer.identifier, "type": type]
+        if let metadata = loaded?["metadata"] {
+            properties["metadata"] = metadata
+        }
+        if let source = (layer as? MLNForegroundStyleLayer)?.sourceIdentifier, !source.isEmpty {
+            properties["source"] = source
+        }
+        if let vectorLayer = layer as? MLNVectorStyleLayer {
+            if let sourceLayer = vectorLayer.sourceLayerIdentifier, !sourceLayer.isEmpty {
+                properties["source-layer"] = sourceLayer
+            }
+            if let filter = layerFilter(of: vectorLayer, loaded: loaded) {
+                properties["filter"] = filter
+            }
+        }
+        // Like Android, the spec defaults (0 and 24) are left out. Going
+        // through the shortest Float text keeps 0.1 from reading back as
+        // 0.10000000149011612.
+        if layer.minimumZoomLevel > 0 {
+            properties["minzoom"] = Double(String(layer.minimumZoomLevel))
+        }
+        if layer.maximumZoomLevel < 24 {
+            properties["maxzoom"] = Double(String(layer.maximumZoomLevel))
+        }
+        let names = changes?.propertyNames ?? Self.propertyNames(in: loaded)
+        func section(_ key: String, _ readableNames: [String]) -> [String: Any] {
+            let style = loaded?[key] as? [String: Any] ?? [:]
+            var json = style.filter { !readableNames.contains($0.key) }
+            for name in readableNames where names.contains(name) {
+                json[name] = propertyJSON(name, of: layer) ?? style[name]
+            }
+            return json
+        }
+        var layout = section("layout", readable.layout)
+        layout["visibility"] = layer.isVisible ? "visible" : "none"
+        properties["paint"] = section("paint", readable.paint)
+        properties["layout"] = layout
+        return properties
+    }
+
+    /// The style-spec JSON of the property `name` of `layer`, or nil when
+    /// MapLibre cannot give it.
+    private func propertyJSON(_ name: String, of layer: MLNStyleLayer) -> Any? {
+        var json: Any?
+        let exception = MapLibreGLCatchException {
+            json = LayerPropertyConverter.propertyValue(name, of: layer)
+                .flatMap(LayerPropertyConverter.styleJSON)
+        }
+        guard exception == nil, let value = json, JSONSerialization.isValidJSONObject([value])
+        else { return nil }
+        return value
+    }
+
+    /// The filter of `layer` as it was set, or as the style wrote it, or nil
+    /// for none. `loaded` is the style's entry of the layer.
+    private func layerFilter(
+        of layer: MLNVectorStyleLayer,
+        loaded: @autoclosure () -> [String: Any]?
+    ) -> Any? {
+        if let filter = layerChanges[layer.identifier]?.filter {
+            return filter is NSNull ? nil : filter
+        }
+        if let loaded = loaded() {
+            return loaded["filter"]
+        }
+        // A layer added outside this plugin: only MapLibre knows its filter.
+        var filter: Any?
+        _ = MapLibreGLCatchException {
+            filter = layer.predicate?.mgl_jsonExpressionObject
+        }
+        guard let json = filter, JSONSerialization.isValidJSONObject([json]) else { return nil }
+        return json
     }
 
     func styleGetSourceProperties(sourceId: String, result: @escaping FlutterResult) {
@@ -1488,20 +1569,41 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(styleNotReadyError())
             return
         }
-        // The loaded style JSON misses image sources added at runtime.
-        if let imageSource = style.source(withIdentifier: sourceId) as? MLNImageSource {
+        guard let source = style.source(withIdentifier: sourceId) else {
+            result(nil)
+            return
+        }
+        if let imageSource = source as? MLNImageSource {
             result(jsonString(from: Self.imageSourceProperties(imageSource)))
             return
         }
-        let styleObject = currentStyleObject()
-        // Nil when there is no such source.
-        var properties: String?
-        if let sources = styleObject?["sources"] as? [String: Any],
-           let source = sources[sourceId] as? [String: Any]
-        {
-            properties = jsonString(from: source)
+        // As on Android, a source that came with the style reads as loaded:
+        // only the style holds all of its properties (data, tiles, ...).
+        let sources = currentStyleObject()?["sources"] as? [String: Any]
+        if let loaded = sources?[sourceId] as? [String: Any] {
+            result(jsonString(from: loaded))
+            return
         }
-        result(properties)
+        result(runtimeSourceProperties(source).flatMap(jsonString))
+    }
+
+    /// The style-spec entry of `source`, added since the style loaded. As on
+    /// Android, MapLibre keeps little of it: the type, the url (`data` for
+    /// GeoJSON loaded from one) and the attribution. Nil for a source the
+    /// style spec has no type for.
+    private func runtimeSourceProperties(_ source: MLNSource) -> [String: Any]? {
+        guard let type = Self.styleSourceType(source) else { return nil }
+        var properties: [String: Any] = ["type": type]
+        if let url = (source as? MLNShapeSource)?.url {
+            properties["data"] = url.absoluteString
+        }
+        if let url = (source as? MLNTileSource)?.configurationURL {
+            properties["url"] = url.absoluteString
+        }
+        if let attribution = sourceAttributions[source.identifier], !attribution.isEmpty {
+            properties["attribution"] = attribution
+        }
+        return properties
     }
 
     /// The style-spec entry of `source`: its type, four [lng, lat] corners from
@@ -2327,6 +2429,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         addedShapesByLayer.removeAll()
         interactiveFeatureLayerIds.removeAll()
+        layerChanges.removeAll()
+        sourceAttributions.removeAll()
 
         // A parked mapWaitForMap is answered once: a later style load, after
         // a setStyle, must not reply to the same message again.
@@ -2537,6 +2641,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 converted.append((name, value, expression))
             }
         }
+        var changes = currentChanges(ofLayer: layerId)
+        defer { layerChanges[layerId] = changes }
         for property in converted {
             let exception = MapLibreGLCatchException {
                 LayerPropertyConverter.setProperty(
@@ -2554,8 +2660,33 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     exception.reason ?? exception.name.rawValue
                 )
             }
+            if property.expression == nil {
+                changes.propertyNames.remove(property.name)
+            } else {
+                changes.propertyNames.insert(property.name)
+            }
         }
         return nil
+    }
+
+    /// What this plugin changed on the layer `layerId`, starting from the
+    /// style as loaded for a layer of the style it has not changed yet.
+    private func currentChanges(ofLayer layerId: String) -> LayerChanges {
+        return layerChanges[layerId]
+            ?? LayerChanges(propertyNames: Self.propertyNames(in: loadedStyleLayer(layerId)))
+    }
+
+    /// The names of the paint and layout properties a style entry sets.
+    private static func propertyNames(in entry: [String: Any]?) -> Set<String> {
+        let paint = entry?["paint"] as? [String: Any] ?? [:]
+        let layout = entry?["layout"] as? [String: Any] ?? [:]
+        return Set(paint.keys).union(layout.keys)
+    }
+
+    /// The entry of the layer `layerId` in the style as it was loaded, or nil.
+    private func loadedStyleLayer(_ layerId: String) -> [String: Any]? {
+        let layers = currentStyleObject()?["layers"] as? [[String: Any]]
+        return layers?.first { ($0["id"] as? String) == layerId }
     }
 
     /// The error of a property value MapLibre rejects, also logged.
@@ -2669,6 +2800,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         properties: [String: Any],
         enableInteraction: Bool = false
     ) -> Result<Void, MethodCallError> {
+        // A new layer starts with nothing set, whatever the style once had
+        // under its id, and is forgotten if it is not added.
+        layerChanges[layer.identifier] = LayerChanges(isAdded: true, filter: NSNull())
+        var isAdded = false
+        defer {
+            if !isAdded { layerChanges.removeValue(forKey: layer.identifier) }
+        }
         if let sourceLayerIdentifier = sourceLayerIdentifier,
            let vectorLayer = layer as? MLNVectorStyleLayer
         {
@@ -2691,6 +2829,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if case let .failure(error) = insert(layer, into: style, below: belowLayerId) {
             return .failure(error)
         }
+        isAdded = true
         if enableInteraction {
             interactiveFeatureLayerIds.insert(layer.identifier)
         }
@@ -2883,6 +3022,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     reason: Self.filterRejection(exception)
                 ))
             }
+            var changes = currentChanges(ofLayer: layer.identifier)
+            changes.filter = filter
+            layerChanges[layer.identifier] = changes
             return .success(())
         } catch {
             return .failure(MethodCallError.invalidFilter(reason: Self.filterNotJSON))
@@ -3054,6 +3196,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         style.addSource(source)
         // setGeoJsonFeature edits only data this API was given as GeoJSON.
         addedShapesByLayer.removeValue(forKey: sourceId)
+        sourceAttributions[sourceId] = properties["attribution"] as? String
         return .success(())
     }
 
@@ -3506,7 +3649,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     func setStyleString(styleString: String) {
         interactiveFeatureLayerIds.removeAll()
         addedShapesByLayer.removeAll()
-        
+        layerChanges.removeAll()
+        sourceAttributions.removeAll()
+
         styleIsJSON = Self.styleStringIsJSON(styleString)
         if styleIsJSON {
             mapView.styleJSON = styleString

@@ -150,6 +150,7 @@
   * **Android**: pausing an offline region right after resuming it keeps it paused.
   * `setLayerProperties` converts each value once on Android and iOS instead of twice.
 * Feature ids come back from the queries and the cluster calls as they are in the data on every platform, and `["id"]` filters and feature state find them by that id. On web `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. A source added with `generateId` numbers its features on Android and iOS too. The drag and hover callbacks no longer throw a `TypeError` on a numeric id on iOS and web (#1124).
+* **iOS**: `getLayerProperties()` and `getSourceProperties()` read layers and sources added at runtime instead of answering `null`, and a layer reads its current values instead of the ones the style loaded with. As on Android, colors read as `rgba(...)` text. On Android and iOS, a filter from `getLayerProperties()` or `getLayerFilter()` reads as the app or the style wrote it, where a legacy one came back with internal operators such as `filter-==` (#985, #1127).
 * `onCameraMove` and moves without animation work the same on every platform (#1126):
   * **iOS**: `onCameraMove` fires for `moveCamera` and a zero duration `animateCamera`, which only reached `onCameraIdle`, and its last call before `onCameraIdle` has the position where the camera stopped instead of the frame before.
   * **Android**: `animateCamera` with a zero duration moves the camera at once, as on iOS and web, instead of failing with a generic error.
