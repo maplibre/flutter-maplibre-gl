@@ -430,7 +430,8 @@ class MapLibreMapController extends ChangeNotifier {
   bool _isCameraMoving = false;
 
   /// Returns the most recent camera position reported by the platform side.
-  /// Will be null, if [MapLibreMap.trackCameraPosition] is false.
+  /// It only follows the camera while [MapLibreMap.trackCameraPosition] is
+  /// true.
   ///
   /// Never holds a camera with NaN or infinite components; those readings are
   /// dropped. For a guaranteed fresh reading rather than the last reported one,
