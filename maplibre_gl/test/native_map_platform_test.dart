@@ -786,6 +786,89 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
+    // A large addSource is checked on another isolate, and a layer add made
+    // right after it without await would otherwise find no source.
+    test('a call on a source waits for the writes to it in flight', () async {
+      api.replies['mapQuerySourceFeatures'] = <String>[];
+      api.replies['sourceGetClusterExpansionZoom'] = 3;
+      final big = line(40000);
+
+      await Future.wait([
+        platform.addSource('source', GeojsonSourceProperties(data: big)),
+        platform.addCircleLayer(
+          'source',
+          'circles',
+          const {},
+          enableInteraction: true,
+        ),
+        platform.querySourceFeatures('source', null, null),
+        platform.getClusterExpansionZoom('source', 1),
+        platform.setFeatureState('source', '1', const {'on': true}),
+        platform.getSourceProperties('source'),
+        platform.removeSource('source'),
+      ]);
+
+      expect(api.calls.map((call) => call.first), [
+        'styleAddSource',
+        'circleLayerAdd',
+        'mapQuerySourceFeatures',
+        'sourceGetClusterExpansionZoom',
+        'sourceSetFeatureState',
+        'styleGetSourceProperties',
+        'styleRemoveSource',
+      ]);
+    });
+
+    // The layer add waits for the source, so the calls on the layer wait
+    // for the layer add.
+    test('a call on a layer waits for its add in flight', () async {
+      final big = line(40000);
+
+      await Future.wait([
+        platform.addGeoJsonSource('source', big),
+        platform.addCircleLayer(
+          'source',
+          'circles',
+          const {},
+          enableInteraction: true,
+        ),
+        platform.setLayerProperties('circles', const {'circle-radius': 4}),
+        platform.addBackgroundLayer(
+          'background',
+          const {},
+          belowLayerId: 'circles',
+        ),
+        platform.setGeoJsonSource('source', line(1)),
+      ]);
+
+      expect(api.calls.map((call) => call.first), [
+        'sourceAddGeoJson',
+        'circleLayerAdd',
+        'layerSetProperties',
+        'backgroundLayerAdd',
+        'sourceSetGeoJson',
+      ]);
+    });
+
+    test('a call with no write in flight on its source goes at once', () async {
+      api.replies['mapQuerySourceFeatures'] = <String>[];
+      final big = platform.addGeoJsonSource('big', line(40000));
+      final add = platform.addCircleLayer(
+        'other',
+        'circles',
+        const {},
+        enableInteraction: true,
+      );
+      final query = platform.querySourceFeatures('other', null, null);
+
+      expect(api.calls.map((call) => call.first), [
+        'circleLayerAdd',
+        'mapQuerySourceFeatures',
+      ]);
+      await Future.wait([big, add, query]);
+      expect(api.calls.last.first, 'sourceAddGeoJson');
+    });
+
     // jsonEncode writes app models and the position classes of GeoJSON
     // libraries through their toJson(), as it always has.
     test('objects with toJson() go in as jsonEncode writes them', () async {

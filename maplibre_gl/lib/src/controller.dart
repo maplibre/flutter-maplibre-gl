@@ -97,6 +97,10 @@ typedef OnMapIdleCallback = void Function();
 ///
 /// Listeners are notified after changes have been applied on the platform side.
 ///
+/// The calls on a source or a layer reach the platform in the order they are
+/// made, even without `await`: a layer added right after its source finds
+/// it, though checking large GeoJSON data takes a while.
+///
 /// ## Errors
 ///
 /// The style, layer and source calls throw a [PlatformException] with the
