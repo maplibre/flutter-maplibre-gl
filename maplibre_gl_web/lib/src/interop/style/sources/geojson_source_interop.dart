@@ -15,11 +15,13 @@ extension type GeoJsonSourceJsImpl._(JSObject _) implements JSObject {
     FeatureCollectionJsImpl data,
   });
 
+  /// Takes GeoJSON or the url of GeoJSON.
+  ///
   /// Returns a promise since maplibre-gl-js 6, which settles once the worker
   /// has the data; version 5 returned the source itself and took a second
   /// `waitForCompletion` argument. Typed loosely so both builds work, and
   /// unwrapped in `GeoJsonSource.setData`.
-  external JSAny? setData(FeatureCollectionJsImpl featureCollection);
+  external JSAny? setData(JSAny data);
 
   /// The three cluster-inspection methods return promises as of maplibre-gl-js
   /// 6, where version 5 took a trailing callback and returned the source. They

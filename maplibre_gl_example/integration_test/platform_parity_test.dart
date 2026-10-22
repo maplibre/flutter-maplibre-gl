@@ -1500,6 +1500,129 @@ void main() {
     });
   });
 
+  group('sources replaced or removed', () {
+    testWidgets('editGeoJsonUrl answers true for a GeoJSON source, and '
+        'setGeoJsonFeature then has no data to change', (tester) async {
+      final controller = await _pumpMapWithPoints(tester);
+
+      // The host does not exist, so nothing leaves the device.
+      expect(
+        await pumpUntil(
+          tester,
+          controller.editGeoJsonUrl(_sourceId, 'https://tiles.invalid/a.json'),
+          'editGeoJsonUrl',
+        ),
+        isTrue,
+      );
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
+        'setGeoJsonFeature after editGeoJsonUrl',
+      );
+    });
+
+    testWidgets('removeSource keeps a GeoJSON source a layer still uses, '
+        'with the data setGeoJsonFeature changes', (tester) async {
+      final controller = await _pumpMapWithPoints(tester);
+
+      await pumpUntil(
+        tester,
+        controller.removeSource(_sourceId),
+        'removeSource of a source in use',
+      );
+      expect(
+        await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+        contains(_sourceId),
+      );
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
+        'setGeoJsonFeature',
+      );
+      await pumpUntilValue(
+        tester,
+        () => controller.querySourceFeatures(_sourceId, null, [
+          '==',
+          ['get', 'n'],
+          5,
+        ]),
+        (features) => _ids(features).contains(1),
+        'querySourceFeatures after setGeoJsonFeature',
+      );
+
+      await pumpUntil(
+        tester,
+        controller.removeLayer(_layerId),
+        'removeLayer',
+      );
+      await pumpUntil(
+        tester,
+        controller.removeSource(_sourceId),
+        'removeSource',
+      );
+      expect(
+        await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+        isNot(contains(_sourceId)),
+      );
+    });
+
+    testWidgets('an image source shows bytes until it is removed, and its id '
+        'can show bytes again', (tester) async {
+      final controller = await pumpMap(tester);
+      final first = await _loadPng(tester, 'assets/sydney0.png');
+      final second = await _loadPng(tester, 'assets/sydney1.png');
+      Future<Map<String, dynamic>?> read() => pumpUntil(
+        tester,
+        controller.getSourceProperties('image'),
+        'getSourceProperties',
+      );
+
+      await pumpUntil(
+        tester,
+        controller.addImageSource('image', first, _quad),
+        'addImageSource',
+      );
+      await pumpUntil(
+        tester,
+        controller.addImageLayer('image-layer', 'image'),
+        'addImageLayer',
+      );
+      await pumpUntil(
+        tester,
+        controller.updateImageSource('image', second, null),
+        'updateImageSource',
+      );
+      expect(await read(), {'type': 'image', 'coordinates': _corners});
+
+      await pumpUntil(
+        tester,
+        controller.removeLayer('image-layer'),
+        'removeLayer',
+      );
+      await pumpUntil(
+        tester,
+        controller.removeSource('image'),
+        'removeSource',
+      );
+      expect(
+        await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+        isNot(contains('image')),
+      );
+
+      await pumpUntil(
+        tester,
+        controller.addImageSource('image', second, _movedQuad),
+        'addImageSource again',
+      );
+      await pumpUntil(
+        tester,
+        controller.addImageLayer('image-layer', 'image'),
+        'addImageLayer again',
+      );
+      expect(await read(), {'type': 'image', 'coordinates': _movedCorners});
+    });
+  });
+
   group('layer property values MapLibre rejects', () {
     testWidgets('fail a layer add with INVALID_EXPRESSION or '
         'INVALID_ARGUMENT, naming the property', (tester) async {
