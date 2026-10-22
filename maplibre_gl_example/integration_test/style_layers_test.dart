@@ -628,6 +628,66 @@ void main() {
     expect(properties!['paint'], {'circle-blur': 0.5});
   });
 
+  testWidgets('a filter reads back as it was written, legacy or expression, '
+      'on a layer of the style and on one added at runtime', (tester) async {
+    const legacy = ['==', 'class', 'park'];
+    const expression = [
+      'in',
+      ['get', 'class'],
+      [
+        'literal',
+        ['park', 'wood'],
+      ],
+    ];
+    final style = jsonDecode(_styleWithSource()) as Map<String, dynamic>;
+    (style['layers'] as List).addAll([
+      for (final (id, filter) in [
+        ('styled-legacy', legacy),
+        ('styled-expression', expression),
+      ])
+        {'id': id, 'type': 'circle', 'source': 'styled', 'filter': filter},
+    ]);
+    final controller = await pumpMap(tester, styleString: jsonEncode(style));
+    for (final (id, filter) in [
+      ('runtime-legacy', legacy),
+      ('runtime-expression', expression),
+    ]) {
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          'styled',
+          id,
+          const CircleLayerProperties(),
+          filter: filter,
+        ),
+        'addCircleLayer $id',
+      );
+    }
+
+    for (final (id, filter) in [
+      ('styled-legacy', legacy),
+      ('styled-expression', expression),
+      ('runtime-legacy', legacy),
+      ('runtime-expression', expression),
+    ]) {
+      final properties = await pumpUntil(
+        tester,
+        controller.getLayerProperties(id),
+        'getLayerProperties $id',
+      );
+      expect(properties!['filter'], filter, reason: id);
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getLayerFilter(id),
+          'getLayerFilter $id',
+        ),
+        filter,
+        reason: id,
+      );
+    }
+  });
+
   testWidgets('setLayerVisibility round trips through getLayerVisibility', (
     tester,
   ) async {

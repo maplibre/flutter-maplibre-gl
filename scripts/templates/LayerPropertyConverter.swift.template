@@ -55,6 +55,28 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `{{typeCamel}}Layer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func get{{typePascal}}Property(
+        _ {{typeCamel}}Layer: MLN{{typePascal}}StyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            {{#paint_properties_ios}}
+            case "{{{value}}}":
+                return {{typeCamel}}Layer.{{iosName}}
+            {{/paint_properties_ios}}
+            {{#layout_properties_ios}}
+            {{^isVisibilityProperty}}
+            case "{{{value}}}":
+                return {{typeCamel}}Layer.{{iosName}}
+            {{/isVisibilityProperty}}
+            {{/layout_properties_ios}}
+            default:
+                return nil
+        }
+    }
+
 {{/layerTypes}}
     /// Sets `propertyName` of `layer` to `expression`, which
     /// `propertyExpression(_:value:)` made from `value`. False for a layer
@@ -77,26 +99,23 @@ class LayerPropertyConverter {
         return true
     }
 
-    /// The value `layer` holds for each of its paint and layout properties
-    /// but `visibility`, by style-spec name, or nil for a layer type this
-    /// converter does not know. MapLibre reads a property that was never set
-    /// as its default value.
-    class func propertyValues(
-        of layer: MLNStyleLayer
-    ) -> (paint: [(String, NSExpression?)], layout: [(String, NSExpression?)])? {
+    /// The paint and layout properties `propertyValue(_:of:)` reads on
+    /// `layer`, all but `visibility`, or nil for a layer type this converter
+    /// does not know.
+    class func readableProperties(of layer: MLNStyleLayer) -> (paint: [String], layout: [String])? {
         switch layer {
         {{#layerTypes}}
-        case let {{typeCamel}}Layer as MLN{{typePascal}}StyleLayer:
+        case is MLN{{typePascal}}StyleLayer:
             return (
                 paint: [
                     {{#paint_properties_ios}}
-                    ("{{{value}}}", {{typeCamel}}Layer.{{iosName}}),
+                    "{{{value}}}",
                     {{/paint_properties_ios}}
                 ],
                 layout: [
                     {{#layout_properties_ios}}
                     {{^isVisibilityProperty}}
-                    ("{{{value}}}", {{typeCamel}}Layer.{{iosName}}),
+                    "{{{value}}}",
                     {{/isVisibilityProperty}}
                     {{/layout_properties_ios}}
                 ]
@@ -107,7 +126,21 @@ class LayerPropertyConverter {
         }
     }
 
-    /// The style-spec JSON of `expression`, a value `propertyValues(of:)`
+    /// The value `layer` holds for `propertyName`, or nil for a property this
+    /// converter does not read. MapLibre reads a property that was never set
+    /// as its default value, and may raise an Objective-C exception.
+    class func propertyValue(_ propertyName: String, of layer: MLNStyleLayer) -> NSExpression? {
+        switch layer {
+        {{#layerTypes}}
+        case let {{typeCamel}}Layer as MLN{{typePascal}}StyleLayer:
+            return get{{typePascal}}Property({{typeCamel}}Layer, propertyName)
+        {{/layerTypes}}
+        default:
+            return nil
+        }
+    }
+
+    /// The style-spec JSON of `expression`, a value `propertyValue(_:of:)`
     /// read, in the shape Android answers: a constant as a plain value, with
     /// a color as `rgba(r,g,b,a)` text, and anything else as an expression,
     /// with a color as `["rgba", r, g, b, a]`. MapLibre may raise an

@@ -145,6 +145,130 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `symbolLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getSymbolProperty(
+        _ symbolLayer: MLNSymbolStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "icon-opacity":
+                return symbolLayer.iconOpacity
+            case "icon-color":
+                return symbolLayer.iconColor
+            case "icon-halo-color":
+                return symbolLayer.iconHaloColor
+            case "icon-halo-width":
+                return symbolLayer.iconHaloWidth
+            case "icon-halo-blur":
+                return symbolLayer.iconHaloBlur
+            case "icon-translate":
+                return symbolLayer.iconTranslation
+            case "icon-translate-anchor":
+                return symbolLayer.iconTranslationAnchor
+            case "text-opacity":
+                return symbolLayer.textOpacity
+            case "text-color":
+                return symbolLayer.textColor
+            case "text-halo-color":
+                return symbolLayer.textHaloColor
+            case "text-halo-width":
+                return symbolLayer.textHaloWidth
+            case "text-halo-blur":
+                return symbolLayer.textHaloBlur
+            case "text-translate":
+                return symbolLayer.textTranslation
+            case "text-translate-anchor":
+                return symbolLayer.textTranslationAnchor
+            case "symbol-placement":
+                return symbolLayer.symbolPlacement
+            case "symbol-spacing":
+                return symbolLayer.symbolSpacing
+            case "symbol-avoid-edges":
+                return symbolLayer.symbolAvoidsEdges
+            case "symbol-sort-key":
+                return symbolLayer.symbolSortKey
+            case "symbol-z-order":
+                return symbolLayer.symbolZOrder
+            case "icon-allow-overlap":
+                return symbolLayer.iconAllowsOverlap
+            case "icon-ignore-placement":
+                return symbolLayer.iconIgnoresPlacement
+            case "icon-optional":
+                return symbolLayer.iconOptional
+            case "icon-rotation-alignment":
+                return symbolLayer.iconRotationAlignment
+            case "icon-size":
+                return symbolLayer.iconScale
+            case "icon-text-fit":
+                return symbolLayer.iconTextFit
+            case "icon-text-fit-padding":
+                return symbolLayer.iconTextFitPadding
+            case "icon-image":
+                return symbolLayer.iconImageName
+            case "icon-rotate":
+                return symbolLayer.iconRotation
+            case "icon-padding":
+                return symbolLayer.iconPadding
+            case "icon-keep-upright":
+                return symbolLayer.keepsIconUpright
+            case "icon-offset":
+                return symbolLayer.iconOffset
+            case "icon-anchor":
+                return symbolLayer.iconAnchor
+            case "icon-pitch-alignment":
+                return symbolLayer.iconPitchAlignment
+            case "text-pitch-alignment":
+                return symbolLayer.textPitchAlignment
+            case "text-rotation-alignment":
+                return symbolLayer.textRotationAlignment
+            case "text-field":
+                return symbolLayer.text
+            case "text-font":
+                return symbolLayer.textFontNames
+            case "text-size":
+                return symbolLayer.textFontSize
+            case "text-max-width":
+                return symbolLayer.maximumTextWidth
+            case "text-line-height":
+                return symbolLayer.textLineHeight
+            case "text-letter-spacing":
+                return symbolLayer.textLetterSpacing
+            case "text-justify":
+                return symbolLayer.textJustification
+            case "text-radial-offset":
+                return symbolLayer.textRadialOffset
+            case "text-variable-anchor":
+                return symbolLayer.textVariableAnchor
+            case "text-variable-anchor-offset":
+                return symbolLayer.textVariableAnchorOffset
+            case "text-anchor":
+                return symbolLayer.textAnchor
+            case "text-max-angle":
+                return symbolLayer.maximumTextAngle
+            case "text-writing-mode":
+                return symbolLayer.textWritingModes
+            case "text-rotate":
+                return symbolLayer.textRotation
+            case "text-padding":
+                return symbolLayer.textPadding
+            case "text-keep-upright":
+                return symbolLayer.keepsTextUpright
+            case "text-transform":
+                return symbolLayer.textTransform
+            case "text-offset":
+                return symbolLayer.textOffset
+            case "text-allow-overlap":
+                return symbolLayer.textAllowsOverlap
+            case "text-ignore-placement":
+                return symbolLayer.textIgnoresPlacement
+            case "text-optional":
+                return symbolLayer.textOptional
+            default:
+                return nil
+        }
+    }
+
     class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Null resets the property, and a value that cannot be read leaves it as it is.
@@ -195,6 +319,42 @@ class LayerPropertyConverter {
                 }
             default:
                 break
+        }
+    }
+
+    /// The value `circleLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getCircleProperty(
+        _ circleLayer: MLNCircleStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "circle-radius":
+                return circleLayer.circleRadius
+            case "circle-color":
+                return circleLayer.circleColor
+            case "circle-blur":
+                return circleLayer.circleBlur
+            case "circle-opacity":
+                return circleLayer.circleOpacity
+            case "circle-translate":
+                return circleLayer.circleTranslation
+            case "circle-translate-anchor":
+                return circleLayer.circleTranslationAnchor
+            case "circle-pitch-scale":
+                return circleLayer.circleScaleAlignment
+            case "circle-pitch-alignment":
+                return circleLayer.circlePitchAlignment
+            case "circle-stroke-width":
+                return circleLayer.circleStrokeWidth
+            case "circle-stroke-color":
+                return circleLayer.circleStrokeColor
+            case "circle-stroke-opacity":
+                return circleLayer.circleStrokeOpacity
+            case "circle-sort-key":
+                return circleLayer.circleSortKey
+            default:
+                return nil
         }
     }
 
@@ -259,6 +419,50 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `lineLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getLineProperty(
+        _ lineLayer: MLNLineStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "line-opacity":
+                return lineLayer.lineOpacity
+            case "line-color":
+                return lineLayer.lineColor
+            case "line-translate":
+                return lineLayer.lineTranslation
+            case "line-translate-anchor":
+                return lineLayer.lineTranslationAnchor
+            case "line-width":
+                return lineLayer.lineWidth
+            case "line-gap-width":
+                return lineLayer.lineGapWidth
+            case "line-offset":
+                return lineLayer.lineOffset
+            case "line-blur":
+                return lineLayer.lineBlur
+            case "line-dasharray":
+                return lineLayer.lineDashPattern
+            case "line-pattern":
+                return lineLayer.linePattern
+            case "line-gradient":
+                return lineLayer.lineGradient
+            case "line-cap":
+                return lineLayer.lineCap
+            case "line-join":
+                return lineLayer.lineJoin
+            case "line-miter-limit":
+                return lineLayer.lineMiterLimit
+            case "line-round-limit":
+                return lineLayer.lineRoundLimit
+            case "line-sort-key":
+                return lineLayer.lineSortKey
+            default:
+                return nil
+        }
+    }
+
     class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Null resets the property, and a value that cannot be read leaves it as it is.
@@ -301,6 +505,34 @@ class LayerPropertyConverter {
                 }
             default:
                 break
+        }
+    }
+
+    /// The value `fillLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getFillProperty(
+        _ fillLayer: MLNFillStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "fill-antialias":
+                return fillLayer.fillAntialiased
+            case "fill-opacity":
+                return fillLayer.fillOpacity
+            case "fill-color":
+                return fillLayer.fillColor
+            case "fill-outline-color":
+                return fillLayer.fillOutlineColor
+            case "fill-translate":
+                return fillLayer.fillTranslation
+            case "fill-translate-anchor":
+                return fillLayer.fillTranslationAnchor
+            case "fill-pattern":
+                return fillLayer.fillPattern
+            case "fill-sort-key":
+                return fillLayer.fillSortKey
+            default:
+                return nil
         }
     }
 
@@ -351,6 +583,36 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `fillExtrusionLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getFillExtrusionProperty(
+        _ fillExtrusionLayer: MLNFillExtrusionStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "fill-extrusion-opacity":
+                return fillExtrusionLayer.fillExtrusionOpacity
+            case "fill-extrusion-color":
+                return fillExtrusionLayer.fillExtrusionColor
+            case "fill-extrusion-translate":
+                return fillExtrusionLayer.fillExtrusionTranslation
+            case "fill-extrusion-translate-anchor":
+                return fillExtrusionLayer.fillExtrusionTranslationAnchor
+            case "fill-extrusion-pattern":
+                return fillExtrusionLayer.fillExtrusionPattern
+            case "fill-extrusion-height":
+                return fillExtrusionLayer.fillExtrusionHeight
+            case "fill-extrusion-base":
+                return fillExtrusionLayer.fillExtrusionBase
+            case "fill-extrusion-vertical-gradient":
+                return fillExtrusionLayer.fillExtrusionHasVerticalGradient
+            case "fill-extrusion-rounded-corner-distance":
+                return fillExtrusionLayer.fillExtrusionRoundedCornerDistance
+            default:
+                return nil
+        }
+    }
+
     class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Null resets the property, and a value that cannot be read leaves it as it is.
@@ -393,6 +655,34 @@ class LayerPropertyConverter {
                 }
             default:
                 break
+        }
+    }
+
+    /// The value `rasterLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getRasterProperty(
+        _ rasterLayer: MLNRasterStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "raster-opacity":
+                return rasterLayer.rasterOpacity
+            case "raster-hue-rotate":
+                return rasterLayer.rasterHueRotation
+            case "raster-brightness-min":
+                return rasterLayer.minimumRasterBrightness
+            case "raster-brightness-max":
+                return rasterLayer.maximumRasterBrightness
+            case "raster-saturation":
+                return rasterLayer.rasterSaturation
+            case "raster-contrast":
+                return rasterLayer.rasterContrast
+            case "raster-resampling":
+                return rasterLayer.rasterResamplingMode
+            case "raster-fade-duration":
+                return rasterLayer.rasterFadeDuration
+            default:
+                return nil
         }
     }
 
@@ -441,6 +731,34 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `hillshadeLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getHillshadeProperty(
+        _ hillshadeLayer: MLNHillshadeStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "hillshade-illumination-direction":
+                return hillshadeLayer.hillshadeIlluminationDirection
+            case "hillshade-illumination-altitude":
+                return hillshadeLayer.hillshadeIlluminationAltitude
+            case "hillshade-illumination-anchor":
+                return hillshadeLayer.hillshadeIlluminationAnchor
+            case "hillshade-exaggeration":
+                return hillshadeLayer.hillshadeExaggeration
+            case "hillshade-shadow-color":
+                return hillshadeLayer.hillshadeShadowColor
+            case "hillshade-highlight-color":
+                return hillshadeLayer.hillshadeHighlightColor
+            case "hillshade-accent-color":
+                return hillshadeLayer.hillshadeAccentColor
+            case "hillshade-method":
+                return hillshadeLayer.hillshadeMethod
+            default:
+                return nil
+        }
+    }
+
     class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Null resets the property, and a value that cannot be read leaves it as it is.
@@ -480,6 +798,28 @@ class LayerPropertyConverter {
         }
     }
 
+    /// The value `heatmapLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getHeatmapProperty(
+        _ heatmapLayer: MLNHeatmapStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "heatmap-radius":
+                return heatmapLayer.heatmapRadius
+            case "heatmap-weight":
+                return heatmapLayer.heatmapWeight
+            case "heatmap-intensity":
+                return heatmapLayer.heatmapIntensity
+            case "heatmap-color":
+                return heatmapLayer.heatmapColor
+            case "heatmap-opacity":
+                return heatmapLayer.heatmapOpacity
+            default:
+                return nil
+        }
+    }
+
     class func addColorReliefProperties(colorReliefLayer: MLNColorReliefStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
             // Null resets the property, and a value that cannot be read leaves it as it is.
@@ -510,6 +850,22 @@ class LayerPropertyConverter {
                 }
             default:
                 break
+        }
+    }
+
+    /// The value `colorReliefLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getColorReliefProperty(
+        _ colorReliefLayer: MLNColorReliefStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "color-relief-opacity":
+                return colorReliefLayer.colorReliefOpacity
+            case "color-relief-color":
+                return colorReliefLayer.colorReliefColor
+            default:
+                return nil
         }
     }
 
@@ -545,6 +901,24 @@ class LayerPropertyConverter {
                 }
             default:
                 break
+        }
+    }
+
+    /// The value `backgroundLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getBackgroundProperty(
+        _ backgroundLayer: MLNBackgroundStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "background-color":
+                return backgroundLayer.backgroundColor
+            case "background-pattern":
+                return backgroundLayer.backgroundPattern
+            case "background-opacity":
+                return backgroundLayer.backgroundOpacity
+            default:
+                return nil
         }
     }
 
@@ -585,207 +959,204 @@ class LayerPropertyConverter {
         return true
     }
 
-    /// The value `layer` holds for each of its paint and layout properties
-    /// but `visibility`, by style-spec name, or nil for a layer type this
-    /// converter does not know. MapLibre reads a property that was never set
-    /// as its default value.
-    class func propertyValues(
-        of layer: MLNStyleLayer
-    ) -> (paint: [(String, NSExpression?)], layout: [(String, NSExpression?)])? {
+    /// The paint and layout properties `propertyValue(_:of:)` reads on
+    /// `layer`, all but `visibility`, or nil for a layer type this converter
+    /// does not know.
+    class func readableProperties(of layer: MLNStyleLayer) -> (paint: [String], layout: [String])? {
         switch layer {
-        case let symbolLayer as MLNSymbolStyleLayer:
+        case is MLNSymbolStyleLayer:
             return (
                 paint: [
-                    ("icon-opacity", symbolLayer.iconOpacity),
-                    ("icon-color", symbolLayer.iconColor),
-                    ("icon-halo-color", symbolLayer.iconHaloColor),
-                    ("icon-halo-width", symbolLayer.iconHaloWidth),
-                    ("icon-halo-blur", symbolLayer.iconHaloBlur),
-                    ("icon-translate", symbolLayer.iconTranslation),
-                    ("icon-translate-anchor", symbolLayer.iconTranslationAnchor),
-                    ("text-opacity", symbolLayer.textOpacity),
-                    ("text-color", symbolLayer.textColor),
-                    ("text-halo-color", symbolLayer.textHaloColor),
-                    ("text-halo-width", symbolLayer.textHaloWidth),
-                    ("text-halo-blur", symbolLayer.textHaloBlur),
-                    ("text-translate", symbolLayer.textTranslation),
-                    ("text-translate-anchor", symbolLayer.textTranslationAnchor),
+                    "icon-opacity",
+                    "icon-color",
+                    "icon-halo-color",
+                    "icon-halo-width",
+                    "icon-halo-blur",
+                    "icon-translate",
+                    "icon-translate-anchor",
+                    "text-opacity",
+                    "text-color",
+                    "text-halo-color",
+                    "text-halo-width",
+                    "text-halo-blur",
+                    "text-translate",
+                    "text-translate-anchor",
                 ],
                 layout: [
-                    ("symbol-placement", symbolLayer.symbolPlacement),
-                    ("symbol-spacing", symbolLayer.symbolSpacing),
-                    ("symbol-avoid-edges", symbolLayer.symbolAvoidsEdges),
-                    ("symbol-sort-key", symbolLayer.symbolSortKey),
-                    ("symbol-z-order", symbolLayer.symbolZOrder),
-                    ("icon-allow-overlap", symbolLayer.iconAllowsOverlap),
-                    ("icon-ignore-placement", symbolLayer.iconIgnoresPlacement),
-                    ("icon-optional", symbolLayer.iconOptional),
-                    ("icon-rotation-alignment", symbolLayer.iconRotationAlignment),
-                    ("icon-size", symbolLayer.iconScale),
-                    ("icon-text-fit", symbolLayer.iconTextFit),
-                    ("icon-text-fit-padding", symbolLayer.iconTextFitPadding),
-                    ("icon-image", symbolLayer.iconImageName),
-                    ("icon-rotate", symbolLayer.iconRotation),
-                    ("icon-padding", symbolLayer.iconPadding),
-                    ("icon-keep-upright", symbolLayer.keepsIconUpright),
-                    ("icon-offset", symbolLayer.iconOffset),
-                    ("icon-anchor", symbolLayer.iconAnchor),
-                    ("icon-pitch-alignment", symbolLayer.iconPitchAlignment),
-                    ("text-pitch-alignment", symbolLayer.textPitchAlignment),
-                    ("text-rotation-alignment", symbolLayer.textRotationAlignment),
-                    ("text-field", symbolLayer.text),
-                    ("text-font", symbolLayer.textFontNames),
-                    ("text-size", symbolLayer.textFontSize),
-                    ("text-max-width", symbolLayer.maximumTextWidth),
-                    ("text-line-height", symbolLayer.textLineHeight),
-                    ("text-letter-spacing", symbolLayer.textLetterSpacing),
-                    ("text-justify", symbolLayer.textJustification),
-                    ("text-radial-offset", symbolLayer.textRadialOffset),
-                    ("text-variable-anchor", symbolLayer.textVariableAnchor),
-                    ("text-variable-anchor-offset", symbolLayer.textVariableAnchorOffset),
-                    ("text-anchor", symbolLayer.textAnchor),
-                    ("text-max-angle", symbolLayer.maximumTextAngle),
-                    ("text-writing-mode", symbolLayer.textWritingModes),
-                    ("text-rotate", symbolLayer.textRotation),
-                    ("text-padding", symbolLayer.textPadding),
-                    ("text-keep-upright", symbolLayer.keepsTextUpright),
-                    ("text-transform", symbolLayer.textTransform),
-                    ("text-offset", symbolLayer.textOffset),
-                    ("text-allow-overlap", symbolLayer.textAllowsOverlap),
-                    ("text-ignore-placement", symbolLayer.textIgnoresPlacement),
-                    ("text-optional", symbolLayer.textOptional),
+                    "symbol-placement",
+                    "symbol-spacing",
+                    "symbol-avoid-edges",
+                    "symbol-sort-key",
+                    "symbol-z-order",
+                    "icon-allow-overlap",
+                    "icon-ignore-placement",
+                    "icon-optional",
+                    "icon-rotation-alignment",
+                    "icon-size",
+                    "icon-text-fit",
+                    "icon-text-fit-padding",
+                    "icon-image",
+                    "icon-rotate",
+                    "icon-padding",
+                    "icon-keep-upright",
+                    "icon-offset",
+                    "icon-anchor",
+                    "icon-pitch-alignment",
+                    "text-pitch-alignment",
+                    "text-rotation-alignment",
+                    "text-field",
+                    "text-font",
+                    "text-size",
+                    "text-max-width",
+                    "text-line-height",
+                    "text-letter-spacing",
+                    "text-justify",
+                    "text-radial-offset",
+                    "text-variable-anchor",
+                    "text-variable-anchor-offset",
+                    "text-anchor",
+                    "text-max-angle",
+                    "text-writing-mode",
+                    "text-rotate",
+                    "text-padding",
+                    "text-keep-upright",
+                    "text-transform",
+                    "text-offset",
+                    "text-allow-overlap",
+                    "text-ignore-placement",
+                    "text-optional",
                 ]
             )
-        case let circleLayer as MLNCircleStyleLayer:
+        case is MLNCircleStyleLayer:
             return (
                 paint: [
-                    ("circle-radius", circleLayer.circleRadius),
-                    ("circle-color", circleLayer.circleColor),
-                    ("circle-blur", circleLayer.circleBlur),
-                    ("circle-opacity", circleLayer.circleOpacity),
-                    ("circle-translate", circleLayer.circleTranslation),
-                    ("circle-translate-anchor", circleLayer.circleTranslationAnchor),
-                    ("circle-pitch-scale", circleLayer.circleScaleAlignment),
-                    ("circle-pitch-alignment", circleLayer.circlePitchAlignment),
-                    ("circle-stroke-width", circleLayer.circleStrokeWidth),
-                    ("circle-stroke-color", circleLayer.circleStrokeColor),
-                    ("circle-stroke-opacity", circleLayer.circleStrokeOpacity),
+                    "circle-radius",
+                    "circle-color",
+                    "circle-blur",
+                    "circle-opacity",
+                    "circle-translate",
+                    "circle-translate-anchor",
+                    "circle-pitch-scale",
+                    "circle-pitch-alignment",
+                    "circle-stroke-width",
+                    "circle-stroke-color",
+                    "circle-stroke-opacity",
                 ],
                 layout: [
-                    ("circle-sort-key", circleLayer.circleSortKey),
+                    "circle-sort-key",
                 ]
             )
-        case let lineLayer as MLNLineStyleLayer:
+        case is MLNLineStyleLayer:
             return (
                 paint: [
-                    ("line-opacity", lineLayer.lineOpacity),
-                    ("line-color", lineLayer.lineColor),
-                    ("line-translate", lineLayer.lineTranslation),
-                    ("line-translate-anchor", lineLayer.lineTranslationAnchor),
-                    ("line-width", lineLayer.lineWidth),
-                    ("line-gap-width", lineLayer.lineGapWidth),
-                    ("line-offset", lineLayer.lineOffset),
-                    ("line-blur", lineLayer.lineBlur),
-                    ("line-dasharray", lineLayer.lineDashPattern),
-                    ("line-pattern", lineLayer.linePattern),
-                    ("line-gradient", lineLayer.lineGradient),
+                    "line-opacity",
+                    "line-color",
+                    "line-translate",
+                    "line-translate-anchor",
+                    "line-width",
+                    "line-gap-width",
+                    "line-offset",
+                    "line-blur",
+                    "line-dasharray",
+                    "line-pattern",
+                    "line-gradient",
                 ],
                 layout: [
-                    ("line-cap", lineLayer.lineCap),
-                    ("line-join", lineLayer.lineJoin),
-                    ("line-miter-limit", lineLayer.lineMiterLimit),
-                    ("line-round-limit", lineLayer.lineRoundLimit),
-                    ("line-sort-key", lineLayer.lineSortKey),
+                    "line-cap",
+                    "line-join",
+                    "line-miter-limit",
+                    "line-round-limit",
+                    "line-sort-key",
                 ]
             )
-        case let fillLayer as MLNFillStyleLayer:
+        case is MLNFillStyleLayer:
             return (
                 paint: [
-                    ("fill-antialias", fillLayer.fillAntialiased),
-                    ("fill-opacity", fillLayer.fillOpacity),
-                    ("fill-color", fillLayer.fillColor),
-                    ("fill-outline-color", fillLayer.fillOutlineColor),
-                    ("fill-translate", fillLayer.fillTranslation),
-                    ("fill-translate-anchor", fillLayer.fillTranslationAnchor),
-                    ("fill-pattern", fillLayer.fillPattern),
+                    "fill-antialias",
+                    "fill-opacity",
+                    "fill-color",
+                    "fill-outline-color",
+                    "fill-translate",
+                    "fill-translate-anchor",
+                    "fill-pattern",
                 ],
                 layout: [
-                    ("fill-sort-key", fillLayer.fillSortKey),
+                    "fill-sort-key",
                 ]
             )
-        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+        case is MLNFillExtrusionStyleLayer:
             return (
                 paint: [
-                    ("fill-extrusion-opacity", fillExtrusionLayer.fillExtrusionOpacity),
-                    ("fill-extrusion-color", fillExtrusionLayer.fillExtrusionColor),
-                    ("fill-extrusion-translate", fillExtrusionLayer.fillExtrusionTranslation),
-                    ("fill-extrusion-translate-anchor", fillExtrusionLayer.fillExtrusionTranslationAnchor),
-                    ("fill-extrusion-pattern", fillExtrusionLayer.fillExtrusionPattern),
-                    ("fill-extrusion-height", fillExtrusionLayer.fillExtrusionHeight),
-                    ("fill-extrusion-base", fillExtrusionLayer.fillExtrusionBase),
-                    ("fill-extrusion-vertical-gradient", fillExtrusionLayer.fillExtrusionHasVerticalGradient),
+                    "fill-extrusion-opacity",
+                    "fill-extrusion-color",
+                    "fill-extrusion-translate",
+                    "fill-extrusion-translate-anchor",
+                    "fill-extrusion-pattern",
+                    "fill-extrusion-height",
+                    "fill-extrusion-base",
+                    "fill-extrusion-vertical-gradient",
                 ],
                 layout: [
-                    ("fill-extrusion-rounded-corner-distance", fillExtrusionLayer.fillExtrusionRoundedCornerDistance),
+                    "fill-extrusion-rounded-corner-distance",
                 ]
             )
-        case let rasterLayer as MLNRasterStyleLayer:
+        case is MLNRasterStyleLayer:
             return (
                 paint: [
-                    ("raster-opacity", rasterLayer.rasterOpacity),
-                    ("raster-hue-rotate", rasterLayer.rasterHueRotation),
-                    ("raster-brightness-min", rasterLayer.minimumRasterBrightness),
-                    ("raster-brightness-max", rasterLayer.maximumRasterBrightness),
-                    ("raster-saturation", rasterLayer.rasterSaturation),
-                    ("raster-contrast", rasterLayer.rasterContrast),
-                    ("raster-resampling", rasterLayer.rasterResamplingMode),
-                    ("raster-fade-duration", rasterLayer.rasterFadeDuration),
-                ],
-                layout: [
-                ]
-            )
-        case let hillshadeLayer as MLNHillshadeStyleLayer:
-            return (
-                paint: [
-                    ("hillshade-illumination-direction", hillshadeLayer.hillshadeIlluminationDirection),
-                    ("hillshade-illumination-altitude", hillshadeLayer.hillshadeIlluminationAltitude),
-                    ("hillshade-illumination-anchor", hillshadeLayer.hillshadeIlluminationAnchor),
-                    ("hillshade-exaggeration", hillshadeLayer.hillshadeExaggeration),
-                    ("hillshade-shadow-color", hillshadeLayer.hillshadeShadowColor),
-                    ("hillshade-highlight-color", hillshadeLayer.hillshadeHighlightColor),
-                    ("hillshade-accent-color", hillshadeLayer.hillshadeAccentColor),
-                    ("hillshade-method", hillshadeLayer.hillshadeMethod),
+                    "raster-opacity",
+                    "raster-hue-rotate",
+                    "raster-brightness-min",
+                    "raster-brightness-max",
+                    "raster-saturation",
+                    "raster-contrast",
+                    "raster-resampling",
+                    "raster-fade-duration",
                 ],
                 layout: [
                 ]
             )
-        case let heatmapLayer as MLNHeatmapStyleLayer:
+        case is MLNHillshadeStyleLayer:
             return (
                 paint: [
-                    ("heatmap-radius", heatmapLayer.heatmapRadius),
-                    ("heatmap-weight", heatmapLayer.heatmapWeight),
-                    ("heatmap-intensity", heatmapLayer.heatmapIntensity),
-                    ("heatmap-color", heatmapLayer.heatmapColor),
-                    ("heatmap-opacity", heatmapLayer.heatmapOpacity),
+                    "hillshade-illumination-direction",
+                    "hillshade-illumination-altitude",
+                    "hillshade-illumination-anchor",
+                    "hillshade-exaggeration",
+                    "hillshade-shadow-color",
+                    "hillshade-highlight-color",
+                    "hillshade-accent-color",
+                    "hillshade-method",
                 ],
                 layout: [
                 ]
             )
-        case let colorReliefLayer as MLNColorReliefStyleLayer:
+        case is MLNHeatmapStyleLayer:
             return (
                 paint: [
-                    ("color-relief-opacity", colorReliefLayer.colorReliefOpacity),
-                    ("color-relief-color", colorReliefLayer.colorReliefColor),
+                    "heatmap-radius",
+                    "heatmap-weight",
+                    "heatmap-intensity",
+                    "heatmap-color",
+                    "heatmap-opacity",
                 ],
                 layout: [
                 ]
             )
-        case let backgroundLayer as MLNBackgroundStyleLayer:
+        case is MLNColorReliefStyleLayer:
             return (
                 paint: [
-                    ("background-color", backgroundLayer.backgroundColor),
-                    ("background-pattern", backgroundLayer.backgroundPattern),
-                    ("background-opacity", backgroundLayer.backgroundOpacity),
+                    "color-relief-opacity",
+                    "color-relief-color",
+                ],
+                layout: [
+                ]
+            )
+        case is MLNBackgroundStyleLayer:
+            return (
+                paint: [
+                    "background-color",
+                    "background-pattern",
+                    "background-opacity",
                 ],
                 layout: [
                 ]
@@ -795,7 +1166,37 @@ class LayerPropertyConverter {
         }
     }
 
-    /// The style-spec JSON of `expression`, a value `propertyValues(of:)`
+    /// The value `layer` holds for `propertyName`, or nil for a property this
+    /// converter does not read. MapLibre reads a property that was never set
+    /// as its default value, and may raise an Objective-C exception.
+    class func propertyValue(_ propertyName: String, of layer: MLNStyleLayer) -> NSExpression? {
+        switch layer {
+        case let symbolLayer as MLNSymbolStyleLayer:
+            return getSymbolProperty(symbolLayer, propertyName)
+        case let circleLayer as MLNCircleStyleLayer:
+            return getCircleProperty(circleLayer, propertyName)
+        case let lineLayer as MLNLineStyleLayer:
+            return getLineProperty(lineLayer, propertyName)
+        case let fillLayer as MLNFillStyleLayer:
+            return getFillProperty(fillLayer, propertyName)
+        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+            return getFillExtrusionProperty(fillExtrusionLayer, propertyName)
+        case let rasterLayer as MLNRasterStyleLayer:
+            return getRasterProperty(rasterLayer, propertyName)
+        case let hillshadeLayer as MLNHillshadeStyleLayer:
+            return getHillshadeProperty(hillshadeLayer, propertyName)
+        case let heatmapLayer as MLNHeatmapStyleLayer:
+            return getHeatmapProperty(heatmapLayer, propertyName)
+        case let colorReliefLayer as MLNColorReliefStyleLayer:
+            return getColorReliefProperty(colorReliefLayer, propertyName)
+        case let backgroundLayer as MLNBackgroundStyleLayer:
+            return getBackgroundProperty(backgroundLayer, propertyName)
+        default:
+            return nil
+        }
+    }
+
+    /// The style-spec JSON of `expression`, a value `propertyValue(_:of:)`
     /// read, in the shape Android answers: a constant as a plain value, with
     /// a color as `rgba(r,g,b,a)` text, and anything else as an expression,
     /// with a color as `["rgba", r, g, b, a]`. MapLibre may raise an
