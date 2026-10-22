@@ -545,7 +545,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// has in [geojson], number or string, on every platform. GeoJSON that does
   /// not pass through the plugin, loaded from a URL or declared in the style,
   /// keeps the ids MapLibre gives it: on Android and web only integer ids are
-  /// sure to come back the same. Vector tile ids are always integers.
+  /// sure to come back the same. Vector tile ids are always integers. To keep
+  /// the ids, the plugin can add a `maplibre_gl:` property to a feature, which
+  /// a style expression reading every property, such as `['properties']`,
+  /// sees; the queries leave it out.
   ///
   /// [promoteId] makes the property of that name the id of each feature, on
   /// web only. Android and iOS ignore it: there the GeoJSON must carry a
@@ -570,7 +573,8 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Replaces the data of the GeoJSON source [sourceId] with [geojson], which
-  /// takes the same GeoJSON as [addGeoJsonSource].
+  /// takes the same GeoJSON as [addGeoJsonSource] and keeps its ids the same
+  /// way, with a `maplibre_gl:` property that `['properties']` sees.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -2379,6 +2383,11 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// An [ImageSourceProperties] source loads its image from `url`; for image
   /// bytes use [addImageSource].
+  ///
+  /// A [GeojsonSourceProperties] source with `generateId` gives each feature
+  /// its index as id, over any id it had, on every platform. MapLibre Native
+  /// has no `generateId`, so on Android and iOS the plugin numbers the data it
+  /// sets to the source, but not data loaded from a URL.
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for properties
   /// no source can be built from, or `INVALID_GEOJSON`,

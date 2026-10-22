@@ -109,6 +109,12 @@ A feature keeps the `id` it has in the data, number or string, on every platform
 
 GeoJSON loaded from a URL or declared in the style does not pass through the plugin, so it keeps the ids MapLibre gives it: on Android and web only integer ids are sure to come back the same. Vector tile ids are always integers.
 
+To keep the ids, the plugin can add a property whose name starts with `maplibre_gl:` to a feature. The queries leave it out, but a style expression that reads every property, such as `["properties"]`, sees it.
+
+Filter by id with `["id"]`. On web the legacy filter syntax, such as `["==", "$id", 2]`, sees only integer ids.
+
+A source added with `addSource` and `generateId: true` gives each feature its index as id, over any id it had. MapLibre Native has no `generateId`, so on Android and iOS the plugin numbers the data it sets, but not data loaded from a URL.
+
 Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
 
 ## `promoteId`: web only
