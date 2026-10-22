@@ -18,15 +18,16 @@ class GeoJsonSource extends Source<GeoJsonSourceJsImpl> {
         ),
       );
 
-  /// Replaces the source's data, completing once the worker has it.
+  /// Replaces the source's data with [data], GeoJSON or its url, completing
+  /// once the worker has it.
   ///
   /// maplibre-gl-js 6 returns a promise here, where version 5 returned the
   /// source itself, so only a promise is awaited and a version 5 library on the
   /// page keeps working. Dropping it would report the data as applied before it
   /// is, and would turn a rejection, on invalid GeoJSON for example, into an
   /// unhandled one.
-  Future<void> setData(FeatureCollection featureCollection) async {
-    final result = jsObject.setData(featureCollection.jsObject);
+  Future<void> setData(JSAny data) async {
+    final result = jsObject.setData(data);
     if (result.isA<JSPromise>()) await (result! as JSPromise).toDart;
   }
 

@@ -753,8 +753,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (reason != null) throw invalidGeoJson(id, reason);
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
-    await _setSourceData(
-      source,
+    await source.setData(
       _rememberGeoJson(id, Map<String, dynamic>.from(geojson! as Map)),
     );
     return true;
@@ -764,9 +763,13 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool> editGeoJsonUrl(String id, String url) async {
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
-    // setGeoJsonFeature cannot change data it does not hold.
-    _addedFeaturesByLayer.remove(id);
-    await _setSourceData(source, url.toJS);
+    final held = _addedFeaturesByLayer[id];
+    await source.setData(url.toJS);
+    // setGeoJsonFeature cannot change data it does not hold. Data set while
+    // the url was handed over came after it, and stays.
+    if (identical(_addedFeaturesByLayer[id], held)) {
+      _addedFeaturesByLayer.remove(id);
+    }
     return true;
   }
 
@@ -2050,12 +2053,6 @@ class MapLibreMapController extends MapLibrePlatform
     return collection;
   }
 
-  /// Replaces the data of [source] with [data], GeoJSON or its url.
-  static Future<void> _setSourceData(GeoJsonSource source, JSAny data) =>
-      source.setData(
-        FeatureCollection.fromJsObject(data as FeatureCollectionJsImpl),
-      );
-
   @override
   Future<void> setGeoJsonSource(
     String sourceId,
@@ -2064,7 +2061,7 @@ class MapLibreMapController extends MapLibrePlatform
     final reason = geoJsonError(geojson);
     if (reason != null) throw invalidGeoJson(sourceId, reason);
     final source = _geoJsonSource(sourceId);
-    await _setSourceData(source, _rememberGeoJson(sourceId, geojson));
+    await source.setData(_rememberGeoJson(sourceId, geojson));
   }
 
   /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
@@ -2417,12 +2414,16 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
-  /// Replaces the map this controller drives with [map].
+  /// Replaces the map this controller drives with [map], whose style has
+  /// loaded when [styleReady] is true.
   ///
   /// For tests of the calls that do nothing but hand a payload to
   /// maplibre-gl-js, which can then be driven against a stand-in for it.
   @visibleForTesting
-  void debugSetMap(MapLibreMap map) => _map = map;
+  void debugSetMap(MapLibreMap map, {bool styleReady = false}) {
+    _map = map;
+    _styleReady = styleReady;
+  }
 
   @override
   Future<void> setSky(SkyProperties sky) async {
@@ -2934,7 +2935,7 @@ class MapLibreMapController extends MapLibrePlatform
     final updated = List.of(features);
     updated[index] = (id: id, feature: jsify(geojsonFeature));
     _addedFeaturesByLayer[sourceId] = updated;
-    await _setSourceData(source, _featureCollection(updated));
+    await source.setData(_featureCollection(updated));
   }
 
   @override
