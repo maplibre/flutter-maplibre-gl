@@ -1970,7 +1970,8 @@ class MapLibreMapController extends ChangeNotifier {
     return fill.options.geometry!;
   }
 
-  /// Query rendered (i.e. visible) features at a point in screen coordinates
+  /// Queries the rendered (visible) features at [point], in logical pixels
+  /// from the top left corner of the map view.
   ///
   /// Throws a [PlatformException] with code `INVALID_EXPRESSION` if MapLibre
   /// rejects [filter].
@@ -1992,7 +1993,8 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
-  /// Query rendered (i.e. visible) features in a Rect in screen coordinates
+  /// Queries the rendered (visible) features in [rect], in logical pixels
+  /// from the top left corner of the map view.
   ///
   /// Unlike [queryRenderedFeatures], which takes the filter expression itself,
   /// [filter] is that expression encoded as a JSON string, for example
@@ -2375,12 +2377,12 @@ class MapLibreMapController extends ChangeNotifier {
     return getLayerFilter(layerId);
   }
 
-  /// Returns the point on the screen that corresponds to a geographical coordinate ([latLng]). The screen location is in screen pixels (not display pixels) relative to the top left of the map (not of the whole screen)
+  /// Returns where [latLng] is on the map view, in logical pixels from its
+  /// top left corner. Never null: a location outside the view gets a point
+  /// outside it too.
   ///
-  /// Note: The resulting x and y coordinates are rounded to [int] on web, on other platforms they may differ very slightly (in the range of about 10^-10) from the actual nearest screen coordinate.
-  /// You therefore might want to round them appropriately, depending on your use case.
-  ///
-  /// Returns null if [latLng] is not currently visible on the map.
+  /// On web x and y are rounded to whole pixels; on Android and iOS they keep
+  /// their fraction, so round them yourself if you need whole pixels.
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a
   /// latitude or longitude that is NaN or infinite.
@@ -2388,7 +2390,8 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.toScreenLocation(latLng);
   }
 
-  /// The screen points of [latLngs], as [toScreenLocation] returns each.
+  /// The screen points of [latLngs] in logical pixels, as [toScreenLocation]
+  /// returns each, in the same order.
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a
   /// latitude or longitude that is NaN or infinite.
@@ -2396,7 +2399,8 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.toScreenLocationBatch(latLngs);
   }
 
-  /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
+  /// Returns the location at [screenLocation], in logical pixels from the top
+  /// left corner of the map view.
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a screen
   /// coordinate that is NaN or infinite.
@@ -2404,8 +2408,8 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.toLatLng(screenLocation);
   }
 
-  /// Returns the distance spanned by one pixel at the specified [latitude] and current zoom level.
-  /// The distance between pixels decreases as the latitude approaches the poles. This relationship parallels the relationship between longitudinal coordinates at different latitudes.
+  /// Returns the meters spanned by one logical pixel at [latitude] and the
+  /// current zoom. They shrink toward the poles, as the meridians get closer.
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     return _maplibrePlatform.getMetersPerPixelAtLatitude(latitude);
   }

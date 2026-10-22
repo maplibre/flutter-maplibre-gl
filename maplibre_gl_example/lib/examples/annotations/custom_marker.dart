@@ -1,7 +1,6 @@
 import 'dart:async' show unawaited;
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -190,19 +189,9 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    var ratio = 1.0;
-
-    //web does not support Platform._operatingSystem
-    if (!kIsWeb) {
-      final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-
-      // iOS returns logical pixel while Android returns screen pixel
-      ratio = isIos ? 1.0 : MediaQuery.of(context).devicePixelRatio;
-    }
-
     return Positioned(
-      left: _position.x / ratio - _iconSize / 2,
-      top: _position.y / ratio - _iconSize / 2,
+      left: _position.x - _iconSize / 2,
+      top: _position.y - _iconSize / 2,
       child: RotationTransition(
         turns: _animation,
         child: Image.asset(

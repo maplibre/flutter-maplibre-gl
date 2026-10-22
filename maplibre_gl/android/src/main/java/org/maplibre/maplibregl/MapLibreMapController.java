@@ -2738,6 +2738,21 @@ final class MapLibreMapController
             new PgLatLng(bounds.getLatNorth(), bounds.getLonEast())));
   }
 
+  // The SDK measures the map view in physical pixels and Dart in logical pixels, like iOS and
+  // web. Every screen point that crosses between them goes through these two.
+
+  /** The physical pixel of the logical point ({@code x}, {@code y}) of the map view. */
+  private PointF toPixel(double x, double y) {
+    return new PointF(
+        Convert.toFractionalPixels(x, density), Convert.toFractionalPixels(y, density));
+  }
+
+  /** The logical point of the physical {@code pixel} of the map view. */
+  private PgScreenPoint toScreenPoint(PointF pixel) {
+    return new PgScreenPoint(
+        Convert.toLogicalPixels(pixel.x, density), Convert.toLogicalPixels(pixel.y, density));
+  }
+
   @Override
   public void mapToScreenLocation(double latitude, double longitude, MethodChannel.Result result) {
     if (rejectNonFinite(StyleChecks.isFinite(latitude, longitude), result)) {
@@ -2745,7 +2760,7 @@ final class MapLibreMapController
     }
     PointF pointf =
         mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
-    result.success(new PgScreenPoint(pointf.x, pointf.y));
+    result.success(toScreenPoint(pointf));
   }
 
   @Override
@@ -2762,8 +2777,8 @@ final class MapLibreMapController
           mapLibreMap
               .getProjection()
               .toScreenLocation(new LatLng(coordinates[i], coordinates[i + 1]));
-      reply[i] = pointf.x;
-      reply[i + 1] = pointf.y;
+      reply[i] = Convert.toLogicalPixels(pointf.x, density);
+      reply[i + 1] = Convert.toLogicalPixels(pointf.y, density);
     }
 
     result.success(reply);
@@ -2775,8 +2790,7 @@ final class MapLibreMapController
       result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.NON_FINITE_SCREEN_POINT, null);
       return;
     }
-    LatLng latlng =
-        mapLibreMap.getProjection().fromScreenLocation(new PointF((float) x, (float) y));
+    LatLng latlng = mapLibreMap.getProjection().fromScreenLocation(toPixel(x, y));
     result.success(new PgLatLng(latlng.getLatitude(), latlng.getLongitude()));
   }
 
@@ -2793,7 +2807,7 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final PointF pixel = new PointF((float) x, (float) y);
+    final PointF pixel = toPixel(x, y);
     answerFeatures(
         filter,
         result,
@@ -2810,7 +2824,12 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     final String[] layers = layerIds.toArray(new String[0]);
-    final RectF rectF = new RectF((float) left, (float) top, (float) right, (float) bottom);
+    final RectF rectF =
+        new RectF(
+            Convert.toFractionalPixels(left, density),
+            Convert.toFractionalPixels(top, density),
+            Convert.toFractionalPixels(right, density),
+            Convert.toFractionalPixels(bottom, density));
     answerFeatures(
         filter,
         result,
@@ -4171,7 +4190,7 @@ final class MapLibreMapController
   public boolean onMapClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
     Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf, false);
-    final PgScreenPoint screenPoint = new PgScreenPoint(pointf.x, pointf.y);
+    final PgScreenPoint screenPoint = toScreenPoint(pointf);
     final PgLatLng latLng = new PgLatLng(point.getLatitude(), point.getLongitude());
     if (featureLayerPair != null && featureLayerPair.first != null) {
       flutterApi.featureOnTap(
@@ -4193,7 +4212,7 @@ final class MapLibreMapController
   public boolean onMapLongClick(@NonNull LatLng point) {
     PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
     flutterApi.mapOnMapLongClick(
-        new PgScreenPoint(pointf.x, pointf.y),
+        toScreenPoint(pointf),
         new PgLatLng(point.getLatitude(), point.getLongitude()),
         PigeonReplies.IGNORE);
     return true;
@@ -4999,7 +5018,7 @@ final class MapLibreMapController
     final PgFeatureDrag drag =
         new PgFeatureDrag(
             draggedFeature.id(),
-            new PgScreenPoint(pointf.x, pointf.y),
+            toScreenPoint(pointf),
             new PgLatLng(dragOrigin.getLatitude(), dragOrigin.getLongitude()),
             new PgLatLng(current.getLatitude(), current.getLongitude()),
             new PgLatLng(

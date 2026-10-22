@@ -842,8 +842,7 @@ Future<List> _waitForRendered(
   );
 }
 
-/// The screen location of [latLng], in the units queryRenderedFeatures takes
-/// on this platform (toScreenLocation answers in the same ones).
+/// The screen location of [latLng], in logical pixels.
 Future<Point<double>> _screen(
   WidgetTester tester,
   MapLibreMapController controller,

@@ -173,12 +173,10 @@ class _MapProbe {
   /// and drags only sees what is drawn.
   Future<Circle> addCircle(Offset fromCenter, {bool draggable = false}) async {
     final topLeft = tester.getTopLeft(find.byType(MapLibreMap));
-    // toLatLng and queryRenderedFeatures use physical pixels on Android.
-    final scale = _onAndroid ? tester.view.devicePixelRatio : 1.0;
     final local = onScreen(fromCenter) - topLeft;
     final latLng = await pumpUntil(
       tester,
-      controller.toLatLng(Point(local.dx * scale, local.dy * scale)),
+      controller.toLatLng(Point(local.dx, local.dy)),
       'toLatLng',
     );
     final circle = await pumpUntil(
@@ -197,7 +195,7 @@ class _MapProbe {
     await pumpUntilValue(
       tester,
       () => controller.queryRenderedFeatures(
-        Point(local.dx * scale, local.dy * scale),
+        Point(local.dx, local.dy),
         [layerId],
         null,
       ),

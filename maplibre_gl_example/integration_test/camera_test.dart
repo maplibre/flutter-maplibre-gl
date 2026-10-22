@@ -181,12 +181,11 @@ void main() {
       tester,
     ) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
       const focus = Offset(300, 120);
 
       final anchor = await pumpUntil(
         tester,
-        controller.toLatLng(Point(focus.dx * scale, focus.dy * scale)),
+        controller.toLatLng(Point(focus.dx, focus.dy)),
         'toLatLng focus',
       );
       await pumpUntil(
@@ -204,8 +203,8 @@ void main() {
         controller.toScreenLocation(anchor),
         'toScreenLocation anchor',
       );
-      expect(after.x / scale, closeTo(focus.dx, 3), reason: 'x of $after');
-      expect(after.y / scale, closeTo(focus.dy, 3), reason: 'y of $after');
+      expect(after.x, closeTo(focus.dx, 3), reason: 'x of $after');
+      expect(after.y, closeTo(focus.dy, 3), reason: 'y of $after');
     });
 
     testWidgets('scrollBy pans by logical pixels', (tester) async {
@@ -287,7 +286,6 @@ void main() {
     testWidgets('newLatLngBounds puts the bounds in the middle of uneven '
         'padding', (tester) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
       final bounds = LatLngBounds(
         southwest: const LatLng(-10, -10),
         northeast: const LatLng(10, 10),
@@ -343,18 +341,18 @@ void main() {
           tester,
           () => screen(const LatLng(0, 0), label),
           (point) =>
-              (point.x / scale - areaCenterX).abs() < 3 &&
-              (point.y / scale - areaCenterY).abs() < 3,
+              (point.x - areaCenterX).abs() < 3 &&
+              (point.y - areaCenterY).abs() < 3,
           '$label bounds center at ($areaCenterX, $areaCenterY)',
         );
-        expect(center.x / scale, closeTo(areaCenterX, 3), reason: label);
-        expect(center.y / scale, closeTo(areaCenterY, 3), reason: label);
+        expect(center.x, closeTo(areaCenterX, 3), reason: label);
+        expect(center.y, closeTo(areaCenterY, 3), reason: label);
 
         final north = await screen(const LatLng(10, 0), label);
         final south = await screen(const LatLng(-10, 0), label);
-        expect(north.y / scale, closeTo(0, 3), reason: '$label north edge');
+        expect(north.y, closeTo(0, 3), reason: '$label north edge');
         expect(
-          south.y / scale,
+          south.y,
           closeTo(areaBottom, 3),
           reason: '$label south edge',
         );
@@ -364,9 +362,7 @@ void main() {
         final camera = await _queryCamera(tester, controller);
         final viewCenter = await pumpUntil(
           tester,
-          controller.toLatLng(
-            Point(_mapSize / 2 * scale, _mapSize / 2 * scale),
-          ),
+          controller.toLatLng(const Point(_mapSize / 2, _mapSize / 2)),
           '$label toLatLng view center',
         );
         _expectLatLng(camera.target, viewCenter, 0.05, '$label target');
@@ -379,7 +375,6 @@ void main() {
       tester,
     ) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
       final bounds = LatLngBounds(
         southwest: const LatLng(-10, -10),
         northeast: const LatLng(10, 10),
@@ -414,8 +409,8 @@ void main() {
         controller.toScreenLocation(const LatLng(5, 5)),
         'toScreenLocation target',
       );
-      expect(point.x / scale, closeTo(_mapSize / 2, 2), reason: '$point');
-      expect(point.y / scale, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.x, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.y, closeTo(_mapSize / 2, 2), reason: '$point');
 
       // A fit without padding centers the bounds in the whole view again.
       await pumpUntil(
@@ -430,14 +425,13 @@ void main() {
         controller.toScreenLocation(const LatLng(0, 0)),
         'toScreenLocation bounds center',
       );
-      expect(center.x / scale, closeTo(_mapSize / 2, 2), reason: '$center');
-      expect(center.y / scale, closeTo(_mapSize / 2, 2), reason: '$center');
+      expect(center.x, closeTo(_mapSize / 2, 2), reason: '$center');
+      expect(center.y, closeTo(_mapSize / 2, 2), reason: '$center');
     });
 
     testWidgets('newLatLngBounds keeps the bearing and centers the bounds '
         'in the padding', (tester) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
       final bounds = LatLngBounds(
         southwest: const LatLng(-10, -10),
         northeast: const LatLng(10, 10),
@@ -471,15 +465,14 @@ void main() {
         controller.toScreenLocation(const LatLng(0, 0)),
         'toScreenLocation bounds center',
       );
-      expect(center.x / scale, closeTo(180, 3), reason: '$center');
-      expect(center.y / scale, closeTo(100, 3), reason: '$center');
+      expect(center.x, closeTo(180, 3), reason: '$center');
+      expect(center.y, closeTo(100, 3), reason: '$center');
     });
 
     testWidgets('newLatLngBounds padding adds to the content insets', (
       tester,
     ) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
       final bounds = LatLngBounds(
         southwest: const LatLng(-10, -10),
         northeast: const LatLng(10, 10),
@@ -511,12 +504,12 @@ void main() {
         'toScreenLocation $point',
       );
       final center = await screen(const LatLng(0, 0));
-      expect(center.x / scale, closeTo(170, 3), reason: '$center');
-      expect(center.y / scale, closeTo(140, 3), reason: '$center');
+      expect(center.x, closeTo(170, 3), reason: '$center');
+      expect(center.y, closeTo(140, 3), reason: '$center');
       final north = await screen(const LatLng(10, 0));
       final south = await screen(const LatLng(-10, 0));
-      expect(north.y / scale, closeTo(40, 3), reason: 'north edge $north');
-      expect(south.y / scale, closeTo(240, 3), reason: 'south edge $south');
+      expect(north.y, closeTo(40, 3), reason: 'north edge $north');
+      expect(south.y, closeTo(240, 3), reason: 'south edge $south');
     });
 
     testWidgets('reports success for each update kind', (tester) async {
@@ -1114,19 +1107,18 @@ void main() {
           zoom: 4,
         ),
       );
-      final scale = _screenScale(tester);
 
       final point = await pumpUntil(
         tester,
         controller.toScreenLocation(const LatLng(15, 25)),
         'toScreenLocation',
       );
-      expect(point.x / scale, closeTo(_mapSize / 2, 2), reason: '$point');
-      expect(point.y / scale, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.x, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.y, closeTo(_mapSize / 2, 2), reason: '$point');
 
       final center = await pumpUntil(
         tester,
-        controller.toLatLng(Point(_mapSize / 2 * scale, _mapSize / 2 * scale)),
+        controller.toLatLng(const Point(_mapSize / 2, _mapSize / 2)),
         'toLatLng',
       );
       _expectLatLng(center, const LatLng(15, 25), 0.05, 'view center');
@@ -1136,7 +1128,6 @@ void main() {
       tester,
     ) async {
       final controller = await pumpMap(tester);
-      final scale = _screenScale(tester);
 
       // 50 logical pixels at zoom 3 on the equator.
       final dLng = 50 / _worldSize(3) * 360;
@@ -1145,8 +1136,8 @@ void main() {
         controller.toScreenLocation(LatLng(0, dLng)),
         'toScreenLocation',
       );
-      expect(point.x / scale, closeTo(_mapSize / 2 + 50, 2), reason: '$point');
-      expect(point.y / scale, closeTo(_mapSize / 2, 2), reason: '$point');
+      expect(point.x, closeTo(_mapSize / 2 + 50, 2), reason: '$point');
+      expect(point.y, closeTo(_mapSize / 2, 2), reason: '$point');
     });
 
     testWidgets('toScreenLocation and toLatLng round trip', (tester) async {
@@ -1214,7 +1205,7 @@ void main() {
       );
 
       final equator = await metersPerPixel(0);
-      // Per logical pixel on every platform, unlike toScreenLocation.
+      // Per logical pixel on every platform.
       final expected = _earthCircumference / _worldSize(3);
       expect(equator, closeTo(expected, expected * 0.02));
 
@@ -1470,14 +1461,6 @@ Future<CameraPosition> _queryCamera(
   expect(camera, isNotNull, reason: 'queryCameraPosition');
   return camera!;
 }
-
-/// Device pixels per logical pixel in the coordinates toScreenLocation and
-/// toLatLng use. Android answers in physical pixels straight from its
-/// Projection, iOS in points and web in CSS pixels; the example app's custom
-/// marker page compensates the same way, so this is existing behavior rather
-/// than something these tests define.
-double _screenScale(WidgetTester tester) =>
-    testPlatform == TestPlatform.android ? tester.view.devicePixelRatio : 1.0;
 
 bool _isNear(CameraPosition camera, CameraPosition target) =>
     (camera.target.latitude - target.target.latitude).abs() < 0.05 &&

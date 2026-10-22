@@ -38,6 +38,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
 * **Web**: `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS. Set it if your web app reads the camera position (#1126).
+* **Android**: screen points are in logical pixels, like on iOS and web, instead of physical pixels: `toScreenLocation`, `toScreenLocationBatch`, `toLatLng`, `queryRenderedFeatures`, `queryRenderedFeaturesInRect`, and the point of `onMapClick`, `onMapLongClick`, `onFeatureTapped` and `onFeatureDrag`. Remove any Android-only multiplication or division by `devicePixelRatio` (#1130).
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).

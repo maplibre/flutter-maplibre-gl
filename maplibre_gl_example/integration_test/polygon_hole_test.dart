@@ -146,10 +146,6 @@ class _MapProbe {
   final clicks = <LatLng>[];
   late MapLibreMapController controller;
 
-  // toScreenLocation and queryRenderedFeaturesInRect use physical pixels on
-  // Android.
-  double get _scale => _onAndroid ? tester.view.devicePixelRatio : 1.0;
-
   Future<Offset> _platformPoint(LatLng at) async {
     final p = await pumpUntil(
       tester,
@@ -164,7 +160,7 @@ class _MapProbe {
   Future<List> query(LatLng at) async {
     final center = await _platformPoint(at);
     return controller.queryRenderedFeaturesInRect(
-      Rect.fromCircle(center: center, radius: 8 * _scale),
+      Rect.fromCircle(center: center, radius: 8),
       [_layerId],
       null,
     );
@@ -172,7 +168,7 @@ class _MapProbe {
 
   /// Taps at [at], moved by [nudge] logical pixels.
   Future<void> tap(LatLng at, {Offset nudge = Offset.zero}) async {
-    final local = await _platformPoint(at) / _scale;
+    final local = await _platformPoint(at);
     final topLeft = tester.getTopLeft(find.byType(MapLibreMap));
     final finger = _Finger(tester);
     await finger.down(topLeft + local + nudge);
