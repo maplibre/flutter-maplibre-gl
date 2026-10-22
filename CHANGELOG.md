@@ -151,7 +151,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **Android**: pausing an offline region right after resuming it keeps it paused.
   * `setLayerProperties` converts each value once on Android and iOS instead of twice.
 * Feature ids come back from the queries and the cluster calls as they are in the data on every platform, and `["id"]` filters and feature state find them by that id. On web `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. The drag and hover callbacks no longer throw a `TypeError` on a numeric id on iOS and web (#1124).
-* **iOS**: `getLayerProperties()` and `getSourceProperties()` read layers and sources added at runtime instead of answering `null`, and a layer reads its current values instead of the ones the style loaded with. As on Android, colors read as `rgba(...)` text (#985, #PRNUM).
+* **iOS**: `getLayerProperties()` and `getSourceProperties()` read layers and sources added at runtime instead of answering `null`, and a layer reads its current values instead of the ones the style loaded with. As on Android, colors read as `rgba(...)` text (#985, #1127).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
