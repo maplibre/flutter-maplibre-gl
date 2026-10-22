@@ -184,6 +184,175 @@ void main() {
     expect(map.drags, isEmpty);
     expect(map.featureTaps, hasLength(1));
   });
+
+  testWidgets('taps, drags and hovers report the feature id as text', (
+    tester,
+  ) async {
+    if (!kIsWeb) return;
+    final taps = <String>[];
+    final drags = <String>{};
+    final hovers = <String>{};
+    final controller = await pumpMap(tester);
+    controller.onFeatureTapped.add(
+      (point, latLng, id, layerId, annotation) => taps.add(id),
+    );
+    controller.onFeatureDrag.add(
+      (point, origin, current, delta, id, annotation, type) => drags.add(id),
+    );
+    controller.onFeatureHover.add(
+      (point, latLng, id, annotation, type) => hovers.add(id),
+    );
+    // The ids a GeoJSON feature can have, by where the feature is.
+    final features = <LatLng, Object>{
+      const LatLng(5, -8): 2,
+      const LatLng(5, 8): '2',
+      const LatLng(-6, -8): 2.5,
+      const LatLng(-6, 8): 'poi-12',
+    };
+    await pumpUntil(
+      tester,
+      controller.addGeoJsonSource('ids', {
+        'type': 'FeatureCollection',
+        'features': [
+          for (final MapEntry(:key, :value) in features.entries)
+            {
+              'type': 'Feature',
+              'id': value,
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [key.longitude, key.latitude],
+              },
+              'properties': {'draggable': true},
+            },
+        ],
+      }),
+      'addGeoJsonSource',
+    );
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        'ids',
+        'ids-circle',
+        const CircleLayerProperties(circleRadius: 15),
+      ),
+      'addCircleLayer',
+    );
+    final canvas =
+        web.document.querySelector('canvas.maplibregl-canvas')!
+            as web.HTMLCanvasElement;
+    final mouse = _Mouse(canvas);
+
+    for (final MapEntry(:key, :value) in features.entries) {
+      final screen = await pumpUntil(
+        tester,
+        controller.toScreenLocation(key),
+        'toScreenLocation',
+      );
+      var at = Point<double>(screen.x.toDouble(), screen.y.toDouble());
+      await pumpUntilValue(
+        tester,
+        () => controller.queryRenderedFeatures(at, ['ids-circle'], null),
+        (features) => features.isNotEmpty,
+        'feature $value drawn',
+      );
+
+      mouse.hover(at);
+      mouse.down(at);
+      mouse.up(at);
+      mouse.click(at);
+      await _settle(tester);
+      expect(taps, [value.toString()], reason: 'tap on $value');
+      expect(hovers, {value.toString()}, reason: 'hover over $value');
+
+      mouse.down(at);
+      for (var i = 0; i < 5; i++) {
+        at += const Point<double>(2, 0);
+        mouse.move(at);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      mouse.up(at);
+      await _settle(tester);
+      expect(drags, {value.toString()}, reason: 'drag of $value');
+
+      // Off every feature, so the next one starts from nothing hovered.
+      mouse.hover(const Point<double>(5, 5));
+      await _settle(tester);
+      taps.clear();
+      drags.clear();
+      hovers.clear();
+    }
+  });
+
+  testWidgets('a tap on a source with generateId reports the id it '
+      'generates', (tester) async {
+    if (!kIsWeb) return;
+    final taps = <String>[];
+    final controller = await pumpMap(tester);
+    controller.onFeatureTapped.add(
+      (point, latLng, id, layerId, annotation) => taps.add(id),
+    );
+    // Features without ids: generateId numbers them by their index.
+    const places = [LatLng(5, -8), LatLng(-6, 8)];
+    await pumpUntil(
+      tester,
+      controller.addSource(
+        'generated',
+        GeojsonSourceProperties(
+          data: {
+            'type': 'FeatureCollection',
+            'features': [
+              for (final at in places)
+                {
+                  'type': 'Feature',
+                  'geometry': {
+                    'type': 'Point',
+                    'coordinates': [at.longitude, at.latitude],
+                  },
+                  'properties': <String, Object?>{},
+                },
+            ],
+          },
+          generateId: true,
+        ),
+      ),
+      'addSource',
+    );
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        'generated',
+        'generated-circle',
+        const CircleLayerProperties(circleRadius: 15),
+      ),
+      'addCircleLayer',
+    );
+    final canvas =
+        web.document.querySelector('canvas.maplibregl-canvas')!
+            as web.HTMLCanvasElement;
+    final mouse = _Mouse(canvas);
+
+    for (final (index, place) in places.indexed) {
+      final screen = await pumpUntil(
+        tester,
+        controller.toScreenLocation(place),
+        'toScreenLocation',
+      );
+      final at = Point<double>(screen.x.toDouble(), screen.y.toDouble());
+      await pumpUntilValue(
+        tester,
+        () => controller.queryRenderedFeatures(at, ['generated-circle'], null),
+        (features) => features.isNotEmpty,
+        'feature $index drawn',
+      );
+
+      mouse.down(at);
+      mouse.up(at);
+      mouse.click(at);
+      await _settle(tester);
+      expect(taps, ['$index'], reason: 'tap on feature $index');
+      taps.clear();
+    }
+  });
 }
 
 /// Lets the drag and tap callbacks reach Dart.

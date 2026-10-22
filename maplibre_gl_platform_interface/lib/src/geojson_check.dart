@@ -13,7 +13,10 @@ const invalidGeoJsonCode = 'INVALID_GEOJSON';
 ///
 /// It reads the data the way `jsonEncode` writes it: an object such as a
 /// geometry or a position class counts as what its `toJson()` returns.
-String? geoJsonError(Object? data) {
+///
+/// [onFeature] sees each Feature that passes, as `jsonEncode` writes it, with
+/// its index in the `features` of a FeatureCollection, or 0 for a lone Feature.
+String? geoJsonError(Object? data, {GeoJsonFeatureVisitor? onFeature}) {
   final json = jsonValueOf(data);
   if (json is! Map) return 'GeoJSON must be an object.';
   final type = jsonValueOf(json['type']);
@@ -23,14 +26,19 @@ String? geoJsonError(Object? data) {
       return 'A FeatureCollection must have a "features" array.';
     }
     for (var i = 0; i < features.length; i++) {
-      final error = _featureError(features[i]);
+      final feature = features[i];
+      final error = _featureError(feature);
       if (error != null) return 'Feature $i: $error';
+      onFeature?.call(i, jsonValueOf(feature)! as Map);
     }
     return null;
   }
-  if (type == 'Feature') return _featureError(json);
+  if (type == 'Feature') return geoJsonFeatureError(json, onFeature: onFeature);
   return _geometryError(json);
 }
+
+/// A Feature that passed [geoJsonError] or [geoJsonFeatureError], at [index].
+typedef GeoJsonFeatureVisitor = void Function(int index, Map feature);
 
 /// Why [text] is not the JSON text of a GeoJSON object MapLibre can read, or
 /// null when it is. See [geoJsonError].
@@ -50,7 +58,10 @@ String? geoJsonTextError(String text) => decodeGeoJson(text).error;
 
 /// Why [data] is not a GeoJSON Feature MapLibre can read, or null when it is.
 /// See [geoJsonError].
-String? geoJsonFeatureError(Object? data) {
+String? geoJsonFeatureError(
+  Object? data, {
+  GeoJsonFeatureVisitor? onFeature,
+}) {
   final json = jsonValueOf(data);
   if (json is! Map) return 'GeoJSON must be an object.';
   final type = jsonValueOf(json['type']);
@@ -59,7 +70,9 @@ String? geoJsonFeatureError(Object? data) {
         ? 'It is a $type, not a Feature.'
         : 'A Feature must have the type "Feature".';
   }
-  return _featureError(json);
+  final error = _featureError(json);
+  if (error == null) onFeature?.call(0, json);
+  return error;
 }
 
 /// [value] as `jsonEncode` writes it: [value] itself when it is null, a bool,

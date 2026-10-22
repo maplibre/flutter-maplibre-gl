@@ -105,7 +105,9 @@ final isSelected = features.first['id'] == 2;
 await controller.setLayerFilter('pois', ['==', ['id'], 2]);
 ```
 
-Only integer ids come back the same on every platform. Android returns a string id that looks like a number, such as `"2"`, as the number `2`. On web, MapLibre GL JS keeps only integer ids: `"2"` and `2.5` come back as `2`, and other string ids are lost. If your app reads ids from queries, use integer ids.
+Ids come back as they are in the data on every platform: `2` and `2.5` as numbers, `"2"` and `"poi-12"` as strings. The exception is GeoJSON loaded from a URL or declared in the style, which does not pass through the plugin: on Android and web only its integer ids are sure to come back the same.
+
+A source added with `addSource` and `generateId: true` now numbers its features by their index on Android and iOS too, where they had no id.
 
 ### iOS: hex colors with alpha
 

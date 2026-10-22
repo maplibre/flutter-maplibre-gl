@@ -341,7 +341,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (isDraggable != null && isDraggable) {
       // Prevent the default map drag behavior.
       e.preventDefault();
-      final id = e.features.first.id;
+      final id = plainFeatureId(e.features.first.id);
       // Nothing is reported yet: the press is a click until the pointer moves
       // past the drag threshold, as on Android and iOS.
       if (id != null) {
@@ -764,7 +764,11 @@ class MapLibreMapController extends MapLibrePlatform
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
     await source.setData(
-      _rememberGeoJson(id, geojson! as Map<String, dynamic>),
+      _rememberGeoJson(
+        id,
+        Map<String, dynamic>.from(geojson! as Map),
+        keepIds: _keepFeatureIds(id),
+      ),
     );
     return true;
   }
@@ -777,6 +781,7 @@ class MapLibreMapController extends MapLibrePlatform
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
     final held = _addedFeaturesByLayer[id];
+    _releaseFeatureIds(id);
     await source.setData(encoded.toJS);
     // setGeoJsonFeature cannot change data it does not hold. Data set while
     // the url was handed over came after it, and stays.
@@ -812,12 +817,16 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<String?> getStyle() async {
-    final styleJs = _map.getStyle();
-    if (styleJs == null) return null;
-
-    // Convert JS object to Dart map, then to JSON string
-    final styleMap = dartify(styleJs);
-    return jsonEncode(styleMap);
+    final style = _styleMap();
+    if (style == null) return null;
+    final sources = style['sources'];
+    if (sources is Map) {
+      for (final source in sources.values) {
+        if (source is Map<String, dynamic>) withoutFeatureIdsInSource(source);
+      }
+    }
+    style['layers'] = withoutFeatureIds(style['layers']);
+    return jsonEncode(style);
   }
 
   @override
@@ -863,7 +872,7 @@ class MapLibreMapController extends MapLibrePlatform
       options['layers'] = layerIds;
     }
     if (filter != null) {
-      options['filter'] = filter;
+      options['filter'] = withFeatureIds(filter);
     }
 
     // avoid issues with the js point type
@@ -871,23 +880,10 @@ class MapLibreMapController extends MapLibrePlatform
     if (geometry == null) return [];
 
     return _filteredQuery(
-          'queryRenderedFeatures',
-          filter != null,
-          () => _map.queryRenderedFeatures(geometry, options),
-        )
-        .map(
-          (feature) => <String, dynamic>{
-            'type': 'Feature',
-            'id': feature.id,
-            'geometry': <String, dynamic>{
-              'type': feature.geometry.type,
-              'coordinates': feature.geometry.coordinates,
-            },
-            'properties': feature.properties,
-            'source': feature.source,
-          },
-        )
-        .toList();
+      'queryRenderedFeatures',
+      filter != null,
+      () => _map.queryRenderedFeatures(geometry, options),
+    ).map((feature) => _queriedFeature(feature, feature.source)).toList();
   }
 
   @override
@@ -922,7 +918,7 @@ class MapLibreMapController extends MapLibrePlatform
       } on FormatException {
         throw _invalidFilter(_filterNotJson);
       }
-      if (decoded is List) options['filter'] = decoded;
+      if (decoded is List) options['filter'] = withFeatureIds(decoded);
     }
 
     final geometry = jsify([
@@ -931,23 +927,10 @@ class MapLibreMapController extends MapLibrePlatform
     ]);
     if (geometry == null) return [];
     return _filteredQuery(
-          'queryRenderedFeatures',
-          options.containsKey('filter'),
-          () => _map.queryRenderedFeatures(geometry, options),
-        )
-        .map(
-          (feature) => <String, dynamic>{
-            'type': 'Feature',
-            'id': feature.id,
-            'geometry': <String, dynamic>{
-              'type': feature.geometry.type,
-              'coordinates': feature.geometry.coordinates,
-            },
-            'properties': feature.properties,
-            'source': feature.source,
-          },
-        )
-        .toList();
+      'queryRenderedFeatures',
+      options.containsKey('filter'),
+      () => _map.queryRenderedFeatures(geometry, options),
+    ).map((feature) => _queriedFeature(feature, feature.source)).toList();
   }
 
   @override
@@ -968,7 +951,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
 
     if (filter != null) {
-      parameters['filter'] = filter;
+      parameters['filter'] = withFeatureIds(filter);
     }
 
     return _filteredQuery(
@@ -976,21 +959,25 @@ class MapLibreMapController extends MapLibrePlatform
           filter != null,
           () => _map.querySourceFeatures(sourceId, parameters),
         )
-        .map(
-          (feature) => <String, dynamic>{
-            'type': 'Feature',
-            'id': feature.id,
-            'geometry': <String, dynamic>{
-              'type': feature.geometry.type,
-              'coordinates': feature.geometry.coordinates,
-            },
-            'properties': feature.properties,
-            // maplibre-gl-js leaves `source` unset on these features, so name
-            // the source that was queried.
-            'source': sourceId,
-          },
-        )
+        // maplibre-gl-js leaves `source` unset on these features, so name the
+        // source that was queried.
+        .map((feature) => _queriedFeature(feature, sourceId))
         .toList();
+  }
+
+  /// [feature] as the queries answer it, with the id it has in the data.
+  static Map<String, dynamic> _queriedFeature(Feature feature, String source) {
+    final properties = feature.properties;
+    return <String, dynamic>{
+      'type': 'Feature',
+      'id': takeFeatureId(feature.id, properties),
+      'geometry': <String, dynamic>{
+        'type': feature.geometry.type,
+        'coordinates': feature.geometry.coordinates,
+      },
+      'properties': properties,
+      'source': source,
+    };
   }
 
   /// Runs [query], the maplibre-gl-js feature query [method], and throws
@@ -1109,8 +1096,16 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
-  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject> features) =>
-      features.toDart.map(dartifyMap).toList();
+  /// The features of a cluster query, each with the id it has in the data.
+  List<Map<String, dynamic>> _clusterFeatures(JSArray<JSObject> features) => [
+    for (final feature in features.toDart.map(dartifyMap))
+      if (feature['properties'] case final Map? properties
+          when feature.containsKey('id') ||
+              (properties?.containsKey(featureIdProperty) ?? false))
+        feature..['id'] = takeFeatureId(feature['id'], properties)
+      else
+        feature,
+  ];
 
   @override
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
@@ -1316,7 +1311,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (filtered.isNotEmpty) {
       // Add 'first' feature info to payload
       payload['layerId'] = filtered.first.layerId;
-      payload['id'] = filtered.first.id;
+      payload['id'] = plainFeatureId(filtered.first.id);
       onFeatureTappedPlatform(payload);
       // Fire onMapClickPlatform only if featureTapsTriggersMapClick is true
       if (_featureTapsTriggersMapClick) {
@@ -1989,7 +1984,9 @@ class MapLibreMapController extends MapLibrePlatform
     _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
     // throwing, so listen for it while the filter is set.
-    final errors = _mapErrorsDuring(() => _map.setFilter(layerId, filter));
+    final errors = _mapErrorsDuring(
+      () => _map.setFilter(layerId, withFeatureIds(filter)),
+    );
     if (errors.isNotEmpty) {
       final message = errors.first;
       throw _invalidFilter(
@@ -2010,23 +2007,62 @@ class MapLibreMapController extends MapLibrePlatform
     _ensureStyleReady();
     // Before the cache write below, so a rejected add keeps the original's data.
     _ensureNewSourceId(sourceId);
-    final source = jsifyMap({
-      'type': 'geojson',
-      if (promoteId != null) 'promoteId': promoteId,
-    });
-    source.setProperty('data'.toJS, _rememberGeoJson(sourceId, geojson));
+    final (data, features) = _geoJsonData(geojson);
+    _addedFeaturesByLayer[sourceId] = features;
+    _addGeoJsonSource(
+      sourceId,
+      jsifyMap({
+        'type': 'geojson',
+        if (promoteId != null) 'promoteId': promoteId,
+      }),
+      data,
+      features,
+    );
+  }
+
+  /// Adds the GeoJSON source [sourceId] with [options] and [data], whose
+  /// features are [features], and makes it keep their ids when it can.
+  /// maplibre-gl-js hands the data to its worker asynchronously, so ids copied
+  /// right after the add still go with it.
+  void _addGeoJsonSource(
+    String sourceId,
+    JSObject options,
+    JSObject data,
+    List<_SourceFeature> features,
+  ) {
+    options.setProperty('data'.toJS, data);
     (_map.jsObject as JSObject).callMethod<JSAny?>(
       'addSource'.toJS,
       sourceId.toJS,
-      source,
+      options,
     );
+    // A new source has no layer to rewrite yet.
+    final source = _jsSource(sourceId);
+    if (source != null && promoteFeatureIds(source, promote: true)) {
+      _copyFeatureIds(features);
+    }
   }
 
   /// [geojson] as a JS object, keeping its features for
   /// [setFeatureForGeoJsonSource]. A lone Feature counts as a collection of
   /// one; a geometry has no feature to replace. An object in it goes in as
-  /// what its `toJson()` returns, as on Android and iOS.
-  JSObject _rememberGeoJson(String sourceId, Map<String, dynamic> geojson) {
+  /// what its `toJson()` returns, as on Android and iOS. With [keepIds], each
+  /// feature also carries its id in [featureIdProperty].
+  JSObject _rememberGeoJson(
+    String sourceId,
+    Map<String, dynamic> geojson, {
+    required bool keepIds,
+  }) {
+    final (data, features) = _geoJsonData(geojson);
+    if (keepIds) _copyFeatureIds(features);
+    _addedFeaturesByLayer[sourceId] = features;
+    return data;
+  }
+
+  /// [geojson] as a JS object, and its features. See [_rememberGeoJson].
+  static (JSObject, List<_SourceFeature>) _geoJsonData(
+    Map<dynamic, dynamic> geojson,
+  ) {
     final data = jsifyJson(geojson)! as JSObject;
     final List<_SourceFeature> features;
     switch (jsonValueOf(geojson['type'])) {
@@ -2046,8 +2082,76 @@ class MapLibreMapController extends MapLibrePlatform
       default:
         features = const [];
     }
-    _addedFeaturesByLayer[sourceId] = features;
-    return data;
+    return (data, features);
+  }
+
+  /// Copies the id of each of [features] that has one into its
+  /// [featureIdProperty].
+  static void _copyFeatureIds(List<_SourceFeature> features) {
+    for (final (:id, :feature) in features) {
+      if (id != null) copyFeatureId(feature! as JSObject);
+    }
+  }
+
+  /// Makes the GeoJSON source [sourceId] take its feature ids from
+  /// [featureIdProperty], for data the plugin sets, and answers whether it
+  /// does: see [promoteFeatureIds]. When it starts to, the layers of the
+  /// style on it read those ids with `['id']` too.
+  bool _keepFeatureIds(String sourceId) {
+    final source = _jsSource(sourceId);
+    if (source == null) return false;
+    final before = promotesFeatureIds(source);
+    if (!promoteFeatureIds(source, promote: true)) return false;
+    if (!before) _withFeatureIdsInLayersOf(sourceId);
+    return true;
+  }
+
+  /// Makes the GeoJSON source [sourceId] take the ids maplibre-gl-js reads,
+  /// for data loaded from a URL, which has no [featureIdProperty]. A source
+  /// with a `promoteId` of its own keeps it. The layers on it need no change:
+  /// `['id']` falls back to those ids.
+  void _releaseFeatureIds(String sourceId) {
+    final source = _jsSource(sourceId);
+    if (source != null) promoteFeatureIds(source, promote: false);
+  }
+
+  /// Makes `['id']` in the filter, paint and layout of each layer on the
+  /// source [sourceId] read the id in the data, as it does in the layers the
+  /// plugin adds. The layers declared in the style still hold `['id']` as
+  /// written.
+  void _withFeatureIdsInLayersOf(String sourceId) {
+    final layers = _map.getStyleObject()?.getProperty<JSAny?>('layers'.toJS);
+    if (!layers.isA<JSArray>()) return;
+    final map = _map.jsObject as JSObject;
+    for (final layer in (layers! as JSArray<JSAny?>).toDart) {
+      if (!layer.isA<JSObject>()) continue;
+      final spec = layer! as JSObject;
+      if (spec.getProperty<JSAny?>('source'.toJS).dartify() != sourceId) {
+        continue;
+      }
+      final layerId = spec.getProperty<JSAny?>('id'.toJS).dartify();
+      if (layerId is! String) continue;
+      final filter = dartify(spec.getProperty<JSAny?>('filter'.toJS));
+      final rewritten = withFeatureIds(filter);
+      if (!identical(rewritten, filter)) _map.setFilter(layerId, rewritten);
+      for (final (group, setter) in [
+        ('paint', 'setPaintProperty'),
+        ('layout', 'setLayoutProperty'),
+      ]) {
+        final properties = dartify(spec.getProperty<JSAny?>(group.toJS));
+        if (properties is! Map) continue;
+        for (final MapEntry(:key, :value) in properties.entries) {
+          final rewritten = withFeatureIds(value);
+          if (identical(rewritten, value)) continue;
+          map.callMethod<JSAny?>(
+            setter.toJS,
+            layerId.toJS,
+            (key as String).toJS,
+            jsify(rewritten),
+          );
+        }
+      }
+    }
   }
 
   /// The id of [feature], a Feature the GeoJSON check accepted, as
@@ -2082,7 +2186,13 @@ class MapLibreMapController extends MapLibrePlatform
     final reason = geoJsonError(geojson);
     if (reason != null) throw invalidGeoJson(sourceId, reason);
     final source = _geoJsonSource(sourceId, 'setGeoJsonSource');
-    await source.setData(_rememberGeoJson(sourceId, geojson));
+    await source.setData(
+      _rememberGeoJson(
+        sourceId,
+        geojson,
+        keepIds: _keepFeatureIds(sourceId),
+      ),
+    );
   }
 
   /// The GeoJSON source [sourceId], for the Dart method [methodName]. Throws
@@ -2255,7 +2365,7 @@ class MapLibreMapController extends MapLibrePlatform
               setter.toJS,
               layerId.toJS,
               name.toJS,
-              jsify(value),
+              jsify(withFeatureIds(value)),
             ),
           );
           for (final message in errors) {
@@ -2562,7 +2672,8 @@ class MapLibreMapController extends MapLibrePlatform
         if (checks.hexColorError(key, value) case final reason?) key: reason,
     };
     final before = _existingLayerId(belowLayerId);
-    var kept = properties;
+    filter = withFeatureIds(filter);
+    var kept = withFeatureIds(properties)! as Map<String, dynamic>;
     // At most twice: the second time without the properties it did not know.
     for (var attempt = 0; ; attempt++) {
       final layer = <String, dynamic>{
@@ -2674,9 +2785,12 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _handleLayerMouseMove(Event e, String layerId) {
-    // Normalize feature ids to String to avoid type mismatch (ids can be int, String, etc.)
+    // As text, the id the tap and drag callbacks get.
     final currentHoveredFeatures =
-        e.features.map((f) => f.id?.toString()).whereType<String>().toList();
+        e.features
+            .map((f) => plainFeatureId(f.id)?.toString())
+            .whereType<String>()
+            .toList();
     final lastHoveredFeatures = _hoveredFeatureIdsByLayer[layerId] ?? [];
     final features = <String>{
       ...currentHoveredFeatures,
@@ -2813,6 +2927,18 @@ class MapLibreMapController extends MapLibrePlatform
     }
     // An object in GeoJSON data goes in as what its toJson() returns, as on
     // Android and iOS.
+    final plain = type == 'geojson' ? jsonValueOf(data) : null;
+    if (plain is Map) {
+      // Data the plugin sets keeps its feature ids.
+      final (jsData, features) = _geoJsonData(plain);
+      _addGeoJsonSource(
+        sourceId,
+        jsifyJson({...json}..remove('data'))! as JSObject,
+        jsData,
+        features,
+      );
+      return;
+    }
     (_map.jsObject as JSObject).callMethod<JSAny?>(
       'addSource'.toJS,
       sourceId.toJS,
@@ -3034,7 +3160,9 @@ class MapLibreMapController extends MapLibrePlatform
     final index = features.indexWhere((feature) => feature.id == id);
     if (index < 0) return;
     final updated = List.of(features);
-    updated[index] = (id: id, feature: jsifyJson(geojsonFeature));
+    final (feature, replaced) = _geoJsonData(geojsonFeature);
+    if (_keepFeatureIds(sourceId)) _copyFeatureIds(replaced);
+    updated[index] = (id: id, feature: feature);
     _addedFeaturesByLayer[sourceId] = updated;
     await source.setData(_featureCollection(updated));
   }
@@ -3170,7 +3298,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future getFilter(String layerId) async {
     _checkFilterable(layerId);
-    return _map.getFilter(layerId);
+    return withoutFeatureIds(_map.getFilter(layerId));
   }
 
   /// The layer types Android and iOS can filter.
@@ -3227,7 +3355,8 @@ class MapLibreMapController extends MapLibrePlatform
     if (layers is! List) return null;
     for (final layer in layers) {
       if (layer is Map && layer['id'] == layerId) {
-        final shaped = _styleShaped(layer);
+        final shaped =
+            withoutFeatureIds(_styleShaped(layer))! as Map<String, dynamic>;
         // Android and iOS leave out a zoom range at the spec defaults, which
         // maplibre-gl-js serializes once set, by setLayerZoomRange or the
         // style itself.
@@ -3248,7 +3377,7 @@ class MapLibreMapController extends MapLibrePlatform
     if (sources is! Map) return null;
     final source = sources[sourceId];
     if (source is! Map) return null;
-    final shaped = _styleShaped(source);
+    final shaped = withoutFeatureIdsInSource(_styleShaped(source));
     if (_imageUrls.containsKey(sourceId)) shaped.remove('url');
     return shaped;
   }

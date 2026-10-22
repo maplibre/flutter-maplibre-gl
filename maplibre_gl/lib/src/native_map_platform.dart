@@ -312,6 +312,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> mapOnStyleLoaded() async {
+    // A new style holds none of the sources added before it.
+    _generatedIdSources.clear();
     onMapStyleLoadedPlatform(null);
   }
 
@@ -637,13 +639,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) {
+    final input = (data, _featureIdsOf(id));
     return _writeGeoJson(id, () async {
-      final reason =
+      final (json, reason) =
           data.length > _geoJsonTextOffloadLength
-              ? await compute(geoJsonTextError, data)
-              : geoJsonTextError(data);
+              ? await compute(_checkGeoJsonText, input)
+              : _checkGeoJsonText(input);
       if (reason != null) throw invalidGeoJson(id, reason);
-      return _api.mapEditGeoJsonSource(id, data);
+      return _api.mapEditGeoJsonSource(id, json!);
     });
   }
 
@@ -879,10 +882,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> removeSource(String sourceId) async {
-    await _inOrder(
-      [_sourceKey(sourceId)],
-      () => _api.styleRemoveSource(sourceId),
-    );
+    // Cleared now, in call order with an addSource of the same id made
+    // right after. A source that stays keeps its numbered ids.
+    final generated = _generatedIdSources.remove(sourceId);
+    try {
+      await _inOrder(
+        [_sourceKey(sourceId)],
+        () => _api.styleRemoveSource(sourceId),
+      );
+    } catch (_) {
+      if (generated) _generatedIdSources.add(sourceId);
+      rethrow;
+    }
   }
 
   @override
@@ -972,20 +983,25 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     String? promoteId,
   }) {
-    return _writeGeoJson(sourceId, () async {
-      await _api.sourceAddGeoJson(
-        sourceId,
-        await _encodeGeoJson(geojson, sourceId),
-      );
-    });
+    return _addingSource(
+      sourceId,
+      generateIds: false,
+      () => _writeGeoJson(sourceId, () async {
+        await _api.sourceAddGeoJson(
+          sourceId,
+          await _encodeGeoJson(geojson, sourceId, _defaultFeatureIds),
+        );
+      }),
+    );
   }
 
   @override
   Future<void> setGeoJsonSource(String sourceId, Map<String, dynamic> geojson) {
+    final ids = _featureIdsOf(sourceId);
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetGeoJson(
         sourceId,
-        await _encodeGeoJson(geojson, sourceId),
+        await _encodeGeoJson(geojson, sourceId, ids),
       );
     });
   }
@@ -995,12 +1011,57 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String sourceId,
     Map<String, dynamic> geojsonFeature,
   ) {
+    // A feature replaces the one with its id, so it keeps that id.
+    final ids =
+        _featureIdsOf(sourceId) == _FeatureIds.generate
+            ? _FeatureIds.asTheyAre
+            : _defaultFeatureIds;
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetFeature(
         sourceId,
-        await _encodeGeoJson(geojsonFeature, sourceId, feature: true),
+        await _encodeGeoJson(geojsonFeature, sourceId, ids, feature: true),
       );
     });
+  }
+
+  /// The GeoJSON sources added with `generateId`. MapLibre Native has no such
+  /// option, so the plugin numbers the features of the data it sets to them,
+  /// as maplibre-gl-js does.
+  final Set<String> _generatedIdSources = {};
+
+  /// What the data the plugin sets to the source [sourceId] gets for its ids.
+  _FeatureIds _featureIdsOf(String sourceId) =>
+      _generatedIdSources.contains(sourceId)
+          ? _FeatureIds.generate
+          : _defaultFeatureIds;
+
+  /// What the ids of GeoJSON data get on this platform, without `generateId`.
+  static _FeatureIds get _defaultFeatureIds =>
+      _marksStringIds ? _FeatureIds.markStringIds : _FeatureIds.asTheyAre;
+
+  /// Runs [add], which adds the source [sourceId], and notes whether the
+  /// plugin numbers its features. A failed add leaves the note as it was.
+  Future<void> _addingSource(
+    String sourceId,
+    Future<void> Function() add, {
+    required bool generateIds,
+  }) async {
+    final before = _generatedIdSources.contains(sourceId);
+    _noteGeneratedIds(sourceId, generateIds);
+    try {
+      await add();
+    } catch (_) {
+      _noteGeneratedIds(sourceId, before);
+      rethrow;
+    }
+  }
+
+  void _noteGeneratedIds(String sourceId, bool generateIds) {
+    if (generateIds) {
+      _generatedIdSources.add(sourceId);
+    } else {
+      _generatedIdSources.remove(sourceId);
+    }
   }
 
   /// The call still in flight per source and layer that the calls made
@@ -1102,14 +1163,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// `INVALID_GEOJSON` for data that is not valid GeoJSON.
   static Future<String> _encodeGeoJson(
     Map<String, dynamic> geojson,
-    String sourceId, {
+    String sourceId,
+    _FeatureIds ids, {
     bool feature = false,
   }) async {
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
+    final input = (geojson, ids);
     final (json, reason) =
-        _isLargeGeoJson(geojson)
-            ? await compute(encode, geojson)
-            : encode(geojson);
+        _isLargeGeoJson(geojson) ? await compute(encode, input) : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1118,22 +1179,26 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     return json!;
   }
 
-  /// [geojson] as JSON text, or why it is not GeoJSON.
+  /// [geojson] as JSON text, or why it is not GeoJSON, with its ids as
+  /// [_FeatureIds] says.
   static (String?, String?) _checkAndEncodeGeoJson(
-    Map<String, dynamic> geojson,
+    (Map<String, dynamic>, _FeatureIds) input,
   ) {
-    final reason = geoJsonError(geojson);
+    final (geojson, ids) = input;
+    final (data, reason) = _checkFeatureIds(geojson, ids, geoJsonError);
     if (reason != null) return (null, reason);
-    return _jsonOrReason(() => jsonEncode(geojson));
+    return _jsonOrReason(() => jsonEncode(data));
   }
 
-  /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
+  /// [geojson] as JSON text, or why it is not a GeoJSON Feature, with its id
+  /// as [_FeatureIds] says.
   static (String?, String?) _checkAndEncodeFeature(
-    Map<String, dynamic> geojson,
+    (Map<String, dynamic>, _FeatureIds) input,
   ) {
-    final reason = geoJsonFeatureError(geojson);
+    final (geojson, ids) = input;
+    final (data, reason) = _checkFeatureIds(geojson, ids, geoJsonFeatureError);
     if (reason != null) return (null, reason);
-    return _jsonOrReason(() => jsonEncode(geojson));
+    return _jsonOrReason(() => jsonEncode(data));
   }
 
   /// Why INVALID_GEOJSON rejects a number that is NaN or infinite.
@@ -1158,6 +1223,116 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       rethrow;
     }
   }
+
+  /// [text] as it goes to native, or why it is not GeoJSON, with its ids as
+  /// [_FeatureIds] says. The text is encoded again only when its ids change.
+  static (String?, String?) _checkGeoJsonText((String, _FeatureIds) input) {
+    final (text, ids) = input;
+    if (ids == _FeatureIds.asTheyAre) {
+      final reason = geoJsonTextError(text);
+      return reason == null ? (text, null) : (null, reason);
+    }
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(text);
+    } on FormatException {
+      return (null, geoJsonTextError(text));
+    }
+    final (data, reason) = _checkFeatureIds(decoded, ids, geoJsonError);
+    if (reason != null) return (null, reason);
+    return (identical(data, decoded) ? text : jsonEncode(data), null);
+  }
+
+  /// [geojson] with its ids as [ids] says, or why [check] rejects it. Returns
+  /// [geojson] itself when its ids stay as they are.
+  static (Object?, String?) _checkFeatureIds(
+    Object? geojson,
+    _FeatureIds ids,
+    String? Function(Object?, {GeoJsonFeatureVisitor? onFeature}) check,
+  ) {
+    final marked = <int>[];
+    final reason = check(
+      geojson,
+      onFeature:
+          ids == _FeatureIds.markStringIds ? _collectStringIds(marked) : null,
+    );
+    if (reason != null) return (null, reason);
+    return switch (ids) {
+      _FeatureIds.generate => (_withGeneratedIds(geojson), null),
+      _ => (_withStringIdMarkers(geojson, marked), null),
+    };
+  }
+
+  /// [geojson] with the ids `generateId` gives in maplibre-gl-js: each
+  /// feature of a FeatureCollection its index, over any id it had, and a lone
+  /// Feature 0.
+  static Object? _withGeneratedIds(Object? geojson) {
+    final json = jsonValueOf(geojson);
+    if (json is! Map) return geojson;
+    switch (jsonValueOf(json['type'])) {
+      case 'Feature':
+        return {...json, 'id': 0};
+      case 'FeatureCollection':
+        final features = jsonValueOf(json['features'])! as List;
+        return {
+          ...json,
+          'features': [
+            for (var i = 0; i < features.length; i++)
+              {...jsonValueOf(features[i])! as Map, 'id': i},
+          ],
+        };
+    }
+    return geojson;
+  }
+
+  /// Whether this platform needs [_stringIdMarker]: the Android SDK hands
+  /// every feature id over as text, so native cannot tell `"2"` from `2`.
+  static bool get _marksStringIds =>
+      defaultTargetPlatform == TargetPlatform.android;
+
+  /// The property that marks a feature whose id is text that reads as a
+  /// number, so that FeatureJson.java hands the id back as text. Native
+  /// removes it from every feature it answers with.
+  static const _stringIdMarker = 'maplibre_gl:string_id';
+
+  /// The ids FeatureJson.java turns back into numbers.
+  static final _numericText = RegExp(r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?$');
+
+  /// Adds to [indexes] the index of each feature whose id is text that reads
+  /// as a number.
+  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) => (
+    index,
+    feature,
+  ) {
+    final id = feature['id'];
+    if (id is String && _numericText.hasMatch(id)) indexes.add(index);
+  };
+
+  /// [geojson] with [_stringIdMarker] in the properties of the features at
+  /// [indexes]: a FeatureCollection's, or 0 for a Feature. Returns [geojson]
+  /// itself without any, and copies only what changes otherwise.
+  static Object? _withStringIdMarkers(Object? geojson, List<int> indexes) {
+    if (indexes.isEmpty) return geojson;
+    final json = jsonValueOf(geojson)! as Map;
+    if (jsonValueOf(json['type']) == 'Feature') {
+      return _withStringIdMarker(json);
+    }
+    final features = List<Object?>.of(jsonValueOf(json['features'])! as List);
+    for (final index in indexes) {
+      features[index] = _withStringIdMarker(
+        jsonValueOf(features[index])! as Map,
+      );
+    }
+    return {...json, 'features': features};
+  }
+
+  static Map _withStringIdMarker(Map feature) => {
+    ...feature,
+    'properties': {
+      ...?jsonValueOf(feature['properties']) as Map?,
+      _stringIdMarker: true,
+    },
+  };
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
   /// background isolate.
@@ -1392,31 +1567,50 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final json = normalizeSource(properties.toJson());
     // A string is the url of the data.
     final data = jsonValueOf(json['data']);
-    if (properties is! GeojsonSourceProperties ||
-        data == null ||
-        data is String) {
+    if (properties is! GeojsonSourceProperties) {
       return _inOrder(
         [_sourceKey(sourceId)],
         () => _api.styleAddSource(sourceId, json),
       );
     }
-    return _writeGeoJson(sourceId, () async {
-      final (plain, reason) =
-          data is Map && _isLargeGeoJson(data)
-              ? await compute(_checkSourceData, data)
-              : _checkSourceData(data);
-      if (reason != null) throw invalidGeoJson(sourceId, reason);
-      await _api.styleAddSource(sourceId, {...json, 'data': plain});
-    });
+    final generateIds = properties.generateId ?? false;
+    if (data == null || data is String) {
+      return _addingSource(
+        sourceId,
+        generateIds: generateIds,
+        () => _inOrder(
+          [_sourceKey(sourceId)],
+          () => _api.styleAddSource(sourceId, json),
+        ),
+      );
+    }
+    final input = (
+      data,
+      generateIds ? _FeatureIds.generate : _defaultFeatureIds,
+    );
+    return _addingSource(
+      sourceId,
+      generateIds: generateIds,
+      () => _writeGeoJson(sourceId, () async {
+        final (plain, reason) =
+            data is Map && _isLargeGeoJson(data)
+                ? await compute(_checkSourceData, input)
+                : _checkSourceData(input);
+        if (reason != null) throw invalidGeoJson(sourceId, reason);
+        await _api.styleAddSource(sourceId, {...json, 'data': plain});
+      }),
+    );
   }
 
   /// [data], the GeoJSON data of `addSource`, with what `jsonEncode` writes in
-  /// place of each object it reads through `toJson()`, or why it is not
-  /// GeoJSON. The platform channel takes plain JSON values only.
-  static (Object?, String?) _checkSourceData(Object? data) {
-    final reason = geoJsonError(data);
+  /// place of each object it reads through `toJson()` and its ids as
+  /// [_FeatureIds] says, or why it is not GeoJSON. The platform channel takes
+  /// plain JSON values only.
+  static (Object?, String?) _checkSourceData((Object?, _FeatureIds) input) {
+    final (data, ids) = input;
+    final (checked, reason) = _checkFeatureIds(data, ids, geoJsonError);
     if (reason != null) return (null, reason);
-    return _jsonOrReason<Object?>(() => _plainJson(data));
+    return _jsonOrReason<Object?>(() => _plainJson(checked));
   }
 
   /// [value] with each object in it that is not a JSON value replaced by
@@ -1813,6 +2007,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   Future<void> setStyle(String styleString) async {
     await _api.styleSetStyle(styleString);
   }
+}
+
+/// What the plugin does to the feature ids of GeoJSON data on its way to
+/// native.
+enum _FeatureIds {
+  /// Nothing.
+  asTheyAre,
+
+  /// Marks the text ids that read as numbers: see
+  /// [_MapLibreNativePlatform._withStringIdMarkers].
+  markStringIds,
+
+  /// Gives each feature its index, as `generateId` does in maplibre-gl-js.
+  generate,
 }
 
 /// The messenger of the calls of a map, which fails a call that finds no

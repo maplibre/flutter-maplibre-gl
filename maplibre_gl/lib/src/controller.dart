@@ -7,9 +7,9 @@ part of '../maplibre_gl.dart';
 typedef OnMapClickCallback =
     void Function(Point<double> point, LatLng coordinates);
 
-// New generalized feature interaction callback that always provides a raw feature id.
-// If the feature also corresponds to a managed annotation, the annotation parameter
-// is non-null; otherwise it is null (e.g. raw style layer feature not managed by an AnnotationManager).
+/// A tap on a feature of an interactive layer. [id] is the feature id as text,
+/// such as `'2'` for the id 2, on every platform. [annotation] is the
+/// annotation the feature belongs to, or null for a feature of your own layers.
 typedef OnFeatureInteractionCallback =
     void Function(
       Point<double> point,
@@ -19,6 +19,8 @@ typedef OnFeatureInteractionCallback =
       Annotation? annotation,
     );
 
+/// A step of a feature drag. [id] is the feature id as text, such as `'2'` for
+/// the id 2, on every platform.
 typedef OnFeatureDragCallback =
     void Function(
       Point<double> point,
@@ -30,6 +32,8 @@ typedef OnFeatureDragCallback =
       DragEventType eventType,
     );
 
+/// The mouse entering, moving over or leaving a feature, on web. [id] is the
+/// feature id as text, such as `'2'` for the id 2.
 typedef OnFeatureHoverCallback =
     void Function(
       Point<double> point,
@@ -168,7 +172,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onFeatureDraggedPlatform.add((payload) {
-      final id = payload["id"];
+      final id = payload["id"].toString();
       final annotation = getAnnotationById(id);
       final enmDragEventType = DragEventType.values.firstWhere(
         (element) => element.name == payload["eventType"],
@@ -187,7 +191,7 @@ class MapLibreMapController extends ChangeNotifier {
     });
 
     _maplibrePlatform.onFeatureHoverPlatform.add((payload) {
-      final id = payload["id"];
+      final id = payload["id"].toString();
       final annotation = getAnnotationById(id);
       final hoverEventType = HoverEventType.values.firstWhere(
         (e) => e.name == payload["eventType"],
@@ -544,10 +548,18 @@ class MapLibreMapController extends ChangeNotifier {
   /// in https://datatracker.ietf.org/doc/html/rfc7946. A feature `id` must be
   /// a string or a number.
   ///
-  /// [promoteId] can be used on web to promote an id from properties to be the
-  /// id of the feature. This is useful because by default maplibre-gl-js does not
-  /// support string ids. On Android and iOS the parameter is ignored: there
-  /// features must carry a top-level `id` member in the GeoJSON itself.
+  /// The queries and the cluster calls answer each feature with the `id` it
+  /// has in [geojson], number or string, on every platform. GeoJSON that does
+  /// not pass through the plugin, loaded from a URL or declared in the style,
+  /// keeps the ids MapLibre gives it: on Android and web only integer ids are
+  /// sure to come back the same. Vector tile ids are always integers. To keep
+  /// the ids, the plugin can add a `maplibre_gl:` property to a feature, which
+  /// a style expression reading every property, such as `['properties']`,
+  /// sees; the queries leave it out.
+  ///
+  /// [promoteId] makes the property of that name the id of each feature, on
+  /// web only. Android and iOS ignore it: there the GeoJSON must carry a
+  /// top-level `id`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -568,7 +580,8 @@ class MapLibreMapController extends ChangeNotifier {
   }
 
   /// Replaces the data of the GeoJSON source [sourceId] with [geojson], which
-  /// takes the same GeoJSON as [addGeoJsonSource].
+  /// takes the same GeoJSON as [addGeoJsonSource] and keeps its ids the same
+  /// way, with a `maplibre_gl:` property that `['properties']` sees.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -618,8 +631,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
-  /// [featureId] The unique ID of the feature. Must be an integer or a string
-  ///   that can be cast to an integer.
+  /// [featureId] The id of the feature as text, such as `'2'` for the id 2.
   /// [state] A set of key-value pairs representing the state. Values should be
   ///   valid JSON types.
   /// [sourceLayer] Required for vector sources on every platform; GeoJSON
@@ -1970,6 +1982,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On Android and iOS a polygon is also returned for a point inside one of
   /// its holes, as MapLibre Native reports it, while taps and drags ignore
   /// it; on web the holes are left out.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1995,6 +2009,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On Android and iOS a polygon is also returned for a box inside one of
   /// its holes, as MapLibre Native reports it, while taps and drags ignore
   /// it; on web the holes are left out.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
@@ -2020,6 +2036,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
@@ -2063,7 +2081,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// [getClusterExpansionZoom].
   ///
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
-  /// the `cluster_id` property of the cluster feature.
+  /// the `cluster_id` property of the cluster feature. A child that is one of
+  /// the original points has the `id` it has in the data, see
+  /// [addGeoJsonSource].
   ///
   /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
   /// has no cluster [clusterId], or is not clustered. Cluster ids change with
@@ -2081,7 +2101,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// read a whole cluster at once, pass its `point_count` as [limit].
   ///
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
-  /// the `cluster_id` property of the cluster feature.
+  /// the `cluster_id` property of the cluster feature. Each point has the `id`
+  /// it has in the data, see [addGeoJsonSource].
   ///
   /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
   /// has no cluster [clusterId], or is not clustered. Cluster ids change with
@@ -2373,6 +2394,11 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// An [ImageSourceProperties] source loads its image from `url`; for image
   /// bytes use [addImageSource].
+  ///
+  /// A [GeojsonSourceProperties] source with `generateId` gives each feature
+  /// its index as id, over any id it had, on every platform. MapLibre Native
+  /// has no `generateId`, so on Android and iOS the plugin numbers the data it
+  /// sets to the source, but not data loaded from a URL.
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for properties
   /// no source can be built from, or `INVALID_GEOJSON`,

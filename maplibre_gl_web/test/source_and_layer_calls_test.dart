@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
+import 'package:maplibre_gl_web/src/feature_ids.dart';
 import 'package:maplibre_gl_web/maplibre_gl_web.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
@@ -386,7 +387,7 @@ void main() {
       final plain = jsonDecode(jsonEncode(line)) as Map<String, dynamic>;
 
       await controller.addGeoJsonSource('line', _collection([line]));
-      expect(map.data('line'), _collection([plain]));
+      expect(_withoutKeptIds(map.data('line')), _collection([plain]));
 
       await controller.setGeoJsonSource('line', _collection([line]));
       await controller.setFeatureForGeoJsonSource('line', {
@@ -394,7 +395,7 @@ void main() {
         'properties': {'n': 2},
       });
       expect(
-        map.data('line'),
+        _withoutKeptIds(map.data('line')),
         _collection([
           {
             ...plain,
@@ -407,7 +408,7 @@ void main() {
         'other',
         GeojsonSourceProperties(data: _collection([line])),
       );
-      expect(map.data('other'), _collection([plain]));
+      expect(_withoutKeptIds(map.data('other')), _collection([plain]));
     });
 
     test('a value jsonEncode cannot write fails as on Android and '
@@ -964,4 +965,25 @@ void main() {
       );
     });
   });
+}
+
+/// [data] without the copy of each feature id that keeps ids on web.
+Object? _withoutKeptIds(Object? data) {
+  if (data is! Map) return data;
+  final features = data['features'];
+  if (features is! List) return data;
+  return {
+    ...data,
+    'features': [
+      for (final feature in features)
+        if (feature is Map && feature['properties'] is Map)
+          {
+            ...feature,
+            'properties': {...feature['properties'] as Map}
+              ..remove(featureIdProperty),
+          }
+        else
+          feature,
+    ],
+  };
 }
