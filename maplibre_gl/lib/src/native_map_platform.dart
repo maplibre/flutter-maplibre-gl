@@ -819,8 +819,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String name,
     Uint8List bytes, [
     bool sdf = false,
+    double? pixelRatio,
   ]) async {
-    await _api.styleAddImage(name, bytes, bytes.length, sdf);
+    await _api.styleAddImage(name, bytes, bytes.length, sdf, pixelRatio);
   }
 
   @override

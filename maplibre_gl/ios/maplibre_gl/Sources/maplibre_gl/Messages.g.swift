@@ -2612,7 +2612,9 @@ protocol MapLibreMapHostApi {
   func mapGetVisibleRegion(completion: @escaping (Result<PgLatLngBounds, Error>) -> Void)
   /// Adds the image [bytes] to the style as [name], as a signed distance
   /// field image when [sdf] is true. [length] is the length of [bytes].
-  func styleAddImage(name: String, bytes: FlutterStandardTypedData, length: Int64, sdf: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// [pixelRatio] is the number of image pixels per logical pixel, or null for
+  /// the screen density.
+  func styleAddImage(name: String, bytes: FlutterStandardTypedData, length: Int64, sdf: Bool, pixelRatio: Double?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Adds an image source [imageSourceId] that draws the image [bytes] on
   /// [coordinates]. [length] is the length of [bytes].
   func styleAddImageSource(imageSourceId: String, bytes: FlutterStandardTypedData, length: Int64, coordinates: PgLatLngQuad, completion: @escaping (Result<Void, Error>) -> Void)
@@ -3387,6 +3389,8 @@ class MapLibreMapHostApiSetup {
     }
     /// Adds the image [bytes] to the style as [name], as a signed distance
     /// field image when [sdf] is true. [length] is the length of [bytes].
+    /// [pixelRatio] is the number of image pixels per logical pixel, or null for
+    /// the screen density.
     let styleAddImageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       styleAddImageChannel.setMessageHandler { message, reply in
@@ -3395,7 +3399,8 @@ class MapLibreMapHostApiSetup {
         let bytesArg = args[1] as! FlutterStandardTypedData
         let lengthArg = args[2] as! Int64
         let sdfArg = args[3] as! Bool
-        api.styleAddImage(name: nameArg, bytes: bytesArg, length: lengthArg, sdf: sdfArg) { result in
+        let pixelRatioArg: Double? = nilOrValue(args[4])
+        api.styleAddImage(name: nameArg, bytes: bytesArg, length: lengthArg, sdf: sdfArg, pixelRatio: pixelRatioArg) { result in
           switch result {
           case .success:
             reply(wrapResult(nil))

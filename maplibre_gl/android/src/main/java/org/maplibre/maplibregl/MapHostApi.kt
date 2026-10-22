@@ -195,8 +195,9 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         bytes: ByteArray,
         length: Long,
         sdf: Boolean,
+        pixelRatio: Double?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(callback) { map.styleAddImage(name, bytes, length, sdf, it) }
+    ) = unit(callback) { map.styleAddImage(name, bytes, length, sdf, pixelRatio, it) }
 
     override fun styleAddImageSource(
         imageSourceId: String,

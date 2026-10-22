@@ -3991,7 +3991,12 @@ final class MapLibreMapController
 
   @Override
   public void styleAddImage(
-      String name, byte[] bytes, long length, boolean sdf, MethodChannel.Result result) {
+      String name,
+      byte[] bytes,
+      long length,
+      boolean sdf,
+      @Nullable Double pixelRatio,
+      MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
       return;
@@ -4004,6 +4009,12 @@ final class MapLibreMapController
     if (bitmap == null) {
       result.error("INVALID_IMAGE", "Failed to decode image bytes.", null);
       return;
+    }
+    // MapLibre reads the image's pixel ratio from the bitmap density, which is the screen's unless
+    // the caller gives one.
+    if (pixelRatio != null) {
+      bitmap.setDensity(
+          Math.max(1, (int) Math.round(pixelRatio * DisplayMetrics.DENSITY_DEFAULT)));
     }
     style.addImage(name, bitmap, sdf);
     result.success(null);

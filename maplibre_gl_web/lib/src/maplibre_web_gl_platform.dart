@@ -1185,6 +1185,7 @@ class MapLibreMapController extends MapLibrePlatform
     String name,
     Uint8List bytes, [
     bool sdf = false,
+    double? pixelRatio,
   ]) async {
     // Same contract as Android: bytes that are not an image are a
     // PlatformException, not a null-check error. decodeImage answers null for
@@ -1215,7 +1216,7 @@ class MapLibreMapController extends MapLibrePlatform
     await _map.addImage(
       name,
       {'width': photo.width, 'height': photo.height, 'data': data},
-      {'sdf': sdf, 'pixelRatio': 1},
+      {'sdf': sdf, 'pixelRatio': pixelRatio ?? 1},
     );
   }
 

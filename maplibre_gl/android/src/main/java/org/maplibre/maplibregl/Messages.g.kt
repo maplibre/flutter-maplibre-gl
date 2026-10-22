@@ -2882,8 +2882,10 @@ interface MapLibreMapHostApi {
   /**
    * Adds the image [bytes] to the style as [name], as a signed distance
    * field image when [sdf] is true. [length] is the length of [bytes].
+   * [pixelRatio] is the number of image pixels per logical pixel, or null for
+   * the screen density.
    */
-  fun styleAddImage(name: String, bytes: ByteArray, length: Long, sdf: Boolean, callback: (Result<Unit>) -> Unit)
+  fun styleAddImage(name: String, bytes: ByteArray, length: Long, sdf: Boolean, pixelRatio: Double?, callback: (Result<Unit>) -> Unit)
   /**
    * Adds an image source [imageSourceId] that draws the image [bytes] on
    * [coordinates]. [length] is the length of [bytes].
@@ -3746,7 +3748,8 @@ interface MapLibreMapHostApi {
             val bytesArg = args[1] as ByteArray
             val lengthArg = args[2] as Long
             val sdfArg = args[3] as Boolean
-            api.styleAddImage(nameArg, bytesArg, lengthArg, sdfArg) { result: Result<Unit> ->
+            val pixelRatioArg = args[4] as Double?
+            api.styleAddImage(nameArg, bytesArg, lengthArg, sdfArg, pixelRatioArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))

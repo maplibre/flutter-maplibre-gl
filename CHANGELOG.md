@@ -54,6 +54,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
 * **Web**: `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
+* `addImage` takes an optional `pixelRatio`, the number of image pixels per logical pixel. By default web draws one image pixel per logical pixel and Android and iOS one per device pixel; pass `MediaQuery.devicePixelRatioOf(context)` for the same size on every platform (#1129).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).

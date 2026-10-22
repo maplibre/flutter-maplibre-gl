@@ -303,7 +303,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String name,
     Uint8List bytes, [
     bool sdf = false,
-  ]) async {}
+    double? pixelRatio,
+  ]) async {
+    calls.add(PlatformCall('addImage', [name, bytes, sdf, pixelRatio]));
+  }
 
   @override
   Future<void> addImageSource(

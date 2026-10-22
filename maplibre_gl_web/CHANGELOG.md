@@ -26,6 +26,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
 * `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
+* `addImage` takes an optional `pixelRatio`, the number of image pixels per logical pixel. Without it the image is drawn at one image pixel per logical pixel as before; pass `MediaQuery.devicePixelRatioOf(context)` for the size Android and iOS draw (#1129).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set. On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
