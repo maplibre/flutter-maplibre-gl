@@ -69,10 +69,6 @@ Android now rejects a negative `setOfflineTileCountLimit` with `INVALID_ARGUMENT
 
 On Android, `resumeOfflineRegionDownload` resumes a region that no download of the current app session follows, for example one paused before the app restarted, as iOS does. It used to fail with `ResumeRegionError`. Such a download sends no events, so follow it with `getOfflineRegionStatus`. Resuming a region that is already complete does nothing on either platform.
 
-`setOffline` throws an `UnsupportedError` on iOS and web, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
-
-On web, the other plugin-wide calls that need offline storage or the native network stack throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache`. MapLibre GL JS has no offline storage.
-
 Calls that used to fail silently on some platforms now throw everywhere. Add a `catch` where your app can hit them:
 
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
@@ -85,6 +81,25 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * Data that is not a valid GeoJSON FeatureCollection, Feature or geometry throws `INVALID_GEOJSON` from `addGeoJsonSource`, `setGeoJsonSource`, `setGeoJsonFeature`, `editGeoJsonSource` and `addSource`, where Android and web left the source empty. A feature with `"id": null` counts as invalid: MapLibre Native cannot read it.
 * `addSource` throws `INVALID_ARGUMENT` for an image source without a `url` or four corners, and for a tiled source without `url` or `tiles` or a GeoJSON source without `data`, which web used to add. For image bytes, use `addImageSource`.
 * On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
+
+### Android: numeric feature ids
+
+Numeric GeoJSON feature ids stay numbers in queries and filters on Android, as on iOS and web, where they used to turn into strings. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`:
+
+```dart
+// Source data: {'type': 'Feature', 'id': 2, ...}
+final features = await controller.queryRenderedFeatures(point, ['pois'], null);
+
+// Before (Android)
+final isSelected = features.first['id'] == '2';
+await controller.setLayerFilter('pois', ['==', ['id'], '2']);
+
+// After (every platform)
+final isSelected = features.first['id'] == 2;
+await controller.setLayerFilter('pois', ['==', ['id'], 2]);
+```
+
+Only integer ids come back the same on every platform. Android returns a string id that looks like a number, such as `"2"`, as the number `2`. On web, MapLibre GL JS keeps only integer ids: `"2"` and `2.5` come back as `2`, and other string ids are lost. If your app reads ids from queries, use integer ids.
 
 ### Android and iOS: Pigeon messages
 
@@ -123,9 +138,10 @@ See [Building without Google Play Services](advanced/user-location.md#building-w
 
 None of these need a code change, but they are the places where code that worked before starts behaving differently.
 
+* **iOS, Web**: `setOffline` throws an `UnsupportedError`, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
+* **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`. MapLibre GL JS has no offline storage.
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
-* **Android**: numeric GeoJSON feature ids stay numbers in queries and filters. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
