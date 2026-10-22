@@ -609,6 +609,43 @@ void main() {
       expect(platform.callsFor('getFilter').length, 1);
     });
 
+    test('addImage passes sdf and pixelRatio to the platform', () async {
+      final bytes = Uint8List.fromList([1, 2, 3]);
+
+      await controller.addImage('pin', bytes);
+      await controller.addImage('sharp', bytes, true, 2);
+
+      expect(
+        platform.callsFor('addImage').map((c) => c.positionalArgs).toList(),
+        [
+          ['pin', bytes, false, null],
+          ['sharp', bytes, true, 2.0],
+        ],
+      );
+    });
+
+    test(
+      'addImage rejects a pixelRatio that is not positive and finite',
+      () async {
+        final bytes = Uint8List.fromList([1, 2, 3]);
+
+        for (final ratio in [0.0, -1.0, double.nan, double.infinity]) {
+          await expectLater(
+            controller.addImage('pin', bytes, false, ratio),
+            throwsA(
+              isA<PlatformException>().having(
+                (e) => e.code,
+                'code',
+                'INVALID_ARGUMENT',
+              ),
+            ),
+            reason: 'pixelRatio $ratio',
+          );
+        }
+        expect(platform.wasCalled('addImage'), isFalse);
+      },
+    );
+
     test('addImageLayer delegates to addLayer on platform', () async {
       await controller.addImageLayer('img-layer', 'img-source');
 

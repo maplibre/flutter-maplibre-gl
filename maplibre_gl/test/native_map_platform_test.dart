@@ -1750,17 +1750,22 @@ void main() {
       bottomLeft: PgLatLng(latitude: 3, longitude: 1),
     );
 
-    test('addImage sends the bytes, their length and sdf', () async {
-      final bytes = Uint8List.fromList([1, 2, 3]);
+    test(
+      'addImage sends the bytes, their length, sdf and pixelRatio',
+      () async {
+        final bytes = Uint8List.fromList([1, 2, 3]);
 
-      await platform.addImage('pin', bytes);
-      await platform.addImage('glyph', bytes, true);
+        await platform.addImage('pin', bytes);
+        await platform.addImage('glyph', bytes, true);
+        await platform.addImage('sharp', bytes, false, 2.5);
 
-      expect(api.calls, [
-        ['styleAddImage', 'pin', bytes, 3, false],
-        ['styleAddImage', 'glyph', bytes, 3, true],
-      ]);
-    });
+        expect(api.calls, [
+          ['styleAddImage', 'pin', bytes, 3, false, null],
+          ['styleAddImage', 'glyph', bytes, 3, true, null],
+          ['styleAddImage', 'sharp', bytes, 3, false, 2.5],
+        ]);
+      },
+    );
 
     test('addImageSource sends the corners', () async {
       final bytes = Uint8List.fromList([1, 2]);
@@ -2694,7 +2699,8 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
     Uint8List bytes,
     int length,
     bool sdf,
-  ) => _call('styleAddImage', [name, bytes, length, sdf]);
+    double? pixelRatio,
+  ) => _call('styleAddImage', [name, bytes, length, sdf, pixelRatio]);
 
   @override
   Future<void> styleAddImageSource(

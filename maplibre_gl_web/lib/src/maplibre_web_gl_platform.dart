@@ -1179,6 +1179,7 @@ class MapLibreMapController extends MapLibrePlatform
     String name,
     Uint8List bytes, [
     bool sdf = false,
+    double? pixelRatio,
   ]) async {
     // Same contract as Android: bytes that are not an image are a
     // PlatformException, not a null-check error. decodeImage answers null for
@@ -1206,12 +1207,10 @@ class MapLibreMapController extends MapLibrePlatform
     if (_map.hasImage(name)) {
       _map.removeImage(name);
     }
-    // One image pixel per device pixel, as on Android and iOS: a 96 px image
-    // is 48 logical px on a 2x screen, not 96.
     await _map.addImage(
       name,
       {'width': photo.width, 'height': photo.height, 'data': data},
-      {'sdf': sdf, 'pixelRatio': web.window.devicePixelRatio},
+      {'sdf': sdf, 'pixelRatio': pixelRatio ?? 1},
     );
   }
 

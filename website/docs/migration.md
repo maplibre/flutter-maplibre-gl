@@ -162,7 +162,6 @@ None of these need a code change, but they are the places where code that worked
 * Fill annotations without a `fillOutlineColor` get an outline in their fill color on Android and iOS, where it used to be transparent.
 * **Android**: on Android 12 and later devices without Google Play Services, high accuracy positions come from Android's `fused` provider instead of `gps`, so a coarser network fix can arrive before the GPS one.
 * **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
-* **Web**: `addImage`, including the icons `iconImage` loads from assets, draws one image pixel per device pixel, like Android and iOS, so these icons are smaller on high-density screens: a 96 px PNG is 48 logical pixels on a 2x screen, where it used to be 96. Make the image larger, or raise `iconSize`, to keep the old size.
 
 ### New options
 

@@ -879,8 +879,16 @@ abstract class MapLibreMapHostApi {
 
   /// Adds the image [bytes] to the style as [name], as a signed distance
   /// field image when [sdf] is true. [length] is the length of [bytes].
+  /// [pixelRatio] is the number of image pixels per logical pixel, or null for
+  /// the screen density.
   @asyncCallback
-  void styleAddImage(String name, Uint8List bytes, int length, bool sdf);
+  void styleAddImage(
+    String name,
+    Uint8List bytes,
+    int length,
+    bool sdf,
+    double? pixelRatio,
+  );
 
   /// Adds an image source [imageSourceId] that draws the image [bytes] on
   /// [coordinates]. [length] is the length of [bytes].

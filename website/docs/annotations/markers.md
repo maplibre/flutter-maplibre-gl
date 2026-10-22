@@ -98,6 +98,10 @@ final symbols = await controller.addSymbols([
   *that* style includes them, and the MapLibre demo style ships no marker sprite at all.
 - **Images you register at runtime** with `addImage`, from `onStyleLoadedCallback`:
   available whatever the style, which is why the examples here do it that way.
+  By default web draws one image pixel per logical pixel and Android and iOS one per
+  device pixel, so the same PNG is larger on web. For the same size everywhere, pass
+  the screen's ratio as `pixelRatio`:
+  `addImage('my-pin', bytes, false, MediaQuery.devicePixelRatioOf(context))`.
 
 A name the map does not have renders nothing and only logs *"image … could not be
 loaded"*, so it fails quietly.

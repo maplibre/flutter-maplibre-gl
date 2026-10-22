@@ -994,13 +994,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         name: String,
         bytes: FlutterStandardTypedData,
         sdf: Bool,
+        pixelRatio: Double?,
         result: @escaping FlutterResult
     ) {
         guard let style = mapView.style else {
             result(styleNotReadyError())
             return
         }
-        guard let image = UIImage(data: bytes.data, scale: UIScreen.main.scale) else {
+        // MapLibre reads the image's pixel ratio from its scale, which is the
+        // screen's unless the caller gives one.
+        let scale = pixelRatio.map { CGFloat($0) } ?? UIScreen.main.scale
+        guard let image = UIImage(data: bytes.data, scale: scale) else {
             result(FlutterError(
                 code: "INVALID_IMAGE",
                 message: "Failed to decode image bytes.",

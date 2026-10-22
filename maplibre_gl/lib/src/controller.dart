@@ -2106,11 +2106,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// This allows you to add an image to the currently displayed style once, and from there on refer to it e.g. in the [Symbol.iconImage] anytime you add a [Symbol] later on.
   /// Set [sdf] to true if the image you add is an SDF image.
   ///
-  /// Every platform draws one image pixel per device pixel, so the image is
-  /// its size in pixels divided by the device pixel ratio in logical pixels: a
-  /// 96 x 96 PNG is 48 x 48 on a 2x screen and 32 x 32 on a 3x one. For an icon
-  /// of a given logical size, make the image that size times
-  /// `MediaQuery.devicePixelRatioOf(context)`, or scale it with `iconSize`.
+  /// [pixelRatio] is the number of image pixels per logical pixel. Without it,
+  /// web draws one image pixel per logical pixel and Android and iOS one per
+  /// device pixel: a 96 px image is 96 logical px on web and 32 on a 3x phone.
+  /// Pass `MediaQuery.devicePixelRatioOf(context)` for the same size on every
+  /// platform, or 1 for the web size. A [pixelRatio] that is not a positive
+  /// finite number throws a [PlatformException] with code `INVALID_ARGUMENT`.
   ///
   /// Returns after the image has successfully been added to the style.
   /// An image already added under [name] is replaced.
@@ -2146,8 +2147,20 @@ class MapLibreMapController extends ChangeNotifier {
   ///  );
   /// }
   /// ```
-  Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]) {
-    return _maplibrePlatform.addImage(name, bytes, sdf);
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+    double? pixelRatio,
+  ]) async {
+    if (pixelRatio != null && !(pixelRatio > 0 && pixelRatio.isFinite)) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            'pixelRatio must be a positive finite number, not $pixelRatio.',
+      );
+    }
+    return _maplibrePlatform.addImage(name, bytes, sdf, pixelRatio);
   }
 
   /// If true, the icon will be visible even if it collides with other previously drawn symbols.

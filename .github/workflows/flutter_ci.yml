@@ -171,13 +171,6 @@ jobs:
               --target="integration_test/$target" \
               -d web-server --browser-name=chrome --headless || status=1
           done
-          # Headless Chrome has a device pixel ratio of 1, where an image drawn
-          # at one pixel per logical pixel is the right size too.
-          flutter drive \
-            --driver=test_driver/integration_test.dart \
-            --target=integration_test/add_image_size_test.dart \
-            -d web-server --browser-name=chrome --headless \
-            --web-browser-flag=--force-device-scale-factor=2 || status=1
           exit $status
 
   integration-android:

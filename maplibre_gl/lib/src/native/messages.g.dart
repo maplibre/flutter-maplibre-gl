@@ -3611,11 +3611,14 @@ class MapLibreMapHostApi {
 
   /// Adds the image [bytes] to the style as [name], as a signed distance
   /// field image when [sdf] is true. [length] is the length of [bytes].
+  /// [pixelRatio] is the number of image pixels per logical pixel, or null for
+  /// the screen density.
   Future<void> styleAddImage(
     String name,
     Uint8List bytes,
     int length,
     bool sdf,
+    double? pixelRatio,
   ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddImage$pigeonVar_messageChannelSuffix';
@@ -3625,7 +3628,7 @@ class MapLibreMapHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[name, bytes, length, sdf],
+      <Object?>[name, bytes, length, sdf, pixelRatio],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

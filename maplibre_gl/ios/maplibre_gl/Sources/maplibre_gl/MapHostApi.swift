@@ -472,10 +472,17 @@ final class MapHostApi: MapLibreMapHostApi {
         bytes: FlutterStandardTypedData,
         length: Int64,
         sdf: Bool,
+        pixelRatio: Double?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         run(voidResult(completion)) {
-            $0.styleAddImage(name: name, bytes: bytes, sdf: sdf, result: $1)
+            $0.styleAddImage(
+                name: name,
+                bytes: bytes,
+                sdf: sdf,
+                pixelRatio: pixelRatio,
+                result: $1
+            )
         }
     }
 

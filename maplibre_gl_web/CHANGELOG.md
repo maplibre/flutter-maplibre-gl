@@ -22,13 +22,13 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
 * `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
+* `addImage` takes an optional `pixelRatio`, the number of image pixels per logical pixel. Without it the image is drawn at one image pixel per logical pixel as before; pass `MediaQuery.devicePixelRatioOf(context)` for the size Android and iOS draw (#1129).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.14.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)): fewer main thread stalls, better complex scripts and right-to-left labels without a plugin, and a fix for a crash when `removeFeatureState` removes a property that was never set. On a browser without WebGL2, creating the map now fails: the controller future completes with an error and `onMapCreated` is not called, instead of handing out a blank map. The error report still says whether a maplibre-gl-js 5 build would work (#1081).
 * A feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS (#1077).
 * `animateCamera` and `easeCamera` complete when the camera arrives instead of when it starts, so code awaiting them runs after the animation. `animateCamera` completes with `false` when another camera call or a gesture interrupts it (#1069, #1089).
 * The offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException`: `MapLibreGlobalWeb` implements them (#1114, #937).
-* `addImage`, including the icons `iconImage` loads from assets, draws one image pixel per device pixel, as Android and iOS do. A 96 px PNG is 48 logical pixels on a 2x screen instead of 96, and sharp instead of upscaled, so icons are as large as in the Android and iOS apps and smaller than before on high-density screens. Make the image larger, or raise `iconSize`, to keep the old size (#1129).
 
 ### Fixed
 * Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).

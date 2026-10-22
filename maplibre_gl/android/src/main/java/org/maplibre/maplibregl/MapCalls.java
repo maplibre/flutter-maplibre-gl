@@ -356,7 +356,12 @@ public interface MapCalls {
   // Style
 
   void styleAddImage(
-      String name, byte[] bytes, long length, boolean sdf, MethodChannel.Result result);
+      String name,
+      byte[] bytes,
+      long length,
+      boolean sdf,
+      @Nullable Double pixelRatio,
+      MethodChannel.Result result);
 
   void styleSetLight(Map<String, Object> light, MethodChannel.Result result);
 
