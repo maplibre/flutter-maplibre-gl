@@ -1280,6 +1280,8 @@ void main() {
         ),
       );
 
+      // Insets first: on iOS a change of insets stops a camera animation.
+      final insets = controller.updateContentInsets(const EdgeInsets.all(4));
       final bounds = controller.setCameraBounds(
         west: -10,
         north: 10,
@@ -1287,12 +1289,11 @@ void main() {
         east: 10,
         padding: 20,
       );
-      final insets = controller.updateContentInsets(const EdgeInsets.all(4));
       await pumpFor(tester, const Duration(milliseconds: 300));
       size.value = const Size(_mapSize, _mapSize);
 
-      await pumpUntil(tester, bounds, 'setCameraBounds');
       await pumpUntil(tester, insets, 'updateContentInsets');
+      await pumpUntil(tester, bounds, 'setCameraBounds');
       await pumpUntilValue(
         tester,
         () => _queryCamera(tester, controller),
