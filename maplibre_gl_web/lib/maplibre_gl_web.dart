@@ -45,6 +45,8 @@ import 'package:maplibre_gl_web/src/utils.dart';
 import 'package:maplibre_gl_web/src/webgl_support.dart';
 import 'package:maplibre_gl_web/src/camera_easing_math.dart';
 import 'package:maplibre_gl_web/src/feature_drag.dart';
+import 'package:maplibre_gl_web/src/feature_id_interop.dart';
+import 'package:maplibre_gl_web/src/feature_ids.dart';
 
 part 'src/convert.dart';
 
