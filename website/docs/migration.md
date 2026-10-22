@@ -85,6 +85,8 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * Data that is not a valid GeoJSON FeatureCollection, Feature or geometry throws `INVALID_GEOJSON` from `addGeoJsonSource`, `setGeoJsonSource`, `setGeoJsonFeature`, `editGeoJsonSource` and `addSource`, where Android and web left the source empty. A feature with `"id": null` counts as invalid: MapLibre Native cannot read it.
 * `addSource` throws `INVALID_ARGUMENT` for an image source without a `url` or four corners, and for a tiled source without `url` or `tiles` or a GeoJSON source without `data`, which web used to add. For image bytes, use `addImageSource`.
 * On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
+* On web, a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer. Android and iOS take any zoom.
+* On Android and iOS, GeoJSON with a NaN or infinite number, properties included, throws `INVALID_GEOJSON`, since JSON cannot hold it. It threw a `JsonUnsupportedObjectError`, and `addSource` crashed on iOS. Web takes such a number.
 
 ### Android: numeric feature ids
 
@@ -104,6 +106,20 @@ await controller.setLayerFilter('pois', ['==', ['id'], 2]);
 ```
 
 Only integer ids come back the same on every platform. Android returns a string id that looks like a number, such as `"2"`, as the number `2`. On web, MapLibre GL JS keeps only integer ids: `"2"` and `2.5` come back as `2`, and other string ids are lost. If your app reads ids from queries, use integer ids.
+
+### iOS: hex colors with alpha
+
+On iOS a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. It used to read it first. If you wrote `#aarrggbb` for iOS, move the alpha to the end:
+
+```dart
+// Before (iOS): red at 50% opacity
+fillColor: '#80ff0000',
+
+// After (every platform)
+fillColor: '#ff000080',
+```
+
+The plugin's `UIColor(hexString:)` extension reads it the same way.
 
 ### Android and iOS: Pigeon messages
 
@@ -154,6 +170,8 @@ None of these need a code change, but they are the places where code that worked
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer where it is instead of moving it on top.
 * Fill annotations without a `fillOutlineColor` get an outline in their fill color on Android and iOS, where it used to be transparent.
 * **Android**: on Android 12 and later devices without Google Play Services, high accuracy positions come from Android's `fused` provider instead of `gps`, so a coarser network fix can arrive before the GPS one.
+* A GeoJSON, image or raster-dem source url with a space or another character a url cannot hold is percent-encoded on every platform, as browsers and iOS 17 do, so an iOS file path under `Library/Application Support` loads. `editGeoJsonUrl` answers `false` for an empty url, where Android and web answered `true`.
+* Tile source `bounds` with west greater than east, which cross the antimeridian, take every longitude, so the tiles on both sides load.
 * **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
 
 ### New options

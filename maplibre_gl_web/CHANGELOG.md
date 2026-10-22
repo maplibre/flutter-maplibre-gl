@@ -50,6 +50,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * The queries throw a `PlatformException` with code `INVALID_EXPRESSION` for a filter MapLibre GL JS rejects, and `queryRenderedFeaturesInRect` filters only with an expression array, as on Android and iOS (#1119).
 * `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, `updateImageSource` moves the corners at once, and a layer added below a missing layer goes on top (#1119).
 * `editGeoJsonUrl` works in JavaScript builds; it threw a `TypeError` outside wasm. `removeSource` keeps a source that a layer still uses, image source bytes load through an object URL, and GeoJSON holding objects with `toJson()` goes in (#1123).
+* A GeoJSON, image or raster-dem source url and the url of `editGeoJsonUrl` are percent-encoded as on Android and iOS, so a url with a space loads, and `editGeoJsonUrl` answers `false` for an empty url. Tile source `bounds` that cross the antimeridian take every longitude, so their tiles load (#1123).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
