@@ -2405,7 +2405,11 @@ final class MapLibreMapController
             result.success(false);
           }
         };
-    if (durationMs != null) {
+    if (durationMs != null && durationMs == 0) {
+      // The SDK rejects a zero duration, where iOS and web jump to the camera at once. So does
+      // this, with the camera events of a moveCamera.
+      mapLibreMap.moveCamera(update, onCameraMoveFinishedListener);
+    } else if (durationMs != null) {
       mapLibreMap.animateCamera(update, durationMs, onCameraMoveFinishedListener);
     } else {
       mapLibreMap.animateCamera(update, onCameraMoveFinishedListener);
