@@ -14,6 +14,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
   * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE`, and a feature with `"id": null` throws `INVALID_GEOJSON`.
   * A hex color with a digit that is not hex throws `INVALID_ARGUMENT`, and `addSource` checks bounds, tile zoom levels and urls as Android and iOS do.
 * `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
+* `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS. Set it if your app reads the camera position (#1126).
 
 ### Added
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).

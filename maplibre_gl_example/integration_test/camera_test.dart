@@ -752,10 +752,6 @@ void main() {
       },
     );
 
-    // Android rejects a zero duration and gives no promise for a move that
-    // goes nowhere, so these run on iOS and web only.
-    final skipAndroid = testPlatform == TestPlatform.android;
-
     testWidgets(
       'an animateCamera with a zero duration completes with true',
       (tester) async {
@@ -775,7 +771,6 @@ void main() {
         final camera = await _queryCamera(tester, controller);
         expect(_isNear(camera, target), isTrue, reason: '$camera');
       },
-      skip: skipAndroid,
     );
 
     testWidgets(
@@ -795,7 +790,6 @@ void main() {
 
         expect(result, isTrue);
       },
-      skip: skipAndroid,
     );
 
     testWidgets('easeCamera completes once the camera is on target', (
@@ -944,6 +938,11 @@ void main() {
       for (final position in moves) {
         expect(position.zoom.isFinite, isTrue, reason: '$position');
       }
+      // The last onCameraMove is where the camera stopped, as onCameraIdle
+      // reports it, not the frame before (#1122).
+      final stopped = controller.cameraPosition!;
+      _expectLatLng(moves.last.target, stopped.target, 1e-9, 'last move');
+      expect(moves.last.zoom, closeTo(stopped.zoom, 1e-9));
       // The last idle leaves the camera on the target.
       await pumpUntilValue(
         tester,
@@ -954,6 +953,114 @@ void main() {
         ),
         'camera at target after idle',
       );
+    });
+
+    testWidgets(
+      'a move without animation reaches onCameraMove before onCameraIdle',
+      (tester) async {
+        // A position for each onCameraMove, null for each onCameraIdle.
+        final events = <CameraPosition?>[];
+        final controller = await pumpMap(
+          tester,
+          builder:
+              (onMapCreated, onStyleLoaded) => MapLibreMap(
+                styleString: offlineStyle,
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(0, 0),
+                  zoom: 3,
+                ),
+                trackCameraPosition: true,
+                onCameraMove: events.add,
+                onCameraIdle: () => events.add(null),
+                onMapCreated: onMapCreated,
+                onStyleLoadedCallback: onStyleLoaded,
+              ),
+        );
+
+        // Let any startup camera events drain before counting.
+        await pumpFor(tester, const Duration(milliseconds: 500));
+
+        Future<void> expectMoveBeforeIdle(
+          String label,
+          Future<bool?> Function() move,
+          CameraPosition target,
+        ) async {
+          events.clear();
+          await pumpUntil(tester, move(), label);
+          await pumpUntilValue(
+            tester,
+            () async => events.contains(null),
+            (idle) => idle,
+            '$label: onCameraIdle',
+          );
+          final moves = events.sublist(0, events.indexOf(null));
+          expect(moves, isNotEmpty, reason: '$label: onCameraMove');
+          expect(
+            _isNear(moves.last!, target),
+            isTrue,
+            reason: '$label: $moves',
+          );
+        }
+
+        // MapLibre iOS reports no change in progress for these (#1122).
+        await expectMoveBeforeIdle(
+          'moveCamera',
+          () => controller.moveCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(46.12, 10.75), 15),
+          ),
+          const CameraPosition(target: LatLng(46.12, 10.75), zoom: 15),
+        );
+        await expectMoveBeforeIdle(
+          'animateCamera with a zero duration',
+          () => controller.animateCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(-20, 30), 6),
+            duration: Duration.zero,
+          ),
+          const CameraPosition(target: LatLng(-20, 30), zoom: 6),
+        );
+      },
+    );
+
+    testWidgets('without trackCameraPosition only onCameraIdle fires', (
+      tester,
+    ) async {
+      const initial = CameraPosition(target: LatLng(0, 0), zoom: 3);
+      final moves = <CameraPosition>[];
+      var idles = 0;
+      final controller = await pumpMap(
+        tester,
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: initial,
+              onCameraMove: moves.add,
+              onCameraIdle: () => idles++,
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
+      );
+
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      idles = 0;
+
+      await pumpUntil(
+        tester,
+        controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(10, 10), 5),
+          duration: const Duration(milliseconds: 300),
+        ),
+        'animateCamera',
+      );
+      await pumpUntilValue(
+        tester,
+        () async => idles,
+        (count) => count > 0,
+        'onCameraIdle',
+      );
+
+      // No position without trackCameraPosition, on web too.
+      expect(moves, isEmpty, reason: 'onCameraMove');
+      expect(controller.cameraPosition, initial);
     });
   });
 

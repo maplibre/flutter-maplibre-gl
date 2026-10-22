@@ -42,6 +42,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// MLNMapView takes for "no change" and drops, so the map stays at zoom 0.
     private var pendingInitialCamera: PgCameraPosition?
     private var trackCameraPosition = false
+    /// The camera position last sent to `cameraOnMove`, or the one the current camera change
+    /// started from. Nil while the position is not tracked.
+    private var lastMovePosition: PgCameraPosition?
     private let cameraAnimations = CameraAnimationTracker()
     private var myLocationEnabled = false
     private var manualLocationSource = false
@@ -3084,7 +3087,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     // MLNMapView calls this instead of regionWillChangeAnimated, which takes no reason.
     func mapView(
-        _: MLNMapView,
+        _ mapView: MLNMapView,
         regionWillChangeWith reason: MLNCameraChangeReason,
         animated _: Bool
     ) {
@@ -3092,13 +3095,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // with REASON_API_GESTURE.
         let isGesture = !reason.isDisjoint(with: .gestures)
         flutterApi.cameraOnMoveStarted(isGesture: isGesture) { _ in }
+        // Where the change starts, so regionDidChange can tell whether the camera moved.
+        lastMovePosition = getCamera()?.toPigeon(mapView: mapView)
     }
 
     func mapViewRegionIsChanging(_ mapView: MLNMapView) {
-        if !trackCameraPosition { return }
-        // Never nil here: getCamera() answers whenever the position is tracked.
+        // Never nil when the position is tracked: getCamera() answers whenever it is.
         guard let camera = getCamera() else { return }
-        flutterApi.cameraOnMove(position: camera.toPigeon(mapView: mapView)) { _ in }
+        sendCameraMove(camera.toPigeon(mapView: mapView))
+    }
+
+    private func sendCameraMove(_ position: PgCameraPosition) {
+        lastMovePosition = position
+        flutterApi.cameraOnMove(position: position) { _ in }
     }
 
     func mapView(_: MLNMapView, shouldChangeFrom _: MLNMapCamera, to _: MLNMapCamera) -> Bool {
@@ -3116,7 +3125,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         cameraAnimations.regionDidChange(reason: reason, animated: animated)
         // Null when the map does not track the camera position: getCamera()
         // answers only when it does.
-        flutterApi.cameraOnIdle(position: getCamera()?.toPigeon(mapView: mapView)) { _ in }
+        let position = getCamera()?.toPigeon(mapView: mapView)
+        // MLNMapView reports no change in progress for a move without animation, such as
+        // moveCamera, nor for the last frame of an animation. Android sends every position the
+        // camera reaches to onCameraMove before onCameraIdle, so the final one goes out here
+        // when Dart does not have it yet (#1122).
+        if let position = position, position != lastMovePosition {
+            sendCameraMove(position)
+        }
+        flutterApi.cameraOnIdle(position: position) { _ in }
     }
 
     func addSourceGeojson(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {
