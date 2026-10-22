@@ -324,4 +324,54 @@ void main() {
       expect(warnings, [contains('integers only')]);
     });
   });
+
+  test("the layers of the style on a source read the kept ids with ['id'] "
+      'once the plugin keeps them', () async {
+    const filter = [
+      '==',
+      ['id'],
+      'poi-12',
+    ];
+    const radius = [
+      'match',
+      ['id'],
+      ['id'],
+      10,
+      5,
+    ];
+    map.declareSource('style', {'type': 'geojson', 'data': _collection([])});
+    map.declareSource('other', {'type': 'geojson', 'data': _collection([])});
+    map.declareLayer(
+      'on-style',
+      'style',
+      filter: filter,
+      paint: {'circle-radius': radius, 'circle-opacity': 0.5},
+    );
+    map.declareLayer('on-other', 'other', filter: filter);
+
+    await controller.setGeoJsonSource('style', _collection(['poi-12']));
+
+    expect(map.changes, ['filter on-style', 'paint on-style circle-radius']);
+    final layer = map.layers.first.dartify()! as Map;
+    const id = [
+      'coalesce',
+      ['get', featureIdProperty],
+      ['id'],
+    ];
+    expect(layer['filter'], ['==', id, 'poi-12']);
+    // The label of the match is the text id, not an expression.
+    expect((layer['paint'] as Map)['circle-radius'], [
+      'match',
+      id,
+      ['id'],
+      10,
+      5,
+    ]);
+    // Read back as the style declares it.
+    expect(await controller.getFilter('on-style'), filter);
+
+    // Once is enough.
+    await controller.setGeoJsonSource('style', _collection(['poi-12']));
+    expect(map.changes, hasLength(2));
+  });
 }

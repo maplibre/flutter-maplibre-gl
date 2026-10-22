@@ -2103,18 +2103,63 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Makes the GeoJSON source [sourceId] take its feature ids from
   /// [featureIdProperty], for data the plugin sets, and answers whether it
-  /// does: see [promoteFeatureIds].
+  /// does: see [promoteFeatureIds]. When it starts to, the layers of the
+  /// style on it read those ids with `['id']` too.
   bool _keepFeatureIds(String sourceId) {
     final source = _jsSource(sourceId);
-    return source != null && promoteFeatureIds(source, promote: true);
+    if (source == null) return false;
+    final before = promotesFeatureIds(source);
+    if (!promoteFeatureIds(source, promote: true)) return false;
+    if (!before) _withFeatureIdsInLayersOf(sourceId);
+    return true;
   }
 
   /// Makes the GeoJSON source [sourceId] take the ids maplibre-gl-js reads,
   /// for data loaded from a URL, which has no [featureIdProperty]. A source
-  /// with a `promoteId` of its own keeps it.
+  /// with a `promoteId` of its own keeps it. The layers on it need no change:
+  /// `['id']` falls back to those ids.
   void _releaseFeatureIds(String sourceId) {
     final source = _jsSource(sourceId);
     if (source != null) promoteFeatureIds(source, promote: false);
+  }
+
+  /// Makes `['id']` in the filter, paint and layout of each layer on the
+  /// source [sourceId] read the id in the data, as it does in the layers the
+  /// plugin adds. The layers declared in the style still hold `['id']` as
+  /// written.
+  void _withFeatureIdsInLayersOf(String sourceId) {
+    final layers = _map.getStyleObject()?.getProperty<JSAny?>('layers'.toJS);
+    if (!layers.isA<JSArray>()) return;
+    final map = _map.jsObject as JSObject;
+    for (final layer in (layers! as JSArray<JSAny?>).toDart) {
+      if (!layer.isA<JSObject>()) continue;
+      final spec = layer! as JSObject;
+      if (spec.getProperty<JSAny?>('source'.toJS).dartify() != sourceId) {
+        continue;
+      }
+      final layerId = spec.getProperty<JSAny?>('id'.toJS).dartify();
+      if (layerId is! String) continue;
+      final filter = dartify(spec.getProperty<JSAny?>('filter'.toJS));
+      final rewritten = withFeatureIds(filter);
+      if (!identical(rewritten, filter)) _map.setFilter(layerId, rewritten);
+      for (final (group, setter) in [
+        ('paint', 'setPaintProperty'),
+        ('layout', 'setLayoutProperty'),
+      ]) {
+        final properties = dartify(spec.getProperty<JSAny?>(group.toJS));
+        if (properties is! Map) continue;
+        for (final MapEntry(:key, :value) in properties.entries) {
+          final rewritten = withFeatureIds(value);
+          if (identical(rewritten, value)) continue;
+          map.callMethod<JSAny?>(
+            setter.toJS,
+            layerId.toJS,
+            (key as String).toJS,
+            jsify(rewritten),
+          );
+        }
+      }
+    }
   }
 
   /// The id of [feature], a Feature the GeoJSON check accepted, as
