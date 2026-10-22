@@ -611,7 +611,7 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         try {
             body(result)
         } catch (e: RuntimeException) {
-            Log.e(TAG, "A map call failed", e)
+            Log.e(TAG, "The map call ${callName(e)} failed", e)
             result.error("error", e.message, Log.getStackTraceString(e))
         }
     }
@@ -621,6 +621,18 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         private const val MAP_NOT_READY = "MAP_NOT_READY"
         private const val MAP_NOT_READY_MESSAGE =
             "Map is not ready (activity may have been recreated)"
+
+        /** The names of the Pigeon methods. */
+        private val callNames = MapLibreMapHostApi::class.java.methods.map { it.name }.toSet()
+
+        /**
+         * The Pigeon method [e] was thrown under, read from its stack: every call runs [answer]
+         * from within the method of this class it is named after.
+         */
+        internal fun callName(e: Throwable): String =
+            e.stackTrace.firstOrNull {
+                it.className == MapHostApi::class.java.name && it.methodName in callNames
+            }?.methodName ?: "unknown"
     }
 }
 

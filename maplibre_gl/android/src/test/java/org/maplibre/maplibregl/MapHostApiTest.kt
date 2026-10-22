@@ -231,6 +231,22 @@ class MapHostApiTest {
     }
 
     @Test
+    fun aCallThatThrowsIsNamedAfterItsPigeonMethod() {
+        val names = mutableListOf<String>()
+        answer = { _, _ ->
+            names.add(MapHostApi.callName(IllegalStateException("boom")))
+            throw IllegalStateException("boom")
+        }
+        for (method in pigeonMethods) {
+            names.clear()
+
+            invoke(method)
+
+            assertEquals(method.name, listOf(method.name), names)
+        }
+    }
+
+    @Test
     fun anErrorOfTheCallArrivesAsAPigeonErrorWithTheSameCode() {
         val details = hashMapOf("reason" to "disk")
         answer = { _, result -> result.error("AMBIENT_CACHE_ERROR", "No space left", details) }
