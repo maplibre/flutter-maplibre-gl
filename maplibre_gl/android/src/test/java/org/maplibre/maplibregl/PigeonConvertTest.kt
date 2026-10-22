@@ -86,6 +86,66 @@ class PigeonConvertTest {
     }
 
     @Test
+    fun aCameraUpdateWithEveryValueFiniteMoves() {
+        for (update in listOf(
+            PgCameraUpdateNewCameraPosition(PgCameraPosition(90.0, target, 30.0, 12.5)),
+            PgCameraUpdateNewLatLng(target),
+            PgCameraUpdateNewLatLngBounds(
+                PgLatLngBounds(target, PgLatLng(46.0, 10.0)),
+                PgEdgeInsets(1.0, 2.0, 3.0, 4.0),
+            ),
+            PgCameraUpdateNewLatLngZoom(target, 3.0),
+            PgCameraUpdateScrollBy(1.0, 2.0),
+            PgCameraUpdateZoomBy(1.0, PgScreenPoint(3.0, 4.0)),
+            PgCameraUpdateZoomIn(),
+            PgCameraUpdateZoomOut(),
+            PgCameraUpdateZoomTo(3.0),
+            PgCameraUpdateBearingTo(3.0),
+            PgCameraUpdateTiltTo(3.0),
+        )) {
+            assertNull("$update", PigeonConvert.nonFiniteReason(update))
+        }
+    }
+
+    @Test
+    fun aCameraUpdateWithANonFiniteValueIsRejectedWithWhatIsWrong() {
+        val nan = PgLatLng(Double.NaN, 9.0)
+        for (update in listOf(
+            PgCameraUpdateNewCameraPosition(PgCameraPosition(0.0, nan, 0.0, 3.0)),
+            PgCameraUpdateNewLatLng(nan),
+            PgCameraUpdateNewLatLngBounds(PgLatLngBounds(target, nan), PgEdgeInsets(0.0, 0.0, 0.0, 0.0)),
+            PgCameraUpdateNewLatLngZoom(PgLatLng(1.0, Double.POSITIVE_INFINITY), 3.0),
+        )) {
+            assertEquals("$update", StyleChecks.NON_FINITE_COORDINATES, PigeonConvert.nonFiniteReason(update))
+        }
+        for (update in listOf(
+            PgCameraUpdateNewCameraPosition(PgCameraPosition(0.0, target, 0.0, Double.NaN)),
+            PgCameraUpdateNewLatLngBounds(
+                PgLatLngBounds(target, target),
+                PgEdgeInsets(0.0, Double.NaN, 0.0, 0.0),
+            ),
+            PgCameraUpdateNewLatLngZoom(target, Double.NaN),
+            PgCameraUpdateScrollBy(Double.NaN, 0.0),
+            PgCameraUpdateZoomBy(1.0, PgScreenPoint(0.0, Double.NaN)),
+            PgCameraUpdateZoomTo(Double.POSITIVE_INFINITY),
+            PgCameraUpdateBearingTo(Double.NaN),
+            PgCameraUpdateTiltTo(Double.NaN),
+        )) {
+            assertEquals("$update", StyleChecks.NON_FINITE_CAMERA_VALUES, PigeonConvert.nonFiniteReason(update))
+        }
+    }
+
+    @Test
+    fun aQuadIsFiniteWhenEveryCornerIs() {
+        val corner = PgLatLng(1.0, 2.0)
+        assertEquals(true, PigeonConvert.isFinite(PgLatLngQuad(corner, corner, corner, corner)))
+        assertEquals(
+            false,
+            PigeonConvert.isFinite(PgLatLngQuad(corner, corner, PgLatLng(Double.NaN, 2.0), corner)),
+        )
+    }
+
+    @Test
     fun theLocationRequestTakesTheAndroidProperties() {
         val request = PigeonConvert.toLocationEngineRequest(
             PgLocationEngineProperties(

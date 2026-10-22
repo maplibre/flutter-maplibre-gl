@@ -10,13 +10,74 @@ import org.maplibre.android.style.sources.RasterSource;
 import org.maplibre.android.style.sources.Source;
 import org.maplibre.android.style.sources.VectorSource;
 
-/** Checks of the layer and source calls, with the codes and messages shared with iOS and web. */
+/** Checks of the map calls, with the codes and messages shared with iOS and web. */
 final class StyleChecks {
   private StyleChecks() {}
 
   static final String UNSUPPORTED_SOURCE_TYPE = "UNSUPPORTED_SOURCE_TYPE";
   static final String INVALID_EXPRESSION = "INVALID_EXPRESSION";
   static final String INVALID_ARGUMENT = "INVALID_ARGUMENT";
+  static final String SOURCE_LAYER_REQUIRED = "SOURCE_LAYER_REQUIRED";
+  static final String STYLE_NOT_READY = "STYLE_NOT_READY";
+  static final String STYLE_NOT_READY_MESSAGE =
+      "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?";
+
+  /** The message of a coordinate that is NaN or infinite, which MapLibre cannot place. */
+  static final String NON_FINITE_COORDINATES = "Latitude and longitude must be finite numbers.";
+
+  /** The message of a screen point that is NaN or infinite. */
+  static final String NON_FINITE_SCREEN_POINT = "Screen coordinates must be finite numbers.";
+
+  /** The message of a camera update with a zoom, angle, offset or padding that is not finite. */
+  static final String NON_FINITE_CAMERA_VALUES =
+      "Zoom, bearing, tilt, offsets and padding must be finite numbers.";
+
+  /** The lowest and highest zoom a layer can have. */
+  static final double MIN_ZOOM = 0;
+
+  static final double MAX_ZOOM = 24;
+
+  /** The message of a camera padding that does not fit in the 32 bits the engine takes. */
+  static String paddingOutOfRange(long padding) {
+    return "Padding " + padding + " does not fit in 32 bits.";
+  }
+
+  /** Whether {@code a} and {@code b}, such as a latitude and a longitude, are finite. */
+  static boolean isFinite(double a, double b) {
+    return !Double.isNaN(a) && !Double.isInfinite(a) && !Double.isNaN(b) && !Double.isInfinite(b);
+  }
+
+  /** The message of a source that cannot be built from the properties it was given. */
+  static String unbuildableSource(String sourceId, String type) {
+    return "Source '" + sourceId + "' cannot be built from its properties as a '" + type
+        + "' source.";
+  }
+
+  /**
+   * The message of a call made on a source that is not GeoJSON. {@code methodName} is the Dart
+   * method, and {@code clustered} tells whether it needs a clustered source.
+   */
+  static String notGeoJsonSource(String sourceId, String methodName, boolean clustered) {
+    return "Source '" + sourceId + "' is not a GeoJSON source. " + methodName
+        + " only applies to " + (clustered ? "clustered " : "") + "GeoJSON sources.";
+  }
+
+  /** The message of a layer on a vector source that names no source layer. */
+  static String sourceLayerRequired(String layerId, String sourceId) {
+    return "Source '" + sourceId + "' is a vector source, so layer '" + layerId
+        + "' requires a 'sourceLayer'.";
+  }
+
+  /** Whether {@code minzoom} and {@code maxzoom}, each null when not set, are within 0 and 24. */
+  static boolean isZoomInRange(@Nullable Double minzoom, @Nullable Double maxzoom) {
+    return (minzoom == null || (minzoom >= MIN_ZOOM && minzoom <= MAX_ZOOM))
+        && (maxzoom == null || (maxzoom >= MIN_ZOOM && maxzoom <= MAX_ZOOM));
+  }
+
+  /** The message of a layer add with a zoom outside 0 to 24. */
+  static String zoomOutOfRange(String layerId) {
+    return "The minzoom and maxzoom of layer '" + layerId + "' must be within 0 and 24.";
+  }
 
   /** The style-spec type of {@code source}, or null for a source the style spec has no type for. */
   @Nullable

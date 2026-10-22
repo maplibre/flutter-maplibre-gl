@@ -90,4 +90,53 @@ class StyleChecksTest {
             )
         }
     }
+
+    @Test
+    fun theNewMessagesAreTheOnesIosGives() {
+        assertEquals(
+            "Source 's' is not a GeoJSON source. setGeoJsonSource only applies to GeoJSON sources.",
+            StyleChecks.notGeoJsonSource("s", "setGeoJsonSource", false),
+        )
+        assertEquals(
+            "Source 's' is not a GeoJSON source. getClusterLeaves only applies to clustered " +
+                "GeoJSON sources.",
+            StyleChecks.notGeoJsonSource("s", "getClusterLeaves", true),
+        )
+        assertEquals(
+            "Source 'v' is a vector source, so layer 'l' requires a 'sourceLayer'.",
+            StyleChecks.sourceLayerRequired("l", "v"),
+        )
+        assertEquals(
+            "The minzoom and maxzoom of layer 'l' must be within 0 and 24.",
+            StyleChecks.zoomOutOfRange("l"),
+        )
+        assertEquals(
+            "Source 's' cannot be built from its properties as a 'vector' source.",
+            StyleChecks.unbuildableSource("s", "vector"),
+        )
+        assertEquals("Padding 4294967296 does not fit in 32 bits.", StyleChecks.paddingOutOfRange(1L shl 32))
+    }
+
+    @Test
+    fun aLayerZoomIsWithinZeroAndTwentyFour() {
+        assertTrue(StyleChecks.isZoomInRange(null, null))
+        assertTrue(StyleChecks.isZoomInRange(0.0, 24.0))
+        assertTrue(StyleChecks.isZoomInRange(null, 12.5))
+        for ((min, max) in listOf(-0.1 to null, null to 24.1, Double.NaN to 5.0, 1.0 to Double.NaN)) {
+            assertFalse("$min $max", StyleChecks.isZoomInRange(min, max))
+        }
+    }
+
+    @Test
+    fun aCoordinateIsFiniteOnBothAxes() {
+        assertTrue(StyleChecks.isFinite(45.0, 9.0))
+        for ((lat, lng) in listOf(
+            Double.NaN to 0.0,
+            0.0 to Double.NaN,
+            Double.POSITIVE_INFINITY to 0.0,
+            0.0 to Double.NEGATIVE_INFINITY,
+        )) {
+            assertFalse("$lat $lng", StyleChecks.isFinite(lat, lng))
+        }
+    }
 }
