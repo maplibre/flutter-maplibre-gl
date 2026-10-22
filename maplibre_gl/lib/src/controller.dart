@@ -2750,6 +2750,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// size (in logical pixels) using an offscreen renderer while preserving the
   /// current camera position and style. When omitted the snapshot matches the
   /// current map view size.
+  ///
+  /// The image has the screen's pixel density: a 300 x 300 snapshot is a
+  /// 900 x 900 PNG on a 3x screen.
   Future<Uint8List> takeSnapshot({int? width, int? height}) {
     return _maplibrePlatform.takeSnapshot(width: width, height: height);
   }
