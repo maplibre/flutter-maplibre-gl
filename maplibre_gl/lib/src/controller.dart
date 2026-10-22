@@ -2733,18 +2733,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// contains `id`, `type`, `source` (and `source-layer` when set), `minzoom`,
   /// `maxzoom`, `filter`, and the `paint` and `layout` property objects keyed
   /// by their style-spec names (e.g. `circle-color`, `line-width`). Property
-  /// values are returned as JSON literals or expressions.
+  /// values are returned as JSON literals or expressions. Layers added at
+  /// runtime and changes made since the style loaded are included.
   ///
-  /// **Android**: runtime changes are included. Colors come back as
-  /// `rgba(...)` strings, and `layout` always has `visibility`.
-  ///
-  /// **iOS**: only layers that came with the style are readable. iOS reads the
-  /// style as it was loaded, so a layer added at runtime through this API is
-  /// not in it and this answers null for it, where Android and web answer
-  /// normally. For layers that came with the style, the zoom range is read
-  /// live, so it follows [setLayerZoomRange], while the other properties read
-  /// as loaded. See
-  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
+  /// **Android, iOS**: colors come back as `rgba(...)` strings, and `layout`
+  /// always has `visibility`.
   ///
   /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
   /// style has loaded.
@@ -2764,13 +2757,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// right, bottom right, bottom left), and `url` only when the image comes
   /// from a url, not from bytes.
   ///
-  /// **Android**: any other source added at runtime reports only `type`,
+  /// **Android, iOS**: any other source added at runtime reports only `type`,
   /// plus `url` (`data` for GeoJSON loaded from a URL) and `attribution` when
   /// set. A source from the style reports its full entry as loaded.
-  ///
-  /// **iOS**: apart from image sources, only sources that came with the
-  /// style are readable; this answers null for one added at runtime. See
-  /// https://github.com/maplibre/flutter-maplibre-gl/issues/985.
   ///
   /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
   /// style has loaded.

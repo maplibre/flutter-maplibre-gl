@@ -106,14 +106,8 @@ void main() {
       controller.getSourceProperties('runtime'),
       'getSourceProperties runtime',
     );
-    if (testPlatform == TestPlatform.ios) {
-      // Documented on getSourceProperties: iOS reads the style as it was
-      // loaded, so a source added at runtime is not in it (#985).
-      expect(runtime, isNull);
-    } else {
-      expect(runtime, isNotNull);
-      expect(runtime!['type'], 'geojson');
-    }
+    expect(runtime, isNotNull);
+    expect(runtime!['type'], 'geojson');
   });
 
   testWidgets('each offline layer type can be added and removed', (
@@ -370,12 +364,6 @@ void main() {
       controller.getLayerProperties('runtime-line'),
       'getLayerProperties runtime-line',
     );
-    if (testPlatform == TestPlatform.ios) {
-      // Documented on getLayerProperties: iOS reads the style as it was
-      // loaded, so a layer added at runtime is not in it (#985).
-      expect(runtime, isNull);
-      return;
-    }
     expect(runtime, isNotNull);
     expect(runtime!['id'], 'runtime-line');
     expect(runtime['type'], 'line');
@@ -392,8 +380,6 @@ void main() {
   testWidgets('setLayerZoomRange round trips through getLayerProperties', (
     tester,
   ) async {
-    // A layer that came with the style, so every platform can read it back:
-    // iOS reads the live zoom range over the style as loaded.
     final controller = await pumpMap(tester, styleString: _styleWithSource());
 
     await pumpUntil(
@@ -443,10 +429,6 @@ void main() {
       controller.setLayerZoomRange('circle', 3, 9.5),
       'setLayerZoomRange',
     );
-    // iOS cannot read a runtime layer back (#985), so there only the call
-    // itself is checked.
-    if (testPlatform == TestPlatform.ios) return;
-
     final properties = await pumpUntil(
       tester,
       controller.getLayerProperties('circle'),
@@ -571,10 +553,6 @@ void main() {
       'setLayerProperties',
     );
 
-    // A failed set would surface above; reading back needs a runtime layer,
-    // which iOS cannot read (#985), so there only the call is checked.
-    if (testPlatform == TestPlatform.ios) return;
-
     final properties = await pumpUntil(
       tester,
       controller.getLayerProperties('line'),
@@ -585,6 +563,69 @@ void main() {
     expect(paint['line-width'], 6);
     expect(paint['line-opacity'], 0.25);
     expect((properties['layout'] as Map)['line-cap'], 'round');
+  });
+
+  testWidgets('getLayerProperties reads values back in the shape they were '
+      'set, and leaves out what was never set', (tester) async {
+    final controller = await _pumpMapWithSource(tester);
+    const radius = [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      5,
+      1,
+      10,
+      4,
+    ];
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        _sourceId,
+        'circle',
+        const CircleLayerProperties(
+          circleRadius: radius,
+          circleTranslate: [1, 2],
+          circlePitchAlignment: 'map',
+          // The default value, which still counts as set.
+          circleOpacity: 1,
+        ),
+      ),
+      'addCircleLayer',
+    );
+
+    final properties = await pumpUntil(
+      tester,
+      controller.getLayerProperties('circle'),
+      'getLayerProperties',
+    );
+    expect(properties!['paint'], {
+      'circle-radius': radius,
+      'circle-translate': [1, 2],
+      'circle-pitch-alignment': 'map',
+      'circle-opacity': 1,
+    });
+  });
+
+  testWidgets('setLayerProperties on a layer of the style resets what it '
+      'leaves null', (tester) async {
+    final controller = await pumpMap(tester, styleString: _styleWithSource());
+
+    // Sends every circle property, so the style's circle-radius goes back to
+    // its default and reads as never set.
+    await pumpUntil(
+      tester,
+      controller.setLayerProperties(
+        'styled-circles',
+        const CircleLayerProperties(circleBlur: 0.5),
+      ),
+      'setLayerProperties',
+    );
+    final properties = await pumpUntil(
+      tester,
+      controller.getLayerProperties('styled-circles'),
+      'getLayerProperties',
+    );
+    expect(properties!['paint'], {'circle-blur': 0.5});
   });
 
   testWidgets('setLayerVisibility round trips through getLayerVisibility', (
@@ -644,8 +685,7 @@ void main() {
     tester,
   ) async {
     // Reads visibility back through getLayerProperties, so the setter is
-    // covered even where getLayerVisibility is not answered. iOS cannot read a
-    // runtime layer back (#985), so there only the call itself is checked.
+    // covered even where getLayerVisibility is not answered.
     final controller = await _pumpMapWithSource(tester);
 
     await pumpUntil(
@@ -662,7 +702,6 @@ void main() {
       controller.setLayerVisibility('circle', false),
       'setLayerVisibility false',
     );
-    if (testPlatform == TestPlatform.ios) return;
 
     final properties = await pumpUntil(
       tester,
@@ -907,15 +946,13 @@ void main() {
 
     final ids = await _layerIds(tester, controller);
     expect(ids.where((id) => id == 'circle'), hasLength(1));
-    if (testPlatform != TestPlatform.ios) {
-      final properties = await pumpUntil(
-        tester,
-        controller.getLayerProperties('circle'),
-        'getLayerProperties',
-      );
-      expect(properties!['type'], 'circle');
-      expect((properties['paint'] as Map)['circle-radius'], 4);
-    }
+    final properties = await pumpUntil(
+      tester,
+      controller.getLayerProperties('circle'),
+      'getLayerProperties',
+    );
+    expect(properties!['type'], 'circle');
+    expect((properties['paint'] as Map)['circle-radius'], 4);
   });
 
   testWidgets('getLayerProperties and getSourceProperties answer null for an '
@@ -1034,8 +1071,7 @@ Future<MapLibreMapController> _pumpMapWithSource(WidgetTester tester) async {
   return controller;
 }
 
-/// The offline style with a GeoJSON source and a circle layer baked in, for
-/// reads that iOS only answers for what came with the style (#985).
+/// The offline style with a GeoJSON source and a circle layer baked in.
 String _styleWithSource() {
   final style = jsonDecode(offlineStyle) as Map<String, dynamic>;
   style['sources'] = {

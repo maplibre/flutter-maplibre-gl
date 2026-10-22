@@ -462,12 +462,6 @@ void main() {
       controller.getLayerProperties(layerId),
       'getLayerProperties',
     );
-    if (testPlatform == TestPlatform.ios) {
-      // Documented: iOS only reads layers that came with the style, so a
-      // runtime layer answers null there (#985).
-      expect(properties, isNull);
-      return;
-    }
     expect(properties, isNotNull);
     expect(properties!['type'], 'symbol');
     expect(properties['source'], layerId);

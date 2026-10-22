@@ -322,15 +322,12 @@ void main() {
           ),
           filter,
         );
-        // iOS reads layers from the style it loaded, without those added since.
-        if (testPlatform != TestPlatform.ios) {
-          final layer = await pumpUntil(
-            tester,
-            controller.getLayerProperties(_layerId),
-            'getLayerProperties',
-          );
-          expect(layer?['filter'], filter);
-        }
+        final layer = await pumpUntil(
+          tester,
+          controller.getLayerProperties(_layerId),
+          'getLayerProperties',
+        );
+        expect(layer?['filter'], filter);
       }
     });
   });
@@ -427,9 +424,8 @@ void main() {
       controller.getSourceProperties(_sourceId),
       'getSourceProperties',
     );
-    // iOS reads sources from the style it loaded, without those added since.
-    if (testPlatform != TestPlatform.ios) expect(source?['type'], 'geojson');
-    expect(source ?? const {}, isNot(contains('promoteId')));
+    expect(source?['type'], 'geojson');
+    expect(source, isNot(contains('promoteId')));
     expect(jsonEncode(source), isNot(contains(_reserved)));
 
     final style = await pumpUntil(tester, controller.getStyle(), 'getStyle');

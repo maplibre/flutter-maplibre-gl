@@ -2076,9 +2076,6 @@ void main() {
           expect(read, color);
           continue;
         }
-        // iOS reads layer properties from the style as loaded, so a value
-        // set later does not show there.
-        if (defaultTargetPlatform == TargetPlatform.iOS) continue;
         final rgba = RegExp(
           r'^rgba\(([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\)$',
         ).firstMatch('$read');

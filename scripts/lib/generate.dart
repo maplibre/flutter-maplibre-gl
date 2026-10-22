@@ -359,6 +359,7 @@ Map<String, dynamic> buildStyleProperty(
     'isFontProperty': key == "text-font",
     'isIosAsCamelCase': renamedIosProperties.containsKey(camelCase),
     'iosAsCamelCase': renamedIosProperties[camelCase],
+    'iosName': renamedIosProperties[camelCase] ?? camelCase,
     'iosExpression': iosExpression,
     'doc': value["doc"],
     'docSplit':

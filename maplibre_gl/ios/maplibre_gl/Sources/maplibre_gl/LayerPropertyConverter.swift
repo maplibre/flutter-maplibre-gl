@@ -585,6 +585,276 @@ class LayerPropertyConverter {
         return true
     }
 
+    /// The value `layer` holds for each of its paint and layout properties
+    /// but `visibility`, by style-spec name, or nil for a layer type this
+    /// converter does not know. MapLibre reads a property that was never set
+    /// as its default value.
+    class func propertyValues(
+        of layer: MLNStyleLayer
+    ) -> (paint: [(String, NSExpression?)], layout: [(String, NSExpression?)])? {
+        switch layer {
+        case let symbolLayer as MLNSymbolStyleLayer:
+            return (
+                paint: [
+                    ("icon-opacity", symbolLayer.iconOpacity),
+                    ("icon-color", symbolLayer.iconColor),
+                    ("icon-halo-color", symbolLayer.iconHaloColor),
+                    ("icon-halo-width", symbolLayer.iconHaloWidth),
+                    ("icon-halo-blur", symbolLayer.iconHaloBlur),
+                    ("icon-translate", symbolLayer.iconTranslation),
+                    ("icon-translate-anchor", symbolLayer.iconTranslationAnchor),
+                    ("text-opacity", symbolLayer.textOpacity),
+                    ("text-color", symbolLayer.textColor),
+                    ("text-halo-color", symbolLayer.textHaloColor),
+                    ("text-halo-width", symbolLayer.textHaloWidth),
+                    ("text-halo-blur", symbolLayer.textHaloBlur),
+                    ("text-translate", symbolLayer.textTranslation),
+                    ("text-translate-anchor", symbolLayer.textTranslationAnchor),
+                ],
+                layout: [
+                    ("symbol-placement", symbolLayer.symbolPlacement),
+                    ("symbol-spacing", symbolLayer.symbolSpacing),
+                    ("symbol-avoid-edges", symbolLayer.symbolAvoidsEdges),
+                    ("symbol-sort-key", symbolLayer.symbolSortKey),
+                    ("symbol-z-order", symbolLayer.symbolZOrder),
+                    ("icon-allow-overlap", symbolLayer.iconAllowsOverlap),
+                    ("icon-ignore-placement", symbolLayer.iconIgnoresPlacement),
+                    ("icon-optional", symbolLayer.iconOptional),
+                    ("icon-rotation-alignment", symbolLayer.iconRotationAlignment),
+                    ("icon-size", symbolLayer.iconScale),
+                    ("icon-text-fit", symbolLayer.iconTextFit),
+                    ("icon-text-fit-padding", symbolLayer.iconTextFitPadding),
+                    ("icon-image", symbolLayer.iconImageName),
+                    ("icon-rotate", symbolLayer.iconRotation),
+                    ("icon-padding", symbolLayer.iconPadding),
+                    ("icon-keep-upright", symbolLayer.keepsIconUpright),
+                    ("icon-offset", symbolLayer.iconOffset),
+                    ("icon-anchor", symbolLayer.iconAnchor),
+                    ("icon-pitch-alignment", symbolLayer.iconPitchAlignment),
+                    ("text-pitch-alignment", symbolLayer.textPitchAlignment),
+                    ("text-rotation-alignment", symbolLayer.textRotationAlignment),
+                    ("text-field", symbolLayer.text),
+                    ("text-font", symbolLayer.textFontNames),
+                    ("text-size", symbolLayer.textFontSize),
+                    ("text-max-width", symbolLayer.maximumTextWidth),
+                    ("text-line-height", symbolLayer.textLineHeight),
+                    ("text-letter-spacing", symbolLayer.textLetterSpacing),
+                    ("text-justify", symbolLayer.textJustification),
+                    ("text-radial-offset", symbolLayer.textRadialOffset),
+                    ("text-variable-anchor", symbolLayer.textVariableAnchor),
+                    ("text-variable-anchor-offset", symbolLayer.textVariableAnchorOffset),
+                    ("text-anchor", symbolLayer.textAnchor),
+                    ("text-max-angle", symbolLayer.maximumTextAngle),
+                    ("text-writing-mode", symbolLayer.textWritingModes),
+                    ("text-rotate", symbolLayer.textRotation),
+                    ("text-padding", symbolLayer.textPadding),
+                    ("text-keep-upright", symbolLayer.keepsTextUpright),
+                    ("text-transform", symbolLayer.textTransform),
+                    ("text-offset", symbolLayer.textOffset),
+                    ("text-allow-overlap", symbolLayer.textAllowsOverlap),
+                    ("text-ignore-placement", symbolLayer.textIgnoresPlacement),
+                    ("text-optional", symbolLayer.textOptional),
+                ]
+            )
+        case let circleLayer as MLNCircleStyleLayer:
+            return (
+                paint: [
+                    ("circle-radius", circleLayer.circleRadius),
+                    ("circle-color", circleLayer.circleColor),
+                    ("circle-blur", circleLayer.circleBlur),
+                    ("circle-opacity", circleLayer.circleOpacity),
+                    ("circle-translate", circleLayer.circleTranslation),
+                    ("circle-translate-anchor", circleLayer.circleTranslationAnchor),
+                    ("circle-pitch-scale", circleLayer.circleScaleAlignment),
+                    ("circle-pitch-alignment", circleLayer.circlePitchAlignment),
+                    ("circle-stroke-width", circleLayer.circleStrokeWidth),
+                    ("circle-stroke-color", circleLayer.circleStrokeColor),
+                    ("circle-stroke-opacity", circleLayer.circleStrokeOpacity),
+                ],
+                layout: [
+                    ("circle-sort-key", circleLayer.circleSortKey),
+                ]
+            )
+        case let lineLayer as MLNLineStyleLayer:
+            return (
+                paint: [
+                    ("line-opacity", lineLayer.lineOpacity),
+                    ("line-color", lineLayer.lineColor),
+                    ("line-translate", lineLayer.lineTranslation),
+                    ("line-translate-anchor", lineLayer.lineTranslationAnchor),
+                    ("line-width", lineLayer.lineWidth),
+                    ("line-gap-width", lineLayer.lineGapWidth),
+                    ("line-offset", lineLayer.lineOffset),
+                    ("line-blur", lineLayer.lineBlur),
+                    ("line-dasharray", lineLayer.lineDashPattern),
+                    ("line-pattern", lineLayer.linePattern),
+                    ("line-gradient", lineLayer.lineGradient),
+                ],
+                layout: [
+                    ("line-cap", lineLayer.lineCap),
+                    ("line-join", lineLayer.lineJoin),
+                    ("line-miter-limit", lineLayer.lineMiterLimit),
+                    ("line-round-limit", lineLayer.lineRoundLimit),
+                    ("line-sort-key", lineLayer.lineSortKey),
+                ]
+            )
+        case let fillLayer as MLNFillStyleLayer:
+            return (
+                paint: [
+                    ("fill-antialias", fillLayer.fillAntialiased),
+                    ("fill-opacity", fillLayer.fillOpacity),
+                    ("fill-color", fillLayer.fillColor),
+                    ("fill-outline-color", fillLayer.fillOutlineColor),
+                    ("fill-translate", fillLayer.fillTranslation),
+                    ("fill-translate-anchor", fillLayer.fillTranslationAnchor),
+                    ("fill-pattern", fillLayer.fillPattern),
+                ],
+                layout: [
+                    ("fill-sort-key", fillLayer.fillSortKey),
+                ]
+            )
+        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+            return (
+                paint: [
+                    ("fill-extrusion-opacity", fillExtrusionLayer.fillExtrusionOpacity),
+                    ("fill-extrusion-color", fillExtrusionLayer.fillExtrusionColor),
+                    ("fill-extrusion-translate", fillExtrusionLayer.fillExtrusionTranslation),
+                    ("fill-extrusion-translate-anchor", fillExtrusionLayer.fillExtrusionTranslationAnchor),
+                    ("fill-extrusion-pattern", fillExtrusionLayer.fillExtrusionPattern),
+                    ("fill-extrusion-height", fillExtrusionLayer.fillExtrusionHeight),
+                    ("fill-extrusion-base", fillExtrusionLayer.fillExtrusionBase),
+                    ("fill-extrusion-vertical-gradient", fillExtrusionLayer.fillExtrusionHasVerticalGradient),
+                ],
+                layout: [
+                    ("fill-extrusion-rounded-corner-distance", fillExtrusionLayer.fillExtrusionRoundedCornerDistance),
+                ]
+            )
+        case let rasterLayer as MLNRasterStyleLayer:
+            return (
+                paint: [
+                    ("raster-opacity", rasterLayer.rasterOpacity),
+                    ("raster-hue-rotate", rasterLayer.rasterHueRotation),
+                    ("raster-brightness-min", rasterLayer.minimumRasterBrightness),
+                    ("raster-brightness-max", rasterLayer.maximumRasterBrightness),
+                    ("raster-saturation", rasterLayer.rasterSaturation),
+                    ("raster-contrast", rasterLayer.rasterContrast),
+                    ("raster-resampling", rasterLayer.rasterResamplingMode),
+                    ("raster-fade-duration", rasterLayer.rasterFadeDuration),
+                ],
+                layout: [
+                ]
+            )
+        case let hillshadeLayer as MLNHillshadeStyleLayer:
+            return (
+                paint: [
+                    ("hillshade-illumination-direction", hillshadeLayer.hillshadeIlluminationDirection),
+                    ("hillshade-illumination-altitude", hillshadeLayer.hillshadeIlluminationAltitude),
+                    ("hillshade-illumination-anchor", hillshadeLayer.hillshadeIlluminationAnchor),
+                    ("hillshade-exaggeration", hillshadeLayer.hillshadeExaggeration),
+                    ("hillshade-shadow-color", hillshadeLayer.hillshadeShadowColor),
+                    ("hillshade-highlight-color", hillshadeLayer.hillshadeHighlightColor),
+                    ("hillshade-accent-color", hillshadeLayer.hillshadeAccentColor),
+                    ("hillshade-method", hillshadeLayer.hillshadeMethod),
+                ],
+                layout: [
+                ]
+            )
+        case let heatmapLayer as MLNHeatmapStyleLayer:
+            return (
+                paint: [
+                    ("heatmap-radius", heatmapLayer.heatmapRadius),
+                    ("heatmap-weight", heatmapLayer.heatmapWeight),
+                    ("heatmap-intensity", heatmapLayer.heatmapIntensity),
+                    ("heatmap-color", heatmapLayer.heatmapColor),
+                    ("heatmap-opacity", heatmapLayer.heatmapOpacity),
+                ],
+                layout: [
+                ]
+            )
+        case let colorReliefLayer as MLNColorReliefStyleLayer:
+            return (
+                paint: [
+                    ("color-relief-opacity", colorReliefLayer.colorReliefOpacity),
+                    ("color-relief-color", colorReliefLayer.colorReliefColor),
+                ],
+                layout: [
+                ]
+            )
+        case let backgroundLayer as MLNBackgroundStyleLayer:
+            return (
+                paint: [
+                    ("background-color", backgroundLayer.backgroundColor),
+                    ("background-pattern", backgroundLayer.backgroundPattern),
+                    ("background-opacity", backgroundLayer.backgroundOpacity),
+                ],
+                layout: [
+                ]
+            )
+        default:
+            return nil
+        }
+    }
+
+    /// The style-spec JSON of `expression`, a value `propertyValues(of:)`
+    /// read, in the shape Android answers: a constant as a plain value, with
+    /// a color as `rgba(r,g,b,a)` text, and anything else as an expression,
+    /// with a color as `["rgba", r, g, b, a]`. MapLibre may raise an
+    /// Objective-C exception for an expression it has no JSON for.
+    class func styleJSON(_ expression: NSExpression) -> Any? {
+        let json: Any = expression.mgl_jsonExpressionObject
+        if json is NSNull { return nil }
+        let isConstant = expression.expressionType == .constantValue
+            || expression.expressionType == .aggregate
+        return styleValue(json, isConstant: isConstant)
+    }
+
+    private class func styleValue(_ json: Any, isConstant: Bool) -> Any {
+        if let number = json as? NSNumber {
+            // A Float would read as 0.10000000149011612 rather than 0.1.
+            if String(cString: number.objCType) == "f" {
+                return Double(String(number.floatValue)) ?? number
+            }
+            return number
+        }
+        if let object = json as? [String: Any] {
+            return object.mapValues { styleValue($0, isConstant: isConstant) }
+        }
+        guard let array = json as? [Any] else { return json }
+        if let rgba = colorComponents(array) {
+            if isConstant {
+                return "rgba(" + rgba.map(cssNumber).joined(separator: ",") + ")"
+            }
+            return ["rgba", rgba[0], rgba[1], rgba[2], rgba[3]] as [Any]
+        }
+        // MapLibre wraps a constant array in a literal expression.
+        if isConstant, array.count == 2, array[0] as? String == "literal" {
+            return styleValue(array[1], isConstant: true)
+        }
+        return array.map { styleValue($0, isConstant: isConstant) }
+    }
+
+    /// The red, green, blue and alpha of a color MapLibre wrote as
+    /// `["rgb", r, g, b]` or `["rgba", r, g, b, a]`, or nil for any other
+    /// array. Like Android, the alpha keeps two decimals; the channels keep
+    /// three, which drops the noise of the Float MapLibre stores them in.
+    private class func colorComponents(_ array: [Any]) -> [Double]? {
+        guard let operation = array.first as? String,
+              operation == "rgb" && array.count == 4 || operation == "rgba" && array.count == 5
+        else { return nil }
+        var rgba: [Double] = []
+        for item in array.dropFirst() {
+            guard let number = item as? NSNumber, isNumber(number) else { return nil }
+            rgba.append(number.doubleValue)
+        }
+        let channels = rgba.prefix(3).map { ($0 * 1000).rounded() / 1000 }
+        let alpha = rgba.count == 4 ? (rgba[3] * 100).rounded() / 100 : 1
+        return channels + [alpha]
+    }
+
+    private class func cssNumber(_ value: Double) -> String {
+        return value == value.rounded() ? String(Int(value)) : String(value)
+    }
+
     /// The expression `value` sets `propertyName` to, or nil for NSNull, which
     /// resets the property, and for a value that cannot be read. MapLibre may
     /// raise an Objective-C exception for a value it rejects.

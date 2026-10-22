@@ -164,6 +164,19 @@ void main() {
       expect(properties[2]['iosExpression'], 'expression');
     });
 
+    // The Swift converter reads and writes each property under this name.
+    test('names the iOS property, renamed or not', () {
+      final properties = buildStyleProperties({
+        'layout_symbol': {
+          'icon-size': {'type': 'number', 'doc': 'size'},
+          'icon-optional': {'type': 'boolean', 'doc': 'optional'},
+        },
+      }, 'layout_symbol');
+
+      expect(properties[0]['iosName'], 'iconScale');
+      expect(properties[1]['iosName'], 'iconOptional');
+    });
+
     // The layout branch of the native templates has no wrap, so an array-typed
     // layout property has to stop generation rather than be emitted unwrapped.
     test('refuses an array-typed layout property', () {
