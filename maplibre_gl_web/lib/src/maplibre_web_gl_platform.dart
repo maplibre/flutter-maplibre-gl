@@ -1206,10 +1206,12 @@ class MapLibreMapController extends MapLibrePlatform
     if (_map.hasImage(name)) {
       _map.removeImage(name);
     }
+    // One image pixel per device pixel, as on Android and iOS: a 96 px image
+    // is 48 logical px on a 2x screen, not 96.
     await _map.addImage(
       name,
       {'width': photo.width, 'height': photo.height, 'data': data},
-      {'sdf': sdf, 'pixelRatio': 1},
+      {'sdf': sdf, 'pixelRatio': web.window.devicePixelRatio},
     );
   }
 

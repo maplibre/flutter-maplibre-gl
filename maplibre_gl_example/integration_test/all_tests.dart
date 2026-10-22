@@ -13,6 +13,7 @@
 // not included: it imports package:web, which does not compile for Android
 // or iOS, so CI runs it on its own on web. ambient_cache_size_test.dart runs
 // first, so its database reset happens before any other map uses the store.
+import 'add_image_size_test.dart' as add_image_size;
 import 'ambient_cache_size_test.dart' as ambient_cache_size;
 import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'annotations_test.dart' as annotations;
@@ -34,6 +35,7 @@ import 'web_feature_state_test.dart' as web_feature_state;
 
 void main() {
   ambient_cache_size.main();
+  add_image_size.main();
   android_feature_drag.main();
   annotations.main();
   attribution.main();
