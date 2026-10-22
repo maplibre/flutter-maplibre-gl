@@ -1,9 +1,10 @@
 // Integration tests for calls that must answer the same on Android, iOS and
 // web, errors included: feature queries and filters, image sources, layer
 // adds (missing or incompatible source, belowLayerId, filter, property
-// values), setLayerProperties, the GeoJSON source calls and their data,
-// addSource, getSourceProperties of image sources, and the calls made while
-// no style is loaded.
+// values, source layer, zoom range), setLayerProperties, the GeoJSON source
+// calls and their data, addSource, removeSource, getSourceProperties of image
+// sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, and the
+// calls made while no style is loaded.
 //
 // The calls without a style run on Android and iOS only: web cannot drop a
 // loaded style, so a web unit test covers them there. Video sources are web
@@ -935,6 +936,65 @@ void main() {
       tester,
     ) async {
       final controller = await pumpMap(tester);
+
+      await expectPlatformError(
+        tester,
+        controller.setGeoJsonSource('no-such-source', _onePoint),
+        'setGeoJsonSource on a missing source',
+        code: 'SOURCE_NOT_FOUND',
+      );
+      await expectPlatformError(
+        tester,
+        controller.setGeoJsonFeature(
+          'no-such-source',
+          _point(1, _p1, {'n': 5}),
+        ),
+        'setGeoJsonFeature on a missing source',
+        code: 'SOURCE_NOT_FOUND',
+      );
+    });
+
+    // Web answers SOURCE_NOT_FOUND for these until it makes the same change.
+    testWidgets(
+      'a source that is not GeoJSON fails with UNSUPPORTED_SOURCE_TYPE',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        final image = await _loadPng(tester, 'assets/sydney0.png');
+        await pumpUntil(
+          tester,
+          controller.addImageSource('image', image, _quad),
+          'addImageSource',
+        );
+
+        final calls = <String, Future<void> Function()>{
+          'setGeoJsonSource':
+              () => controller.setGeoJsonSource('image', _onePoint),
+          'setGeoJsonFeature':
+              () => controller.setGeoJsonFeature(
+                'image',
+                _point(1, _p1, {'n': 5}),
+              ),
+        };
+        for (final call in calls.entries) {
+          final error = await expectPlatformError(
+            tester,
+            call.value(),
+            '${call.key} on an image source',
+            code: 'UNSUPPORTED_SOURCE_TYPE',
+          );
+          expect(
+            error.message,
+            "Source 'image' is not a GeoJSON source. ${call.key} only applies "
+            'to GeoJSON sources.',
+          );
+        }
+      },
+      skip: kIsWeb,
+    );
+
+    testWidgets('the cluster calls on a source that is not GeoJSON fail with '
+        'UNSUPPORTED_SOURCE_TYPE', (tester) async {
+      final controller = await pumpMap(tester);
       final image = await _loadPng(tester, 'assets/sydney0.png');
       await pumpUntil(
         tester,
@@ -942,22 +1002,80 @@ void main() {
         'addImageSource',
       );
 
-      // A source that is not GeoJSON counts as missing, as for
-      // updateImageSource.
-      for (final sourceId in ['no-such-source', 'image']) {
-        await expectPlatformError(
+      final calls = <String, Future<Object?> Function()>{
+        'getClusterExpansionZoom':
+            () => controller.getClusterExpansionZoom('image', 1),
+        'getClusterChildren': () => controller.getClusterChildren('image', 1),
+        'getClusterLeaves': () => controller.getClusterLeaves('image', 1),
+      };
+      for (final call in calls.entries) {
+        final error = await expectPlatformError(
           tester,
-          controller.setGeoJsonSource(sourceId, _onePoint),
-          'setGeoJsonSource on $sourceId',
-          code: 'SOURCE_NOT_FOUND',
+          call.value(),
+          '${call.key} on an image source',
+          code: 'UNSUPPORTED_SOURCE_TYPE',
         );
-        await expectPlatformError(
-          tester,
-          controller.setGeoJsonFeature(sourceId, _point(1, _p1, {'n': 5})),
-          'setGeoJsonFeature on $sourceId',
-          code: 'SOURCE_NOT_FOUND',
+        expect(
+          error.message,
+          "Source 'image' is not a GeoJSON source. ${call.key} only applies "
+          'to clustered GeoJSON sources.',
         );
       }
+    });
+
+    testWidgets('a source removed and added again leaves setGeoJsonFeature '
+        'none of its old data', (tester) async {
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.addGeoJsonSource(_sourceId, _onePoint),
+        'addGeoJsonSource',
+      );
+      await pumpUntil(
+        tester,
+        controller.removeSource(_sourceId),
+        'removeSource',
+      );
+      await pumpUntil(
+        tester,
+        controller.addSource(
+          _sourceId,
+          GeojsonSourceProperties(
+            data: {
+              'type': 'FeatureCollection',
+              'features': [
+                _point(2, _p2, {'n': 2}),
+              ],
+            },
+          ),
+        ),
+        'addSource with other data',
+      );
+      // A layer, so the source has tiles to query.
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          _layerId,
+          const CircleLayerProperties(circleRadius: 6),
+        ),
+        'addCircleLayer',
+      );
+
+      // Feature 1 was in the removed source only: nothing changes.
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonFeature(_sourceId, _point(1, _p1, {'n': 5})),
+        'setGeoJsonFeature',
+      );
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      final features = await pumpUntilValue(
+        tester,
+        () => controller.querySourceFeatures(_sourceId, null, null),
+        (features) => features.isNotEmpty,
+        'querySourceFeatures',
+      );
+      expect(_ids(features), {2});
     });
 
     testWidgets('setGeoJsonFeature takes a Feature only, and replaces it in '
@@ -1679,6 +1797,514 @@ void main() {
         'queryRenderedFeatures aside after the change',
       );
     });
+  });
+
+  group('values the engine cannot take', () {
+    // Web checks these sources differently until it makes the same change.
+    testWidgets(
+      'addSource fails with INVALID_ARGUMENT for tile options MapLibre '
+      'rejects and for GeoJSON data that names no url',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        const tiles = ['https://tiles.invalid/{z}/{x}/{y}.pbf'];
+        final sources = <String, SourceProperties>{
+          'bounds of three numbers': const VectorSourceProperties(
+            tiles: tiles,
+            bounds: [-10, -10, 10],
+          ),
+          'bounds with south above north': const VectorSourceProperties(
+            tiles: tiles,
+            bounds: [-10, 20, 10, 10],
+          ),
+          'bounds with west east of east': const RasterSourceProperties(
+            tiles: [_tileUrl],
+            bounds: [20, -10, 10, 10],
+          ),
+          'minzoom above maxzoom': const RasterSourceProperties(
+            tiles: [_tileUrl],
+            minzoom: 10,
+            maxzoom: 5,
+          ),
+          'a negative maxzoom': const RasterDemSourceProperties(
+            tiles: [_tileUrl],
+            minzoom: 0,
+            maxzoom: -1,
+          ),
+          'an empty data url': const GeojsonSourceProperties(data: ''),
+          'a data url with spaces': const GeojsonSourceProperties(
+            data: 'not a url',
+          ),
+        };
+        for (final source in sources.entries) {
+          final type = source.value.toJson()['type'];
+          final error = await expectPlatformError(
+            tester,
+            controller.addSource('broken', source.value),
+            'addSource ${source.key}',
+            code: 'INVALID_ARGUMENT',
+          );
+          expect(
+            error.message,
+            "Source 'broken' cannot be built from its properties as a "
+            "'$type' source.",
+            reason: source.key,
+          );
+        }
+        expect(
+          await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+          isNot(contains('broken')),
+        );
+
+        // Latitudes beyond the poles are clamped, as MapLibre does.
+        await pumpUntil(
+          tester,
+          controller.addSource(
+            'clamped',
+            const VectorSourceProperties(
+              tiles: tiles,
+              bounds: [-180, -95, 180, 95],
+            ),
+          ),
+          'addSource with bounds beyond the poles',
+        );
+      },
+      skip: kIsWeb,
+    );
+
+    testWidgets(
+      'removeSource keeps a source a layer still uses, with its corners',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        final image = await _loadPng(tester, 'assets/sydney0.png');
+        await pumpUntil(
+          tester,
+          controller.addImageSource('image', image, _quad),
+          'addImageSource',
+        );
+        await pumpUntil(
+          tester,
+          controller.addImageLayer('image-layer', 'image'),
+          'addImageLayer',
+        );
+
+        await pumpUntil(
+          tester,
+          controller.removeSource('image'),
+          'removeSource of a source in use',
+        );
+
+        expect(
+          await pumpUntil(tester, controller.getSourceIds(), 'getSourceIds'),
+          contains('image'),
+        );
+        expect(
+          await pumpUntil(
+            tester,
+            controller.getSourceProperties('image'),
+            'getSourceProperties',
+          ),
+          {'type': 'image', 'coordinates': _corners},
+        );
+      },
+      // Web forgets what it knew about the source even when maplibre-gl-js
+      // keeps it.
+      skip: kIsWeb,
+    );
+
+    testWidgets('a hex color with a digit that is not hex fails with '
+        'INVALID_ARGUMENT, and the alpha of a long one comes last', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      await _addPoints(tester, controller);
+
+      for (final color in ['#ggg', '#ff00zz', '#12345']) {
+        final error = await expectPlatformError(
+          tester,
+          controller.addCircleLayer(
+            _sourceId,
+            'bad',
+            CircleLayerProperties(circleColor: color),
+          ),
+          'addCircleLayer with $color',
+          code: 'INVALID_ARGUMENT',
+        );
+        expect(
+          error.message,
+          startsWith(
+            "Invalid value for property 'circle-color' of layer "
+            "'bad': ",
+          ),
+          reason: color,
+        );
+      }
+
+      // #rrggbbaa and #rgba, as in CSS: half transparent red.
+      for (final color in ['#ff000080', '#f008']) {
+        await pumpUntil(
+          tester,
+          controller.setLayerProperties(
+            backgroundLayerId,
+            BackgroundLayerProperties(backgroundColor: color),
+          ),
+          'setLayerProperties with $color',
+        );
+        final layer = await pumpUntil(
+          tester,
+          controller.getLayerProperties(backgroundLayerId),
+          'getLayerProperties',
+        );
+        final read = (layer!['paint'] as Map)['background-color'];
+        if (kIsWeb) {
+          expect(read, color);
+          continue;
+        }
+        final rgba = RegExp(
+          r'^rgba\(([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\)$',
+        ).firstMatch('$read');
+        expect(rgba, isNotNull, reason: '$color read as $read');
+        final channels = [
+          for (var i = 1; i <= 4; i++) double.parse(rgba!.group(i)!),
+        ];
+        expect(channels[0], closeTo(255, 1), reason: '$color read as $read');
+        expect(channels[1], closeTo(0, 1), reason: '$color read as $read');
+        expect(channels[2], closeTo(0, 1), reason: '$color read as $read');
+        expect(channels[3], closeTo(0.5, 0.05), reason: '$color read as $read');
+      }
+    });
+
+    // maplibre-gl-js answers these with its own errors.
+    testWidgets(
+      'NaN coordinates and camera values fail with INVALID_ARGUMENT',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        final image = await _loadPng(tester, 'assets/sydney0.png');
+        const nan = double.nan;
+        const coordinates = 'Latitude and longitude must be finite numbers.';
+
+        final calls = <String, (String, Future<Object?> Function())>{
+          'moveCamera newLatLng': (
+            coordinates,
+            () => controller.moveCamera(
+              CameraUpdate.newLatLng(const LatLng(nan, 0)),
+            ),
+          ),
+          'animateCamera newCameraPosition': (
+            coordinates,
+            () => controller.animateCamera(
+              CameraUpdate.newCameraPosition(
+                const CameraPosition(target: LatLng(0, nan), zoom: 3),
+              ),
+            ),
+          ),
+          'moveCamera zoomTo': (
+            'Zoom, bearing, tilt, offsets and padding must be finite numbers.',
+            () => controller.moveCamera(CameraUpdate.zoomTo(nan)),
+          ),
+          'easeCamera tiltTo': (
+            'Zoom, bearing, tilt, offsets and padding must be finite numbers.',
+            () => controller.easeCamera(CameraUpdate.tiltTo(nan)),
+          ),
+          'addImageSource': (
+            coordinates,
+            () => controller.addImageSource(
+              'nan-image',
+              image,
+              const LatLngQuad(
+                topLeft: LatLng(2, -2),
+                topRight: LatLng(2, nan),
+                bottomRight: LatLng(-2, 2),
+                bottomLeft: LatLng(-2, -2),
+              ),
+            ),
+          ),
+          'toScreenLocation': (
+            coordinates,
+            () => controller.toScreenLocation(const LatLng(nan, 0)),
+          ),
+          'toScreenLocationBatch': (
+            coordinates,
+            () => controller.toScreenLocationBatch(const [
+              LatLng(1, 1),
+              LatLng(nan, 0),
+            ]),
+          ),
+          'setCameraBounds': (
+            coordinates,
+            () => controller.setCameraBounds(
+              west: nan,
+              north: 10,
+              south: -10,
+              east: 10,
+              padding: 0,
+            ),
+          ),
+          'toLatLng': (
+            'Screen coordinates must be finite numbers.',
+            () => controller.toLatLng(const Point(nan, 10)),
+          ),
+        };
+        for (final MapEntry(key: label, value: (message, call))
+            in calls.entries) {
+          final error = await expectPlatformError(
+            tester,
+            call(),
+            label,
+            code: 'INVALID_ARGUMENT',
+          );
+          expect(error.message, message, reason: label);
+        }
+
+        // updateImageSource checks the corners before it changes anything.
+        await pumpUntil(
+          tester,
+          controller.addImageSource('image', image, _quad),
+          'addImageSource',
+        );
+        final error = await expectPlatformError(
+          tester,
+          controller.updateImageSource(
+            'image',
+            null,
+            const LatLngQuad(
+              topLeft: LatLng(nan, -2),
+              topRight: LatLng(2, 2),
+              bottomRight: LatLng(-2, 2),
+              bottomLeft: LatLng(-2, -2),
+            ),
+          ),
+          'updateImageSource',
+          code: 'INVALID_ARGUMENT',
+        );
+        expect(error.message, coordinates);
+        expect(
+          await pumpUntil(
+            tester,
+            controller.getSourceProperties('image'),
+            'getSourceProperties',
+          ),
+          {'type': 'image', 'coordinates': _corners},
+        );
+      },
+      skip: kIsWeb,
+    );
+
+    // maplibre-gl-js takes any padding and clamps the latitudes.
+    testWidgets(
+      'setCameraBounds fails with INVALID_ARGUMENT for a padding beyond 32 '
+      'bits and a latitude beyond the poles',
+      (tester) async {
+        final controller = await pumpMap(tester);
+
+        final padding = await expectPlatformError(
+          tester,
+          controller.setCameraBounds(
+            west: -10,
+            north: 10,
+            south: -10,
+            east: 10,
+            padding: 1 << 40,
+          ),
+          'setCameraBounds with a padding beyond 32 bits',
+          code: 'INVALID_ARGUMENT',
+        );
+        expect(
+          padding.message,
+          'Padding 1099511627776 does not fit in 32 bits.',
+        );
+
+        final latitude = await expectPlatformError(
+          tester,
+          controller.setCameraBounds(
+            west: -10,
+            north: 95,
+            south: -10,
+            east: 10,
+            padding: 0,
+          ),
+          'setCameraBounds with a latitude beyond the poles',
+          code: 'INVALID_ARGUMENT',
+        );
+        expect(latitude.message, 'Latitude must be within -90 and 90.');
+      },
+      skip: kIsWeb,
+    );
+
+    testWidgets('a second takeSnapshot answers the first one too', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+
+      // The first snapshot is cancelled when the second one starts before it
+      // finishes, and fails with SNAPSHOT_ERROR; one that finished first
+      // answers its image. Either way it answers.
+      final first = controller
+          .takeSnapshot(width: 64, height: 64)
+          .then<Object>(
+            (bytes) => bytes,
+            onError: (Object error) => error,
+          );
+      final second = controller.takeSnapshot(width: 64, height: 64);
+
+      final firstAnswer = await pumpUntil(tester, first, 'first takeSnapshot');
+      if (firstAnswer is PlatformException) {
+        expect(firstAnswer.code, 'SNAPSHOT_ERROR');
+        expect(
+          firstAnswer.message,
+          'A newer takeSnapshot call cancelled this one.',
+        );
+      } else {
+        expect(firstAnswer, isA<Uint8List>());
+      }
+      expect(
+        await pumpUntil(tester, second, 'second takeSnapshot'),
+        isNotEmpty,
+      );
+    });
+  });
+
+  // Web drops these layers without an error until it makes the same change.
+  group('layer adds MapLibre would draw nothing for', () {
+    testWidgets(
+      'a layer on a vector source without a sourceLayer fails with '
+      'SOURCE_LAYER_REQUIRED',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        await pumpUntil(
+          tester,
+          controller.addSource(
+            'vector',
+            const VectorSourceProperties(
+              tiles: ['https://tiles.invalid/{z}/{x}/{y}.pbf'],
+            ),
+          ),
+          'addSource vector',
+        );
+        final layersBefore = await pumpUntil(
+          tester,
+          controller.getLayerIds(),
+          'getLayerIds',
+        );
+
+        final calls = <String, Future<void> Function()>{
+          'line-no-source-layer':
+              () => controller.addLineLayer(
+                'vector',
+                'line-no-source-layer',
+                const LineLayerProperties(),
+              ),
+          'fill-empty-source-layer':
+              () => controller.addFillLayer(
+                'vector',
+                'fill-empty-source-layer',
+                const FillLayerProperties(),
+                sourceLayer: '',
+              ),
+          'circle-no-source-layer':
+              () => controller.addLayer(
+                'vector',
+                'circle-no-source-layer',
+                const CircleLayerProperties(),
+              ),
+        };
+        for (final call in calls.entries) {
+          final error = await expectPlatformError(
+            tester,
+            call.value(),
+            call.key,
+            code: 'SOURCE_LAYER_REQUIRED',
+          );
+          expect(
+            error.message,
+            "Source 'vector' is a vector source, so layer '${call.key}' "
+            "requires a 'sourceLayer'.",
+          );
+        }
+        expect(
+          await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
+          layersBefore,
+        );
+
+        await pumpUntil(
+          tester,
+          controller.addLineLayer(
+            'vector',
+            'roads',
+            const LineLayerProperties(),
+            sourceLayer: 'roads',
+          ),
+          'addLineLayer with a sourceLayer',
+        );
+      },
+      skip: kIsWeb,
+    );
+
+    testWidgets(
+      'a zoom outside 0 to 24 fails with INVALID_ARGUMENT',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        await _addPoints(tester, controller);
+        final layersBefore = await pumpUntil(
+          tester,
+          controller.getLayerIds(),
+          'getLayerIds',
+        );
+
+        final calls = <String, Future<void> Function()>{
+          'circle-minzoom':
+              () => controller.addCircleLayer(
+                _sourceId,
+                'circle-minzoom',
+                const CircleLayerProperties(),
+                minzoom: -1,
+              ),
+          'line-maxzoom':
+              () => controller.addLineLayer(
+                _sourceId,
+                'line-maxzoom',
+                const LineLayerProperties(),
+                maxzoom: 24.5,
+              ),
+          'background-maxzoom':
+              () => controller.addBackgroundLayer(
+                'background-maxzoom',
+                const BackgroundLayerProperties(),
+                maxzoom: 30,
+              ),
+        };
+        for (final call in calls.entries) {
+          final error = await expectPlatformError(
+            tester,
+            call.value(),
+            call.key,
+            code: 'INVALID_ARGUMENT',
+          );
+          expect(
+            error.message,
+            "The minzoom and maxzoom of layer '${call.key}' must be within 0 "
+            'and 24.',
+          );
+        }
+        expect(
+          await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
+          layersBefore,
+        );
+
+        await pumpUntil(
+          tester,
+          controller.addCircleLayer(
+            _sourceId,
+            'circle-full-range',
+            const CircleLayerProperties(),
+            minzoom: 0,
+            maxzoom: 24,
+          ),
+          'addCircleLayer from 0 to 24',
+        );
+      },
+      skip: kIsWeb,
+    );
   });
 
   group('without a style', () {
