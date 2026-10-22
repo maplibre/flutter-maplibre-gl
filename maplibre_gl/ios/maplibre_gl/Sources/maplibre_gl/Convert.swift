@@ -123,6 +123,45 @@ class Convert {
         return position.flatMap { MLNOrnamentPosition(rawValue: UInt($0.rawValue)) }
     }
 
+    /// Why `update` cannot move the camera, or nil when it can: a NaN or
+    /// infinite value, which MapLibre cannot place and aborts the app on.
+    /// Android checks the same values.
+    class func nonFiniteReason(_ update: PgCameraUpdate) -> String? {
+        var coordinates: [PgLatLng] = []
+        var values: [Double] = []
+        switch update {
+        case let update as PgCameraUpdateNewCameraPosition:
+            let position = update.cameraPosition
+            coordinates = [position.target]
+            values = [position.bearing, position.tilt, position.zoom]
+        case let update as PgCameraUpdateNewLatLng:
+            coordinates = [update.latLng]
+        case let update as PgCameraUpdateNewLatLngBounds:
+            coordinates = [update.bounds.southwest, update.bounds.northeast]
+            let padding = update.padding
+            values = [padding.top, padding.left, padding.bottom, padding.right]
+        case let update as PgCameraUpdateNewLatLngZoom:
+            coordinates = [update.latLng]
+            values = [update.zoom]
+        case let update as PgCameraUpdateScrollBy:
+            values = [update.dx, update.dy]
+        case let update as PgCameraUpdateZoomBy:
+            values = [update.amount] + [update.focus?.x, update.focus?.y].compactMap { $0 }
+        case let update as PgCameraUpdateZoomTo:
+            values = [update.zoom]
+        case let update as PgCameraUpdateBearingTo:
+            values = [update.bearing]
+        case let update as PgCameraUpdateTiltTo:
+            values = [update.tilt]
+        default:
+            break
+        }
+        if !coordinates.allSatisfy(\.isFinite) {
+            return MethodCallError.nonFiniteCoordinates
+        }
+        return values.allSatisfy(\.isFinite) ? nil : MethodCallError.nonFiniteCameraValues
+    }
+
     /// The camera `update` moves to, read against the current camera of
     /// `mapView`. Nil for a kind of update this side does not know.
     class func camera(for update: PgCameraUpdate, mapView: MLNMapView) -> MLNMapCamera? {
@@ -213,6 +252,8 @@ class Convert {
             )
             return camera
         default:
+            // Pigeon decodes only the updates above, but Swift cannot tell:
+            // PgCameraUpdate is a protocol.
             return nil
         }
     }
