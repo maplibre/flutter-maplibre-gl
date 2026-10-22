@@ -41,6 +41,42 @@ PlatformException incompatibleSource(
       "of type '$sourceType'.",
 );
 
+/// The error of a layer on the vector source [sourceId] that names no source
+/// layer. maplibre-gl-js would not add it, and MapLibre Native would draw
+/// nothing.
+PlatformException sourceLayerRequired(String layerId, String sourceId) =>
+    PlatformException(
+      code: 'SOURCE_LAYER_REQUIRED',
+      message:
+          "Source '$sourceId' is a vector source, so layer '$layerId' "
+          "requires a 'sourceLayer'.",
+    );
+
+/// Whether [minzoom] and [maxzoom] of a layer, each null when not set, are
+/// within 0 and 24, the zoom levels of the style spec.
+bool isZoomInRange(double? minzoom, double? maxzoom) =>
+    (minzoom == null || (minzoom >= 0 && minzoom <= 24)) &&
+    (maxzoom == null || (maxzoom >= 0 && maxzoom <= 24));
+
+/// The error of a layer added with a zoom outside 0 to 24.
+PlatformException zoomOutOfRange(String layerId) => PlatformException(
+  code: 'INVALID_ARGUMENT',
+  message:
+      "The minzoom and maxzoom of layer '$layerId' must be within 0 and 24.",
+);
+
+/// The error of a layer maplibre-gl-js did not add, for [reason], the error
+/// it reported, if any.
+PlatformException layerNotAdded(String layerId, String? reason) =>
+    PlatformException(
+      code: 'INVALID_LAYER',
+      message:
+          reason == null
+              ? "Layer '$layerId' was not added."
+              : "Layer '$layerId' was not added: $reason",
+      details: reason,
+    );
+
 /// Whether [value], a layer property value, reads as an expression: an array
 /// that starts with a string. Every platform picks INVALID_EXPRESSION or
 /// INVALID_ARGUMENT this way, whatever reason its engine gives.

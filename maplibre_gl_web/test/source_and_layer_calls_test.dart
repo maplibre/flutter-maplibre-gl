@@ -416,4 +416,123 @@ void main() {
       expect(map.sources, isEmpty);
     });
   });
+
+  group('layer adds', () {
+    setUp(() async {
+      await controller.addSource(
+        'tiles',
+        const VectorSourceProperties(tiles: ['https://example.com/{z}']),
+      );
+      await controller.addGeoJsonSource('points', _collection([]));
+    });
+
+    test('a layer on a vector source needs a source layer', () async {
+      for (final sourceLayer in [null, '']) {
+        await expectLater(
+          controller.addFillLayer(
+            'tiles',
+            'fills',
+            const {},
+            sourceLayer: sourceLayer,
+            enableInteraction: true,
+          ),
+          throwsA(
+            platformError('SOURCE_LAYER_REQUIRED').having(
+              (e) => e.message,
+              'message',
+              "Source 'tiles' is a vector source, so layer 'fills' requires "
+                  "a 'sourceLayer'.",
+            ),
+          ),
+          reason: '$sourceLayer',
+        );
+      }
+      expect(map.layers, isEmpty);
+      expect(map.layerListeners, isEmpty);
+
+      await controller.addFillLayer(
+        'tiles',
+        'fills',
+        const {},
+        sourceLayer: 'water',
+        enableInteraction: false,
+      );
+      expect(map.layers.keys, ['fills']);
+    });
+
+    test('a zoom outside 0 to 24 fails with INVALID_ARGUMENT', () async {
+      final calls = <String, Future<void> Function()>{
+        'circles':
+            () => controller.addCircleLayer(
+              'points',
+              'circles',
+              const {},
+              minzoom: 25,
+              enableInteraction: true,
+            ),
+        'lines':
+            () => controller.addLineLayer(
+              'points',
+              'lines',
+              const {},
+              maxzoom: -1,
+              enableInteraction: false,
+            ),
+        'background':
+            () => controller.addBackgroundLayer(
+              'background',
+              const {},
+              minzoom: double.nan,
+            ),
+      };
+      for (final MapEntry(key: layerId, value: call) in calls.entries) {
+        await expectLater(
+          call(),
+          throwsA(
+            platformError('INVALID_ARGUMENT').having(
+              (e) => e.message,
+              'message',
+              "The minzoom and maxzoom of layer '$layerId' must be within 0 "
+                  'and 24.',
+            ),
+          ),
+          reason: layerId,
+        );
+      }
+      expect(map.layers, isEmpty);
+      expect(map.layerListeners, isEmpty);
+    });
+
+    test('a layer maplibre-gl-js does not add fails with INVALID_LAYER and '
+        'gets no listeners', () async {
+      map.rejectLayer = 'layers.circles: Something is wrong.';
+
+      await expectLater(
+        controller.addCircleLayer(
+          'points',
+          'circles',
+          const {},
+          enableInteraction: true,
+        ),
+        throwsA(
+          platformError('INVALID_LAYER').having(
+            (e) => e.message,
+            'message',
+            "Layer 'circles' was not added: layers.circles: Something is "
+                'wrong.',
+          ),
+        ),
+      );
+      expect(map.layerListeners, isEmpty);
+
+      map.rejectLayer = null;
+      await controller.addCircleLayer(
+        'points',
+        'circles',
+        const {},
+        enableInteraction: true,
+      );
+      expect(map.layerListeners, contains('mouseenter circles'));
+    });
+  });
 }

@@ -217,4 +217,64 @@ void main() {
       );
     });
   });
+
+  group('layer adds', () {
+    test('a layer on a vector source needs a source layer', () {
+      expect(
+        sourceLayerRequired('roads', 'tiles'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'SOURCE_LAYER_REQUIRED')
+            .having(
+              (e) => e.message,
+              'message',
+              "Source 'tiles' is a vector source, so layer 'roads' requires "
+                  "a 'sourceLayer'.",
+            ),
+      );
+    });
+
+    test('a zoom is within 0 and 24', () {
+      expect(isZoomInRange(null, null), isTrue);
+      expect(isZoomInRange(0, 24), isTrue);
+      expect(isZoomInRange(24, 0), isTrue, reason: 'each on its own');
+      for (final (min, max) in <(double?, double?)>[
+        (-1, null),
+        (null, 25),
+        (24.5, null),
+        (double.nan, null),
+        (null, double.infinity),
+      ]) {
+        expect(isZoomInRange(min, max), isFalse, reason: '[$min, $max]');
+      }
+      expect(
+        zoomOutOfRange('roads'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'INVALID_ARGUMENT')
+            .having(
+              (e) => e.message,
+              'message',
+              "The minzoom and maxzoom of layer 'roads' must be within 0 "
+                  'and 24.',
+            ),
+      );
+    });
+
+    test('a layer maplibre-gl-js did not add says why', () {
+      expect(
+        layerNotAdded('roads', 'Something is wrong.'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'INVALID_LAYER')
+            .having(
+              (e) => e.message,
+              'message',
+              "Layer 'roads' was not added: Something is wrong.",
+            )
+            .having((e) => e.details, 'details', 'Something is wrong.'),
+      );
+      expect(
+        layerNotAdded('roads', null).message,
+        "Layer 'roads' was not added.",
+      );
+    });
+  });
 }

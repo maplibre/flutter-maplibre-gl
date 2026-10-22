@@ -2482,6 +2482,10 @@ class MapLibreMapController extends MapLibrePlatform
     if (sourceType != null && !checks.canDraw(layerType, sourceType)) {
       throw checks.incompatibleSource(layerId, layerType, sourceId, sourceType);
     }
+    if (sourceType == 'vector' &&
+        (sourceLayer == null || sourceLayer.isEmpty)) {
+      throw checks.sourceLayerRequired(layerId, sourceId);
+    }
     _addValidatedLayer(
       layerId,
       layerType,
@@ -2509,7 +2513,8 @@ class MapLibreMapController extends MapLibrePlatform
   /// [source] entries. maplibre-gl-js reports an invalid filter or property
   /// only through an error event; this throws it instead, the filter first,
   /// then the property whose name comes first. A property maplibre-gl-js does
-  /// not know is dropped.
+  /// not know is dropped. A layer maplibre-gl-js did not add for any other
+  /// reason fails with `INVALID_LAYER`.
   void _addValidatedLayer(
     String layerId,
     String layerType,
@@ -2520,10 +2525,15 @@ class MapLibreMapController extends MapLibrePlatform
     double? maxzoom,
     dynamic filter,
   }) {
+    // maplibre-gl-js would not add the layer, and MapLibre Native would take
+    // any zoom.
+    if (!checks.isZoomInRange(minzoom, maxzoom)) {
+      throw checks.zoomOutOfRange(layerId);
+    }
     final before = _existingLayerId(belowLayerId);
     var kept = properties;
     // At most twice: the second time without the properties it did not know.
-    for (var attempt = 0; attempt < 2; attempt++) {
+    for (var attempt = 0; ; attempt++) {
       final layer = <String, dynamic>{
         'id': layerId,
         'type': layerType,
@@ -2545,6 +2555,7 @@ class MapLibreMapController extends MapLibrePlatform
       String? filterReason;
       checks.PropertyError? propertyError;
       final unknown = <String>{};
+      final others = <String>[];
       for (final message in errors) {
         final filterMatch = filterKey.firstMatch(message);
         if (filterMatch != null) {
@@ -2553,7 +2564,7 @@ class MapLibreMapController extends MapLibrePlatform
         }
         final error = checks.propertyError(message);
         if (error == null) {
-          web.console.error(message.toJS);
+          others.add(message);
         } else if (checks.isUnknownProperty(error.reason)) {
           web.console.warn(message.toJS);
           unknown.add(error.property);
@@ -2571,7 +2582,16 @@ class MapLibreMapController extends MapLibrePlatform
           error.reason,
         );
       }
-      if (unknown.isEmpty || _map.getLayer(layerId) != null) return;
+      if (_map.getLayer(layerId) != null) {
+        // Logged, as maplibre-gl-js does without a listener.
+        for (final message in others) {
+          web.console.error(message.toJS);
+        }
+        return;
+      }
+      if (unknown.isEmpty || attempt > 0) {
+        throw checks.layerNotAdded(layerId, others.firstOrNull);
+      }
       kept = {
         for (final entry in kept.entries)
           if (!unknown.contains(entry.key)) entry.key: entry.value,
