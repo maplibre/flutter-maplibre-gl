@@ -282,6 +282,77 @@ void main() {
       hovers.clear();
     }
   });
+
+  testWidgets('a tap on a source with generateId reports the id it '
+      'generates', (tester) async {
+    if (!kIsWeb) return;
+    final taps = <String>[];
+    final controller = await pumpMap(tester);
+    controller.onFeatureTapped.add(
+      (point, latLng, id, layerId, annotation) => taps.add(id),
+    );
+    // Features without ids: generateId numbers them by their index.
+    const places = [LatLng(5, -8), LatLng(-6, 8)];
+    await pumpUntil(
+      tester,
+      controller.addSource(
+        'generated',
+        GeojsonSourceProperties(
+          data: {
+            'type': 'FeatureCollection',
+            'features': [
+              for (final at in places)
+                {
+                  'type': 'Feature',
+                  'geometry': {
+                    'type': 'Point',
+                    'coordinates': [at.longitude, at.latitude],
+                  },
+                  'properties': <String, Object?>{},
+                },
+            ],
+          },
+          generateId: true,
+        ),
+      ),
+      'addSource',
+    );
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        'generated',
+        'generated-circle',
+        const CircleLayerProperties(circleRadius: 15),
+      ),
+      'addCircleLayer',
+    );
+    final canvas =
+        web.document.querySelector('canvas.maplibregl-canvas')!
+            as web.HTMLCanvasElement;
+    final mouse = _Mouse(canvas);
+
+    for (final (index, place) in places.indexed) {
+      final screen = await pumpUntil(
+        tester,
+        controller.toScreenLocation(place),
+        'toScreenLocation',
+      );
+      final at = Point<double>(screen.x.toDouble(), screen.y.toDouble());
+      await pumpUntilValue(
+        tester,
+        () => controller.queryRenderedFeatures(at, ['generated-circle'], null),
+        (features) => features.isNotEmpty,
+        'feature $index drawn',
+      );
+
+      mouse.down(at);
+      mouse.up(at);
+      mouse.click(at);
+      await _settle(tester);
+      expect(taps, ['$index'], reason: 'tap on feature $index');
+      taps.clear();
+    }
+  });
 }
 
 /// Lets the drag and tap callbacks reach Dart.
