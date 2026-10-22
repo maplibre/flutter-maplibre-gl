@@ -2,6 +2,7 @@ package org.maplibre.maplibregl
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -138,5 +139,22 @@ class StyleChecksTest {
         )) {
             assertFalse("$lat $lng", StyleChecks.isFinite(lat, lng))
         }
+    }
+
+    @Test
+    fun aHexColorHasThreeFourSixOrEightHexDigits() {
+        for (color in listOf("#f00", "#F00A", "#ff0000", "#ff000080", " #ff 0000 ")) {
+            assertNull(color, StyleChecks.hexColorError("circle-color", color))
+        }
+        for (color in listOf("#ggg", "#ff00zz", "#12", "#12345", "#")) {
+            assertEquals(
+                color,
+                "Could not parse color from value '$color'.",
+                StyleChecks.hexColorError("circle-color", color),
+            )
+        }
+        assertNull(StyleChecks.hexColorError("circle-color", "red"))
+        assertNull(StyleChecks.hexColorError("circle-radius", "#ggg"))
+        assertNull(StyleChecks.hexColorError("circle-color", listOf("get", "c")))
     }
 }

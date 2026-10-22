@@ -55,8 +55,11 @@ class SourcePropertyConverterTest {
     }
 
     @Test
-    fun aGeoJsonSourceWithAnEmptyUrlIsNotBuilt() {
+    fun aSourceWithAnEmptyUrlAndNoTilesIsNotBuilt() {
         assertNull(SourcePropertyConverter.buildSource("s", "geojson", mapOf("data" to "")))
+        for (type in listOf("vector", "raster", "raster-dem")) {
+            assertNull(type, SourcePropertyConverter.buildSource("s", type, mapOf("url" to "")))
+        }
     }
 
     @Test

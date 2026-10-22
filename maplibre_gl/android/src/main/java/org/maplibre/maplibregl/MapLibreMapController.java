@@ -2102,15 +2102,15 @@ final class MapLibreMapController
           // Null resets the property, which the engine always takes.
           continue;
         }
-        check.setProperties(value);
-        final String logged = errors.take();
-        if (logged != null) {
-          replyInvalidProperty(
-              layerId,
-              value.name,
-              properties.get(value.name),
-              StyleChecks.propertyReason(logged, value.name),
-              result);
+        final Object raw = properties.get(value.name);
+        String reason = StyleChecks.hexColorError(value.name, raw);
+        if (reason == null) {
+          check.setProperties(value);
+          final String logged = errors.take();
+          reason = logged == null ? null : StyleChecks.propertyReason(logged, value.name);
+        }
+        if (reason != null) {
+          replyInvalidProperty(layerId, value.name, raw, reason, result);
           return null;
         }
       }
@@ -2577,6 +2577,10 @@ final class MapLibreMapController
       MethodChannel.Result result) {
     if (rejectNonFinite(
         StyleChecks.isFinite(north, east) && StyleChecks.isFinite(south, west), result)) {
+      return;
+    }
+    if (Math.abs(north) > 90 || Math.abs(south) > 90) {
+      result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.LATITUDE_OUT_OF_RANGE, null);
       return;
     }
     if (padding < Integer.MIN_VALUE || padding > Integer.MAX_VALUE) {

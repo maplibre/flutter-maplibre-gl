@@ -250,8 +250,15 @@ class SourcePropertyConverter {
     return null;
   }
 
-  static VectorSource buildVectorSource(String id, Map<String, Object> properties) {
+  /** The url in {@code properties}, or null without one. An empty url names nothing to load. */
+  @Nullable
+  private static String url(Map<String, Object> properties) {
     final Object url = properties.get("url");
+    return url instanceof String && !((String) url).isEmpty() ? (String) url : null;
+  }
+
+  static VectorSource buildVectorSource(String id, Map<String, Object> properties) {
+    final String url = url(properties);
     if (url != null) {
       final Uri uri = Uri.parse(Convert.toString(url));
 
@@ -266,7 +273,7 @@ class SourcePropertyConverter {
   }
 
   static RasterSource buildRasterSource(String id, Map<String, Object> properties) {
-    final Object url = properties.get("url");
+    final String url = url(properties);
     final Object tileSizeObj = properties.get("tileSize");
     if (url != null) {
       final String uri = Convert.toString(url);
@@ -292,7 +299,7 @@ class SourcePropertyConverter {
   }
 
   static RasterDemSource buildRasterDemSource(String id, Map<String, Object> properties) {
-    final Object url = properties.get("url");
+    final String url = url(properties);
     if (url != null) {
       try {
         final URI uri = new URI(Convert.toString(url));

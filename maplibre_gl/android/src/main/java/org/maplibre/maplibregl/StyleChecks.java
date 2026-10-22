@@ -25,6 +25,9 @@ final class StyleChecks {
   /** The message of a coordinate that is NaN or infinite, which MapLibre cannot place. */
   static final String NON_FINITE_COORDINATES = "Latitude and longitude must be finite numbers.";
 
+  /** The message of a latitude beyond the poles. */
+  static final String LATITUDE_OUT_OF_RANGE = "Latitude must be within -90 and 90.";
+
   /** The message of a screen point that is NaN or infinite. */
   static final String NON_FINITE_SCREEN_POINT = "Screen coordinates must be finite numbers.";
 
@@ -183,6 +186,29 @@ final class StyleChecks {
   /** The code of a property value the engine rejects. */
   static String invalidPropertyCode(@Nullable Object value) {
     return isExpression(value) ? INVALID_EXPRESSION : INVALID_ARGUMENT;
+  }
+
+  /**
+   * Why {@code value} of {@code property} is not a color, or null. Only a hex color is checked: the
+   * engine reads one with digits that are not hex, such as #ggg, as black, where iOS and web reject
+   * it.
+   */
+  @Nullable
+  static String hexColorError(String property, @Nullable Object value) {
+    if (!property.endsWith("-color") || !(value instanceof String)) {
+      return null;
+    }
+    final String color = ((String) value).replace(" ", "");
+    if (!color.startsWith("#")) {
+      return null;
+    }
+    final int digits = color.length() - 1;
+    boolean valid = digits == 3 || digits == 4 || digits == 6 || digits == 8;
+    for (int i = 1; valid && i < color.length(); i++) {
+      final char c = Character.toLowerCase(color.charAt(i));
+      valid = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+    }
+    return valid ? null : "Could not parse color from value '" + value + "'.";
   }
 
   /** The message of a property value the engine rejects, with the reason it gave. */
