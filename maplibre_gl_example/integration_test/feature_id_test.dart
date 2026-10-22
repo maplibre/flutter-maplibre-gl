@@ -704,11 +704,7 @@ double _longitudeOf(List features, String name) {
   return double.negativeInfinity;
 }
 
-/// Screen units per logical pixel in queries: physical pixels on Android.
-double _queryScale(WidgetTester tester) =>
-    testPlatform == TestPlatform.android ? tester.view.devicePixelRatio : 1.0;
-
-/// The screen location of [latLng], in the units the queries take.
+/// The screen location of [latLng], in logical pixels.
 Future<Point<double>> _screen(
   WidgetTester tester,
   MapLibreMapController controller,
@@ -729,9 +725,7 @@ Future<Offset> _onScreen(
   LatLng latLng,
 ) async {
   final point = await _screen(tester, controller, latLng);
-  final scale = _queryScale(tester);
-  return tester.getTopLeft(find.byType(MapLibreMap)) +
-      Offset(point.x / scale, point.y / scale);
+  return tester.getTopLeft(find.byType(MapLibreMap)) + Offset(point.x, point.y);
 }
 
 /// A screen rectangle around every one of [_features].
@@ -769,11 +763,7 @@ Future<void> _expectGrownByState(
   // Inside the big circle only, on the side away from the other features.
   final center = await _screen(tester, controller, _features[name]!.at);
   final side = _features[name]!.at.longitude < 0 ? -1 : 1;
-  final scale = _queryScale(tester);
-  final edge = Point<double>(
-    center.x + side * 20 * scale,
-    center.y + 15 * scale,
-  );
+  final edge = Point<double>(center.x + side * 20, center.y + 15);
   Future<List> queryEdge() =>
       controller.queryRenderedFeatures(edge, [_layerId], null);
   expect(
