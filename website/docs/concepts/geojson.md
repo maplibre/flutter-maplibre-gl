@@ -103,9 +103,17 @@ Sources are added with `addGeoJsonSource` and updated with `setGeoJsonSource`
 
 On Android and iOS, adding or updating a source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, is encoded on a background isolate, so the UI is not blocked for the whole encode. Smaller payloads keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame.
 
-## `promoteId`: web-only caveat
+## Feature ids
 
-MapLibre GL JS requires features to have an integer ID for feature-state to work correctly. If your GeoJSON uses string IDs or property-based IDs, pass `promoteId`:
+A feature keeps the `id` it has in the data, number or string, on every platform: the queries and the cluster calls answer `2.5` and `"poi-12"` as they were added, and an `["id"]` filter or feature state finds the feature by that id. The tap and drag callbacks get the id as text, such as `"2"` for `2`.
+
+GeoJSON loaded from a URL or declared in the style does not pass through the plugin, so it keeps the ids MapLibre gives it: on Android and web only integer ids are sure to come back the same. Vector tile ids are always integers.
+
+Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
+
+## `promoteId`: web only
+
+`promoteId` makes a property the id of each feature:
 
 ```dart
 await controller.addGeoJsonSource(
@@ -115,9 +123,7 @@ await controller.addGeoJsonSource(
 );
 ```
 
-This parameter is only supported on web: the MapLibre Android SDK does not expose `promoteId`, and on iOS it is ignored as well. For feature state on Android, every feature must carry a top-level `id` member in the GeoJSON itself.
-
-Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
+Android and iOS ignore it: there every feature must carry a top-level `id` member in the GeoJSON itself.
 
 ## Live demo
 

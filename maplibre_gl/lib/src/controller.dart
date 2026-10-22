@@ -534,10 +534,15 @@ class MapLibreMapController extends ChangeNotifier {
   /// in https://datatracker.ietf.org/doc/html/rfc7946. A feature `id` must be
   /// a string or a number.
   ///
-  /// [promoteId] can be used on web to promote an id from properties to be the
-  /// id of the feature. This is useful because by default maplibre-gl-js does not
-  /// support string ids. On Android and iOS the parameter is ignored: there
-  /// features must carry a top-level `id` member in the GeoJSON itself.
+  /// The queries and the cluster calls answer each feature with the `id` it
+  /// has in [geojson], number or string, on every platform. GeoJSON that does
+  /// not pass through the plugin, loaded from a URL or declared in the style,
+  /// keeps the ids MapLibre gives it: on Android and web only integer ids are
+  /// sure to come back the same. Vector tile ids are always integers.
+  ///
+  /// [promoteId] makes the property of that name the id of each feature, on
+  /// web only. Android and iOS ignore it: there the GeoJSON must carry a
+  /// top-level `id`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -607,8 +612,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// since its SDK does not expose the feature state API yet.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
-  /// [featureId] The unique ID of the feature. Must be an integer or a string
-  ///   that can be cast to an integer.
+  /// [featureId] The id of the feature as text, such as `'2'` for the id 2.
   /// [state] A set of key-value pairs representing the state. Values should be
   ///   valid JSON types.
   /// [sourceLayer] Required for vector sources on every platform; GeoJSON
@@ -1943,6 +1947,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On Android and iOS a polygon is also returned for a point inside one of
   /// its holes, as MapLibre Native reports it, while taps and drags ignore
   /// it; on web the holes are left out.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> queryRenderedFeatures(
     Point<double> point,
     List<String> layerIds,
@@ -1968,6 +1974,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On Android and iOS a polygon is also returned for a box inside one of
   /// its holes, as MapLibre Native reports it, while taps and drags ignore
   /// it; on web the holes are left out.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> queryRenderedFeaturesInRect(
     Rect rect,
     List<String> layerIds,
@@ -1993,6 +2001,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// On iOS this throws a [PlatformException] with code
   /// `FEATURE_ENCODING_FAILED` if one of the features found cannot be encoded
   /// as GeoJSON, rather than answering with a list that is silently short.
+  ///
+  /// Each feature has the `id` it has in the data, see [addGeoJsonSource].
   Future<List> querySourceFeatures(
     String sourceId,
     String? sourceLayerId,
@@ -2036,7 +2046,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// [getClusterExpansionZoom].
   ///
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
-  /// the `cluster_id` property of the cluster feature.
+  /// the `cluster_id` property of the cluster feature. A child that is one of
+  /// the original points has the `id` it has in the data, see
+  /// [addGeoJsonSource].
   ///
   /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
   /// has no cluster [clusterId], or is not clustered. Cluster ids change with
@@ -2054,7 +2066,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// read a whole cluster at once, pass its `point_count` as [limit].
   ///
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
-  /// the `cluster_id` property of the cluster feature.
+  /// the `cluster_id` property of the cluster feature. Each point has the `id`
+  /// it has in the data, see [addGeoJsonSource].
   ///
   /// Throws a [PlatformException] with code `CLUSTER_NOT_FOUND` if the source
   /// has no cluster [clusterId], or is not clustered. Cluster ids change with

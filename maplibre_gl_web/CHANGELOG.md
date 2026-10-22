@@ -45,6 +45,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * `addLayer` applies `filter` to fill extrusion and heatmap layers, and `enableInteraction` to fill extrusion layers, instead of dropping them; `addHeatmapLayer` takes a `filter` too (#1088).
 * The queries throw a `PlatformException` with code `INVALID_EXPRESSION` for a filter MapLibre GL JS rejects, and `queryRenderedFeaturesInRect` filters only with an expression array, as on Android and iOS (#1119).
 * `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, `updateImageSource` moves the corners at once, and a layer added below a missing layer goes on top (#1119).
+* Feature ids come back from the queries and the cluster calls as they are in the data: `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. `["id"]` filters, feature state and the tap, drag and hover callbacks use the same ids. A source the app gives a `promoteId` keeps it (#PR).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

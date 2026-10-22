@@ -42,7 +42,7 @@ await controller.addGeoJsonSource('parcels', {
 ```
 
 !!! warning "`promoteId` is web only"
-    On web, [`promoteId`](../concepts/geojson.md#promoteid-web-only-caveat) can promote a property to be the feature ID. The Android SDK does not expose it, so on Android every feature must carry a top-level `id` member itself.
+    On web, [`promoteId`](../concepts/geojson.md#promoteid-web-only) can promote a property to be the feature ID. The Android SDK does not expose it, so on Android every feature must carry a top-level `id` member itself.
 
 ### 2. A layer whose paint reads the state
 
@@ -103,7 +103,7 @@ A `stateKey` needs the `featureId` that owns it: on Android, `stateKey` without 
 ## Gotchas
 
 - **No state is `null`**: a feature nobody touched yet has no state, so the expression returns `null`. Always give the paint a fallback, like the `false` in `["boolean", ["feature-state", "selected"], false]`.
-- **IDs are integers**: feature IDs must be integers or strings castable to integers.
+- **IDs are text**: pass the id as text, such as `'2'` for the id `2` or `'poi-12'`. Vector tile ids are always integers.
 - **Vector sources need `sourceLayer`**: pass it to all three calls when the source is a vector tile source. GeoJSON sources ignore it.
 - **Android needs a top-level `id`**: `promoteId` is web only, so on Android the ID must be in the GeoJSON itself.
 
