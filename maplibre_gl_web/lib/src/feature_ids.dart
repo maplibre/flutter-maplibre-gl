@@ -86,10 +86,9 @@ Object? plainFeatureId(Object? id) {
 }
 
 /// [source], a source as maplibre-gl-js serializes it, without the
-/// `promoteId` and the [featureIdProperty] the plugin added.
+/// [featureIdProperty] the plugin added to its features.
 Map<String, dynamic> withoutFeatureIdsInSource(Map<String, dynamic> source) {
   if (source['type'] != 'geojson') return source;
-  if (source['promoteId'] == featureIdProperty) source.remove('promoteId');
   final data = source['data'];
   if (data is Map) {
     final features = data['features'];

@@ -2015,19 +2015,40 @@ class MapLibreMapController extends MapLibrePlatform
     _ensureStyleReady();
     // Before the cache write below, so a rejected add keeps the original's data.
     _ensureNewSourceId(sourceId);
-    final source = jsifyMap({
-      'type': 'geojson',
-      'promoteId': promoteId ?? featureIdProperty,
-    });
-    source.setProperty(
-      'data'.toJS,
-      _rememberGeoJson(sourceId, geojson, keepIds: promoteId == null),
+    final (data, features) = _geoJsonData(geojson);
+    _addedFeaturesByLayer[sourceId] = features;
+    _addGeoJsonSource(
+      sourceId,
+      jsifyMap({
+        'type': 'geojson',
+        if (promoteId != null) 'promoteId': promoteId,
+      }),
+      data,
+      features,
     );
+  }
+
+  /// Adds the GeoJSON source [sourceId] with [options] and [data], whose
+  /// features are [features], and makes it keep their ids when it can.
+  /// maplibre-gl-js hands the data to its worker asynchronously, so ids copied
+  /// right after the add still go with it.
+  void _addGeoJsonSource(
+    String sourceId,
+    JSObject options,
+    JSObject data,
+    List<_SourceFeature> features,
+  ) {
+    options.setProperty('data'.toJS, data);
     (_map.jsObject as JSObject).callMethod<JSAny?>(
       'addSource'.toJS,
       sourceId.toJS,
-      source,
+      options,
     );
+    // A new source has no layer to rewrite yet.
+    final source = _jsSource(sourceId);
+    if (source != null && promoteFeatureIds(source, promote: true)) {
+      _copyFeatureIds(features);
+    }
   }
 
   /// [geojson] as a JS object, keeping its features for
@@ -2040,16 +2061,16 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> geojson, {
     required bool keepIds,
   }) {
-    final (data, features) = _geoJsonData(geojson, keepIds: keepIds);
+    final (data, features) = _geoJsonData(geojson);
+    if (keepIds) _copyFeatureIds(features);
     _addedFeaturesByLayer[sourceId] = features;
     return data;
   }
 
   /// [geojson] as a JS object, and its features. See [_rememberGeoJson].
   static (JSObject, List<_SourceFeature>) _geoJsonData(
-    Map<dynamic, dynamic> geojson, {
-    required bool keepIds,
-  }) {
+    Map<dynamic, dynamic> geojson,
+  ) {
     final data = jsifyJson(geojson)! as JSObject;
     final List<_SourceFeature> features;
     switch (jsonValueOf(geojson['type'])) {
@@ -2057,37 +2078,43 @@ class MapLibreMapController extends MapLibrePlatform
         final jsFeatures =
             data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
         final dartFeatures = jsonValueOf(geojson['features'])! as List;
-        features = [];
-        for (var i = 0; i < dartFeatures.length; i++) {
-          final id = _jsonId(dartFeatures[i]);
-          final feature = jsFeatures[i];
-          if (keepIds && id != null) copyFeatureId(feature! as JSObject);
-          features.add((id: _featureIdKey(id), feature: feature));
-        }
+        features = [
+          for (var i = 0; i < dartFeatures.length; i++)
+            (
+              id: _featureIdKey(_jsonId(dartFeatures[i])),
+              feature: jsFeatures[i],
+            ),
+        ];
       case 'Feature':
-        final id = _jsonId(geojson);
-        features = [(id: _featureIdKey(id), feature: data)];
-        if (keepIds && id != null) copyFeatureId(data);
+        features = [(id: _featureIdKey(_jsonId(geojson)), feature: data)];
       default:
         features = const [];
     }
     return (data, features);
   }
 
+  /// Copies the id of each of [features] that has one into its
+  /// [featureIdProperty].
+  static void _copyFeatureIds(List<_SourceFeature> features) {
+    for (final (:id, :feature) in features) {
+      if (id != null) copyFeatureId(feature! as JSObject);
+    }
+  }
+
   /// Makes the GeoJSON source [sourceId] take its feature ids from
   /// [featureIdProperty], for data the plugin sets, and answers whether it
-  /// does: not when the app or the style gave it a `promoteId` of its own.
-  bool _keepFeatureIds(String sourceId) => _promoteFeatureIds(sourceId, true);
+  /// does: see [promoteFeatureIds].
+  bool _keepFeatureIds(String sourceId) {
+    final source = _jsSource(sourceId);
+    return source != null && promoteFeatureIds(source, promote: true);
+  }
 
   /// Makes the GeoJSON source [sourceId] take the ids maplibre-gl-js reads,
   /// for data loaded from a URL, which has no [featureIdProperty]. A source
   /// with a `promoteId` of its own keeps it.
-  void _releaseFeatureIds(String sourceId) =>
-      _promoteFeatureIds(sourceId, false);
-
-  bool _promoteFeatureIds(String sourceId, bool promote) {
+  void _releaseFeatureIds(String sourceId) {
     final source = _jsSource(sourceId);
-    return source != null && promoteFeatureIds(source, promote: promote);
+    if (source != null) promoteFeatureIds(source, promote: false);
   }
 
   /// The id of [feature], a Feature the GeoJSON check accepted, as
@@ -2861,25 +2888,24 @@ class MapLibreMapController extends MapLibrePlatform
             "'$type' source.",
       );
     }
-    // Data the plugin sets keeps its feature ids, unless the app or the style
-    // gave the source a promoteId of its own.
-    JSObject? jsData;
-    if (type == 'geojson' && json['promoteId'] == null) {
-      final plain = jsonValueOf(data);
-      if (plain is Map) {
-        json['promoteId'] = featureIdProperty;
-        jsData = _geoJsonData(plain, keepIds: true).$1;
-        json.remove('data');
-      }
-    }
     // An object in GeoJSON data goes in as what its toJson() returns, as on
     // Android and iOS.
-    final options = jsifyJson(json)! as JSObject;
-    if (jsData != null) options.setProperty('data'.toJS, jsData);
+    final plain = type == 'geojson' ? jsonValueOf(data) : null;
+    if (plain is Map) {
+      // Data the plugin sets keeps its feature ids.
+      final (jsData, features) = _geoJsonData(plain);
+      _addGeoJsonSource(
+        sourceId,
+        jsifyJson({...json}..remove('data'))! as JSObject,
+        jsData,
+        features,
+      );
+      return;
+    }
     (_map.jsObject as JSObject).callMethod<JSAny?>(
       'addSource'.toJS,
       sourceId.toJS,
-      options,
+      jsifyJson(json),
     );
   }
 
@@ -3097,10 +3123,8 @@ class MapLibreMapController extends MapLibrePlatform
     final index = features.indexWhere((feature) => feature.id == id);
     if (index < 0) return;
     final updated = List.of(features);
-    final (feature, _) = _geoJsonData(
-      geojsonFeature,
-      keepIds: _keepFeatureIds(sourceId),
-    );
+    final (feature, replaced) = _geoJsonData(geojsonFeature);
+    if (_keepFeatureIds(sourceId)) _copyFeatureIds(replaced);
     updated[index] = (id: id, feature: feature);
     _addedFeaturesByLayer[sourceId] = updated;
     await source.setData(_featureCollection(updated));

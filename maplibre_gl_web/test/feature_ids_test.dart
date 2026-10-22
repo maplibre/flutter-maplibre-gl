@@ -231,10 +231,9 @@ void main() {
   });
 
   group('withoutFeatureIdsInSource', () {
-    test('drops the promoteId and the property the plugin added', () {
+    test('drops the property the plugin added', () {
       final source = <String, dynamic>{
         'type': 'geojson',
-        'promoteId': featureIdProperty,
         'data': {
           'type': 'FeatureCollection',
           'features': [
@@ -290,7 +289,6 @@ void main() {
       expect(
         withoutFeatureIdsInSource({
           'type': 'geojson',
-          'promoteId': featureIdProperty,
           'data': 'https://example.com/a.json',
         }),
         {'type': 'geojson', 'data': 'https://example.com/a.json'},
