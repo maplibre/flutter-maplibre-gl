@@ -2105,6 +2105,13 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// This allows you to add an image to the currently displayed style once, and from there on refer to it e.g. in the [Symbol.iconImage] anytime you add a [Symbol] later on.
   /// Set [sdf] to true if the image you add is an SDF image.
+  ///
+  /// Every platform draws one image pixel per device pixel, so the image is
+  /// its size in pixels divided by the device pixel ratio in logical pixels: a
+  /// 96 x 96 PNG is 48 x 48 on a 2x screen and 32 x 32 on a 3x one. For an icon
+  /// of a given logical size, make the image that size times
+  /// `MediaQuery.devicePixelRatioOf(context)`, or scale it with `iconSize`.
+  ///
   /// Returns after the image has successfully been added to the style.
   /// An image already added under [name] is replaced.
   /// [bytes] that cannot be decoded as an image throw a [PlatformException]

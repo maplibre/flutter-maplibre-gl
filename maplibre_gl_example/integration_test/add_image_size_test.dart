@@ -81,7 +81,7 @@ void main() {
     // Whether the icon is under the point [dx] logical px east of its center.
     // Logical px become longitude, and the platform turns that into its own
     // screen units, so the test holds whatever units toScreenLocation uses.
-    Future<bool> hits(double dx) async {
+    Future<bool> query(double dx) async {
       final degreesPerPixel = 360 / (512 * pow(2, _zoom));
       final screen = await controller.toScreenLocation(
         LatLng(_center.latitude, _center.longitude + dx * degreesPerPixel),
@@ -94,9 +94,11 @@ void main() {
       return features.isNotEmpty;
     }
 
-    await pumpUntilValue(tester, () => hits(0), (hit) => hit, 'icon drawn');
-    final east = await pumpUntil(tester, _edge(hits, 1), 'east edge');
-    final west = await pumpUntil(tester, _edge(hits, -1), 'west edge');
+    Future<bool> hits(double dx) => pumpUntil(tester, query(dx), 'query $dx');
+
+    await pumpUntilValue(tester, () => query(0), (hit) => hit, 'icon drawn');
+    final east = await _edge(hits, 1);
+    final west = await _edge(hits, -1);
 
     final ratio = tester.view.devicePixelRatio;
     expect(
