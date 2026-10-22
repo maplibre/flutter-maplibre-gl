@@ -636,19 +636,21 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<bool> editGeoJsonSource(String id, String data) async {
-    final input = (data, _marksStringIds);
-    final (json, reason) =
-        data.length > _geoJsonTextOffloadLength
-            ? await compute(_checkGeoJsonText, input)
-            : _checkGeoJsonText(input);
-    if (reason != null) throw invalidGeoJson(id, reason);
-    return _api.mapEditGeoJsonSource(id, json!);
+  Future<bool> editGeoJsonSource(String id, String data) {
+    return _writeGeoJson(id, () async {
+      final input = (data, _marksStringIds);
+      final (json, reason) =
+          data.length > _geoJsonTextOffloadLength
+              ? await compute(_checkGeoJsonText, input)
+              : _checkGeoJsonText(input);
+      if (reason != null) throw invalidGeoJson(id, reason);
+      return _api.mapEditGeoJsonSource(id, json!);
+    });
   }
 
   @override
-  Future<bool> editGeoJsonUrl(String id, String url) async {
-    return _api.mapEditGeoJsonUrl(id, url);
+  Future<bool> editGeoJsonUrl(String id, String url) {
+    return _writeGeoJson(id, () => _api.mapEditGeoJsonUrl(id, url));
   }
 
   @override
@@ -952,24 +954,26 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   /// Pending GeoJSON write per source id. See [_writeGeoJson].
-  final Map<String, Future<void>> _pendingGeoJsonWrites = {};
+  final Map<String, Future<Object?>> _pendingGeoJsonWrites = {};
 
-  /// Runs [write] after any GeoJSON write already in flight for [sourceId].
+  /// Runs [write] after any GeoJSON write already in flight for [sourceId],
+  /// and at once when there is none.
   ///
-  /// Encoding can finish asynchronously, and it takes longer the larger the
-  /// payload is. Two writes fired without `await` on the same source would
-  /// otherwise be able to reach native in reverse order, leaving the source
-  /// holding the older payload. Chaining per source id keeps native in call
-  /// order.
-  Future<void> _writeGeoJson(String sourceId, Future<void> Function() write) {
+  /// Checking and encoding can finish asynchronously, and take longer the
+  /// larger the payload is. Two writes fired without `await` on the same
+  /// source would otherwise be able to reach native in reverse order, leaving
+  /// the source holding the older data. Chaining per source id keeps native
+  /// in call order. Every call that sets the data of a GeoJSON source goes
+  /// through here.
+  Future<T> _writeGeoJson<T>(String sourceId, Future<T> Function() write) {
     final pending = _pendingGeoJsonWrites[sourceId];
     // A failed write must not block the writes queued behind it, so its error
     // is ignored for chaining purposes only. Callers still see it through the
     // future returned here.
-    final next = (pending == null
-            ? Future<void>.value()
-            : pending.then<void>((_) {}, onError: (_) {}))
-        .then((_) => write());
+    final next =
+        pending == null
+            ? write()
+            : pending.then<void>((_) {}, onError: (_) {}).then((_) => write());
     _pendingGeoJsonWrites[sourceId] = next;
     unawaited(
       next.then<void>((_) {}, onError: (_) {}).whenComplete(() {
@@ -1096,19 +1100,27 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// [geojson] with [_stringIdMarker] in the properties of the features at
   /// [indexes]: a FeatureCollection's, or 0 for a Feature. Returns [geojson]
   /// itself without any, and copies only what changes otherwise.
-  static Map _withStringIdMarkers(Map geojson, List<int> indexes) {
+  static Object? _withStringIdMarkers(Object? geojson, List<int> indexes) {
     if (indexes.isEmpty) return geojson;
-    if (geojson['type'] == 'Feature') return _withStringIdMarker(geojson);
-    final features = List<Object?>.of(geojson['features'] as List);
-    for (final index in indexes) {
-      features[index] = _withStringIdMarker(features[index]! as Map);
+    final json = jsonValueOf(geojson)! as Map;
+    if (jsonValueOf(json['type']) == 'Feature') {
+      return _withStringIdMarker(json);
     }
-    return {...geojson, 'features': features};
+    final features = List<Object?>.of(jsonValueOf(json['features'])! as List);
+    for (final index in indexes) {
+      features[index] = _withStringIdMarker(
+        jsonValueOf(features[index])! as Map,
+      );
+    }
+    return {...json, 'features': features};
   }
 
   static Map _withStringIdMarker(Map feature) => {
     ...feature,
-    'properties': {...?feature['properties'] as Map?, _stringIdMarker: true},
+    'properties': {
+      ...?jsonValueOf(feature['properties']) as Map?,
+      _stringIdMarker: true,
+    },
   };
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
@@ -1125,7 +1137,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// per ring, so a single ring of 50k points has a `coordinates` length of 1.
   /// The same applies to `MultiLineString`, `MultiPolygon` and
   /// `GeometryCollection`.
-  static bool _isLargeGeoJson(Map<String, dynamic> geojson) {
+  static bool _isLargeGeoJson(Map<dynamic, dynamic> geojson) {
     const limit = _geoJsonOffloadPositionCount;
     final features = geojson['features'];
     if (features is List) {
@@ -1325,21 +1337,71 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     _ensureDemEncodingSupported(properties);
     final json = properties.toJson();
     // A string is the url of the data.
-    final data = json['data'];
-    if (properties is GeojsonSourceProperties &&
-        data != null &&
-        data is! String) {
-      final marked = <int>[];
-      final reason = geoJsonError(
-        data,
-        onFeature: _marksStringIds ? _collectStringIds(marked) : null,
-      );
-      if (reason != null) throw invalidGeoJson(sourceId, reason);
-      if (marked.isNotEmpty) {
-        json['data'] = _withStringIdMarkers(data as Map, marked);
-      }
+    final data = jsonValueOf(json['data']);
+    if (properties is! GeojsonSourceProperties ||
+        data == null ||
+        data is String) {
+      return _api.styleAddSource(sourceId, json);
     }
-    await _api.styleAddSource(sourceId, json);
+    final input = (data, _marksStringIds);
+    return _writeGeoJson(sourceId, () async {
+      final (plain, reason) =
+          data is Map && _isLargeGeoJson(data)
+              ? await compute(_checkSourceData, input)
+              : _checkSourceData(input);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+      await _api.styleAddSource(sourceId, {...json, 'data': plain});
+    });
+  }
+
+  /// [data], the GeoJSON data of `addSource`, with what `jsonEncode` writes in
+  /// place of each object it reads through `toJson()`, or why it is not
+  /// GeoJSON. The platform channel takes plain JSON values only. With
+  /// [markStringIds], see [_withStringIdMarkers].
+  static (Object?, String?) _checkSourceData((Object?, bool) input) {
+    final (data, markStringIds) = input;
+    final marked = <int>[];
+    final reason = geoJsonError(
+      data,
+      onFeature: markStringIds ? _collectStringIds(marked) : null,
+    );
+    if (reason != null) return (null, reason);
+    return (_withStringIdMarkers(_plainJson(data), marked), null);
+  }
+
+  /// [value] with each object in it that is not a JSON value replaced by
+  /// what its `toJson()` returns, as `jsonEncode` writes it. [value] itself
+  /// when nothing is replaced. Throws a [JsonUnsupportedObjectError] for what
+  /// `jsonEncode` cannot write, a number that is not finite included.
+  static Object? _plainJson(Object? value) {
+    final json = jsonValueOf(value);
+    if (json == null || json is bool || json is String) return json;
+    if (json is num) {
+      if (json.isFinite) return json;
+      throw JsonUnsupportedObjectError(json);
+    }
+    if (json is List) {
+      List<Object?>? copy;
+      for (var i = 0; i < json.length; i++) {
+        final item = json[i];
+        final plain = _plainJson(item);
+        if (!identical(plain, item)) {
+          (copy ??= List<Object?>.of(json))[i] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    if (json is Map) {
+      Map<Object?, Object?>? copy;
+      for (final entry in json.entries) {
+        final plain = _plainJson(entry.value);
+        if (!identical(plain, entry.value)) {
+          (copy ??= Map<Object?, Object?>.of(json))[entry.key] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    throw JsonUnsupportedObjectError(value);
   }
 
   /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre

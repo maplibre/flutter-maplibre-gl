@@ -109,6 +109,12 @@ extension PgLatLng {
     var coordinate: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+
+    /// Whether both coordinates are finite. MapLibre aborts the app on a NaN
+    /// or infinite one.
+    var isFinite: Bool {
+        return latitude.isFinite && longitude.isFinite
+    }
 }
 
 extension PgLatLngBounds {
@@ -118,6 +124,11 @@ extension PgLatLngBounds {
 }
 
 extension PgLatLngQuad {
+    /// Whether the four corners are finite.
+    var isFinite: Bool {
+        return [topLeft, topRight, bottomRight, bottomLeft].allSatisfy(\.isFinite)
+    }
+
     var coordinateQuad: MLNCoordinateQuad {
         return MLNCoordinateQuad(
             topLeft: topLeft.coordinate,
@@ -167,39 +178,35 @@ extension UIImage {
 }
 
 public extension UIColor {
+    /// The color of a CSS hex color: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`,
+    /// with the alpha last, as MapLibre reads it on Android and web. Nil for
+    /// anything else, such as a digit that is not hex.
     convenience init?(hexString: String) {
-        let r, g, b, a: CGFloat
-
-        if hexString.hasPrefix("#") {
-            let start = hexString.index(hexString.startIndex, offsetBy: 1)
-            let hexColor = hexString[start...]
-
-            let scanner = Scanner(string: String(hexColor))
-            var hexNumber: UInt64 = 0
-
-            if hexColor.count == 6 {
-                if scanner.scanHexInt64(&hexNumber) {
-                    r = CGFloat((hexNumber & 0xFF0000) >> 16) / 255
-                    g = CGFloat((hexNumber & 0x00FF00) >> 8) / 255
-                    b = CGFloat(hexNumber & 0x0000FF) / 255
-                    a = 255
-
-                    self.init(red: r, green: g, blue: b, alpha: a)
-                    return
-                }
-            } else if hexColor.count == 8 {
-                if scanner.scanHexInt64(&hexNumber) {
-                    a = CGFloat((hexNumber & 0xFF00_0000) >> 24) / 255
-                    r = CGFloat((hexNumber & 0x00FF_0000) >> 16) / 255
-                    g = CGFloat((hexNumber & 0x0000_FF00) >> 8) / 255
-                    b = CGFloat(hexNumber & 0x0000_00FF) / 255
-
-                    self.init(red: r, green: g, blue: b, alpha: a)
-                    return
-                }
+        guard hexString.hasPrefix("#") else { return nil }
+        let digits = hexString.dropFirst()
+        guard [3, 4, 6, 8].contains(digits.count),
+              digits.allSatisfy({ $0.isASCII && $0.isHexDigit })
+        else {
+            return nil
+        }
+        let nibbles: [Int] = digits.compactMap { $0.hexDigitValue }
+        var channels: [CGFloat] = []
+        if nibbles.count <= 4 {
+            // A short color repeats each digit: #f80 is #ff8800.
+            for nibble in nibbles {
+                channels.append(CGFloat(nibble * 17) / 255)
+            }
+        } else {
+            for index in stride(from: 0, to: nibbles.count, by: 2) {
+                let byte: Int = nibbles[index] * 16 + nibbles[index + 1]
+                channels.append(CGFloat(byte) / 255)
             }
         }
-
-        return nil
+        self.init(
+            red: channels[0],
+            green: channels[1],
+            blue: channels[2],
+            alpha: channels.count == 4 ? channels[3] : 1
+        )
     }
 }

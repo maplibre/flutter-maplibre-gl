@@ -7,53 +7,83 @@ class LayerPropertyConverter {
 {{#layerTypes}}
     class func add{{typePascal}}Properties({{typeCamel}}Layer: MLN{{typePascal}}StyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            set{{typePascal}}Property({{typeCamel}}Layer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `{{typeCamel}}Layer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func set{{typePascal}}Property(
+        _ {{typeCamel}}Layer: MLN{{typePascal}}StyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            {{#paint_properties_ios}}
+            case "{{{value}}}":
+            {{#isIosAsCamelCase}}
+                {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
+            {{/isIosAsCamelCase}}
+            {{^isIosAsCamelCase}}
+                {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
+            {{/isIosAsCamelCase}}
+            {{/paint_properties_ios}}
+            {{#layout_properties_ios}}
+            case "{{{value}}}":
+            {{^isVisibilityProperty}}
+            {{#isIosAsCamelCase}}
+                {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
+            {{/isIosAsCamelCase}}
+            {{^isIosAsCamelCase}}
+                {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
+            {{/isIosAsCamelCase}}
+            {{/isVisibilityProperty}}
+            {{#isVisibilityProperty}}
+                if let visibilityValue = propertyValue as? String {
+                    {{typeCamel}}Layer.{{iosAsCamelCase}} = visibilityValue == "visible"
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                {{#paint_properties_ios}}
-                case "{{{value}}}":
-                {{#isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
-                {{/isIosAsCamelCase}}
-                {{^isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
-                {{/isIosAsCamelCase}}
-                {{/paint_properties_ios}}
-                {{#layout_properties_ios}}
-                case "{{{value}}}":
-                {{^isVisibilityProperty}}
-                {{#isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{iosAsCamelCase}} = {{{iosExpression}}}
-                {{/isIosAsCamelCase}}
-                {{^isIosAsCamelCase}}
-                    {{typeCamel}}Layer.{{valueAsCamelCase}} = {{{iosExpression}}}
-                {{/isIosAsCamelCase}}
-                {{/isVisibilityProperty}}
-                {{#isVisibilityProperty}}
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            {{typeCamel}}Layer.{{iosAsCamelCase}} = visibilityValue == "visible"
-                        }
-                    }
-                {{/isVisibilityProperty}}
-                {{/layout_properties_ios}}
-             
-                default:
-                    break
-            }
+            {{/isVisibilityProperty}}
+            {{/layout_properties_ios}}
+            default:
+                break
         }
     }
 
 {{/layerTypes}}
+    /// Sets `propertyName` of `layer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `value`. False for a layer
+    /// type this converter does not know.
+    @discardableResult
+    class func setProperty(
+        _ propertyName: String,
+        value: Any,
+        expression: NSExpression?,
+        on layer: MLNStyleLayer
+    ) -> Bool {
+        switch layer {
+        {{#layerTypes}}
+        case let {{typeCamel}}Layer as MLN{{typePascal}}StyleLayer:
+            set{{typePascal}}Property({{typeCamel}}Layer, propertyName, value: value, expression: expression)
+        {{/layerTypes}}
+        default:
+            return false
+        }
+        return true
+    }
+
+    /// The expression `value` sets `propertyName` to, or nil for NSNull, which
+    /// resets the property, and for a value that cannot be read. MapLibre may
+    /// raise an Objective-C exception for a value it rejects.
+    class func propertyExpression(_ propertyName: String, value: Any) -> NSExpression? {
+        return value is NSNull ? nil : interpretExpression(propertyName: propertyName, value: value)
+    }
+
     /// Wraps a single-color NSExpression in an array, as required by
     /// MapLibre 6.24.0+ for hillshadeShadowColor and hillshadeHighlightColor.
     private class func wrapColorAsArray(_ expression: NSExpression?) -> NSExpression? {
@@ -127,13 +157,14 @@ class LayerPropertyConverter {
         return matches ? nil : "Expected a \(kind), found \(describe(value))."
     }
 
-    /// Whether `css` is a color MapLibre Native reads: a CSS color name, a hex
-    /// color, or an rgb, rgba, hsl or hsla function. Like MapLibre Native, it
-    /// ignores spaces and case, and leaves the numbers to MapLibre.
+    /// Whether `css` is a color MapLibre reads: a CSS color name, a hex color
+    /// of hex digits, or an rgb, rgba, hsl or hsla function. Like MapLibre, it
+    /// ignores spaces and case, and leaves the numbers of a function to
+    /// MapLibre. MapLibre Native reads a hex color with other digits as black.
     class func isColor(_ css: String) -> Bool {
         let color = css.replacingOccurrences(of: " ", with: "").lowercased()
         if cssColorNames.contains(color) { return true }
-        if color.hasPrefix("#") { return [4, 5, 7, 9].contains(color.count) }
+        if color.hasPrefix("#") { return UIColor(hexString: color) != nil }
         guard let open = color.firstIndex(of: "("), color.hasSuffix(")") else { return false }
         let name = color[..<open]
         let count = color[color.index(after: open)..<color.index(before: color.endIndex)]

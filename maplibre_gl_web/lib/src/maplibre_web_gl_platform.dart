@@ -99,7 +99,12 @@ class MapLibreMapController extends MapLibrePlatform
   void dispose() {
     // The map goes away mid-animation: answer the waiting camera call.
     _cancelCameraAnimation();
+    _cancelSnapshot(
+      'MAP_DISPOSED',
+      'The map was disposed before the snapshot was ready.',
+    );
     _removeManualPuck();
+    _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
     }
@@ -416,6 +421,7 @@ class MapLibreMapController extends MapLibrePlatform
     CameraUpdate cameraUpdate, {
     Duration? duration,
   }) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
 
     // Use the existing CameraOptions wrapper which has proper WASM-compatible accessors
@@ -441,10 +447,19 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     _cancelCameraAnimation();
     _map.jumpTo(cameraOptions);
     return true;
+  }
+
+  /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for an update with a
+  /// value that is NaN or infinite. maplibre-gl-js would throw an error of its
+  /// own or move to a camera it cannot draw.
+  static void _checkCameraUpdate(CameraUpdate update) {
+    final error = checks.cameraUpdateError(update);
+    if (error != null) throw checks.invalidArgument(error);
   }
 
   /// Starts the camera animation [start] begins and completes when it ends:
@@ -714,6 +729,7 @@ class MapLibreMapController extends MapLibrePlatform
     Duration? duration,
     CameraAnimationInterpolation? interpolation,
   }) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     final around = cameraOptions.around;
     final bearing = cameraOptions.bearing;
@@ -743,18 +759,11 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    final Object? geojson;
-    try {
-      geojson = jsonDecode(data);
-    } on FormatException {
-      throw invalidGeoJson(id, _filterNotJson);
-    }
-    final reason = geoJsonError(geojson);
-    if (reason != null) throw invalidGeoJson(id, reason);
+    final (data: geojson, :error) = decodeGeoJson(data);
+    if (error != null) throw invalidGeoJson(id, error);
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
-    await _setSourceData(
-      source,
+    await source.setData(
       _rememberGeoJson(
         id,
         Map<String, dynamic>.from(geojson! as Map),
@@ -768,19 +777,28 @@ class MapLibreMapController extends MapLibrePlatform
   Future<bool> editGeoJsonUrl(String id, String url) async {
     final source = _editableGeoJsonSource(id);
     if (source == null) return false;
-    // setGeoJsonFeature cannot change data it does not hold.
-    _addedFeaturesByLayer.remove(id);
+    final held = _addedFeaturesByLayer[id];
     _releaseFeatureIds(id);
-    await _setSourceData(source, url.toJS);
+    await source.setData(url.toJS);
+    // setGeoJsonFeature cannot change data it does not hold. Data set while
+    // the url was handed over came after it, and stays.
+    if (identical(_addedFeaturesByLayer[id], held)) {
+      _addedFeaturesByLayer.remove(id);
+    }
     return true;
   }
 
   /// The GeoJSON source [id], or null without a style or such a source.
-  GeoJsonSource? _editableGeoJsonSource(String id) {
-    if (!_styleReady) return null;
-    final source = _map.getSource(id);
-    if (source is! GeoJsonSource || _sourceType(id) != 'geojson') return null;
-    return source;
+  GeoJsonSource? _editableGeoJsonSource(String id) =>
+      _styleReady ? _geoJsonSourceOrNull(id) : null;
+
+  /// The GeoJSON source [sourceId], or null without such a source.
+  GeoJsonSource? _geoJsonSourceOrNull(String sourceId) {
+    final source = _jsSource(sourceId);
+    if (source?.getProperty<JSString?>('type'.toJS)?.toDart != 'geojson') {
+      return null;
+    }
+    return GeoJsonSource.fromJsObject(source! as GeoJsonSourceJsImpl);
   }
 
   @override
@@ -976,18 +994,15 @@ class MapLibreMapController extends MapLibrePlatform
         thrownStack = stack;
       }
     });
-    // The key before the reason names the filter, such as
-    // "queryRenderedFeatures.filter[0]: ".
-    final key = RegExp('^${RegExp.escape(method)}\\.filter[^:]*: ');
     String? reason;
     for (final message in errors) {
-      final match = key.firstMatch(message);
-      if (match == null) {
+      final filterReason = checks.filterReason(message, method);
+      if (filterReason == null) {
         // Not about the filter: logged, as maplibre-gl-js does without a
         // listener.
         web.console.error(message.toJS);
       } else {
-        reason ??= message.substring(match.end);
+        reason ??= filterReason;
       }
     }
     if (reason != null) throw _invalidFilter(reason);
@@ -1033,20 +1048,13 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
-    final source = _map.getSource(sourceId);
-    if (source == null) {
-      throw PlatformException(
-        code: 'SOURCE_NOT_FOUND',
-        message: "Source '$sourceId' does not exist in the current style.",
-      );
-    }
-    if (source is! GeoJsonSource || !source.hasClusterInspection) {
-      throw PlatformException(
-        code: 'UNSUPPORTED_SOURCE_TYPE',
-        message:
-            "Source '$sourceId' is not a GeoJSON source. $methodName only "
-            'applies to clustered GeoJSON sources.',
-      );
+    final jsSource = _jsSource(sourceId);
+    if (jsSource == null) throw _sourceNotFound(sourceId);
+    final source = GeoJsonSource.fromJsObject(
+      jsSource as GeoJsonSourceJsImpl,
+    );
+    if (!source.hasClusterInspection) {
+      throw checks.notGeoJsonSource(sourceId, methodName, clustered: true);
     }
     return source;
   }
@@ -1211,11 +1219,14 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> removeSource(String sourceId) async {
     _ensureStyleReady();
-    if (_map.getSource(sourceId) != null) {
-      _map.removeSource(sourceId);
-      _imageSourceIds.remove(sourceId);
-      _addedFeaturesByLayer.remove(sourceId);
-    }
+    if (_map.getSource(sourceId) == null) return;
+    _map.removeSource(sourceId);
+    // maplibre-gl-js keeps a source a layer still uses, as MapLibre Native
+    // does, and only reports it in an error event. What is known about the
+    // source stays with it.
+    if (_map.getSource(sourceId) != null) return;
+    _forgetImageUrl(sourceId);
+    _addedFeaturesByLayer.remove(sourceId);
   }
 
   /// Camera position for the streaming paths (e.g. reporting the position after
@@ -1781,7 +1792,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
-    _imageSourceIds.clear();
+    _forgetImageUrls();
     _addedFeaturesByLayer.clear();
     //remove old mouseenter callbacks to avoid multicalling
     _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
@@ -1821,6 +1832,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<LatLng> toLatLng(Point<num> screenLocation) async {
+    if (!checks.isFinite(screenLocation.x, screenLocation.y)) {
+      throw checks.invalidArgument(checks.nonFiniteScreenPoint);
+    }
     final lngLat = _map.unproject(
       geo_point.Point(screenLocation.x, screenLocation.y),
     );
@@ -1829,6 +1843,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
+    _checkLatLngs([latLng]);
     final screenPosition = _map.project(
       LngLat(latLng.longitude, latLng.latitude),
     );
@@ -1841,6 +1856,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List<Point<num>>> toScreenLocationBatch(
     Iterable<LatLng> latLngs,
   ) async {
+    _checkLatLngs(latLngs);
     return latLngs
         .map((latLng) {
           final screenPosition = _map.project(
@@ -1849,6 +1865,16 @@ class MapLibreMapController extends MapLibrePlatform
           return Point(screenPosition.x.round(), screenPosition.y.round());
         })
         .toList(growable: false);
+  }
+
+  /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for a latitude or
+  /// longitude in [latLngs] that is NaN or infinite.
+  static void _checkLatLngs(Iterable<LatLng> latLngs) {
+    for (final latLng in latLngs) {
+      if (!checks.isFinite(latLng.latitude, latLng.longitude)) {
+        throw checks.invalidArgument(checks.nonFiniteCoordinates);
+      }
+    }
   }
 
   @override
@@ -1970,9 +1996,9 @@ class MapLibreMapController extends MapLibrePlatform
       () => _map.setFilter(layerId, withFeatureIds(filter)),
     );
     if (errors.isNotEmpty) {
-      // Drop the "layers.<id>.filter: " prefix GL JS puts on the reason.
+      final message = errors.first;
       throw _invalidFilter(
-        errors.first.replaceFirst(RegExp(r'^layers\.[^:]*: '), ''),
+        checks.filterReason(message, 'layers.$layerId') ?? message,
       );
     }
   }
@@ -2006,8 +2032,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// [geojson] as a JS object, keeping its features for
   /// [setFeatureForGeoJsonSource]. A lone Feature counts as a collection of
-  /// one; a geometry has no feature to replace. With [keepIds], each feature
-  /// also carries its id in [featureIdProperty].
+  /// one; a geometry has no feature to replace. An object in it goes in as
+  /// what its `toJson()` returns, as on Android and iOS. With [keepIds], each
+  /// feature also carries its id in [featureIdProperty].
   JSObject _rememberGeoJson(
     String sourceId,
     Map<String, dynamic> geojson, {
@@ -2023,23 +2050,24 @@ class MapLibreMapController extends MapLibrePlatform
     Map<dynamic, dynamic> geojson, {
     required bool keepIds,
   }) {
-    final data = jsify(geojson)! as JSObject;
+    final data = jsifyJson(geojson)! as JSObject;
     final List<_SourceFeature> features;
-    switch (geojson['type']) {
+    switch (jsonValueOf(geojson['type'])) {
       case 'FeatureCollection':
         final jsFeatures =
             data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
-        final dartFeatures = geojson['features'] as List;
+        final dartFeatures = jsonValueOf(geojson['features'])! as List;
         features = [];
         for (var i = 0; i < dartFeatures.length; i++) {
-          final id = (dartFeatures[i] as Map)['id'];
+          final id = _jsonId(dartFeatures[i]);
           final feature = jsFeatures[i];
           if (keepIds && id != null) copyFeatureId(feature! as JSObject);
           features.add((id: _featureIdKey(id), feature: feature));
         }
       case 'Feature':
-        features = [(id: _featureIdKey(geojson['id']), feature: data)];
-        if (keepIds && geojson['id'] != null) copyFeatureId(data);
+        final id = _jsonId(geojson);
+        features = [(id: _featureIdKey(id), feature: data)];
+        if (keepIds && id != null) copyFeatureId(data);
       default:
         features = const [];
     }
@@ -2062,6 +2090,11 @@ class MapLibreMapController extends MapLibrePlatform
     return source != null && promoteFeatureIds(source, promote: promote);
   }
 
+  /// The id of [feature], a Feature the GeoJSON check accepted, as
+  /// `jsonEncode` writes it.
+  static Object? _jsonId(Object? feature) =>
+      jsonValueOf((jsonValueOf(feature)! as Map)['id']);
+
   /// A feature id as text, so 2, 2.0 and "2" match, as on Android and iOS.
   static String? _featureIdKey(Object? id) {
     if (id is num && id.isFinite && id == id.roundToDouble()) {
@@ -2081,12 +2114,6 @@ class MapLibreMapController extends MapLibrePlatform
     return collection;
   }
 
-  /// Replaces the data of [source] with [data], GeoJSON or its url.
-  static Future<void> _setSourceData(GeoJsonSource source, JSAny data) =>
-      source.setData(
-        FeatureCollection.fromJsObject(data as FeatureCollectionJsImpl),
-      );
-
   @override
   Future<void> setGeoJsonSource(
     String sourceId,
@@ -2094,9 +2121,8 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final reason = geoJsonError(geojson);
     if (reason != null) throw invalidGeoJson(sourceId, reason);
-    final source = _geoJsonSource(sourceId);
-    await _setSourceData(
-      source,
+    final source = _geoJsonSource(sourceId, 'setGeoJsonSource');
+    await source.setData(
       _rememberGeoJson(
         sourceId,
         geojson,
@@ -2105,15 +2131,14 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
-  /// The GeoJSON source [sourceId]. Throws `STYLE_NOT_READY` without a style
-  /// and `SOURCE_NOT_FOUND` without such a source.
-  GeoJsonSource _geoJsonSource(String sourceId) {
+  /// The GeoJSON source [sourceId], for the Dart method [methodName]. Throws
+  /// `STYLE_NOT_READY` without a style, `SOURCE_NOT_FOUND` without the source
+  /// and `UNSUPPORTED_SOURCE_TYPE` for a source of another type.
+  GeoJsonSource _geoJsonSource(String sourceId, String methodName) {
     _ensureStyleReady();
-    final source = _map.getSource(sourceId);
-    if (source is! GeoJsonSource || _sourceType(sourceId) != 'geojson') {
-      throw _sourceNotFound(sourceId);
-    }
-    return source;
+    if (_jsSource(sourceId) == null) throw _sourceNotFound(sourceId);
+    return _geoJsonSourceOrNull(sourceId) ??
+        (throw checks.notGeoJsonSource(sourceId, methodName));
   }
 
   @override
@@ -2124,6 +2149,17 @@ class MapLibreMapController extends MapLibrePlatform
     required double east,
     required int padding,
   }) async {
+    // maplibre-gl-js takes any padding and clamps the latitudes, where
+    // Android and iOS fail.
+    if (!checks.isFinite(north, east) || !checks.isFinite(south, west)) {
+      throw checks.invalidArgument(checks.nonFiniteCoordinates);
+    }
+    if (north.abs() > 90 || south.abs() > 90) {
+      throw checks.invalidArgument(checks.latitudeOutOfRange);
+    }
+    if (padding < -0x80000000 || padding > 0x7FFFFFFF) {
+      throw checks.invalidArgument(checks.paddingOutOfRange(padding));
+    }
     _cancelCameraAnimation();
     _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)), {
       'padding': padding,
@@ -2256,31 +2292,36 @@ class MapLibreMapController extends MapLibrePlatform
         layerId.toJS,
         name.toJS,
       );
-      String? reason;
-      try {
-        final errors = _mapErrorsDuring(
-          () => map.callMethod<JSAny?>(
-            setter.toJS,
-            layerId.toJS,
-            name.toJS,
-            jsify(withFeatureIds(value)),
-          ),
-        );
-        for (final message in errors) {
-          final error = checks.propertyError(message);
-          if (error == null || checks.isUnknownProperty(error.reason)) {
-            web.console.warn(message.toJS);
-          } else {
-            reason ??= error.reason;
+      var reason = checks.hexColorError(name, value);
+      // A hex color fails with the reason Android and iOS give.
+      if (reason == null) {
+        try {
+          final errors = _mapErrorsDuring(
+            () => map.callMethod<JSAny?>(
+              setter.toJS,
+              layerId.toJS,
+              name.toJS,
+              jsify(withFeatureIds(value)),
+            ),
+          );
+          for (final message in errors) {
+            final error = checks.propertyError(message);
+            if (error == null || checks.isUnknownProperty(error.reason)) {
+              web.console.warn(message.toJS);
+            } else {
+              reason ??= error.reason;
+            }
           }
+        } catch (e) {
+          // Resetting fails only for a property maplibre-gl-js does not know.
+          if (value == null) {
+            web.console.warn(
+              'Cannot reset "$name" of layer "$layerId": $e'.toJS,
+            );
+            continue;
+          }
+          reason = e.toString();
         }
-      } catch (e) {
-        // Resetting fails only for a property maplibre-gl-js does not know.
-        if (value == null) {
-          web.console.warn('Cannot reset "$name" of layer "$layerId": $e'.toJS);
-          continue;
-        }
-        reason = e.toString();
       }
       if (reason != null) {
         for (final set in applied.reversed) {
@@ -2455,12 +2496,16 @@ class MapLibreMapController extends MapLibrePlatform
     );
   }
 
-  /// Replaces the map this controller drives with [map].
+  /// Replaces the map this controller drives with [map], whose style has
+  /// loaded when [styleReady] is true.
   ///
   /// For tests of the calls that do nothing but hand a payload to
   /// maplibre-gl-js, which can then be driven against a stand-in for it.
   @visibleForTesting
-  void debugSetMap(MapLibreMap map) => _map = map;
+  void debugSetMap(MapLibreMap map, {bool styleReady = false}) {
+    _map = map;
+    _styleReady = styleReady;
+  }
 
   @override
   Future<void> setSky(SkyProperties sky) async {
@@ -2509,6 +2554,10 @@ class MapLibreMapController extends MapLibrePlatform
     if (sourceType != null && !checks.canDraw(layerType, sourceType)) {
       throw checks.incompatibleSource(layerId, layerType, sourceId, sourceType);
     }
+    if (sourceType == 'vector' &&
+        (sourceLayer == null || sourceLayer.isEmpty)) {
+      throw checks.sourceLayerRequired(layerId, sourceId);
+    }
     _addValidatedLayer(
       layerId,
       layerType,
@@ -2535,8 +2584,10 @@ class MapLibreMapController extends MapLibrePlatform
   /// Adds the layer [layerId] of [layerType] with [properties] and the
   /// [source] entries. maplibre-gl-js reports an invalid filter or property
   /// only through an error event; this throws it instead, the filter first,
-  /// then the property whose name comes first. A property maplibre-gl-js does
-  /// not know is dropped.
+  /// then the property whose name comes first, a hex color MapLibre Native
+  /// cannot read included. A property maplibre-gl-js does not know is
+  /// dropped. A layer maplibre-gl-js did not add for any other reason fails
+  /// with `INVALID_LAYER`.
   void _addValidatedLayer(
     String layerId,
     String layerType,
@@ -2547,11 +2598,20 @@ class MapLibreMapController extends MapLibrePlatform
     double? maxzoom,
     dynamic filter,
   }) {
+    // maplibre-gl-js would not add the layer, and MapLibre Native would take
+    // any zoom.
+    if (!checks.isZoomInRange(minzoom, maxzoom)) {
+      throw checks.zoomOutOfRange(layerId);
+    }
+    final colorErrors = <String, String>{
+      for (final MapEntry(:key, :value) in properties.entries)
+        if (checks.hexColorError(key, value) case final reason?) key: reason,
+    };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
     var kept = withFeatureIds(properties)! as Map<String, dynamic>;
     // At most twice: the second time without the properties it did not know.
-    for (var attempt = 0; attempt < 2; attempt++) {
+    for (var attempt = 0; ; attempt++) {
       final layer = <String, dynamic>{
         'id': layerId,
         'type': layerType,
@@ -2569,19 +2629,19 @@ class MapLibreMapController extends MapLibrePlatform
         if (filter != null) 'filter': filter,
       };
       final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
-      final filterKey = RegExp(r'^layers\..*?\.filter[^:]*: ');
       String? filterReason;
       checks.PropertyError? propertyError;
       final unknown = <String>{};
+      final others = <String>[];
       for (final message in errors) {
-        final filterMatch = filterKey.firstMatch(message);
-        if (filterMatch != null) {
-          filterReason ??= message.substring(filterMatch.end);
+        final reason = checks.filterReason(message, 'layers.$layerId');
+        if (reason != null) {
+          filterReason ??= reason;
           continue;
         }
         final error = checks.propertyError(message);
         if (error == null) {
-          web.console.error(message.toJS);
+          others.add(message);
         } else if (checks.isUnknownProperty(error.reason)) {
           web.console.warn(message.toJS);
           unknown.add(error.property);
@@ -2591,15 +2651,33 @@ class MapLibreMapController extends MapLibrePlatform
         }
       }
       if (filterReason != null) throw _invalidFilter(filterReason);
-      if (propertyError case final error?) {
+      var rejected = propertyError;
+      for (final MapEntry(key: property, value: reason)
+          in colorErrors.entries) {
+        if (rejected == null || property.compareTo(rejected.property) <= 0) {
+          rejected = (property: property, reason: reason);
+        }
+      }
+      if (rejected case final error?) {
+        // A failed add changes nothing, whatever maplibre-gl-js took.
+        if (_map.getLayer(layerId) != null) _map.removeLayer(layerId);
         throw _invalidProperty(
           layerId,
           error.property,
-          kept[error.property],
+          properties[error.property],
           error.reason,
         );
       }
-      if (unknown.isEmpty || _map.getLayer(layerId) != null) return;
+      if (_map.getLayer(layerId) != null) {
+        // Logged, as maplibre-gl-js does without a listener.
+        for (final message in others) {
+          web.console.error(message.toJS);
+        }
+        return;
+      }
+      if (unknown.isEmpty || attempt > 0) {
+        throw checks.layerNotAdded(layerId, others.firstOrNull);
+      }
       kept = {
         for (final entry in kept.entries)
           if (!unknown.contains(entry.key)) entry.key: entry.value,
@@ -2783,11 +2861,26 @@ class MapLibreMapController extends MapLibrePlatform
             "'$type' source.",
       );
     }
-    if (type == 'geojson' && data is Map && json['promoteId'] == null) {
-      json['promoteId'] = featureIdProperty;
-      json['data'] = _geoJsonData(data, keepIds: true).$1;
+    // Data the plugin sets keeps its feature ids, unless the app or the style
+    // gave the source a promoteId of its own.
+    JSObject? jsData;
+    if (type == 'geojson' && json['promoteId'] == null) {
+      final plain = jsonValueOf(data);
+      if (plain is Map) {
+        json['promoteId'] = featureIdProperty;
+        jsData = _geoJsonData(plain, keepIds: true).$1;
+        json.remove('data');
+      }
     }
-    _map.addSource(sourceId, json);
+    // An object in GeoJSON data goes in as what its toJson() returns, as on
+    // Android and iOS.
+    final options = jsifyJson(json)! as JSObject;
+    if (jsData != null) options.setProperty('data'.toJS, jsData);
+    (_map.jsObject as JSObject).callMethod<JSAny?>(
+      'addSource'.toJS,
+      sourceId.toJS,
+      options,
+    );
   }
 
   @override
@@ -2796,19 +2889,27 @@ class MapLibreMapController extends MapLibrePlatform
     Uint8List bytes,
     LatLngQuad coordinates,
   ) async {
-    // Checked in the order of Android and iOS: the id before the bytes.
+    // Checked in the order of Android and iOS: the id, the corners, then the
+    // bytes.
     _ensureStyleReady();
     _ensureNewSourceId(imageSourceId);
-    final url = await _imageDataUrl(bytes);
+    _checkLatLngs(_cornerLatLngs(coordinates));
+    final image = await _imageBlob(bytes);
     // The decoding yields, so the style or the id may have changed since.
     _ensureStyleReady();
     _ensureNewSourceId(imageSourceId);
-    _map.addSource(imageSourceId, <String, dynamic>{
-      'type': 'image',
-      'url': url,
-      'coordinates': _corners(coordinates),
-    });
-    _imageSourceIds.add(imageSourceId);
+    final url = web.URL.createObjectURL(image);
+    try {
+      _map.addSource(imageSourceId, <String, dynamic>{
+        'type': 'image',
+        'url': url,
+        'coordinates': _corners(coordinates),
+      });
+    } catch (_) {
+      _revokeUrl(url);
+      rethrow;
+    }
+    _imageUrls[imageSourceId] = url;
   }
 
   @override
@@ -2819,8 +2920,9 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     _ensureStyleReady();
     _imageSource(imageSourceId);
+    if (coordinates != null) _checkLatLngs(_cornerLatLngs(coordinates));
     // Decoded before anything changes, so a call that fails changes nothing.
-    final url = bytes == null ? null : await _imageDataUrl(bytes);
+    final image = bytes == null ? null : await _imageBlob(bytes);
     _ensureStyleReady();
     final source = _imageSource(imageSourceId);
     // updateImage would move the corners only once the image has loaded.
@@ -2830,16 +2932,34 @@ class MapLibreMapController extends MapLibrePlatform
         jsify(_corners(coordinates)),
       );
     }
-    if (url != null) {
+    if (image != null) {
+      final url = web.URL.createObjectURL(image);
       source.callMethod<JSAny?>('updateImage'.toJS, jsify({'url': url}));
-      // Its url becomes a data URL, which getSourceProperties leaves out.
-      _imageSourceIds.add(imageSourceId);
+      _forgetImageUrl(imageSourceId);
+      _imageUrls[imageSourceId] = url;
     }
   }
 
-  /// The ids of the image sources whose image came from bytes. Their url is a
-  /// data URL, which [getSourceProperties] leaves out.
-  final _imageSourceIds = <String>{};
+  /// The object URL of the image each image source shows from bytes, by
+  /// source id. [getSourceProperties] leaves it out, as Android and iOS have
+  /// no url for such a source.
+  final _imageUrls = <String, String>{};
+
+  /// Revokes the object URL of the image the image source [sourceId] shows
+  /// from bytes, if any.
+  void _forgetImageUrl(String sourceId) {
+    final url = _imageUrls.remove(sourceId);
+    if (url != null) _revokeUrl(url);
+  }
+
+  /// Revokes the object URLs of every image source shown from bytes.
+  void _forgetImageUrls() {
+    _imageUrls.values.forEach(_revokeUrl);
+    _imageUrls.clear();
+  }
+
+  /// Frees the blob behind the object URL [url].
+  static void _revokeUrl(String url) => web.URL.revokeObjectURL(url);
 
   /// The image source [imageSourceId] as maplibre-gl-js holds it. Throws
   /// `SOURCE_NOT_FOUND` when the style has no image source with that id.
@@ -2854,27 +2974,28 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
+  /// The four corners of [quad].
+  static List<LatLng> _cornerLatLngs(LatLngQuad quad) => [
+    quad.topLeft,
+    quad.topRight,
+    quad.bottomRight,
+    quad.bottomLeft,
+  ];
+
   /// The corners of an image source in the order maplibre-gl-js takes them:
   /// top left, top right, bottom right, bottom left, each as [lng, lat].
   static List<List<double>> _corners(LatLngQuad quad) => [
-    for (final corner in [
-      quad.topLeft,
-      quad.topRight,
-      quad.bottomRight,
-      quad.bottomLeft,
-    ])
+    for (final corner in _cornerLatLngs(quad))
       [corner.longitude, corner.latitude],
   ];
 
-  /// [bytes] as a data URL an image source can load. Throws `INVALID_IMAGE`
-  /// for bytes the browser cannot decode, which maplibre-gl-js would report
-  /// only later, through an error event.
-  static Future<String> _imageDataUrl(Uint8List bytes) async {
+  /// [bytes] as a blob, for the object URL an image source loads. Throws
+  /// `INVALID_IMAGE` for bytes the browser cannot decode, which
+  /// maplibre-gl-js would report only later, through an error event.
+  static Future<web.Blob> _imageBlob(Uint8List bytes) async {
+    final blob = web.Blob([bytes.toJS].toJS);
     try {
-      final bitmap =
-          await web.window
-              .createImageBitmap(web.Blob([bytes.toJS].toJS))
-              .toDart;
+      final bitmap = await web.window.createImageBitmap(blob).toDart;
       bitmap.close();
     } catch (_) {
       throw PlatformException(
@@ -2882,9 +3003,7 @@ class MapLibreMapController extends MapLibrePlatform
         message: 'Failed to decode image bytes.',
       );
     }
-    // maplibre-gl-js reads the image from the bytes it fetches, whatever the
-    // type says.
-    return 'data:application/octet-stream;base64,${base64Encode(bytes)}';
+    return blob;
   }
 
   @override
@@ -2969,11 +3088,11 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     final reason = geoJsonFeatureError(geojsonFeature);
     if (reason != null) throw invalidGeoJsonFeature(sourceId, reason);
-    final source = _geoJsonSource(sourceId);
+    final source = _geoJsonSource(sourceId, 'setGeoJsonFeature');
     // Nothing changes in a source whose data this controller did not set.
     final features = _addedFeaturesByLayer[sourceId];
     // A feature without an id replaces nothing.
-    final id = _featureIdKey(geojsonFeature['id']);
+    final id = _featureIdKey(_jsonId(geojsonFeature));
     if (features == null || id == null) return;
     final index = features.indexWhere((feature) => feature.id == id);
     if (index < 0) return;
@@ -2984,7 +3103,7 @@ class MapLibreMapController extends MapLibrePlatform
     );
     updated[index] = (id: id, feature: feature);
     _addedFeaturesByLayer[sourceId] = updated;
-    await _setSourceData(source, _featureCollection(updated));
+    await source.setData(_featureCollection(updated));
   }
 
   @override
@@ -3198,7 +3317,7 @@ class MapLibreMapController extends MapLibrePlatform
     final source = sources[sourceId];
     if (source is! Map) return null;
     final shaped = withoutFeatureIdsInSource(_styleShaped(source));
-    if (_imageSourceIds.contains(sourceId)) shaped.remove('url');
+    if (_imageUrls.containsKey(sourceId)) shaped.remove('url');
     return shaped;
   }
 
@@ -3276,35 +3395,90 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
-    ui.Size? originalSize;
+  Future<Uint8List> takeSnapshot({int? width, int? height}) {
+    // A snapshot waits for map events that a newer call or a dispose can keep
+    // from coming. Android and iOS answer it then, so web does too.
+    _cancelSnapshot(
+      'SNAPSHOT_ERROR',
+      'A newer takeSnapshot call cancelled this one.',
+    );
+    final answer = Completer<Uint8List>();
+    _pendingSnapshot = answer;
+    bool current() => identical(_pendingSnapshot, answer);
+    unawaited(
+      _snapshot(width, height, current).then(
+        (bytes) {
+          if (!current() || bytes == null) return;
+          _pendingSnapshot = null;
+          answer.complete(bytes);
+        },
+        onError: (Object error, StackTrace stack) {
+          if (!current()) return;
+          _pendingSnapshot = null;
+          answer.completeError(error, stack);
+        },
+      ),
+    );
+    return answer.future;
+  }
 
-    // If custom size requested, temporarily resize the map
-    if (width != null && height != null) {
-      originalSize = await setWebMapToCustomSize(
-        ui.Size(width.toDouble(), height.toDouble()),
+  /// The answer of the [takeSnapshot] call still running.
+  Completer<Uint8List>? _pendingSnapshot;
+
+  /// The size of the map before a [takeSnapshot] call with a size resized it,
+  /// until the size is put back.
+  ui.Size? _sizeBeforeSnapshot;
+
+  /// Answers the [takeSnapshot] call still running, if any, with the error
+  /// [code] and [message].
+  void _cancelSnapshot(String code, String message) {
+    final pending = _pendingSnapshot;
+    _pendingSnapshot = null;
+    pending?.completeError(PlatformException(code: code, message: message));
+  }
+
+  /// The snapshot of a [takeSnapshot] call, at [width] by [height] when both
+  /// are set. Null once [current] is false: a newer call or a dispose has
+  /// answered the call, and the size is left for the newer call to put back.
+  Future<Uint8List?> _snapshot(
+    int? width,
+    int? height,
+    bool Function() current,
+  ) async {
+    final sized = width != null && height != null;
+    if (sized) {
+      final container = _map.getContainer();
+      _sizeBeforeSnapshot ??= ui.Size(
+        container.clientWidth.toDouble(),
+        container.clientHeight.toDouble(),
       );
+      await setWebMapToCustomSize(ui.Size(width.toDouble(), height.toDouble()));
+      if (!current()) return null;
       await waitUntilMapTilesAreLoaded();
+    } else if (_sizeBeforeSnapshot case final size?) {
+      // A cancelled call left the map at the size it asked for.
+      _sizeBeforeSnapshot = null;
+      await setWebMapToCustomSize(size);
     }
+    if (!current()) return null;
+    final dataUrl = await _renderedImage();
+    if (!current()) return null;
+    if (_sizeBeforeSnapshot case final size? when sized) {
+      _sizeBeforeSnapshot = null;
+      await setWebMapToCustomSize(size);
+    }
+    return base64Decode(dataUrl.split(',').last);
+  }
 
-    // "preserveDrawingBuffer" is set to false in the WebGL context to get the best possible performance,
-    // therefore we cannot directly use the canvas.toDataURL() method to get a snapshot of the map because it would be blank then.
-    // That's the reason why we trigger a repaint and then directly catch the image data from the canvas during the rendering.
+  /// The map as a PNG data URL, read while it renders: the WebGL context does
+  /// not keep its drawing buffer, for speed, so the canvas is blank between
+  /// renders.
+  Future<String> _renderedImage() {
     final completer = Completer<String>();
     _map.once('render', (_) {
-      final canvas = _map.getCanvas();
-      final dataUrl = canvas.toDataUrl('image/png');
-      completer.complete(dataUrl);
+      completer.complete(_map.getCanvas().toDataUrl('image/png'));
     });
     _map.triggerRepaint();
-    final dataUrl = await completer.future;
-
-    // Restore original size if we changed it
-    if (originalSize != null) {
-      await setWebMapToCustomSize(originalSize);
-    }
-
-    final base64Data = dataUrl.split(',').last;
-    return base64Decode(base64Data);
+    return completer.future;
   }
 }

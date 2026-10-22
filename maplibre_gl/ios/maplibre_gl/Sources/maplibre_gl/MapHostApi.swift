@@ -74,7 +74,8 @@ final class MapHostApi: MapLibreMapHostApi {
         options: PgMapOptions,
         completion: @escaping (Result<PgCameraPosition?, Error>) -> Void
     ) {
-        run(pigeonResult(completion) { $0 as? PgCameraPosition }) {
+        // Options such as the camera bounds or the zoom range move the camera.
+        run(pigeonResult(completion) { $0 as? PgCameraPosition }, kind: .movesCamera) {
             $0.mapUpdate(options: options, result: $1)
         }
     }
@@ -97,7 +98,7 @@ final class MapHostApi: MapLibreMapHostApi {
         animated: Bool,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        run(voidResult(completion)) {
+        run(voidResult(completion), kind: .movesCamera) {
             $0.mapUpdateContentInsets(insets: insets, animated: animated, result: $1)
         }
     }
@@ -219,7 +220,7 @@ final class MapHostApi: MapLibreMapHostApi {
         padding: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        run(voidResult(completion)) {
+        run(voidResult(completion), kind: .movesCamera) {
             $0.mapSetCameraBounds(
                 west: west,
                 north: north,
@@ -992,14 +993,19 @@ final class MapHostApi: MapLibreMapHostApi {
         _ call: @escaping (MapLibreMapController, @escaping FlutterResult) -> Void
     ) {
         guard let controller = controller else {
-            result(FlutterError(
-                code: "MAP_DISPOSED",
-                message: "The map was disposed before the call reached it.",
-                details: nil
-            ))
+            result(Self.disposedError())
             return
         }
-        controller.runCall(kind) { call($0, result) }
+        controller.runCall(kind, result: result) { call($0, result) }
+    }
+
+    /// The error of a call the map was disposed before it ran.
+    static func disposedError() -> FlutterError {
+        return FlutterError(
+            code: "MAP_DISPOSED",
+            message: "The map was disposed before the call reached it.",
+            details: nil
+        )
     }
 }
 

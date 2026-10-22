@@ -51,6 +51,48 @@ internal object PigeonConvert {
             .zoom(position.zoom)
             .build()
 
+    /** Whether both coordinates of [latLng] are finite. */
+    @JvmStatic
+    fun isFinite(latLng: PgLatLng) = StyleChecks.isFinite(latLng.latitude, latLng.longitude)
+
+    /** Whether the four corners of [quad] are finite. */
+    @JvmStatic
+    fun isFinite(quad: PgLatLngQuad) =
+        listOf(quad.topLeft, quad.topRight, quad.bottomRight, quad.bottomLeft).all(::isFinite)
+
+    /**
+     * Why [update] cannot move the camera, or null when it can: a NaN or infinite value, which
+     * MapLibre cannot place and may crash on. iOS checks the same values.
+     */
+    @JvmStatic
+    fun nonFiniteReason(update: PgCameraUpdate): String? {
+        val coordinates = when (update) {
+            is PgCameraUpdateNewCameraPosition -> listOf(update.cameraPosition.target)
+            is PgCameraUpdateNewLatLng -> listOf(update.latLng)
+            is PgCameraUpdateNewLatLngBounds -> listOf(update.bounds.southwest, update.bounds.northeast)
+            is PgCameraUpdateNewLatLngZoom -> listOf(update.latLng)
+            else -> emptyList()
+        }
+        if (!coordinates.all(::isFinite)) {
+            return StyleChecks.NON_FINITE_COORDINATES
+        }
+        val values = when (update) {
+            is PgCameraUpdateNewCameraPosition ->
+                update.cameraPosition.let { listOf(it.bearing, it.tilt, it.zoom) }
+            is PgCameraUpdateNewLatLngBounds ->
+                update.padding.let { listOf(it.top, it.left, it.bottom, it.right) }
+            is PgCameraUpdateNewLatLngZoom -> listOf(update.zoom)
+            is PgCameraUpdateScrollBy -> listOf(update.dx, update.dy)
+            is PgCameraUpdateZoomBy -> listOfNotNull(update.amount, update.focus?.x, update.focus?.y)
+            is PgCameraUpdateZoomTo -> listOf(update.zoom)
+            is PgCameraUpdateBearingTo -> listOf(update.bearing)
+            is PgCameraUpdateTiltTo -> listOf(update.tilt)
+            is PgCameraUpdateZoomIn, is PgCameraUpdateZoomOut, is PgCameraUpdateNewLatLng ->
+                emptyList()
+        }
+        return if (values.all { it.isFinite() }) null else StyleChecks.NON_FINITE_CAMERA_VALUES
+    }
+
     /**
      * Converts [update] into a [CameraUpdate]. Only scrollBy, zoomBy with a focus and
      * newLatLngBounds read the current camera of [map].

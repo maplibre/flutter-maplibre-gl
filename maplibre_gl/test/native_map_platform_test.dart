@@ -707,6 +707,148 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
+    // A small edit would otherwise reach native before the large write made
+    // ahead of it, and be overwritten by it.
+    test('editGeoJsonSource and editGeoJsonUrl keep their place among the '
+        'writes to a source', () async {
+      api.replies['mapEditGeoJsonSource'] = true;
+      api.replies['mapEditGeoJsonUrl'] = true;
+      final big = line(40000);
+      final small = jsonEncode(line(1));
+
+      final answers = await Future.wait([
+        platform.addGeoJsonSource('source', big),
+        platform.editGeoJsonSource('source', small),
+        platform.editGeoJsonUrl('source', 'https://example.com/a.json'),
+      ]);
+
+      expect(answers.skip(1), [true, true]);
+      expect(api.calls, [
+        ['sourceAddGeoJson', 'source', jsonEncode(big)],
+        ['mapEditGeoJsonSource', 'source', small],
+        ['mapEditGeoJsonUrl', 'source', 'https://example.com/a.json'],
+      ]);
+    });
+
+    test('a large editGeoJsonSource text reaches native before a later '
+        'write', () async {
+      api.replies['mapEditGeoJsonSource'] = true;
+      final big = jsonEncode(line(40000));
+      final feature = {
+        'type': 'Feature',
+        'id': 1,
+        'properties': <String, dynamic>{},
+        'geometry': null,
+      };
+
+      await Future.wait([
+        platform.editGeoJsonSource('source', big),
+        platform.setFeatureForGeoJsonSource('source', feature),
+      ]);
+
+      expect(api.calls, [
+        ['mapEditGeoJsonSource', 'source', big],
+        ['sourceSetFeature', 'source', jsonEncode(feature)],
+      ]);
+    });
+
+    test('a large addSource is checked on another isolate and keeps its '
+        'place among the writes to a source', () async {
+      final big = line(40000);
+      final small = line(1);
+
+      await Future.wait([
+        platform.addSource('source', GeojsonSourceProperties(data: big)),
+        platform.setGeoJsonSource('source', small),
+      ]);
+
+      expect(api.calls.map((call) => call.take(2)), [
+        ['styleAddSource', 'source'],
+        ['sourceSetGeoJson', 'source'],
+      ]);
+      expect((api.calls.first[2]! as Map)['data'], big);
+
+      api.calls.clear();
+      ((big['features'] as List).single as Map)['properties'] = 'none';
+      await expectLater(
+        platform.addSource('other', GeojsonSourceProperties(data: big)),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'INVALID_GEOJSON')
+              .having(
+                (e) => e.details,
+                'details',
+                'Feature 0: The "properties" of a Feature must be an object '
+                    'or null.',
+              ),
+        ),
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    // jsonEncode writes app models and the position classes of GeoJSON
+    // libraries through their toJson(), as it always has.
+    test('objects with toJson() go in as jsonEncode writes them', () async {
+      final feature = {
+        'type': 'Feature',
+        'id': 1,
+        'geometry': const _Geometry('LineString', [
+          _Position(1, 2),
+          _Position(3, 4),
+        ]),
+        'properties': <String, dynamic>{},
+      };
+      final collection = {
+        'type': 'FeatureCollection',
+        'features': [feature],
+      };
+
+      await platform.addGeoJsonSource('source', collection);
+      await platform.setGeoJsonSource('source', collection);
+      await platform.setFeatureForGeoJsonSource('source', feature);
+      await platform.addSource(
+        'other',
+        GeojsonSourceProperties(data: collection),
+      );
+
+      expect(api.calls.take(3), [
+        ['sourceAddGeoJson', 'source', jsonEncode(collection)],
+        ['sourceSetGeoJson', 'source', jsonEncode(collection)],
+        ['sourceSetFeature', 'source', jsonEncode(feature)],
+      ]);
+      expect(api.calls.last.take(2), ['styleAddSource', 'other']);
+      expect(
+        (api.calls.last[2]! as Map)['data'],
+        jsonDecode(jsonEncode(collection)),
+      );
+      // The platform channel takes what addSource hands it.
+      expect(
+        () => MapLibreMapHostApi.pigeonChannelCodec.encodeMessage(
+          api.calls.last,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('a value jsonEncode cannot write fails every GeoJSON write the '
+        'same way', () async {
+      final feature = {
+        'type': 'Feature',
+        'geometry': null,
+        'properties': {'when': DateTime(2020)},
+      };
+
+      await expectLater(
+        platform.addGeoJsonSource('source', feature),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      await expectLater(
+        platform.addSource('source', GeojsonSourceProperties(data: feature)),
+        throwsA(isA<JsonUnsupportedObjectError>()),
+      );
+      expect(api.calls, isEmpty);
+    });
+
     test('a url as the data of addSource is not checked', () async {
       await platform.addSource(
         'source',
@@ -2577,6 +2719,28 @@ void main() {
 ///
 /// Every method of the generated client is overridden. One that was not would
 /// send on a channel nothing listens to, and fail with a channel-error.
+/// A position class of a GeoJSON library: `jsonEncode` writes it as the list
+/// its `toJson()` returns.
+class _Position {
+  const _Position(this.longitude, this.latitude);
+
+  final num longitude;
+  final num latitude;
+
+  List<num> toJson() => [longitude, latitude];
+}
+
+/// A geometry class of an app model, written as the map its `toJson()`
+/// returns.
+class _Geometry {
+  const _Geometry(this.type, this.coordinates);
+
+  final String type;
+  final Object? coordinates;
+
+  Map<String, Object?> toJson() => {'type': type, 'coordinates': coordinates};
+}
+
 class _FakeMapHostApi extends MapLibreMapHostApi {
   _FakeMapHostApi() : super(messageChannelSuffix: 'not-overridden');
 

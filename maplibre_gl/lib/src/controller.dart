@@ -110,9 +110,13 @@ typedef OnMapIdleCallback = void Function();
 /// * `SOURCE_NOT_FOUND`, `LAYER_NOT_FOUND_ERROR`: no source or layer has that
 ///   id.
 /// * `SOURCE_ALREADY_EXISTS`, `LAYER_ALREADY_EXISTS`: the id is in use.
-/// * `UNSUPPORTED_SOURCE_TYPE`: the layer cannot draw that type of source.
+/// * `UNSUPPORTED_SOURCE_TYPE`: the layer cannot draw that type of source, or
+///   the call takes a GeoJSON source and gets another type.
+/// * `SOURCE_LAYER_REQUIRED`: a layer on a vector source names no source
+///   layer.
 /// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression.
-/// * `INVALID_ARGUMENT`: a property value has the wrong kind.
+/// * `INVALID_ARGUMENT`: a property value has the wrong kind, a layer zoom is
+///   outside 0 to 24, or a source cannot be built from its properties.
 /// * `INVALID_GEOJSON`: the data is not valid GeoJSON.
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
@@ -509,7 +513,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
-  /// another camera call, a gesture or the map being disposed.
+  /// another camera call, a gesture or the map being disposed. An update with
+  /// a value that is NaN or infinite fails with a [PlatformException] with
+  /// code `INVALID_ARGUMENT`.
   Future<bool?> animateCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -522,8 +528,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes with true once the camera has moved, on
   /// every platform. A move is instant, so unlike [animateCamera] nothing can
-  /// cut it short. On Android and iOS an update that cannot be read fails
-  /// with a [PlatformException] with code `INVALID_ARGUMENT`.
+  /// cut it short. An update with a value that is NaN or infinite fails with
+  /// a [PlatformException] with code `INVALID_ARGUMENT`, and so does one
+  /// Android or iOS cannot read.
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
     return _maplibrePlatform.moveCamera(cameraUpdate);
   }
@@ -569,8 +576,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// platform side.
   ///
   /// Throws a [PlatformException] with code `INVALID_GEOJSON`,
-  /// `SOURCE_NOT_FOUND` (also for a source that is not GeoJSON) or
-  /// `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// `SOURCE_NOT_FOUND`, `UNSUPPORTED_SOURCE_TYPE` for a source that is not
+  /// GeoJSON, or `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> setGeoJsonSource(
     String sourceId,
     Map<String, dynamic> geojson,
@@ -584,14 +591,15 @@ class MapLibreMapController extends ChangeNotifier {
   /// [geojsonFeature] is a GeoJSON Feature, as specified in
   /// https://datatracker.ietf.org/doc/html/rfc7946#section-3.2. Nothing
   /// changes when the data of the source was not set with [addGeoJsonSource],
-  /// [setGeoJsonSource] or [editGeoJsonSource], or does not hold that id.
+  /// [setGeoJsonSource] or [editGeoJsonSource], or does not hold that id. A
+  /// source loading its data from [editGeoJsonUrl] has none to change.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   ///
   /// Throws a [PlatformException] with code `INVALID_GEOJSON`,
-  /// `SOURCE_NOT_FOUND` (also for a source that is not GeoJSON) or
-  /// `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// `SOURCE_NOT_FOUND`, `UNSUPPORTED_SOURCE_TYPE` for a source that is not
+  /// GeoJSON, or `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> setGeoJsonFeature(
     String sourceId,
     Map<String, dynamic> geojsonFeature,
@@ -721,8 +729,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addSymbolLayer(
     String sourceId,
@@ -770,8 +780,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addLineLayer(
     String sourceId,
@@ -843,8 +855,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillLayer(
     String sourceId,
@@ -892,8 +906,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillExtrusionLayer(
     String sourceId,
@@ -941,8 +957,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addCircleLayer(
     String sourceId,
@@ -1148,8 +1166,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// [expressions]: https://maplibre.org/maplibre-style-spec/expressions/
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is a GeoJSON or vector source, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT` or
+  /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
+  /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
+  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addHeatmapLayer(
     String sourceId,
@@ -1367,7 +1387,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
-  /// another camera call, a gesture or the map being disposed.
+  /// another camera call, a gesture or the map being disposed. An update with
+  /// a value that is NaN or infinite fails with a [PlatformException] with
+  /// code `INVALID_ARGUMENT`.
   Future<bool> easeCamera(
     CameraUpdate cameraUpdate, {
     Duration? duration,
@@ -2182,7 +2204,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Adds an image source to the style currently displayed in the map, so that it can later be referred to by the provided id.
   ///
   /// Throws a [PlatformException] with code `INVALID_IMAGE` if [bytes] are not
-  /// an image, or `SOURCE_ALREADY_EXISTS` or `STYLE_NOT_READY` (see
+  /// an image, `INVALID_ARGUMENT` for a corner that is NaN or infinite, or
+  /// `SOURCE_ALREADY_EXISTS` or `STYLE_NOT_READY` (see
   /// [MapLibreMapController]).
   Future<void> addImageSource(
     String imageSourceId,
@@ -2195,8 +2218,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// Update the image and/or coordinates of an image source.
   ///
   /// Throws a [PlatformException] with code `INVALID_IMAGE` if [bytes] are not
-  /// an image, `SOURCE_NOT_FOUND` (also for a source that is not an image
-  /// source) or `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// an image, `INVALID_ARGUMENT` for a corner that is NaN or infinite,
+  /// `SOURCE_NOT_FOUND` (also for a source that is not an image source) or
+  /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> updateImageSource(
     String imageSourceId,
     Uint8List? bytes,
@@ -2211,9 +2235,9 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Removes previously added source by id
   ///
-  /// Removing a source the style does not hold does nothing. Throws a
-  /// [PlatformException] with code `STYLE_NOT_READY` before the style has
-  /// loaded.
+  /// Removing a source the style does not hold does nothing, and a source a
+  /// layer still uses stays. Throws a [PlatformException] with code
+  /// `STYLE_NOT_READY` before the style has loaded.
   Future<void> removeSource(String sourceId) {
     return _maplibrePlatform.removeSource(sourceId);
   }
@@ -2221,7 +2245,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Adds an image layer to the map's style at render time.
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [imageSourceId] is an image or raster source, or `LAYER_ALREADY_EXISTS`,
+  /// [imageSourceId] is an image or raster source, `INVALID_ARGUMENT` for a
+  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
   /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addImageLayer(
     String layerId,
@@ -2238,7 +2263,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// a layer, it goes on top.
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
-  /// [sourceId] is an image or raster source, or `LAYER_ALREADY_EXISTS`,
+  /// [sourceId] is an image or raster source, `INVALID_ARGUMENT` for a
+  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
   /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addImageLayerBelow(
     String layerId,
@@ -2320,15 +2346,25 @@ class MapLibreMapController extends ChangeNotifier {
   /// You therefore might want to round them appropriately, depending on your use case.
   ///
   /// Returns null if [latLng] is not currently visible on the map.
+  ///
+  /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a
+  /// latitude or longitude that is NaN or infinite.
   Future<Point> toScreenLocation(LatLng latLng) async {
     return _maplibrePlatform.toScreenLocation(latLng);
   }
 
+  /// The screen points of [latLngs], as [toScreenLocation] returns each.
+  ///
+  /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a
+  /// latitude or longitude that is NaN or infinite.
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
     return _maplibrePlatform.toScreenLocationBatch(latLngs);
   }
 
   /// Returns the geographic location (as [LatLng]) that corresponds to a point on the screen. The screen location is specified in screen pixels (not display pixels) relative to the top left of the map (not the top left of the whole screen).
+  ///
+  /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a screen
+  /// coordinate that is NaN or infinite.
   Future<LatLng> toLatLng(Point screenLocation) async {
     return _maplibrePlatform.toLatLng(screenLocation);
   }
@@ -2345,10 +2381,17 @@ class MapLibreMapController extends ChangeNotifier {
   /// bytes use [addImageSource].
   ///
   /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for properties
-  /// no source can be built from (a tiled source with neither url nor tiles,
-  /// a GeoJSON source without data, an image source without a url or four
-  /// corners), or `INVALID_GEOJSON`, `SOURCE_ALREADY_EXISTS` or
-  /// `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// no source can be built from, or `INVALID_GEOJSON`,
+  /// `SOURCE_ALREADY_EXISTS` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]). These cannot be built from:
+  ///
+  /// * a tiled source with neither a url nor tiles (an empty url counts as
+  ///   none), or tiles with `bounds` that are not four finite numbers, west
+  ///   not beyond east and south not above north once clamped to the poles,
+  ///   or a `minzoom` or `maxzoom` outside 0 to 255 or in the wrong order;
+  /// * a GeoJSON source without data, or with a url that is empty or holds a
+  ///   space or another character a url cannot;
+  /// * an image source without a url or four corners.
   ///
   /// **Platform support**: [VideoSourceProperties] is web only. Android and
   /// iOS throw `UNSUPPORTED_SOURCE_TYPE`.
@@ -2360,6 +2403,10 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Also consider using [animateCamera] or [moveCamera], which allow you to set camera bounds (with different padding values per side)
   /// as well as other camera properties.
+  ///
+  /// Throws a [PlatformException] with code `INVALID_ARGUMENT` for a
+  /// coordinate that is NaN or infinite, a latitude beyond the poles, or a
+  /// [padding] that does not fit in 32 bits.
   Future setCameraBounds({
     required double west,
     required double north,
@@ -2766,6 +2813,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// size (in logical pixels) using an offscreen renderer while preserving the
   /// current camera position and style. When omitted the snapshot matches the
   /// current map view size.
+  ///
+  /// A newer call cancels one still running, which then fails with a
+  /// [PlatformException] with code `SNAPSHOT_ERROR`. A snapshot the map is
+  /// disposed before fails with `MAP_DISPOSED`.
   Future<Uint8List> takeSnapshot({int? width, int? height}) {
     return _maplibrePlatform.takeSnapshot(width: width, height: height);
   }
