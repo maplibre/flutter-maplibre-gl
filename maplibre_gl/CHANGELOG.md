@@ -66,7 +66,7 @@
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web can play video sources (#1119).
 * **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
-* **Web**: `addImage` draws one image pixel per device pixel, as Android and iOS do. A 96 px PNG is 48 logical pixels on a 2x screen instead of 96, and sharp instead of upscaled, so icons are as large as in the Android and iOS apps and smaller than before on high-density screens. Make the image larger, or raise `iconSize`, to keep the old size (#PRNUM).
+* **Web**: `addImage`, including the icons `iconImage` loads from assets, draws one image pixel per device pixel, as Android and iOS do. A 96 px PNG is 48 logical pixels on a 2x screen instead of 96, and sharp instead of upscaled, so icons are as large as in the Android and iOS apps and smaller than before on high-density screens. Make the image larger, or raise `iconSize`, to keep the old size (#PRNUM).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
