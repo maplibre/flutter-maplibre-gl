@@ -773,10 +773,6 @@ void main() {
       },
     );
 
-    // Android gives no promise for a move that goes nowhere, so this runs on
-    // iOS and web only.
-    final skipAndroid = testPlatform == TestPlatform.android;
-
     testWidgets(
       'an animateCamera to where the camera already is completes with true',
       (tester) async {
@@ -794,7 +790,6 @@ void main() {
 
         expect(result, isTrue);
       },
-      skip: skipAndroid,
     );
 
     testWidgets('easeCamera completes once the camera is on target', (
