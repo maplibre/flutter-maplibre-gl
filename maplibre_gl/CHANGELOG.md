@@ -75,7 +75,7 @@
 * **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
 * **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. An app that wrote `#aarrggbb` for iOS gets other colors: move the alpha to the end. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
 * **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web, instead of throwing `LAYER_NOT_FOUND_ERROR` (#1123).
-* An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#PRNUM).
+* An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#1131).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
