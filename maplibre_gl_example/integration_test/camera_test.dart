@@ -944,7 +944,7 @@ void main() {
         expect(position.zoom.isFinite, isTrue, reason: '$position');
       }
       // The last onCameraMove is where the camera stopped, as onCameraIdle
-      // reports it. iOS used to stop one frame short (#1122).
+      // reports it, not the frame before (#1122).
       final stopped = controller.cameraPosition!;
       _expectLatLng(moves.last.target, stopped.target, 1e-9, 'last move');
       expect(moves.last.zoom, closeTo(stopped.zoom, 1e-9));
@@ -1007,7 +1007,7 @@ void main() {
           );
         }
 
-        // iOS only reported these to onCameraIdle (#1122).
+        // MapLibre iOS reports no change in progress for these (#1122).
         await expectMoveBeforeIdle(
           'moveCamera',
           () => controller.moveCamera(
@@ -1025,6 +1025,48 @@ void main() {
         );
       },
     );
+
+    testWidgets('without trackCameraPosition only onCameraIdle fires', (
+      tester,
+    ) async {
+      const initial = CameraPosition(target: LatLng(0, 0), zoom: 3);
+      final moves = <CameraPosition>[];
+      var idles = 0;
+      final controller = await pumpMap(
+        tester,
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: initial,
+              onCameraMove: moves.add,
+              onCameraIdle: () => idles++,
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
+      );
+
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      idles = 0;
+
+      await pumpUntil(
+        tester,
+        controller.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(10, 10), 5),
+          duration: const Duration(milliseconds: 300),
+        ),
+        'animateCamera',
+      );
+      await pumpUntilValue(
+        tester,
+        () async => idles,
+        (count) => count > 0,
+        'onCameraIdle',
+      );
+
+      // No position without trackCameraPosition, on web too.
+      expect(moves, isEmpty, reason: 'onCameraMove');
+      expect(controller.cameraPosition, initial);
+    });
   });
 
   group('projection', () {

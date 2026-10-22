@@ -1325,26 +1325,15 @@ class MapLibreMapController extends MapLibrePlatform
     onCameraMoveStartedPlatform(null);
   }
 
+  // Positions go out only while [_trackCameraPosition] is on, as on Android
+  // and iOS.
   void _onCameraMove(_) {
-    final center = _map.getCenter();
-    final camera = CameraPosition(
-      bearing: _map.getBearing() as double,
-      target: LatLng(center.lat as double, center.lng as double),
-      tilt: _map.getPitch() as double,
-      zoom: _map.getZoom() as double,
-    );
-    onCameraMovePlatform(camera);
+    if (!_trackCameraPosition) return;
+    onCameraMovePlatform(_readCameraPosition());
   }
 
   void _onCameraIdle(_) {
-    final center = _map.getCenter();
-    final camera = CameraPosition(
-      bearing: _map.getBearing() as double,
-      target: LatLng(center.lat as double, center.lng as double),
-      tilt: _map.getPitch() as double,
-      zoom: _map.getZoom() as double,
-    );
-    onCameraIdlePlatform(camera);
+    onCameraIdlePlatform(_getCameraPosition());
   }
 
   void _onMapIdle(_) {
