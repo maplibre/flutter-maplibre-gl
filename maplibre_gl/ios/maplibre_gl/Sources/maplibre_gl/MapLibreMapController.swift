@@ -435,8 +435,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapUpdate(options: PgMapOptions, result: @escaping FlutterResult) {
         Convert.interpretMapLibreMapOptions(options: options, delegate: self)
-        // Nil when the map does not track the camera position.
-        result(getCamera()?.toPigeon(mapView: mapView))
+        // Nil when the map does not track the camera position. A map without a
+        // size has yet to show its initial camera, so that is the one it reports.
+        guard let camera = getCamera() else {
+            result(nil)
+            return
+        }
+        result(pendingInitialCamera ?? camera.toPigeon(mapView: mapView))
     }
 
     func mapInvalidateAmbientCache(result: @escaping FlutterResult) {
@@ -1091,7 +1096,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let src = style.source(withIdentifier: srcId)
         if src != nil && src is MLNShapeSource {
             let geojsonSrc = src as! MLNShapeSource
-            let geojsonUrl = URL(string: srcUrl)
+            let geojsonUrl = SourcePropertyConverter.strictURL(srcUrl)
             if geojsonUrl != nil {
                 geojsonSrc.url = geojsonUrl
                 // setGeoJsonFeature cannot change data it does not hold.
@@ -2504,15 +2509,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// The style and the source of a layer add, or the error it fails with, in
     /// the order Android checks them. MapLibre raises an Objective-C
     /// exception, which Swift cannot catch, for a layer that cannot draw its
-    /// source, and adds a layer on a vector source without a source layer, or
-    /// with a zoom outside 0 to 24, that draws nothing.
+    /// source, and adds a layer on a vector source without a source layer
+    /// that draws nothing.
     private func validateBeforeLayerAdd(
         sourceId: String,
         layerId: String,
         layerType: String,
-        sourceLayer: String? = nil,
-        minzoom: Double?,
-        maxzoom: Double?
+        sourceLayer: String? = nil
     ) -> Result<(MLNStyle, MLNSource), MethodCallError> {
         guard let style = mapView.style else {
             return .failure(.styleNotReady)
@@ -2533,9 +2536,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
         if source is MLNVectorTileSource, sourceLayer?.isEmpty ?? true {
             return .failure(.sourceLayerRequired(layerId: layerId, sourceId: sourceId))
-        }
-        guard MethodCallError.isZoomInRange(minzoom, maxzoom) else {
-            return .failure(.zoomOutOfRange(layerId: layerId))
         }
         return .success((style, source))
     }
@@ -2848,9 +2848,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "symbol",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -2882,9 +2880,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "line",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -2916,9 +2912,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "fill",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -2950,9 +2944,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "fill-extrusion",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -2984,9 +2976,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "circle",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -3049,9 +3039,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         validateBeforeLayerAdd(
             sourceId: sourceId,
             layerId: layerId,
-            layerType: "hillshade",
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            layerType: "hillshade"
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -3076,9 +3064,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         validateBeforeLayerAdd(
             sourceId: sourceId,
             layerId: layerId,
-            layerType: "color-relief",
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            layerType: "color-relief"
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -3105,9 +3091,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard style.layer(withIdentifier: layerId) == nil else {
             return .failure(.layerAlreadyExists(layerId: layerId))
         }
-        guard MethodCallError.isZoomInRange(minimumZoomLevel, maximumZoomLevel) else {
-            return .failure(.zoomOutOfRange(layerId: layerId))
-        }
         return finishLayerAdd(
             MLNBackgroundStyleLayer(identifier: layerId),
             style: style,
@@ -3132,9 +3115,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             sourceId: sourceId,
             layerId: layerId,
             layerType: "heatmap",
-            sourceLayer: sourceLayerIdentifier,
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            sourceLayer: sourceLayerIdentifier
         )
             .flatMap { style, source in
                 finishLayerAdd(
@@ -3161,9 +3142,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         validateBeforeLayerAdd(
             sourceId: sourceId,
             layerId: layerId,
-            layerType: "raster",
-            minzoom: minimumZoomLevel,
-            maxzoom: maximumZoomLevel
+            layerType: "raster"
         )
             .flatMap { style, source in
                 finishLayerAdd(

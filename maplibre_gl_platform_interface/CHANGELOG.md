@@ -7,6 +7,7 @@
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
 * `geoJsonError`, `geoJsonTextError`, `geoJsonFeatureError`, `invalidGeoJson` and `invalidGeoJsonFeature` check GeoJSON the way MapLibre reads it, so a platform answers `INVALID_GEOJSON` for the same data as the others (#1119).
 * `jsonValueOf` and `decodeGeoJson` read GeoJSON the way `jsonEncode` writes it, including objects with `toJson()` (#1123).
+* `encodeUrl` and `normalizeSource` give a source the url and bounds every platform hands to MapLibre, so the same properties load the same data everywhere (#1123).
 
 ### Changed
 * `MapLibreGlobalPlatform` declares every plugin-wide operation: offline regions, the offline database, the ambient cache, HTTP headers and `setOffline`, which `maplibre_gl` now calls through it. The new members return a future that fails with `UnimplementedError` unless a platform overrides them, so an existing implementation keeps compiling (#1114, #937).

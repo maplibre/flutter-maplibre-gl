@@ -61,8 +61,9 @@ class SourcePropertyConverter {
     }
 
     /// `text` as a URL the way Android reads one with `java.net.URI`: nil when
-    /// it is empty or holds a character a URL cannot, such as a space, on
-    /// every iOS version. iOS 17 and later would encode that character.
+    /// it is empty or holds a character a URL cannot, on every iOS version.
+    /// The Dart side percent-encodes such characters before the call, so the
+    /// same text loads the same file on every platform.
     class func strictURL(_ text: String) -> URL? {
         guard !text.isEmpty else { return nil }
         if #available(iOS 17.0, *) {

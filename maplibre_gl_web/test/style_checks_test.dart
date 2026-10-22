@@ -238,13 +238,8 @@ void main() {
       );
     });
 
-    test('needs the data of a GeoJSON source, or a url MapLibre Native '
-        'reads', () {
+    test('needs the data of a GeoJSON source, or its url', () {
       expect(canBuildSource('geojson', {'data': 'u'}), isTrue);
-      expect(
-        canBuildSource('geojson', {'data': 'https://example.com/a b.json'}),
-        isFalse,
-      );
       expect(canBuildSource('geojson', {'data': ''}), isFalse);
       expect(canBuildSource('geojson', {}), isFalse);
     });
@@ -411,31 +406,6 @@ void main() {
         isNull,
         reason: 'the key is matched as it is written',
       );
-    });
-  });
-
-  group('isUrl', () {
-    test('takes the urls MapLibre Native reads', () {
-      for (final url in [
-        'https://example.com/a.json?x=1&y=%20#top',
-        'data/points.geojson',
-        'https://example.com/café.json',
-      ]) {
-        expect(isUrl(url), isTrue, reason: url);
-      }
-    });
-
-    test('rejects an empty one and characters a url cannot hold', () {
-      for (final url in [
-        '',
-        'not a url',
-        'https://example.com/a\tb',
-        'https://example.com/{z}',
-        'https://example.com/%zz',
-        'https://example.com/"a"',
-      ]) {
-        expect(isUrl(url), isFalse, reason: url);
-      }
     });
   });
 

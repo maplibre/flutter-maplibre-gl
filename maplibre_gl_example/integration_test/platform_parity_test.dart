@@ -30,6 +30,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'support/map_harness.dart';
+import 'support/temp_file.dart'
+    if (dart.library.io) 'support/temp_file_io.dart';
 
 const _sourceId = 'points';
 const _layerId = 'points-circle';
@@ -1404,6 +1406,48 @@ void main() {
       );
     });
 
+    // JSON has no such number, so MapLibre Native cannot read it, where
+    // maplibre-gl-js takes it.
+    testWidgets('a number that is not finite fails with INVALID_GEOJSON on '
+        'Android and iOS, and goes in on web', (tester) async {
+      final controller = await pumpMap(tester);
+      Map<String, dynamic> data(double value) => {
+        'type': 'FeatureCollection',
+        'features': [
+          _point(1, _p1, {'n': value}),
+        ],
+      };
+
+      final calls = <String, Future<Object?> Function()>{
+        'addGeoJsonSource':
+            () => controller.addGeoJsonSource('nan', data(double.nan)),
+        'setGeoJsonSource':
+            () => controller.setGeoJsonSource('nan', data(double.infinity)),
+        'addSource':
+            () => controller.addSource(
+              'nan-properties',
+              GeojsonSourceProperties(data: data(double.nan)),
+            ),
+      };
+      for (final call in calls.entries) {
+        if (kIsWeb) {
+          await pumpUntil(tester, call.value(), call.key);
+          continue;
+        }
+        final error = await expectPlatformError(
+          tester,
+          call.value(),
+          call.key,
+          code: 'INVALID_GEOJSON',
+        );
+        expect(
+          error.message,
+          endsWith('A number is NaN or infinite, which JSON cannot hold.'),
+          reason: call.key,
+        );
+      }
+    });
+
     testWidgets('GeoJSON MapLibre reads goes in everywhere', (tester) async {
       final controller = await pumpMap(tester);
 
@@ -1937,10 +1981,6 @@ void main() {
             tiles: tiles,
             bounds: [-10, 20, 10, 10],
           ),
-          'bounds with west east of east': const RasterSourceProperties(
-            tiles: [_tileUrl],
-            bounds: [20, -10, 10, 10],
-          ),
           'minzoom above maxzoom': const RasterSourceProperties(
             tiles: [_tileUrl],
             minzoom: 10,
@@ -1952,9 +1992,10 @@ void main() {
             maxzoom: -1,
           ),
           'an empty data url': const GeojsonSourceProperties(data: ''),
-          'a data url with spaces': const GeojsonSourceProperties(
-            data: 'not a url',
-          ),
+          'a data url with a port that is not a number':
+              const GeojsonSourceProperties(
+                data: 'https://tiles.invalid:port/a.json',
+              ),
         };
         for (final source in sources.entries) {
           final type = source.value.toJson()['type'];
@@ -1988,6 +2029,77 @@ void main() {
           ),
           'addSource with bounds beyond the poles',
         );
+        // Bounds across the antimeridian take every longitude.
+        await pumpUntil(
+          tester,
+          controller.addSource(
+            'antimeridian',
+            const RasterSourceProperties(
+              tiles: [_tileUrl],
+              bounds: [170, -10, -170, 10],
+            ),
+          ),
+          'addSource with bounds across the antimeridian',
+        );
+      },
+    );
+
+    testWidgets(
+      'a GeoJSON url with a space builds the source, and loads the file on '
+      'Android and iOS',
+      (tester) async {
+        final controller = await pumpMap(tester);
+        // The host does not exist, so nothing leaves the browser.
+        var url = 'https://tiles.invalid/a b.json';
+        if (!kIsWeb) {
+          final path = await pumpUntil(
+            tester,
+            writeFileInDirectoryWithSpace(jsonEncode(_onePoint)),
+            'writeFileInDirectoryWithSpace',
+          );
+          url = 'file://$path';
+        }
+
+        await pumpUntil(
+          tester,
+          controller.addSource('spaced', GeojsonSourceProperties(data: url)),
+          'addSource with a space in the url',
+        );
+        await pumpUntil(
+          tester,
+          controller.addGeoJsonSource('edited', const {
+            'type': 'FeatureCollection',
+            'features': <Object>[],
+          }),
+          'addGeoJsonSource',
+        );
+        expect(
+          await pumpUntil(
+            tester,
+            controller.editGeoJsonUrl('edited', url),
+            'editGeoJsonUrl with a space in the url',
+          ),
+          isTrue,
+        );
+        if (kIsWeb) return;
+
+        for (final sourceId in ['spaced', 'edited']) {
+          await pumpUntil(
+            tester,
+            controller.addCircleLayer(
+              sourceId,
+              '$sourceId-circle',
+              const CircleLayerProperties(),
+            ),
+            'addCircleLayer on $sourceId',
+          );
+          await pumpUntilValue(
+            tester,
+            () => controller.querySourceFeatures(sourceId, null, null),
+            (features) => _ids(features).contains(1),
+            'querySourceFeatures of the file on $sourceId',
+          );
+        }
       },
     );
 
@@ -2353,7 +2465,7 @@ void main() {
     );
 
     testWidgets(
-      'a zoom outside 0 to 24 fails with INVALID_ARGUMENT',
+      'a zoom outside 0 to 24 fails with INVALID_ARGUMENT on web only',
       (tester) async {
         final controller = await pumpMap(tester);
         await _addPoints(tester, controller);
@@ -2376,7 +2488,7 @@ void main() {
                 _sourceId,
                 'line-maxzoom',
                 const LineLayerProperties(),
-                maxzoom: 24.5,
+                maxzoom: 25,
               ),
           'background-maxzoom':
               () => controller.addBackgroundLayer(
@@ -2386,6 +2498,12 @@ void main() {
               ),
         };
         for (final call in calls.entries) {
+          if (!kIsWeb) {
+            // MapLibre Native takes any zoom, and its camera goes past 24.
+            await pumpUntil(tester, call.value(), call.key);
+            continue;
+          }
+          // MapLibre GL JS rejects a zoom outside 0 to 24.
           final error = await expectPlatformError(
             tester,
             call.value(),
@@ -2400,7 +2518,7 @@ void main() {
         }
         expect(
           await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
-          layersBefore,
+          kIsWeb ? layersBefore : [...layersBefore, ...calls.keys],
         );
 
         await pumpUntil(

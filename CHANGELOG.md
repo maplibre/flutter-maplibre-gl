@@ -29,7 +29,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error.
   * **Android, Web**: `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. Android and web ignored these, iOS crashed on some.
-  * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`, and a `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`. Android and iOS added a layer that drew nothing, web dropped it.
+  * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`. Android and iOS added a layer that drew nothing, web dropped it.
+  * **Web**: a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer. Android and iOS take any zoom, as before.
   * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE` instead of `SOURCE_NOT_FOUND`.
   * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
@@ -76,7 +77,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web can play video sources (#1119).
 * **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
-* **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
+* **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. An app that wrote `#aarrggbb` for iOS gets other colors: move the alpha to the end. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
 * **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web, instead of throwing `LAYER_NOT_FOUND_ERROR` (#1123).
 
 ### Fixed
@@ -143,14 +144,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * More fixes from the reviews of the Pigeon migration (#1123):
   * No crash on NaN or infinite coordinates and camera values, which throw `INVALID_ARGUMENT` (iOS), nor on `addSource` with malformed bounds, zoom levels or urls (iOS, and Android for bounds).
   * `takeSnapshot` answers `SNAPSHOT_ERROR` when a newer call cancels it and `MAP_DISPOSED` when the map goes away, instead of never completing.
-  * **iOS**: camera calls made before the map has a size, now including `setCameraBounds`, `updateContentInsets` and option updates, wait for the first layout, and answer `MAP_DISPOSED` if the map goes away first.
+  * **iOS**: camera calls made before the map has a size, now including `setCameraBounds`, `updateContentInsets` and the `cameraTargetBounds`, `minMaxZoomPreference` and `myLocationTrackingMode` options, wait for the first layout, and answer `MAP_DISPOSED` if the map goes away first. The other options apply at once.
   * **Web**: `editGeoJsonUrl` works in JavaScript builds; it threw a `TypeError` outside wasm.
   * GeoJSON holding objects with `toJson()` goes in again on Android and iOS, and now on web.
-  * Writes to the same GeoJSON source keep their order, and `addSource` checks large GeoJSON off the UI isolate.
+  * Writes to the same GeoJSON source keep their order, and `addSource` checks large GeoJSON off the UI isolate. On Android and iOS a later call on that source or its layers waits for them, so an `addCircleLayer` made without `await` right after a large `addGeoJsonSource` or `addSource` no longer fails with `SOURCE_NOT_FOUND`.
+  * **Android, iOS**: GeoJSON with a NaN or infinite number, properties included, throws `INVALID_GEOJSON`, since JSON cannot hold it, instead of a `JsonUnsupportedObjectError` or, for `addSource` on iOS, a crash. Web takes such a number.
+  * A GeoJSON, image or raster-dem source url with a space or another character a url cannot hold, such as an iOS file path under `Library/Application Support`, loads on every platform: it is percent-encoded, as browsers and iOS 17 do. `editGeoJsonUrl` encodes its url the same way and answers `false` for an empty one.
+  * Tile source `bounds` with west greater than east, which cross the antimeridian, take every longitude, so the tiles on both sides load. Android crashed, iOS loaded only the tiles away from the antimeridian, and web none.
   * `removeSource` keeps a source that a layer still uses, and a source added again with the same id no longer brings back old data in `setGeoJsonFeature`.
   * **Android**: pausing an offline region right after resuming it keeps it paused.
   * `setLayerProperties` converts each value once on Android and iOS instead of twice.
-* Feature ids come back from the queries and the cluster calls as they are in the data on every platform, and `["id"]` filters and feature state find them by that id. On web `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. The drag and hover callbacks no longer throw a `TypeError` on a numeric id on iOS and web (#1124).
+* Feature ids come back from the queries and the cluster calls as they are in the data on every platform, and `["id"]` filters and feature state find them by that id. On web `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. A source added with `generateId` numbers its features on Android and iOS too. The drag and hover callbacks no longer throw a `TypeError` on a numeric id on iOS and web (#1124).
 * **iOS**: `getLayerProperties()` and `getSourceProperties()` read layers and sources added at runtime instead of answering `null`, and a layer reads its current values instead of the ones the style loaded with. As on Android, colors read as `rgba(...)` text, and filters, also from `getLayerFilter()`, read as the app or the style wrote them instead of rewritten (#985, #1127).
 
 ### Docs

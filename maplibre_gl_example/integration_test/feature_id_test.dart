@@ -3,6 +3,7 @@
 // and cluster call, is selected by an ['id'] filter on that value, keeps its
 // feature state, and reaches the tap and drag callbacks as text. Whatever the
 // plugin adds to the data to get there never shows up in what the app reads.
+// A source with generateId keeps the ids it generates.
 //
 // Run on a device or simulator (Android, iOS):
 //   flutter test integration_test/feature_id_test.dart -d <device id>
@@ -49,6 +50,11 @@ final _features = <String, ({Object id, LatLng at})>{
 /// What every query should answer: the id of each feature, by name.
 final Map<String, Object> _expectedIds = {
   for (final MapEntry(:key, :value) in _features.entries) key: value.id,
+};
+
+/// The ids `generateId` gives [_features]: their index, over their own id.
+final Map<String, Object> _generatedIds = {
+  for (final (index, name) in _features.keys.indexed) name: index,
 };
 
 void main() {
@@ -339,68 +345,12 @@ void main() {
     if (testPlatform == TestPlatform.ios) return;
     final controller = await _pumpMapWithFeatures(
       tester,
-      circleRadius: [
-        'case',
-        [
-          'boolean',
-          ['feature-state', 'big'],
-          false,
-        ],
-        _bigRadius,
-        _radius,
-      ],
+      circleRadius: _bigByState,
     );
     await _waitForAll(tester, controller);
 
     for (final name in ['decimal', 'name']) {
-      final id = _features[name]!.id.toString();
-      // Inside the big circle only, on the side away from the other features.
-      final center = await _screen(tester, controller, _features[name]!.at);
-      final side = name == 'decimal' ? -1 : 1;
-      final scale = _queryScale(tester);
-      final edge = Point<double>(
-        center.x + side * 20 * scale,
-        center.y + 15 * scale,
-      );
-      Future<List> queryEdge() =>
-          controller.queryRenderedFeatures(edge, [_layerId], null);
-      expect(
-        _idsByName(await pumpUntil(tester, queryEdge(), 'query $name edge')),
-        isEmpty,
-      );
-
-      await pumpUntil(
-        tester,
-        controller.setFeatureState(_sourceId, id, {'big': true}),
-        'setFeatureState $id',
-      );
-      final grown = await pumpUntilValue(
-        tester,
-        queryEdge,
-        (features) => _idsByName(features).isNotEmpty,
-        '$name grown by its feature state',
-      );
-      expect(_idsByName(grown), {name: _features[name]!.id});
-      expect(
-        await pumpUntil(
-          tester,
-          controller.getFeatureState(_sourceId, id),
-          'getFeatureState $id',
-        ),
-        {'big': true},
-      );
-
-      await pumpUntil(
-        tester,
-        controller.removeFeatureState(_sourceId, featureId: id),
-        'removeFeatureState $id',
-      );
-      await pumpUntilValue(
-        tester,
-        queryEdge,
-        (features) => _idsByName(features).isEmpty,
-        '$name back to its size',
-      );
+      await _expectGrownByState(tester, controller, name, _expectedIds);
     }
   });
 
@@ -470,6 +420,95 @@ void main() {
       ))?['promoteId'],
       'ref',
     );
+  });
+
+  // generateId numbers the features by their index, over their own ids.
+  group('a source with generateId keeps the ids it generates', () {
+    testWidgets('in the queries and an id filter, also after '
+        'setGeoJsonSource', (tester) async {
+      final controller = await _pumpMapWithFeatures(tester, generateId: true);
+      final features = await _waitForAll(tester, controller);
+      expect(_idsByName(features), _generatedIds);
+      _expectOwnProperties(features);
+
+      final filter = <Object>[
+        '==',
+        ['id'],
+        _generatedIds['name']!,
+      ];
+      expect(
+        _idsByName(
+          await pumpUntil(
+            tester,
+            controller.querySourceFeatures(_sourceId, null, filter),
+            'querySourceFeatures with $filter',
+          ),
+        ).keys,
+        ['name'],
+      );
+
+      // The same features the other way round, numbered again.
+      final reversed = {
+        'type': 'FeatureCollection',
+        'features':
+            (_featureCollection()['features'] as List).reversed.toList(),
+      };
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonSource(_sourceId, reversed),
+        'setGeoJsonSource',
+      );
+      final renumbered = await pumpUntilValue(
+        tester,
+        () => controller.querySourceFeatures(_sourceId, null, null),
+        (features) => _idsByName(features)['name'] == 0,
+        'querySourceFeatures after setGeoJsonSource',
+      );
+      expect(_idsByName(renumbered), {
+        for (final MapEntry(:key, :value) in _generatedIds.entries)
+          key: _features.length - 1 - (value as int),
+      });
+    });
+
+    testWidgets('in feature state', (tester) async {
+      // The iOS SDK has no feature state API: see geojson_query_test.dart.
+      if (testPlatform == TestPlatform.ios) return;
+      final controller = await _pumpMapWithFeatures(
+        tester,
+        generateId: true,
+        circleRadius: _bigByState,
+      );
+      await _waitForAll(tester, controller);
+
+      await _expectGrownByState(tester, controller, 'name', _generatedIds);
+    });
+
+    // On web the tap is in feature_drag_web_test.dart.
+    testWidgets('in a tap, on Android', (tester) async {
+      if (testPlatform != TestPlatform.android) return;
+      final taps = <String>[];
+      final controller = await _pumpMapWithFeatures(tester, generateId: true);
+      controller.onFeatureTapped.add(
+        (point, latLng, id, layerId, annotation) => taps.add(id),
+      );
+      await _waitForAll(tester, controller);
+      final rect = await _allFeaturesRect(tester, controller);
+      await pumpUntilValue(
+        tester,
+        () => controller.queryRenderedFeaturesInRect(rect, [_layerId], null),
+        (features) => _idsByName(features).length == _features.length,
+        'every feature drawn',
+      );
+
+      for (final MapEntry(:key, :value) in _features.entries) {
+        final finger = _Finger(tester);
+        await finger.down(await _onScreen(tester, controller, value.at));
+        await finger.up();
+        await pumpFor(tester, const Duration(milliseconds: 500));
+        expect(taps, ['${_generatedIds[key]}'], reason: 'tap on $key');
+        taps.clear();
+      }
+    });
   });
 
   group('taps and drags report the id as text', () {
@@ -549,17 +588,25 @@ Map<String, dynamic> _featureCollection({LatLng Function(LatLng at)? place}) =>
     };
 
 /// A map with [data] (by default [_features]) in [_sourceId], drawn as
-/// circles of [circleRadius] in [_layerId].
+/// circles of [circleRadius] in [_layerId]. With [generateId], the source is
+/// added with addSource and `generateId`.
 Future<MapLibreMapController> _pumpMapWithFeatures(
   WidgetTester tester, {
   Map<String, dynamic>? data,
   Object circleRadius = _radius,
+  bool generateId = false,
 }) async {
   final controller = await pumpMap(tester);
+  data ??= _featureCollection();
   await pumpUntil(
     tester,
-    controller.addGeoJsonSource(_sourceId, data ?? _featureCollection()),
-    'addGeoJsonSource',
+    generateId
+        ? controller.addSource(
+          _sourceId,
+          GeojsonSourceProperties(data: data, generateId: true),
+        )
+        : controller.addGeoJsonSource(_sourceId, data),
+    'add the source',
   );
   await pumpUntil(
     tester,
@@ -695,6 +742,77 @@ Future<Rect> _allFeaturesRect(
   final a = await _screen(tester, controller, const LatLng(15, -20));
   final b = await _screen(tester, controller, const LatLng(-15, 20));
   return Rect.fromPoints(Offset(a.x, a.y), Offset(b.x, b.y));
+}
+
+/// A circle radius of [_bigRadius] for a feature with the `big` feature
+/// state, and [_radius] otherwise.
+const List<Object> _bigByState = [
+  'case',
+  [
+    'boolean',
+    ['feature-state', 'big'],
+    false,
+  ],
+  _bigRadius,
+  _radius,
+];
+
+/// Expects the feature [name] to grow with the `big` feature state set on
+/// its id in [ids], and to shrink back once the state is removed.
+Future<void> _expectGrownByState(
+  WidgetTester tester,
+  MapLibreMapController controller,
+  String name,
+  Map<String, Object> ids,
+) async {
+  final id = ids[name]!.toString();
+  // Inside the big circle only, on the side away from the other features.
+  final center = await _screen(tester, controller, _features[name]!.at);
+  final side = _features[name]!.at.longitude < 0 ? -1 : 1;
+  final scale = _queryScale(tester);
+  final edge = Point<double>(
+    center.x + side * 20 * scale,
+    center.y + 15 * scale,
+  );
+  Future<List> queryEdge() =>
+      controller.queryRenderedFeatures(edge, [_layerId], null);
+  expect(
+    _idsByName(await pumpUntil(tester, queryEdge(), 'query $name edge')),
+    isEmpty,
+  );
+
+  await pumpUntil(
+    tester,
+    controller.setFeatureState(_sourceId, id, {'big': true}),
+    'setFeatureState $id',
+  );
+  final grown = await pumpUntilValue(
+    tester,
+    queryEdge,
+    (features) => _idsByName(features).isNotEmpty,
+    '$name grown by its feature state',
+  );
+  expect(_idsByName(grown), {name: ids[name]});
+  expect(
+    await pumpUntil(
+      tester,
+      controller.getFeatureState(_sourceId, id),
+      'getFeatureState $id',
+    ),
+    {'big': true},
+  );
+
+  await pumpUntil(
+    tester,
+    controller.removeFeatureState(_sourceId, featureId: id),
+    'removeFeatureState $id',
+  );
+  await pumpUntilValue(
+    tester,
+    queryEdge,
+    (features) => _idsByName(features).isEmpty,
+    '$name back to its size',
+  );
 }
 
 /// One finger whose events carry real timestamps: with the zero timestamps of
