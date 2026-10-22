@@ -82,12 +82,19 @@ struct LocationPuckStyle: Equatable {
 /// The map view the plugin creates. MLNMapView hands its own tint to the puck
 /// view whenever its tint changes, for example when a sheet dims the window,
 /// which undoes the accuracy circle color. This reports those changes so the
-/// controller can apply the puck tint again.
+/// controller can apply the puck tint again. It also reports each layout, so
+/// the calls waiting for the view to have a size can run once it has one.
 final class LocationPuckMapView: MLNMapView {
     var onTintColorDidChange: (() -> Void)?
+    var onLayout: (() -> Void)?
 
     override func tintColorDidChange() {
         super.tintColorDidChange()
         onTintColorDidChange?()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        onLayout?()
     }
 }

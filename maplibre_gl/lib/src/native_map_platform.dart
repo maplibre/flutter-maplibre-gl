@@ -636,23 +636,31 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<bool> editGeoJsonSource(String id, String data) async {
-    final reason =
-        data.length > _geoJsonTextOffloadLength
-            ? await compute(geoJsonTextError, data)
-            : geoJsonTextError(data);
-    if (reason != null) throw invalidGeoJson(id, reason);
-    return _api.mapEditGeoJsonSource(id, data);
+  Future<bool> editGeoJsonSource(String id, String data) {
+    return _writeGeoJson(id, () async {
+      final reason =
+          data.length > _geoJsonTextOffloadLength
+              ? await compute(geoJsonTextError, data)
+              : geoJsonTextError(data);
+      if (reason != null) throw invalidGeoJson(id, reason);
+      return _api.mapEditGeoJsonSource(id, data);
+    });
   }
 
   @override
-  Future<bool> editGeoJsonUrl(String id, String url) async {
-    return _api.mapEditGeoJsonUrl(id, url);
+  Future<bool> editGeoJsonUrl(String id, String url) {
+    final encoded = encodeUrl(url);
+    // A url that cannot be one changes nothing, as on web.
+    if (encoded == null) return Future.value(false);
+    return _writeGeoJson(id, () => _api.mapEditGeoJsonUrl(id, encoded));
   }
 
   @override
   Future<bool> setLayerFilter(String layerId, String filter) async {
-    return _api.mapSetLayerFilter(layerId, filter);
+    return _inOrder(
+      [_layerKey(layerId)],
+      () => _api.mapSetLayerFilter(layerId, filter),
+    );
   }
 
   @override
@@ -680,11 +688,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     List<String> layerIds,
     List<Object>? filter,
   ) async {
-    final features = await _api.mapQueryRenderedFeaturesAtPoint(
-      point.x,
-      point.y,
-      layerIds,
-      _encodeFilter(filter),
+    final features = await _inOrder(
+      layerIds.map(_layerKey),
+      () => _api.mapQueryRenderedFeaturesAtPoint(
+        point.x,
+        point.y,
+        layerIds,
+        _encodeFilter(filter),
+      ),
     );
     return features.map(jsonDecode).toList();
   }
@@ -696,13 +707,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? filter,
   ) async {
     // The filter comes encoded already.
-    final features = await _api.mapQueryRenderedFeaturesInRect(
-      rect.left,
-      rect.top,
-      rect.right,
-      rect.bottom,
-      layerIds,
-      filter,
+    final features = await _inOrder(
+      layerIds.map(_layerKey),
+      () => _api.mapQueryRenderedFeaturesInRect(
+        rect.left,
+        rect.top,
+        rect.right,
+        rect.bottom,
+        layerIds,
+        filter,
+      ),
     );
     return features.map(jsonDecode).toList();
   }
@@ -713,17 +727,23 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? sourceLayerId,
     List<Object>? filter,
   ) async {
-    final features = await _api.mapQuerySourceFeatures(
-      sourceId,
-      sourceLayerId,
-      _encodeFilter(filter),
+    final features = await _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.mapQuerySourceFeatures(
+        sourceId,
+        sourceLayerId,
+        _encodeFilter(filter),
+      ),
     );
     return features.map(jsonDecode).toList();
   }
 
   @override
   Future<int> getClusterExpansionZoom(String sourceId, int clusterId) async {
-    return _api.sourceGetClusterExpansionZoom(sourceId, clusterId);
+    return _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.sourceGetClusterExpansionZoom(sourceId, clusterId),
+    );
   }
 
   @override
@@ -732,7 +752,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     int clusterId,
   ) async {
     return _decodeFeatures(
-      await _api.sourceGetClusterChildren(sourceId, clusterId),
+      await _inOrder(
+        [_sourceKey(sourceId)],
+        () => _api.sourceGetClusterChildren(sourceId, clusterId),
+      ),
     );
   }
 
@@ -744,7 +767,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     int offset = 0,
   }) async {
     return _decodeFeatures(
-      await _api.sourceGetClusterLeaves(sourceId, clusterId, limit, offset),
+      await _inOrder(
+        [_sourceKey(sourceId)],
+        () => _api.sourceGetClusterLeaves(sourceId, clusterId, limit, offset),
+      ),
     );
   }
 
@@ -800,11 +826,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Uint8List bytes,
     LatLngQuad coordinates,
   ) async {
-    await _api.styleAddImageSource(
-      imageSourceId,
-      bytes,
-      bytes.length,
-      _pgLatLngQuad(coordinates),
+    await _inOrder(
+      [_sourceKey(imageSourceId)],
+      () => _api.styleAddImageSource(
+        imageSourceId,
+        bytes,
+        bytes.length,
+        _pgLatLngQuad(coordinates),
+      ),
     );
   }
 
@@ -814,11 +843,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Uint8List? bytes,
     LatLngQuad? coordinates,
   ) async {
-    await _api.styleUpdateImageSource(
-      imageSourceId,
-      bytes,
-      bytes?.length,
-      coordinates == null ? null : _pgLatLngQuad(coordinates),
+    await _inOrder(
+      [_sourceKey(imageSourceId)],
+      () => _api.styleUpdateImageSource(
+        imageSourceId,
+        bytes,
+        bytes?.length,
+        coordinates == null ? null : _pgLatLngQuad(coordinates),
+      ),
     );
   }
 
@@ -847,7 +879,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> removeSource(String sourceId) async {
-    await _api.styleRemoveSource(sourceId);
+    await _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.styleRemoveSource(sourceId),
+    );
   }
 
   @override
@@ -857,7 +892,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   ) async {
-    await _api.styleAddLayer(imageLayerId, imageSourceId, minzoom, maxzoom);
+    await _inOrder(
+      _layerAddKeys(imageSourceId, imageLayerId, null),
+      () => _api.styleAddLayer(imageLayerId, imageSourceId, minzoom, maxzoom),
+    );
   }
 
   @override
@@ -868,33 +906,48 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   ) async {
-    await _api.styleAddLayerBelow(
-      imageLayerId,
-      imageSourceId,
-      belowLayerId,
-      minzoom,
-      maxzoom,
+    await _inOrder(
+      _layerAddKeys(imageSourceId, imageLayerId, belowLayerId),
+      () => _api.styleAddLayerBelow(
+        imageLayerId,
+        imageSourceId,
+        belowLayerId,
+        minzoom,
+        maxzoom,
+      ),
     );
   }
 
   @override
   Future<void> removeLayer(String imageLayerId) async {
-    await _api.styleRemoveLayer(imageLayerId);
+    await _inOrder(
+      [_layerKey(imageLayerId)],
+      () => _api.styleRemoveLayer(imageLayerId),
+    );
   }
 
   @override
   Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
-    await _api.styleMoveLayer(layerId, belowLayerId);
+    await _inOrder(
+      [_layerKey(layerId), if (belowLayerId != null) _layerKey(belowLayerId)],
+      () => _api.styleMoveLayer(layerId, belowLayerId),
+    );
   }
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
-    await _api.styleSetFilter(layerId, _encodeFilter(filter));
+    await _inOrder(
+      [_layerKey(layerId)],
+      () => _api.styleSetFilter(layerId, _encodeFilter(filter)),
+    );
   }
 
   @override
   Future<dynamic> getFilter(String layerId) async {
-    final filter = await _api.styleGetFilter(layerId);
+    final filter = await _inOrder(
+      [_layerKey(layerId)],
+      () => _api.styleGetFilter(layerId),
+    );
     return filter != null ? jsonDecode(filter) : null;
   }
 
@@ -950,37 +1003,84 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     });
   }
 
-  /// Pending GeoJSON write per source id. See [_writeGeoJson].
-  final Map<String, Future<void>> _pendingGeoJsonWrites = {};
+  /// The call still in flight per source and layer that the calls made
+  /// after it on the same source or layer must follow. See [_inOrder].
+  final Map<String, Future<Object?>> _pendingCalls = {};
 
-  /// Runs [write] after any GeoJSON write already in flight for [sourceId].
+  /// Runs [call] after the calls still in flight on the sources and layers
+  /// of [keys], and at once when there is none.
   ///
-  /// Encoding can finish asynchronously, and it takes longer the larger the
-  /// payload is. Two writes fired without `await` on the same source would
-  /// otherwise be able to reach native in reverse order, leaving the source
-  /// holding the older payload. Chaining per source id keeps native in call
-  /// order.
-  Future<void> _writeGeoJson(String sourceId, Future<void> Function() write) {
-    final pending = _pendingGeoJsonWrites[sourceId];
-    // A failed write must not block the writes queued behind it, so its error
-    // is ignored for chaining purposes only. Callers still see it through the
-    // future returned here.
-    final next = (pending == null
-            ? Future<void>.value()
-            : pending.then<void>((_) {}, onError: (_) {}))
-        .then((_) => write());
-    _pendingGeoJsonWrites[sourceId] = next;
+  /// A GeoJSON write checks and encodes its data first, on another isolate
+  /// when it is large, so it can reach native after a call made later. A
+  /// layer added on that source would then find no source, and a write on
+  /// it would be overwritten by the older data. Chaining the calls that name
+  /// the same source or layer keeps native in call order, and a call on
+  /// another source does not wait.
+  ///
+  /// With [always], [call] counts as in flight even when it runs at once:
+  /// every GeoJSON write does, for its check. Any other call counts only
+  /// while it waits.
+  Future<T> _inOrder<T>(
+    Iterable<String> keys,
+    Future<T> Function() call, {
+    bool always = false,
+  }) {
+    final names = keys.toSet();
+    final pending = {
+      for (final name in names)
+        if (_pendingCalls[name] case final future?) future,
+    };
+    if (pending.isEmpty && !always) return call();
+    // A failed call must not block the calls queued behind it, so its error
+    // is ignored for chaining purposes only. Callers still see it through
+    // the future returned here.
+    final next =
+        pending.isEmpty
+            ? call()
+            : Future.wait(
+              pending.map(
+                (future) => future.then<void>((_) {}, onError: (_) {}),
+              ),
+            ).then((_) => call());
+    for (final name in names) {
+      _pendingCalls[name] = next;
+    }
     unawaited(
       next.then<void>((_) {}, onError: (_) {}).whenComplete(() {
-        if (_pendingGeoJsonWrites[sourceId] == next) {
-          // The removed future is the one already handled just above, so
-          // ignoring it here is deliberate rather than a dropped error.
-          _pendingGeoJsonWrites.remove(sourceId)?.ignore();
+        for (final name in names) {
+          if (_pendingCalls[name] == next) {
+            // The removed future is the one already handled just above, so
+            // ignoring it here is deliberate rather than a dropped error.
+            _pendingCalls.remove(name)?.ignore();
+          }
         }
       }),
     );
     return next;
   }
+
+  /// Runs [write], a call that sets the data of the GeoJSON source
+  /// [sourceId], in call order with the other calls on it. See [_inOrder].
+  Future<T> _writeGeoJson<T>(String sourceId, Future<T> Function() write) =>
+      _inOrder([_sourceKey(sourceId)], write, always: true);
+
+  /// The key of the source [sourceId] in [_pendingCalls].
+  static String _sourceKey(String sourceId) => 'source $sourceId';
+
+  /// The key of the layer [layerId] in [_pendingCalls].
+  static String _layerKey(String layerId) => 'layer $layerId';
+
+  /// The keys of a layer add: its source, the layer, and the layer it goes
+  /// below.
+  static List<String> _layerAddKeys(
+    String? sourceId,
+    String layerId,
+    String? belowLayerId,
+  ) => [
+    if (sourceId != null) _sourceKey(sourceId),
+    _layerKey(layerId),
+    if (belowLayerId != null) _layerKey(belowLayerId),
+  ];
 
   /// Thresholds above which GeoJSON encoding moves to a background isolate:
   /// the number of features in a collection, and the number of coordinate
@@ -1023,7 +1123,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojson,
   ) {
     final reason = geoJsonError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason(() => jsonEncode(geojson));
   }
 
   /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
@@ -1031,7 +1132,31 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojson,
   ) {
     final reason = geoJsonFeatureError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason(() => jsonEncode(geojson));
+  }
+
+  /// Why INVALID_GEOJSON rejects a number that is NaN or infinite.
+  static const _nonFiniteNumber =
+      'A number is NaN or infinite, which JSON cannot hold.';
+
+  /// What [encode] returns, or [_nonFiniteNumber] when it meets a number that
+  /// is NaN or infinite: GeoJSON reaches MapLibre Native as JSON, which has
+  /// no such number. Any other value `jsonEncode` cannot write still throws.
+  static (T?, String?) _jsonOrReason<T>(T Function() encode) {
+    try {
+      return (encode(), null);
+      // The error of jsonEncode, read for the value it could not write.
+      // ignore: avoid_catching_errors
+    } on JsonUnsupportedObjectError catch (error) {
+      Object? cause = error;
+      while (cause is JsonUnsupportedObjectError) {
+        final value = cause.unsupportedObject;
+        if (value is num && !value.isFinite) return (null, _nonFiniteNumber);
+        cause = cause.cause;
+      }
+      rethrow;
+    }
   }
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
@@ -1048,7 +1173,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// per ring, so a single ring of 50k points has a `coordinates` length of 1.
   /// The same applies to `MultiLineString`, `MultiPolygon` and
   /// `GeometryCollection`.
-  static bool _isLargeGeoJson(Map<String, dynamic> geojson) {
+  static bool _isLargeGeoJson(Map<dynamic, dynamic> geojson) {
     const limit = _geoJsonOffloadPositionCount;
     final features = geojson['features'];
     if (features is List) {
@@ -1122,16 +1247,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    await _api.symbolLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      enableInteraction,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.symbolLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        enableInteraction,
+        properties,
+      ),
     );
   }
 
@@ -1147,16 +1275,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    await _api.lineLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      enableInteraction,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.lineLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        enableInteraction,
+        properties,
+      ),
     );
   }
 
@@ -1165,7 +1296,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String layerId,
     Map<String, dynamic> properties,
   ) async {
-    await _api.layerSetProperties(layerId, properties);
+    await _inOrder(
+      [_layerKey(layerId)],
+      () => _api.layerSetProperties(layerId, properties),
+    );
   }
 
   @override
@@ -1180,16 +1314,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    await _api.circleLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      enableInteraction,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.circleLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        enableInteraction,
+        properties,
+      ),
     );
   }
 
@@ -1205,16 +1342,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    await _api.fillLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      enableInteraction,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.fillLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        enableInteraction,
+        properties,
+      ),
     );
   }
 
@@ -1230,32 +1370,88 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     dynamic filter,
     required bool enableInteraction,
   }) async {
-    await _api.fillExtrusionLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      enableInteraction,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.fillExtrusionLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        enableInteraction,
+        properties,
+      ),
     );
   }
 
   @override
   Future<void> addSource(String sourceId, SourceProperties properties) async {
     _ensureDemEncodingSupported(properties);
-    final json = properties.toJson();
+    final json = normalizeSource(properties.toJson());
     // A string is the url of the data.
-    final data = json['data'];
-    if (properties is GeojsonSourceProperties &&
-        data != null &&
-        data is! String) {
-      final reason = geoJsonError(data);
-      if (reason != null) throw invalidGeoJson(sourceId, reason);
+    final data = jsonValueOf(json['data']);
+    if (properties is! GeojsonSourceProperties ||
+        data == null ||
+        data is String) {
+      return _inOrder(
+        [_sourceKey(sourceId)],
+        () => _api.styleAddSource(sourceId, json),
+      );
     }
-    await _api.styleAddSource(sourceId, json);
+    return _writeGeoJson(sourceId, () async {
+      final (plain, reason) =
+          data is Map && _isLargeGeoJson(data)
+              ? await compute(_checkSourceData, data)
+              : _checkSourceData(data);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+      await _api.styleAddSource(sourceId, {...json, 'data': plain});
+    });
+  }
+
+  /// [data], the GeoJSON data of `addSource`, with what `jsonEncode` writes in
+  /// place of each object it reads through `toJson()`, or why it is not
+  /// GeoJSON. The platform channel takes plain JSON values only.
+  static (Object?, String?) _checkSourceData(Object? data) {
+    final reason = geoJsonError(data);
+    if (reason != null) return (null, reason);
+    return _jsonOrReason<Object?>(() => _plainJson(data));
+  }
+
+  /// [value] with each object in it that is not a JSON value replaced by
+  /// what its `toJson()` returns, as `jsonEncode` writes it. [value] itself
+  /// when nothing is replaced. Throws a [JsonUnsupportedObjectError] for what
+  /// `jsonEncode` cannot write, a number that is not finite included.
+  static Object? _plainJson(Object? value) {
+    final json = jsonValueOf(value);
+    if (json == null || json is bool || json is String) return json;
+    if (json is num) {
+      if (json.isFinite) return json;
+      throw JsonUnsupportedObjectError(json);
+    }
+    if (json is List) {
+      List<Object?>? copy;
+      for (var i = 0; i < json.length; i++) {
+        final item = json[i];
+        final plain = _plainJson(item);
+        if (!identical(plain, item)) {
+          (copy ??= List<Object?>.of(json))[i] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    if (json is Map) {
+      Map<Object?, Object?>? copy;
+      for (final entry in json.entries) {
+        final plain = _plainJson(entry.value);
+        if (!identical(plain, entry.value)) {
+          (copy ??= Map<Object?, Object?>.of(json))[entry.key] = plain;
+        }
+      }
+      return copy ?? json;
+    }
+    throw JsonUnsupportedObjectError(value);
   }
 
   /// The `custom` raster-dem encoding is a MapLibre GL JS feature. MapLibre
@@ -1291,13 +1487,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
-    await _api.rasterLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      minzoom,
-      maxzoom,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.rasterLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        minzoom,
+        maxzoom,
+        properties,
+      ),
     );
   }
 
@@ -1311,13 +1510,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
-    await _api.hillshadeLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      minzoom,
-      maxzoom,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.hillshadeLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        minzoom,
+        maxzoom,
+        properties,
+      ),
     );
   }
 
@@ -1330,13 +1532,16 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
-    await _api.colorReliefLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      minzoom,
-      maxzoom,
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.colorReliefLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        minzoom,
+        maxzoom,
+        properties,
+      ),
     );
   }
 
@@ -1348,12 +1553,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? minzoom,
     double? maxzoom,
   }) async {
-    await _api.backgroundLayerAdd(
-      layerId,
-      belowLayerId,
-      minzoom,
-      maxzoom,
-      properties,
+    await _inOrder(
+      _layerAddKeys(null, layerId, belowLayerId),
+      () => _api.backgroundLayerAdd(
+        layerId,
+        belowLayerId,
+        minzoom,
+        maxzoom,
+        properties,
+      ),
     );
   }
 
@@ -1368,15 +1576,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double? maxzoom,
     dynamic filter,
   }) async {
-    await _api.heatmapLayerAdd(
-      sourceId,
-      layerId,
-      belowLayerId,
-      sourceLayer,
-      minzoom,
-      maxzoom,
-      _encodeFilter(filter),
-      properties,
+    await _inOrder(
+      _layerAddKeys(sourceId, layerId, belowLayerId),
+      () => _api.heatmapLayerAdd(
+        sourceId,
+        layerId,
+        belowLayerId,
+        sourceLayer,
+        minzoom,
+        maxzoom,
+        _encodeFilter(filter),
+        properties,
+      ),
     );
   }
 
@@ -1402,7 +1613,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? sourceLayer,
   }) async {
     _ensureFeatureStateAvailable('setFeatureState');
-    await _api.sourceSetFeatureState(sourceId, featureId, state, sourceLayer);
+    await _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.sourceSetFeatureState(sourceId, featureId, state, sourceLayer),
+    );
   }
 
   @override
@@ -1413,11 +1627,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? sourceLayer,
   }) async {
     _ensureFeatureStateAvailable('removeFeatureState');
-    await _api.sourceRemoveFeatureState(
-      sourceId,
-      featureId,
-      stateKey,
-      sourceLayer,
+    await _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.sourceRemoveFeatureState(
+        sourceId,
+        featureId,
+        stateKey,
+        sourceLayer,
+      ),
     );
   }
 
@@ -1431,10 +1648,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     // Native sends the state as JSON text, so nested values arrive intact,
     // and sends null, not an empty object, when the feature has no state,
     // because callers tell the two apart.
-    final state = await _api.sourceGetFeatureState(
-      sourceId,
-      featureId,
-      sourceLayer,
+    final state = await _inOrder(
+      [_sourceKey(sourceId)],
+      () => _api.sourceGetFeatureState(sourceId, featureId, sourceLayer),
     );
     if (state == null) return null;
     return (jsonDecode(state) as Map).cast<String, dynamic>();
@@ -1482,7 +1698,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
-    await _api.layerSetVisibility(layerId, visible);
+    await _inOrder(
+      [_layerKey(layerId)],
+      () => _api.layerSetVisibility(layerId, visible),
+    );
   }
 
   @override
@@ -1490,7 +1709,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     List<String> layerIds,
     bool visible,
   ) async {
-    final missing = await _api.layerSetVisibilityBatch(layerIds, visible);
+    final missing = await _inOrder(
+      layerIds.map(_layerKey),
+      () => _api.layerSetVisibilityBatch(layerIds, visible),
+    );
     return missing ?? const [];
   }
 
@@ -1500,12 +1722,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     double minzoom,
     double maxzoom,
   ) async {
-    await _api.layerSetZoomRange(layerId, minzoom, maxzoom);
+    await _inOrder(
+      [_layerKey(layerId)],
+      () => _api.layerSetZoomRange(layerId, minzoom, maxzoom),
+    );
   }
 
   @override
   Future<bool?> getLayerVisibility(String layerId) async {
-    return _api.layerGetVisibility(layerId);
+    return _inOrder(
+      [_layerKey(layerId)],
+      () => _api.layerGetVisibility(layerId),
+    );
   }
 
   @override
@@ -1553,13 +1781,21 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<Map<String, dynamic>?> getLayerProperties(String layerId) async {
-    return _styleObjectProperties(await _api.styleGetLayerProperties(layerId));
+    return _styleObjectProperties(
+      await _inOrder(
+        [_layerKey(layerId)],
+        () => _api.styleGetLayerProperties(layerId),
+      ),
+    );
   }
 
   @override
   Future<Map<String, dynamic>?> getSourceProperties(String sourceId) async {
     return _styleObjectProperties(
-      await _api.styleGetSourceProperties(sourceId),
+      await _inOrder(
+        [_sourceKey(sourceId)],
+        () => _api.styleGetSourceProperties(sourceId),
+      ),
     );
   }
 

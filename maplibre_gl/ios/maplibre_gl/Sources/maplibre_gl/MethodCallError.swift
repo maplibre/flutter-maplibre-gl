@@ -16,6 +16,8 @@ enum MethodCallError: Error {
     /// GeoJSON that MapLibre cannot read, or that is not what the call takes.
     case invalidGeoJson(message: String)
     case sourceNotFound(sourceId: String)
+    /// A layer on a vector source that names no source layer.
+    case sourceLayerRequired(layerId: String, sourceId: String)
     case layerNotFound(layerId: String)
     /// A call that needs a style while none is loaded.
     case styleNotReady
@@ -38,6 +40,8 @@ enum MethodCallError: Error {
             return "INVALID_GEOJSON"
         case .sourceNotFound:
             return "SOURCE_NOT_FOUND"
+        case .sourceLayerRequired:
+            return "SOURCE_LAYER_REQUIRED"
         case .layerNotFound:
             return "LAYER_NOT_FOUND_ERROR"
         case .styleNotReady:
@@ -66,6 +70,9 @@ enum MethodCallError: Error {
             return message
         case let .sourceNotFound(sourceId):
             return "Source '\(sourceId)' does not exist in the current style."
+        case let .sourceLayerRequired(layerId, sourceId):
+            return "Source '\(sourceId)' is a vector source, so layer '\(layerId)' requires a "
+                + "'sourceLayer'."
         case .layerNotFound:
             return "Layer not found"
         case .styleNotReady:
@@ -92,7 +99,7 @@ enum MethodCallError: Error {
         case let .layerAlreadyExists(layerId):
             return "Layer with id \(layerId) already exists."
         case .unsupportedSourceType, .invalidArgument, .invalidGeoJson, .sourceNotFound,
-             .styleNotReady:
+             .sourceLayerRequired, .styleNotReady:
             return nil
         }
     }
@@ -103,5 +110,47 @@ enum MethodCallError: Error {
             message: message,
             details: details
         )
+    }
+}
+
+// The messages shared with Android and web.
+extension MethodCallError {
+    /// A coordinate that is NaN or infinite, which MapLibre cannot place.
+    static let nonFiniteCoordinates = "Latitude and longitude must be finite numbers."
+
+    /// A latitude beyond the poles.
+    static let latitudeOutOfRange = "Latitude must be within -90 and 90."
+
+    /// A screen point that is NaN or infinite.
+    static let nonFiniteScreenPoint = "Screen coordinates must be finite numbers."
+
+    /// A camera update with a zoom, angle, offset or padding that is not finite.
+    static let nonFiniteCameraValues =
+        "Zoom, bearing, tilt, offsets and padding must be finite numbers."
+
+    /// A source the properties it was given cannot build.
+    static func unbuildableSource(sourceId: String, type: String) -> MethodCallError {
+        return .invalidArgument(
+            message: "Source '\(sourceId)' cannot be built from its properties as a '\(type)' "
+                + "source."
+        )
+    }
+
+    /// A call made on a source that is not GeoJSON. `methodName` is the Dart
+    /// method, and `clustered` tells whether it needs a clustered source.
+    static func notGeoJsonSource(
+        sourceId: String,
+        methodName: String,
+        clustered: Bool = false
+    ) -> MethodCallError {
+        return .unsupportedSourceType(
+            message: "Source '\(sourceId)' is not a GeoJSON source. \(methodName) only applies "
+                + "to \(clustered ? "clustered " : "")GeoJSON sources."
+        )
+    }
+
+    /// A camera padding that does not fit in the 32 bits Android takes.
+    static func paddingOutOfRange(_ padding: Int64) -> MethodCallError {
+        return .invalidArgument(message: "Padding \(padding) does not fit in 32 bits.")
     }
 }

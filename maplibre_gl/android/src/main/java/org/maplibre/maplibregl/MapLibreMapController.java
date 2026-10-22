@@ -277,6 +277,8 @@ final class MapLibreMapController
   // gets none of the gesture.
   private boolean dragOwnsGesture;
   private MapSnapshotter activeSnapshotter;
+  // The takeSnapshot call activeSnapshotter answers.
+  private MethodChannel.Result activeSnapshotResult;
   // Never added to a style: the engine checks the filter of each feature query on it.
   private CircleLayer queryFilterCheck;
   // Never added to a style, one per layer type: the engine checks layer properties on them.
@@ -542,14 +544,6 @@ final class MapLibreMapController
     // NOTE: getMapAsync is intentionally NOT called here. The caller is responsible
     // for invoking it after registerToLifecycle() so that mapView.onCreate fires
     // first (see onActivityAttached / onActivityRebound).
-  }
-
-  private void moveCamera(CameraUpdate cameraUpdate) {
-    mapLibreMap.moveCamera(cameraUpdate);
-  }
-
-  private void animateCamera(CameraUpdate cameraUpdate) {
-    mapLibreMap.animateCamera(cameraUpdate);
   }
 
   private CameraPosition getCameraPosition() {
@@ -963,24 +957,18 @@ final class MapLibreMapController
   private Source getFeatureStateCapableSource(
       String sourceId, String sourceLayer, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return null;
     }
     final Source source = style.getSource(sourceId);
     if (source == null) {
-      result.error(
-          "SOURCE_NOT_FOUND",
-          "Source '" + sourceId + "' does not exist in the current style.",
-          null);
+      replySourceNotFound(result, sourceId);
       return null;
     }
     if (source instanceof VectorSource) {
       if (sourceLayer == null) {
         result.error(
-            "SOURCE_LAYER_REQUIRED",
+            StyleChecks.SOURCE_LAYER_REQUIRED,
             "Source '"
                 + sourceId
                 + "' is a vector source, so feature state calls on it require a 'sourceLayer'.",
@@ -993,7 +981,7 @@ final class MapLibreMapController
       return source;
     }
     result.error(
-        "UNSUPPORTED_SOURCE_TYPE",
+        StyleChecks.UNSUPPORTED_SOURCE_TYPE,
         "Source '"
             + sourceId
             + "' is a "
@@ -1011,32 +999,20 @@ final class MapLibreMapController
   private GeoJsonSource getClusterCapableSource(
       String sourceId, String methodName, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return null;
     }
     final Source source = style.getSource(sourceId);
     if (source == null) {
-      result.error(
-          "SOURCE_NOT_FOUND",
-          "Source '" + sourceId + "' does not exist in the current style.",
-          null);
+      replySourceNotFound(result, sourceId);
       return null;
     }
     if (source instanceof GeoJsonSource) {
       return (GeoJsonSource) source;
     }
     result.error(
-        "UNSUPPORTED_SOURCE_TYPE",
-        "Source '"
-            + sourceId
-            + "' is a "
-            + source.getClass().getSimpleName()
-            + ". "
-            + methodName
-            + " only applies to clustered GeoJSON sources.",
+        StyleChecks.UNSUPPORTED_SOURCE_TYPE,
+        StyleChecks.notGeoJsonSource(sourceId, methodName, true),
         null);
     return null;
   }
@@ -1149,13 +1125,6 @@ final class MapLibreMapController
       return;
     }
 
-    // The channel call already answered SOURCE_ALREADY_EXISTS for this case. The
-    // guard stays so a CannotAddSourceException can never reach the SDK.
-    if (style.getSource(sourceName) != null) {
-      result.success(null);
-      return;
-    }
-
     try {
       // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
       // that silently discards icons registered via addImage() in the same render frame.
@@ -1165,9 +1134,10 @@ final class MapLibreMapController
       // thread and keeps numeric ids numeric. A Java FeatureCollection would
       // turn every id into a String, so ["id"] filters on numbers would miss.
       GeoJsonSource geoJsonSource = new GeoJsonSource(sourceName, source, options);
-      addedFeaturesByLayer.put(sourceName, source);
-
       style.addSource(geoJsonSource);
+      // Replaces the data of any earlier source with this id.
+      addedFeaturesByLayer.put(sourceName, source);
+      imageSourceCoordinates.remove(sourceName);
     } catch (Exception e) {
       Log.e(TAG, "addGeoJsonSource: error adding source '" + sourceName + "'", e);
     }
@@ -1175,24 +1145,46 @@ final class MapLibreMapController
   }
 
   /**
-   * Replaces the data of the GeoJSON source {@code sourceName}. Answers STYLE_NOT_READY without a
-   * style and SOURCE_NOT_FOUND without such a source.
+   * The GeoJSON source {@code sourceId} that {@code methodName} works on, or null after answering
+   * STYLE_NOT_READY without a style, SOURCE_NOT_FOUND without the source and
+   * UNSUPPORTED_SOURCE_TYPE for a source of another type.
    */
-  private void setGeoJsonSource(String sourceName, String geojson, MethodChannel.Result result) {
+  @Nullable
+  private GeoJsonSource geoJsonSource(
+      String sourceId, String methodName, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
-      return;
+      return null;
     }
-    final Source source = style.getSource(sourceName);
+    final Source source = style.getSource(sourceId);
+    if (source == null) {
+      replySourceNotFound(result, sourceId);
+      return null;
+    }
     if (!(source instanceof GeoJsonSource)) {
-      replySourceNotFound(result, sourceName);
+      result.error(
+          StyleChecks.UNSUPPORTED_SOURCE_TYPE,
+          StyleChecks.notGeoJsonSource(sourceId, methodName, false),
+          null);
+      return null;
+    }
+    return (GeoJsonSource) source;
+  }
+
+  /**
+   * Replaces the data of the GeoJSON source {@code sourceName}. Answers what {@link
+   * #geoJsonSource} answers for a source it cannot change.
+   */
+  private void setGeoJsonSource(String sourceName, String geojson, MethodChannel.Result result) {
+    final GeoJsonSource source = geoJsonSource(sourceName, "setGeoJsonSource", result);
+    if (source == null) {
       return;
     }
 
     try {
       // Raw JSON for the same reason as in addGeoJsonSource.
       addedFeaturesByLayer.put(sourceName, geojson);
-      ((GeoJsonSource) source).setGeoJson(geojson);
+      source.setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
     }
@@ -1218,19 +1210,14 @@ final class MapLibreMapController
 
   /**
    * Replaces the feature with the id of {@code geojsonFeature} in the data addGeoJsonSource or
-   * setGeoJsonSource gave {@code sourceName}. Answers STYLE_NOT_READY without a style,
-   * SOURCE_NOT_FOUND without such a source and INVALID_GEOJSON for anything but a Feature. A source
-   * added some other way, or an id its data does not hold, changes nothing.
+   * setGeoJsonSource gave {@code sourceName}. Answers what {@link #geoJsonSource} answers for a
+   * source it cannot change, and INVALID_GEOJSON for anything but a Feature. A source added some
+   * other way, or an id its data does not hold, changes nothing.
    */
   private void setGeoJsonFeature(
       String sourceName, String geojsonFeature, MethodChannel.Result result) {
-    if (style == null || !style.isFullyLoaded()) {
-      replyStyleNotReady(result);
-      return;
-    }
-    final Source source = style.getSource(sourceName);
-    if (!(source instanceof GeoJsonSource)) {
-      replySourceNotFound(result, sourceName);
+    final GeoJsonSource source = geoJsonSource(sourceName, "setGeoJsonFeature", result);
+    if (source == null) {
       return;
     }
     JsonElement feature;
@@ -1252,7 +1239,7 @@ final class MapLibreMapController
       // Merged as JSON rather than through the Java Feature, which would turn
       // the ids of the whole source into Strings.
       if (data != null && data.replace(feature)) {
-        ((GeoJsonSource) source).setGeoJson(data.toJson());
+        source.setGeoJson(data.toJson());
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
@@ -1582,60 +1569,89 @@ final class MapLibreMapController
     return captureEngineError(FILTER_ERROR_PREFIX, action);
   }
 
-  /**
-   * Runs {@code action}, which sets {@code property} on a layer, and returns why the engine
-   * rejected the value, or null. The engine logs it instead of throwing.
-   */
+  /** Runs {@code action} and returns what the engine logged after {@code prefix} meanwhile, or null. */
   @Nullable
-  private static String capturePropertyError(String property, Runnable action) {
-    final String logged = captureEngineError(PROPERTY_ERROR_PREFIX, action);
-    return logged == null ? null : StyleChecks.propertyReason(logged, property);
+  private static String captureEngineError(String prefix, Runnable action) {
+    try (EngineErrors errors = new EngineErrors(prefix)) {
+      action.run();
+      return errors.take();
+    }
+  }
+
+  /** The fields of the SDK logger, read once, or null when this SDK has other ones. */
+  @Nullable private static final Field LOGGER_FIELD = loggerField("logger");
+
+  @Nullable private static final Field LOG_LEVEL_FIELD = loggerField("logLevel");
+
+  @Nullable
+  private static Field loggerField(String name) {
+    try {
+      final Field field = Logger.class.getDeclaredField(name);
+      field.setAccessible(true);
+      return field;
+    } catch (ReflectiveOperationException | RuntimeException e) {
+      return null;
+    }
   }
 
   /**
-   * Runs {@code action} and returns what the engine logged after {@code prefix} meanwhile, or null.
-   * The SDK logger is swapped for a recording one, which works even when the app silenced logging.
+   * Records what the engine logs after a prefix, from when it is created until it is closed. The
+   * engine logs a rejected filter or property instead of throwing. The SDK logger is swapped for a
+   * recording one, which works even when the app silenced logging.
    */
-  private static String captureEngineError(String prefix, Runnable action) {
-    LoggerDefinition previous;
-    int previousLevel;
-    Field loggerField;
-    Field levelField;
-    try {
-      loggerField = Logger.class.getDeclaredField("logger");
-      levelField = Logger.class.getDeclaredField("logLevel");
-      loggerField.setAccessible(true);
-      levelField.setAccessible(true);
-      previous = (LoggerDefinition) loggerField.get(null);
-      previousLevel = levelField.getInt(null);
-    } catch (ReflectiveOperationException e) {
-      action.run();
-      return null;
+  private static final class EngineErrors implements AutoCloseable {
+    @Nullable private final LoggerDefinition previous;
+    private final int previousLevel;
+    @Nullable private String error;
+
+    EngineErrors(String prefix) {
+      LoggerDefinition logger = null;
+      int level = 0;
+      if (LOGGER_FIELD != null && LOG_LEVEL_FIELD != null) {
+        try {
+          logger = (LoggerDefinition) LOGGER_FIELD.get(null);
+          level = LOG_LEVEL_FIELD.getInt(null);
+        } catch (ReflectiveOperationException e) {
+          logger = null;
+        }
+      }
+      previous = logger;
+      previousLevel = level;
+      if (previous == null) {
+        return;
+      }
+      Logger.setLoggerDefinition(
+          new ForwardingLogger(previous) {
+            @Override
+            public void e(String tag, String msg) {
+              // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
+              int start = msg == null ? -1 : msg.indexOf(prefix);
+              if (error == null && start >= 0) {
+                error = msg.substring(start + prefix.length());
+              }
+              if (previousLevel <= Logger.ERROR) {
+                super.e(tag, msg);
+              }
+            }
+          });
+      Logger.setVerbosity(Math.min(previousLevel, Logger.ERROR));
     }
 
-    String[] error = {null};
-    Logger.setLoggerDefinition(
-        new ForwardingLogger(previous) {
-          @Override
-          public void e(String tag, String msg) {
-            // The engine prefixes its messages, e.g. "{main}[JNI]: Error setting filter: ...".
-            int start = msg == null ? -1 : msg.indexOf(prefix);
-            if (error[0] == null && start >= 0) {
-              error[0] = msg.substring(start + prefix.length());
-            }
-            if (previousLevel <= Logger.ERROR) {
-              super.e(tag, msg);
-            }
-          }
-        });
-    Logger.setVerbosity(Math.min(previousLevel, Logger.ERROR));
-    try {
-      action.run();
-    } finally {
-      Logger.setLoggerDefinition(previous);
-      Logger.setVerbosity(previousLevel);
+    /** What the engine logged since the last take, or null. */
+    @Nullable
+    String take() {
+      final String logged = error;
+      error = null;
+      return logged;
     }
-    return error[0];
+
+    @Override
+    public void close() {
+      if (previous != null) {
+        Logger.setLoggerDefinition(previous);
+        Logger.setVerbosity(previousLevel);
+      }
+    }
   }
 
   /** A logger that passes every message on to {@code target}. */
@@ -1956,12 +1972,30 @@ final class MapLibreMapController
    */
   @Nullable
   private CameraUpdate toCameraUpdate(PgCameraUpdate update, MethodChannel.Result result) {
+    final String nonFinite = PigeonConvert.nonFiniteReason(update);
+    if (nonFinite != null) {
+      result.error(StyleChecks.INVALID_ARGUMENT, nonFinite, null);
+      return null;
+    }
     try {
       return PigeonConvert.toCameraUpdate(update, mapLibreMap, density);
     } catch (RuntimeException e) {
-      result.error("INVALID_ARGUMENT", "Cannot interpret " + update + " as CameraUpdate.", null);
+      result.error(
+          StyleChecks.INVALID_ARGUMENT, "Cannot interpret " + update + " as CameraUpdate.", null);
       return null;
     }
+  }
+
+  /**
+   * Answers INVALID_ARGUMENT for a coordinate that is NaN or infinite, which MapLibre cannot place.
+   *
+   * @return true when the call has been answered with an error.
+   */
+  private static boolean rejectNonFinite(boolean finite, MethodChannel.Result result) {
+    if (!finite) {
+      result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.NON_FINITE_COORDINATES, null);
+    }
+    return !finite;
   }
 
   private static void replyLayerNotFound(MethodChannel.Result result, String layerId) {
@@ -1969,10 +2003,7 @@ final class MapLibreMapController
   }
 
   private static void replyStyleNotReady(MethodChannel.Result result) {
-    result.error(
-        "STYLE_NOT_READY",
-        "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-        null);
+    result.error(StyleChecks.STYLE_NOT_READY, StyleChecks.STYLE_NOT_READY_MESSAGE, null);
   }
 
   private static void replySourceNotFound(MethodChannel.Result result, String sourceId) {
@@ -1981,13 +2012,19 @@ final class MapLibreMapController
   }
 
   /**
-   * Answers STYLE_NOT_READY without a style, SOURCE_NOT_FOUND without the source {@code sourceId},
-   * and UNSUPPORTED_SOURCE_TYPE when a layer of {@code layerType} cannot draw that source.
+   * Answers, in this order, STYLE_NOT_READY without a style, SOURCE_NOT_FOUND without the source
+   * {@code sourceId}, UNSUPPORTED_SOURCE_TYPE when a layer of {@code layerType} cannot draw that
+   * source, and SOURCE_LAYER_REQUIRED for a vector source without {@code sourceLayer}. The engine
+   * would add the layer and draw nothing.
    *
    * @return true when the call has been answered with an error.
    */
-  private boolean rejectLayerSource(
-      String layerId, String layerType, String sourceId, MethodChannel.Result result) {
+  private boolean rejectLayerAdd(
+      String layerId,
+      String layerType,
+      String sourceId,
+      @Nullable String sourceLayer,
+      MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);
       return true;
@@ -2005,50 +2042,97 @@ final class MapLibreMapController
           null);
       return true;
     }
+    if (source instanceof VectorSource && (sourceLayer == null || sourceLayer.isEmpty())) {
+      result.error(
+          StyleChecks.SOURCE_LAYER_REQUIRED,
+          StyleChecks.sourceLayerRequired(layerId, sourceId),
+          null);
+      return true;
+    }
     return false;
   }
 
   /**
-   * Answers INVALID_EXPRESSION or INVALID_ARGUMENT, and logs a warning, when the engine rejects one
-   * of {@code properties}. They are tried in name order on a layer outside the style, so a failed
-   * call changes nothing.
-   *
-   * @return true when the call has been answered with an error.
+   * {@code properties} converted for a layer of {@code layerType}, or null after answering
+   * INVALID_EXPRESSION or INVALID_ARGUMENT, and logging a warning, when the engine rejects one of
+   * them. They are tried in name order on a layer outside the style, so a failed call changes
+   * nothing.
    */
-  private boolean rejectInvalidLayerProperties(
+  @Nullable
+  private PropertyValue[] checkedLayerProperties(
       String layerId,
       String layerType,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    final Layer check = propertyCheckLayer(layerType);
-    if (check == null || properties.isEmpty()) {
-      return false;
+    final PropertyValue[] values;
+    try {
+      values = interpretLayerProperties(layerType, properties);
+    } catch (RuntimeException e) {
+      rejectUnconvertibleProperty(layerId, layerType, properties, result, e);
+      return null;
     }
+    final Layer check = propertyCheckLayer(layerType);
+    if (check == null) {
+      return values;
+    }
+    final PropertyValue<?>[] byName = values.clone();
+    Arrays.sort(byName, (a, b) -> a.name.compareTo(b.name));
+    try (EngineErrors errors = new EngineErrors(PROPERTY_ERROR_PREFIX)) {
+      for (PropertyValue<?> value : byName) {
+        if (value.value == null) {
+          // Null resets the property, which the engine always takes.
+          continue;
+        }
+        final Object raw = properties.get(value.name);
+        String reason = StyleChecks.hexColorError(value.name, raw);
+        if (reason == null) {
+          check.setProperties(value);
+          final String logged = errors.take();
+          reason = logged == null ? null : StyleChecks.propertyReason(logged, value.name);
+        }
+        if (reason != null) {
+          replyInvalidProperty(layerId, value.name, raw, reason, result);
+          return null;
+        }
+      }
+    }
+    return values;
+  }
+
+  /**
+   * Answers for the first of {@code properties}, in name order, that the SDK cannot build an
+   * expression from, such as an empty array. Throws {@code failure} again when none fails alone.
+   */
+  private static void rejectUnconvertibleProperty(
+      String layerId,
+      String layerType,
+      Map<String, Object> properties,
+      MethodChannel.Result result,
+      RuntimeException failure) {
     final List<String> names = new ArrayList<>(properties.keySet());
     Collections.sort(names);
     for (String name : names) {
       final Object value = properties.get(name);
-      if (value == null) {
-        // Null resets the property, which the engine always takes.
-        continue;
-      }
-      String reason;
       try {
-        final PropertyValue[] values =
-            interpretLayerProperties(layerType, Collections.singletonMap(name, value));
-        reason = capturePropertyError(name, () -> check.setProperties(values));
+        interpretLayerProperties(layerType, Collections.singletonMap(name, value));
       } catch (RuntimeException e) {
-        // The SDK cannot build an expression from it, such as from an empty array.
-        reason = e.getMessage() != null ? e.getMessage() : e.toString();
-      }
-      if (reason != null) {
-        final String message = StyleChecks.invalidProperty(layerId, name, value, reason);
-        Log.w(TAG, message);
-        result.error(StyleChecks.invalidPropertyCode(value), message, reason);
-        return true;
+        replyInvalidProperty(
+            layerId, name, value, e.getMessage() != null ? e.getMessage() : e.toString(), result);
+        return;
       }
     }
-    return false;
+    throw failure;
+  }
+
+  private static void replyInvalidProperty(
+      String layerId,
+      String name,
+      @Nullable Object value,
+      String reason,
+      MethodChannel.Result result) {
+    final String message = StyleChecks.invalidProperty(layerId, name, value, reason);
+    Log.w(TAG, message);
+    result.error(StyleChecks.invalidPropertyCode(value), message, reason);
   }
 
   private static final String PROPERTY_CHECK_ID = "maplibre-gl-property-check";
@@ -2262,11 +2346,7 @@ final class MapLibreMapController
   @Override
   public void mapSetCustomHeaders(
       Map<String, String> headers, List<String> filter, MethodChannel.Result result) {
-    if (mapLibreMap != null) {
-      MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
-    } else {
-      result.success(null);
-    }
+    MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
   }
 
   @Override
@@ -2313,10 +2393,6 @@ final class MapLibreMapController
   @Override
   public void mapTakeSnapshot(
       @Nullable Long width, @Nullable Long height, MethodChannel.Result result) {
-    if (mapLibreMap == null) {
-      result.error("MAP_NOT_READY", "Map is not ready", null);
-      return;
-    }
     Style currentStyle = mapLibreMap.getStyle();
     if (currentStyle == null) {
       result.error("STYLE_NOT_READY", "Map style is not loaded", null);
@@ -2340,26 +2416,52 @@ final class MapLibreMapController
             .withPixelRatio(density)
             .withStyleBuilder(snapshotStyle)
             .withCameraPosition(mapLibreMap.getCameraPosition());
-    if (activeSnapshotter != null) {
-      activeSnapshotter.cancel();
+    cancelSnapshot(SNAPSHOT_ERROR, SNAPSHOT_SUPERSEDED);
+    final MapSnapshotter snapshotter = new MapSnapshotter(context, options);
+    activeSnapshotter = snapshotter;
+    activeSnapshotResult = result;
+    snapshotter.start(
+        snapshot -> {
+          if (finishSnapshot(snapshotter)) {
+            Bitmap bitmap = snapshot.getBitmap();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+            result.success(stream.toByteArray());
+          }
+        },
+        error -> {
+          if (finishSnapshot(snapshotter)) {
+            result.error(SNAPSHOT_ERROR, error, null);
+          }
+        });
+  }
+
+  private static final String SNAPSHOT_ERROR = "SNAPSHOT_ERROR";
+  private static final String SNAPSHOT_SUPERSEDED = "A newer takeSnapshot call cancelled this one.";
+
+  /**
+   * Forgets {@code snapshotter} once it has finished. False when it no longer runs for a call,
+   * which cancelSnapshot has answered.
+   */
+  private boolean finishSnapshot(MapSnapshotter snapshotter) {
+    if (activeSnapshotter != snapshotter) {
+      return false;
     }
-    activeSnapshotter = new MapSnapshotter(context, options);
-    activeSnapshotter.start(new MapSnapshotter.SnapshotReadyCallback() {
-      @Override
-      public void onSnapshotReady(MapSnapshot snapshot) {
-        activeSnapshotter = null;
-        Bitmap bitmap = snapshot.getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        result.success(stream.toByteArray());
-      }
-    }, new MapSnapshotter.ErrorHandler() {
-      @Override
-      public void onError(String error) {
-        activeSnapshotter = null;
-        result.error("SNAPSHOT_ERROR", error, null);
-      }
-    });
+    activeSnapshotter = null;
+    activeSnapshotResult = null;
+    return true;
+  }
+
+  /** Stops the running snapshot, if any, and fails its call with {@code code}. */
+  private void cancelSnapshot(String code, String message) {
+    if (activeSnapshotter == null) {
+      return;
+    }
+    final MethodChannel.Result waiting = activeSnapshotResult;
+    activeSnapshotter.cancel();
+    activeSnapshotter = null;
+    activeSnapshotResult = null;
+    waiting.error(code, message, null);
   }
 
   // -- Camera -----------------------------------------------------------------
@@ -2370,21 +2472,7 @@ final class MapLibreMapController
     if (update == null) {
       return;
     }
-    mapLibreMap.moveCamera(
-        update,
-        new OnCameraMoveFinishedListener() {
-          @Override
-          public void onFinish() {
-            super.onFinish();
-            result.success(true);
-          }
-
-          @Override
-          public void onCancel() {
-            super.onCancel();
-            result.success(false);
-          }
-        });
+    mapLibreMap.moveCamera(update, answerWhenDone(result));
   }
 
   @Override
@@ -2395,29 +2483,14 @@ final class MapLibreMapController
       return;
     }
     final Integer durationMs = duration == null ? null : Convert.toIntExact(duration);
-
-    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
-        new OnCameraMoveFinishedListener() {
-          @Override
-          public void onFinish() {
-            super.onFinish();
-            result.success(true);
-          }
-
-          @Override
-          public void onCancel() {
-            super.onCancel();
-            result.success(false);
-          }
-        };
     if (durationMs != null && durationMs == 0) {
       // The SDK rejects a zero duration, where iOS and web jump to the camera at once. So does
       // this, with the camera events of a moveCamera.
-      mapLibreMap.moveCamera(update, onCameraMoveFinishedListener);
+      mapLibreMap.moveCamera(update, answerWhenDone(result));
     } else if (durationMs != null) {
-      mapLibreMap.animateCamera(update, durationMs, onCameraMoveFinishedListener);
+      mapLibreMap.animateCamera(update, durationMs, answerWhenDone(result));
     } else {
-      mapLibreMap.animateCamera(update, onCameraMoveFinishedListener);
+      mapLibreMap.animateCamera(update, answerWhenDone(result));
     }
   }
 
@@ -2441,26 +2514,26 @@ final class MapLibreMapController
     // This cross-platform caveat is documented on CameraAnimationInterpolation.
     final boolean easingInterpolator = interpolation != PgCameraAnimationInterpolation.LINEAR;
 
-    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
-        new OnCameraMoveFinishedListener() {
-          @Override
-          public void onFinish() {
-            super.onFinish();
-            result.success(true);
-          }
-
-          @Override
-          public void onCancel() {
-            super.onCancel();
-            result.success(false);
-          }
-        };
-
     if (durationMs != null && durationMs > 0) {
-      mapLibreMap.easeCamera(update, durationMs, easingInterpolator, onCameraMoveFinishedListener);
+      mapLibreMap.easeCamera(update, durationMs, easingInterpolator, answerWhenDone(result));
     } else {
-      mapLibreMap.easeCamera(update, onCameraMoveFinishedListener);
+      mapLibreMap.easeCamera(update, answerWhenDone(result));
     }
+  }
+
+  /** Answers {@code result} true once the camera arrives and false when the move is cut short. */
+  private static MapLibreMap.CancelableCallback answerWhenDone(MethodChannel.Result result) {
+    return new MapLibreMap.CancelableCallback() {
+      @Override
+      public void onFinish() {
+        result.success(true);
+      }
+
+      @Override
+      public void onCancel() {
+        result.success(false);
+      }
+    };
   }
 
   @Override
@@ -2479,9 +2552,9 @@ final class MapLibreMapController
             Convert.toPixels(insets.getBottom(), density));
 
     if (animated) {
-      animateCamera(cameraUpdate, null, result);
+      mapLibreMap.animateCamera(cameraUpdate, answerWhenDone(result));
     } else {
-      moveCamera(cameraUpdate, result);
+      mapLibreMap.moveCamera(cameraUpdate, answerWhenDone(result));
     }
   }
 
@@ -2493,7 +2566,19 @@ final class MapLibreMapController
       double east,
       long padding,
       MethodChannel.Result result) {
-    final int logicalPadding = Convert.toIntExact(padding);
+    if (rejectNonFinite(
+        StyleChecks.isFinite(north, east) && StyleChecks.isFinite(south, west), result)) {
+      return;
+    }
+    if (Math.abs(north) > 90 || Math.abs(south) > 90) {
+      result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.LATITUDE_OUT_OF_RANGE, null);
+      return;
+    }
+    if (padding < Integer.MIN_VALUE || padding > Integer.MAX_VALUE) {
+      result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.paddingOutOfRange(padding), null);
+      return;
+    }
+    final int logicalPadding = (int) padding;
 
     LatLng locationOne = new LatLng(north, east);
     LatLng locationTwo = new LatLng(south, west);
@@ -2673,6 +2758,9 @@ final class MapLibreMapController
 
   @Override
   public void mapToScreenLocation(double latitude, double longitude, MethodChannel.Result result) {
+    if (rejectNonFinite(StyleChecks.isFinite(latitude, longitude), result)) {
+      return;
+    }
     PointF pointf =
         mapLibreMap.getProjection().toScreenLocation(new LatLng(latitude, longitude));
     result.success(new PgScreenPoint(pointf.x, pointf.y));
@@ -2680,6 +2768,11 @@ final class MapLibreMapController
 
   @Override
   public void mapToScreenLocationBatch(double[] coordinates, MethodChannel.Result result) {
+    for (int i = 0; i + 1 < coordinates.length; i += 2) {
+      if (rejectNonFinite(StyleChecks.isFinite(coordinates[i], coordinates[i + 1]), result)) {
+        return;
+      }
+    }
     double[] reply = new double[coordinates.length];
 
     for (int i = 0; i < coordinates.length; i += 2) {
@@ -2696,6 +2789,10 @@ final class MapLibreMapController
 
   @Override
   public void mapToLatLng(double x, double y, MethodChannel.Result result) {
+    if (!StyleChecks.isFinite(x, y)) {
+      result.error(StyleChecks.INVALID_ARGUMENT, StyleChecks.NON_FINITE_SCREEN_POINT, null);
+      return;
+    }
     LatLng latlng =
         mapLibreMap.getProjection().fromScreenLocation(new PointF((float) x, (float) y));
     result.success(new PgLatLng(latlng.getLatitude(), latlng.getLongitude()));
@@ -2745,10 +2842,7 @@ final class MapLibreMapController
       @Nullable String filter,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
 
@@ -2815,7 +2909,7 @@ final class MapLibreMapController
   private static final String QUERY_FILTER_CHECK_ID = "maplibre-gl-query-filter-check";
 
   private static void replyInvalidFilter(MethodChannel.Result result, String reason) {
-    result.error("INVALID_EXPRESSION", "Invalid filter: " + reason, reason);
+    result.error(StyleChecks.INVALID_EXPRESSION, "Invalid filter: " + reason, reason);
   }
 
   // -- Sources ----------------------------------------------------------------
@@ -2823,20 +2917,18 @@ final class MapLibreMapController
   @Override
   public void mapEditGeoJsonSource(String id, String data, MethodChannel.Result result) {
     boolean ret = false;
-    if (mapLibreMap != null) {
-      Style style = mapLibreMap.getStyle();
-      if (style != null) {
-        try {
-          GeoJsonSource source = style.getSourceAs(id);
-          if (source != null) {
-            source.setGeoJson(data);
-            // Kept for setGeoJsonFeature.
-            addedFeaturesByLayer.put(id, data);
-            ret = true;
-          }
-        } catch (Exception e) {
-          Log.e(TAG, "editGeoJsonSource: error updating source '" + id + "'", e);
+    final Style style = mapLibreMap.getStyle();
+    if (style != null) {
+      try {
+        GeoJsonSource source = style.getSourceAs(id);
+        if (source != null) {
+          source.setGeoJson(data);
+          // Kept for setGeoJsonFeature.
+          addedFeaturesByLayer.put(id, data);
+          ret = true;
         }
+      } catch (Exception e) {
+        Log.e(TAG, "editGeoJsonSource: error updating source '" + id + "'", e);
       }
     }
     result.success(ret);
@@ -2845,20 +2937,18 @@ final class MapLibreMapController
   @Override
   public void mapEditGeoJsonUrl(String id, String url, MethodChannel.Result result) {
     boolean ret = false;
-    if (mapLibreMap != null) {
-      Style style = mapLibreMap.getStyle();
-      if (style != null) {
-        try {
-          GeoJsonSource source = style.getSourceAs(id);
-          if (source != null) {
-            source.setUrl(url);
-            // setGeoJsonFeature cannot change data it does not hold.
-            addedFeaturesByLayer.remove(id);
-            ret = true;
-          }
-        } catch (Exception e) {
-          Log.e(TAG, "editGeoJsonUrl: error updating source '" + id + "'", e);
+    final Style style = mapLibreMap.getStyle();
+    if (style != null) {
+      try {
+        GeoJsonSource source = style.getSourceAs(id);
+        if (source != null) {
+          source.setUrl(url);
+          // setGeoJsonFeature cannot change data it does not hold.
+          addedFeaturesByLayer.remove(id);
+          ret = true;
         }
+      } catch (Exception e) {
+        Log.e(TAG, "editGeoJsonUrl: error updating source '" + id + "'", e);
       }
     }
     result.success(ret);
@@ -2923,7 +3013,7 @@ final class MapLibreMapController
     // there is nothing the SDK could remove it from.
     if (featureId == null && stateKey != null) {
       result.error(
-          "INVALID_ARGUMENT",
+          StyleChecks.INVALID_ARGUMENT,
           "removeFeatureState with a 'stateKey' also requires the 'featureId' that owns the key.",
           null);
       return;
@@ -3043,7 +3133,8 @@ final class MapLibreMapController
     }
     final Object type = properties.get("type");
     if (!(type instanceof String)) {
-      result.error("UNSUPPORTED_SOURCE_TYPE", "Source '" + sourceId + "' has no type.", null);
+      result.error(
+          StyleChecks.UNSUPPORTED_SOURCE_TYPE, "Source '" + sourceId + "' has no type.", null);
       return;
     }
     if ("video".equals(type)) {
@@ -3053,7 +3144,7 @@ final class MapLibreMapController
     }
     if (!SourcePropertyConverter.isSupportedType((String) type)) {
       result.error(
-          "UNSUPPORTED_SOURCE_TYPE",
+          StyleChecks.UNSUPPORTED_SOURCE_TYPE,
           "Source '" + sourceId + "' has the type '" + type + "', which this platform does not"
               + " support.",
           null);
@@ -3065,16 +3156,19 @@ final class MapLibreMapController
             : SourcePropertyConverter.buildSource(sourceId, (String) type, properties);
     if (source == null) {
       result.error(
-          "INVALID_ARGUMENT",
-          "Source '" + sourceId + "' cannot be built from its properties as a '" + type
-              + "' source.",
+          StyleChecks.INVALID_ARGUMENT,
+          StyleChecks.unbuildableSource(sourceId, (String) type),
           null);
       return;
     }
     style.addSource(source);
+    // setGeoJsonFeature edits only data this API was given as GeoJSON.
+    addedFeaturesByLayer.remove(sourceId);
     if (source instanceof ImageSource) {
       imageSourceCoordinates.put(
           sourceId, SourcePropertyConverter.buildLatLngQuad(properties.get("coordinates")));
+    } else {
+      imageSourceCoordinates.remove(sourceId);
     }
     result.success(null);
   }
@@ -3082,14 +3176,14 @@ final class MapLibreMapController
   @Override
   public void styleRemoveSource(String sourceId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
-    style.removeSource(sourceId);
-    imageSourceCoordinates.remove(sourceId);
+    // The engine keeps a source a layer still uses, and what is known about it with it.
+    if (style.removeSource(sourceId)) {
+      imageSourceCoordinates.remove(sourceId);
+      addedFeaturesByLayer.remove(sourceId);
+    }
     result.success(null);
   }
 
@@ -3101,10 +3195,10 @@ final class MapLibreMapController
       PgLatLngQuad coordinates,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
+      return;
+    }
+    if (rejectNonFinite(PigeonConvert.isFinite(coordinates), result)) {
       return;
     }
     Bitmap addSourceBitmap =
@@ -3116,6 +3210,7 @@ final class MapLibreMapController
     final LatLngQuad quad = PigeonConvert.toLatLngQuad(coordinates);
     style.addSource(new ImageSource(imageSourceId, quad, addSourceBitmap));
     imageSourceCoordinates.put(imageSourceId, quad);
+    addedFeaturesByLayer.remove(imageSourceId);
     result.success(null);
   }
 
@@ -3127,10 +3222,7 @@ final class MapLibreMapController
       @Nullable PgLatLngQuad coordinates,
       MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     final Source source = style.getSource(imageSourceId);
@@ -3139,6 +3231,10 @@ final class MapLibreMapController
       return;
     }
     final ImageSource imageSource = (ImageSource) source;
+    if (coordinates != null
+        && rejectNonFinite(PigeonConvert.isFinite(coordinates), result)) {
+      return;
+    }
     // Decoded first, so a call that fails changes nothing.
     Bitmap updateBitmap = null;
     if (bytes != null) {
@@ -3162,10 +3258,7 @@ final class MapLibreMapController
   @Override
   public void styleGetSourceIds(MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-              "STYLE_NOT_READY",
-              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-              null);
+      replyStyleNotReady(result);
       return;
     }
     List<String> sourceIds = new ArrayList<>();
@@ -3178,10 +3271,7 @@ final class MapLibreMapController
   @Override
   public void styleGetSourceProperties(String sourceId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-              "STYLE_NOT_READY",
-              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-              null);
+      replyStyleNotReady(result);
       return;
     }
     result.success(getSourceProperties(sourceId));
@@ -3201,17 +3291,17 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "symbol", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "symbol", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "symbol", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "symbol", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretSymbolLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3225,7 +3315,7 @@ final class MapLibreMapController
         propertyValues,
         enableInteraction,
         filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3245,17 +3335,17 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "line", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "line", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "line", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "line", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretLineLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3269,7 +3359,7 @@ final class MapLibreMapController
         propertyValues,
         enableInteraction,
         filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3289,17 +3379,17 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "fill", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "fill", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "fill", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "fill", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretFillLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3313,7 +3403,7 @@ final class MapLibreMapController
         propertyValues,
         enableInteraction,
         filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3333,17 +3423,17 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "fill-extrusion", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "fill-extrusion", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "fill-extrusion", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "fill-extrusion", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretFillExtrusionLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3357,7 +3447,7 @@ final class MapLibreMapController
             propertyValues,
             enableInteraction,
             filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3377,17 +3467,17 @@ final class MapLibreMapController
       boolean enableInteraction,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "circle", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "circle", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "circle", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "circle", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretCircleLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3401,7 +3491,7 @@ final class MapLibreMapController
         propertyValues,
         enableInteraction,
         filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3418,14 +3508,14 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "raster", sourceId, result)) {
-      return;
-    }
-    if (rejectInvalidLayerProperties(layerId, "raster", properties, result)) {
+    if (rejectLayerAdd(layerId, "raster", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretRasterLayerProperties(properties);
+        checkedLayerProperties(layerId, "raster", properties, result);
+    if (propertyValues == null) {
+      return;
+    }
     if (!addRasterLayer(
         layerId,
         sourceId,
@@ -3434,7 +3524,7 @@ final class MapLibreMapController
         belowLayerId,
         propertyValues,
         null)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3451,14 +3541,14 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "hillshade", sourceId, result)) {
-      return;
-    }
-    if (rejectInvalidLayerProperties(layerId, "hillshade", properties, result)) {
+    if (rejectLayerAdd(layerId, "hillshade", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretHillshadeLayerProperties(properties);
+        checkedLayerProperties(layerId, "hillshade", properties, result);
+    if (propertyValues == null) {
+      return;
+    }
     if (!addHillshadeLayer(
         layerId,
         sourceId,
@@ -3467,7 +3557,7 @@ final class MapLibreMapController
         belowLayerId,
         propertyValues,
         null)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3484,14 +3574,14 @@ final class MapLibreMapController
       @Nullable Double maxzoom,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "color-relief", sourceId, result)) {
-      return;
-    }
-    if (rejectInvalidLayerProperties(layerId, "color-relief", properties, result)) {
+    if (rejectLayerAdd(layerId, "color-relief", sourceId, null, result)) {
       return;
     }
     final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretColorReliefLayerProperties(properties);
+        checkedLayerProperties(layerId, "color-relief", properties, result);
+    if (propertyValues == null) {
+      return;
+    }
     if (!addColorReliefLayer(
         layerId,
         sourceId,
@@ -3500,7 +3590,7 @@ final class MapLibreMapController
         belowLayerId,
         propertyValues,
         null)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3520,18 +3610,18 @@ final class MapLibreMapController
       replyStyleNotReady(result);
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "background", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "background", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretBackgroundLayerProperties(properties);
     if (!addBackgroundLayer(
         layerId,
         minzoom != null ? minzoom.floatValue() : null,
         maxzoom != null ? maxzoom.floatValue() : null,
         belowLayerId,
         propertyValues)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3550,17 +3640,17 @@ final class MapLibreMapController
       @Nullable String filter,
       Map<String, Object> properties,
       MethodChannel.Result result) {
-    if (rejectLayerSource(layerId, "heatmap", sourceId, result)) {
+    if (rejectLayerAdd(layerId, "heatmap", sourceId, sourceLayer, result)) {
       return;
     }
     if (rejectInvalidLayerFilter(filter, result)) {
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, "heatmap", properties, result)) {
+    final PropertyValue[] propertyValues =
+        checkedLayerProperties(layerId, "heatmap", properties, result);
+    if (propertyValues == null) {
       return;
     }
-    final PropertyValue[] propertyValues =
-        LayerPropertyConverter.interpretHeatmapLayerProperties(properties);
 
     Expression filterExpression = parseFilter(filter);
 
@@ -3573,7 +3663,7 @@ final class MapLibreMapController
         belowLayerId,
         propertyValues,
         filterExpression)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     updateLocationComponentLayer();
@@ -3598,20 +3688,18 @@ final class MapLibreMapController
       result.error("UNSUPPORTED_LAYER_TYPE", "Layer type not supported", null);
       return;
     }
-    if (rejectInvalidLayerProperties(layerId, type, properties, result)) {
+    final PropertyValue[] values = checkedLayerProperties(layerId, type, properties, result);
+    if (values == null) {
       return;
     }
-    layer.setProperties(interpretLayerProperties(type, properties));
+    layer.setProperties(values);
     result.success(null);
   }
 
   @Override
   public void layerSetVisibility(String layerId, boolean visible, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     Layer layer = style.getLayer(layerId);
@@ -3632,10 +3720,7 @@ final class MapLibreMapController
       return;
     }
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     // Unknown ids are skipped and returned, as on iOS and web.
@@ -3661,17 +3746,14 @@ final class MapLibreMapController
     // reject the same values.
     if (!(minzoom >= 0 && maxzoom <= 24 && minzoom <= maxzoom)) {
       result.error(
-          "INVALID_ARGUMENT",
+          StyleChecks.INVALID_ARGUMENT,
           "Invalid zoom range [" + minzoom + ", " + maxzoom + "]: both must be within 0 and 24, "
               + "with minzoom not above maxzoom.",
           null);
       return;
     }
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     final Layer layer = style.getLayer(layerId);
@@ -3687,10 +3769,7 @@ final class MapLibreMapController
   @Override
   public void layerGetVisibility(String layerId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     Layer layer = style.getLayer(layerId);
@@ -3709,7 +3788,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectLayerSource(imageLayerId, "raster", imageSourceId, result)) {
+    if (rejectLayerAdd(imageLayerId, "raster", imageSourceId, null, result)) {
       return;
     }
     if (!addRasterLayer(
@@ -3720,7 +3799,7 @@ final class MapLibreMapController
         null,
         new PropertyValue[] {},
         null)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     result.success(null);
@@ -3734,7 +3813,7 @@ final class MapLibreMapController
       @Nullable Double minzoom,
       @Nullable Double maxzoom,
       MethodChannel.Result result) {
-    if (rejectLayerSource(imageLayerId, "raster", imageSourceId, result)) {
+    if (rejectLayerAdd(imageLayerId, "raster", imageSourceId, null, result)) {
       return;
     }
     if (!addRasterLayer(
@@ -3745,7 +3824,7 @@ final class MapLibreMapController
         belowLayerId,
         new PropertyValue[] {},
         null)) {
-      result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+      replyStyleNotReady(result);
       return;
     }
     result.success(null);
@@ -3754,10 +3833,7 @@ final class MapLibreMapController
   @Override
   public void styleRemoveLayer(String layerId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     if (style.getLayer(layerId) == null) {
@@ -3774,10 +3850,7 @@ final class MapLibreMapController
   public void styleMoveLayer(
       String layerId, @Nullable String belowLayerId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     Layer layer = style.getLayer(layerId);
@@ -3808,10 +3881,7 @@ final class MapLibreMapController
   public void styleSetFilter(
       String layerId, @Nullable String filter, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     Layer layer = style.getLayer(layerId);
@@ -3833,7 +3903,7 @@ final class MapLibreMapController
     try {
       parsed = parseFilter(filter);
     } catch (RuntimeException e) {
-      result.error("INVALID_EXPRESSION", "Invalid filter: " + e.getMessage(), e.getMessage());
+      result.error(StyleChecks.INVALID_EXPRESSION, "Invalid filter: " + e.getMessage(), e.getMessage());
       return;
     }
     // The SDK takes no null filter, so a null filter becomes the
@@ -3842,7 +3912,7 @@ final class MapLibreMapController
 
     String error = captureFilterError(() -> setLayerFilter(layer, expression));
     if (error != null) {
-      result.error("INVALID_EXPRESSION", "Invalid filter: " + error, error);
+      result.error(StyleChecks.INVALID_EXPRESSION, "Invalid filter: " + error, error);
       return;
     }
     result.success(null);
@@ -3851,10 +3921,7 @@ final class MapLibreMapController
   @Override
   public void styleGetFilter(String layerId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-              "STYLE_NOT_READY",
-              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-              null);
+      replyStyleNotReady(result);
       return;
     }
     Layer layer = style.getLayer(layerId);
@@ -3911,10 +3978,7 @@ final class MapLibreMapController
   @Override
   public void styleGetLayerIds(MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-              "STYLE_NOT_READY",
-              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-              null);
+      replyStyleNotReady(result);
       return;
     }
     List<String> layerIds = new ArrayList<>();
@@ -3927,10 +3991,7 @@ final class MapLibreMapController
   @Override
   public void styleGetLayerProperties(String layerId, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-              "STYLE_NOT_READY",
-              "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-              null);
+      replyStyleNotReady(result);
       return;
     }
     result.success(getLayerProperties(layerId));
@@ -3942,10 +4003,7 @@ final class MapLibreMapController
   public void styleAddImage(
       String name, byte[] bytes, long length, boolean sdf, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     BitmapFactory.Options options = new BitmapFactory.Options();
@@ -3964,10 +4022,7 @@ final class MapLibreMapController
   @Override
   public void styleSetLight(Map<String, Object> lightProperties, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
-      result.error(
-          "STYLE_NOT_READY",
-          "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?",
-          null);
+      replyStyleNotReady(result);
       return;
     }
     // Every LightProperties field is dynamic, so anything can arrive here. The
@@ -3980,7 +4035,7 @@ final class MapLibreMapController
     final Object anchor = lightProperties.get("anchor");
     if (anchor != null && !(anchor instanceof String)) {
       result.error(
-          "INVALID_ARGUMENT", "Invalid 'anchor' in 'light'." + constantsOnly, null);
+          StyleChecks.INVALID_ARGUMENT, "Invalid 'anchor' in 'light'." + constantsOnly, null);
       return;
     }
     final Object position = lightProperties.get("position");
@@ -3992,7 +4047,7 @@ final class MapLibreMapController
             || !(positionValues.get(1) instanceof Number)
             || !(positionValues.get(2) instanceof Number))) {
       result.error(
-          "INVALID_ARGUMENT",
+          StyleChecks.INVALID_ARGUMENT,
           "Invalid 'position' in 'light'. Expected three numbers, [radial, azimuthal,"
               + " polar]."
               + constantsOnly,
@@ -4001,13 +4056,13 @@ final class MapLibreMapController
     }
     final Object color = lightProperties.get("color");
     if (color != null && !(color instanceof String)) {
-      result.error("INVALID_ARGUMENT", "Invalid 'color' in 'light'." + constantsOnly, null);
+      result.error(StyleChecks.INVALID_ARGUMENT, "Invalid 'color' in 'light'." + constantsOnly, null);
       return;
     }
     final Object intensity = lightProperties.get("intensity");
     if (intensity != null && !(intensity instanceof Number)) {
       result.error(
-          "INVALID_ARGUMENT", "Invalid 'intensity' in 'light'." + constantsOnly, null);
+          StyleChecks.INVALID_ARGUMENT, "Invalid 'intensity' in 'light'." + constantsOnly, null);
       return;
     }
 
@@ -4041,12 +4096,12 @@ final class MapLibreMapController
   @Override
   public void mapGetStyle(MethodChannel.Result result) {
     String json = null;
-    if (mapLibreMap != null) {
-      Style style = mapLibreMap.getStyle();
-      if (style != null) {
-        try {
-          json = style.getJson();
-        } catch (Exception e) {}
+    final Style style = mapLibreMap.getStyle();
+    if (style != null) {
+      try {
+        json = style.getJson();
+      } catch (Exception e) {
+        // A style still loading has no JSON yet.
       }
     }
     result.success(json);
@@ -4149,10 +4204,7 @@ final class MapLibreMapController
       return;
     }
     disposed = true;
-    if (activeSnapshotter != null) {
-      activeSnapshotter.cancel();
-      activeSnapshotter = null;
-    }
+    cancelSnapshot("MAP_DISPOSED", "The map was disposed before the snapshot was ready.");
     MapLibreMapHostApi.Companion.setUp(messenger, null, String.valueOf(id));
     // A mapWaitForMap call parked while the map was still being built is only ever
     // answered by onMapReady, which will not fire now. Answer it here, or the Dart
@@ -4174,58 +4226,6 @@ final class MapLibreMapController
       applicationContext.unregisterComponentCallbacks(this);
     } catch (Exception e) {
       // Ignore if already unregistered
-    }
-  }
-
-  private void moveCamera(CameraUpdate cameraUpdate, MethodChannel.Result result) {
-    if (cameraUpdate != null) {
-      // camera transformation not handled yet
-      mapLibreMap.moveCamera(
-          cameraUpdate,
-          new OnCameraMoveFinishedListener() {
-            @Override
-            public void onFinish() {
-              super.onFinish();
-              result.success(true);
-            }
-
-            @Override
-            public void onCancel() {
-              super.onCancel();
-              result.success(false);
-            }
-          });
-
-      // moveCamera(cameraUpdate);
-    } else {
-      result.success(false);
-    }
-  }
-
-  private void animateCamera(
-      CameraUpdate cameraUpdate, Integer duration, MethodChannel.Result result) {
-    final OnCameraMoveFinishedListener onCameraMoveFinishedListener =
-        new OnCameraMoveFinishedListener() {
-          @Override
-          public void onFinish() {
-            super.onFinish();
-            result.success(true);
-          }
-
-          @Override
-          public void onCancel() {
-            super.onCancel();
-            result.success(false);
-          }
-        };
-    if (cameraUpdate != null && duration != null) {
-      // camera transformation not handled yet
-      mapLibreMap.animateCamera(cameraUpdate, duration, onCameraMoveFinishedListener);
-    } else if (cameraUpdate != null) {
-      // camera transformation not handled yet
-      mapLibreMap.animateCamera(cameraUpdate, onCameraMoveFinishedListener);
-    } else {
-      result.success(false);
     }
   }
 
@@ -5063,15 +5063,6 @@ final class MapLibreMapController
     draggedFeature = null;
     dragOrigin = null;
     dragPrevious = null;
-  }
-
-  /** Simple Listener to listen for the status of camera movements. */
-  public class OnCameraMoveFinishedListener implements MapLibreMap.CancelableCallback {
-    @Override
-    public void onFinish() {}
-
-    @Override
-    public void onCancel() {}
   }
 
   private class MoveGestureListener implements MoveGestureDetector.OnMoveGestureListener {

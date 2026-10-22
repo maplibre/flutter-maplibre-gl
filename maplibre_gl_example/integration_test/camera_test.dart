@@ -8,7 +8,7 @@
 // setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
 // controller's cached cameraPosition and the onCameraMove / onCameraIdle
-// callbacks.
+// callbacks, and on iOS the camera calls made on a map without a size.
 //
 // Each platform turns a CameraUpdate into its own SDK camera and does its own
 // projection math (density conversion on Android, altitude-based zoom on iOS,
@@ -1364,6 +1364,96 @@ void main() {
         reason: '${camera.target}',
       );
     });
+  });
+
+  // A camera call on a map without a size aborted the app on iOS: the
+  // projection of a 0x0 view yields NaN (#819). There the calls that move the
+  // camera wait for the view to have a size. Android and web lay a map out
+  // differently, so these run on iOS only.
+  group('a map without a size', () {
+    final skip = testPlatform != TestPlatform.ios;
+
+    testWidgets('runs the calls that move the camera once it has one', (
+      tester,
+    ) async {
+      final size = ValueNotifier(Size.zero);
+      addTearDown(size.dispose);
+      final controller = await pumpMap(
+        tester,
+        resizableSize: size,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(40, 60),
+          zoom: 2,
+        ),
+      );
+
+      // Insets first: on iOS a change of insets stops a camera animation.
+      final insets = controller.updateContentInsets(const EdgeInsets.all(4));
+      final bounds = controller.setCameraBounds(
+        west: -10,
+        north: 10,
+        south: -10,
+        east: 10,
+        padding: 20,
+      );
+      await pumpFor(tester, const Duration(milliseconds: 300));
+      size.value = const Size(_mapSize, _mapSize);
+
+      await pumpUntil(tester, insets, 'updateContentInsets');
+      await pumpUntil(tester, bounds, 'setCameraBounds');
+      await pumpUntilValue(
+        tester,
+        () => _queryCamera(tester, controller),
+        (camera) =>
+            camera.target.latitude.abs() < 0.5 &&
+            camera.target.longitude.abs() < 0.5,
+        'camera centered on the bounds',
+      );
+    }, skip: skip);
+
+    // Only the options that move the camera wait, so the others keep their
+    // place among the calls made after them.
+    testWidgets('applies an option that does not move the camera at once', (
+      tester,
+    ) async {
+      final size = ValueNotifier(Size.zero);
+      addTearDown(size.dispose);
+      final controller = await pumpMap(tester, resizableSize: size);
+
+      // The map never gets a size here, so a call that waited for one would
+      // time out.
+      await pumpUntil(
+        tester,
+        controller.setSymbolPlacementTransitionsEnabled(false),
+        'setSymbolPlacementTransitionsEnabled on a map without a size',
+        timeout: const Duration(seconds: 5),
+      );
+      await pumpUntil(
+        tester,
+        controller.addGeoJsonSource('points', pointCollection()),
+        'addGeoJsonSource on a map without a size',
+        timeout: const Duration(seconds: 5),
+      );
+    }, skip: skip);
+
+    testWidgets('fails a waiting call with MAP_DISPOSED when it goes away', (
+      tester,
+    ) async {
+      final size = ValueNotifier(Size.zero);
+      addTearDown(size.dispose);
+      final controller = await pumpMap(tester, resizableSize: size);
+
+      final move = controller.moveCamera(CameraUpdate.zoomTo(5));
+      await pumpFor(tester, const Duration(milliseconds: 300));
+      await tester.pumpWidget(const SizedBox());
+
+      await expectPlatformError(
+        tester,
+        move,
+        'moveCamera on a disposed map without a size',
+        code: 'MAP_DISPOSED',
+      );
+    }, skip: skip);
   });
 }
 
