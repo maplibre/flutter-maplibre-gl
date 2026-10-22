@@ -18,8 +18,10 @@ import io.flutter.plugin.common.MethodChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class OfflineManagerUtils {
@@ -70,6 +72,13 @@ abstract class OfflineManagerUtils {
   }
 
   static final Map<Long, ActiveDownload> activeDownloads = new HashMap<>();
+
+  /**
+   * The regions a resume is looking up, before it starts them. A pause in the meantime takes the
+   * region out, so the resume answers without starting a download the pause already stopped.
+   * Calls and SDK callbacks all run on the main thread, in the order they arrive.
+   */
+  static final Set<Long> pendingResumes = new HashSet<>();
 
   static void mergeRegions(MethodChannel.Result result, Context context, String path) {
     OfflineManager.Companion.getInstance(context)
@@ -151,6 +160,7 @@ abstract class OfflineManagerUtils {
       }
     }
     activeDownloads.clear();
+    pendingResumes.clear();
 
     OfflineManager.Companion.getInstance(context)
         .resetDatabase(
@@ -487,6 +497,7 @@ abstract class OfflineManagerUtils {
   }
 
   static void deleteRegion(MethodChannel.Result result, Context context, long id) {
+    pendingResumes.remove(id);
     ActiveDownload active = activeDownloads.remove(id);
     if (active != null) {
       active.isComplete.set(true);
@@ -544,6 +555,8 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
       result.success(null);
     } else {
+      // A resume still looking the region up must not start it after this pause.
+      pendingResumes.remove(id);
       findRegionById(context, id, result, foundRegion -> {
         foundRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
         result.success(null);
@@ -565,8 +578,18 @@ abstract class OfflineManagerUtils {
     } else {
       // No download of this session follows the region: it was paused before
       // the app restarted, merged in, or its download ended.
+      pendingResumes.add(id);
       findRegionById(
-          context, id, result, foundRegion -> resumeUntracked(result, context, foundRegion));
+          context,
+          id,
+          new ForwardingResult(result) {
+            @Override
+            public void error(String code, @Nullable String message, @Nullable Object details) {
+              pendingResumes.remove(id);
+              super.error(code, message, details);
+            }
+          },
+          foundRegion -> resumeUntracked(result, context, foundRegion));
     }
   }
 
@@ -582,9 +605,12 @@ abstract class OfflineManagerUtils {
         new OfflineRegion.OfflineRegionStatusCallback() {
           @Override
           public void onStatus(OfflineRegionStatus status) {
-            // Complete, or already started by another resume while this one
-            // read the status.
-            if (status.isComplete() || activeDownloads.containsKey(region.getId())) {
+            // Paused while this resume looked the region up, complete, or already
+            // started by another resume meanwhile.
+            final boolean stillWanted = pendingResumes.remove(region.getId());
+            if (!stillWanted
+                || status.isComplete()
+                || activeDownloads.containsKey(region.getId())) {
               result.success(null);
               return;
             }
@@ -597,9 +623,34 @@ abstract class OfflineManagerUtils {
 
           @Override
           public void onError(String error) {
+            pendingResumes.remove(region.getId());
             result.error(OFFLINE_DATABASE_ERROR, error, null);
           }
         });
+  }
+
+  /** Passes every answer on to {@code target}, for a subclass to see them first. */
+  private static class ForwardingResult implements MethodChannel.Result {
+    private final MethodChannel.Result target;
+
+    ForwardingResult(MethodChannel.Result target) {
+      this.target = target;
+    }
+
+    @Override
+    public void success(@Nullable Object value) {
+      target.success(value);
+    }
+
+    @Override
+    public void error(String code, @Nullable String message, @Nullable Object details) {
+      target.error(code, message, details);
+    }
+
+    @Override
+    public void notImplemented() {
+      target.notImplemented();
+    }
   }
 
   private interface RegionCallback {
