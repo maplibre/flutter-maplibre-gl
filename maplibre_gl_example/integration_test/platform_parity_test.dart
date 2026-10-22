@@ -954,7 +954,6 @@ void main() {
       );
     });
 
-    // Web answers SOURCE_NOT_FOUND for these until it makes the same change.
     testWidgets(
       'a source that is not GeoJSON fails with UNSUPPORTED_SOURCE_TYPE',
       (tester) async {
@@ -989,7 +988,6 @@ void main() {
           );
         }
       },
-      skip: kIsWeb,
     );
 
     testWidgets('the cluster calls on a source that is not GeoJSON fail with '
@@ -1923,7 +1921,6 @@ void main() {
   });
 
   group('values the engine cannot take', () {
-    // Web checks these sources differently until it makes the same change.
     testWidgets(
       'addSource fails with INVALID_ARGUMENT for tile options MapLibre '
       'rejects and for GeoJSON data that names no url',
@@ -1992,7 +1989,6 @@ void main() {
           'addSource with bounds beyond the poles',
         );
       },
-      skip: kIsWeb,
     );
 
     testWidgets(
@@ -2030,9 +2026,6 @@ void main() {
           {'type': 'image', 'coordinates': _corners},
         );
       },
-      // Web forgets what it knew about the source even when maplibre-gl-js
-      // keeps it.
-      skip: kIsWeb,
     );
 
     testWidgets('a hex color with a digit that is not hex fails with '
@@ -2210,7 +2203,6 @@ void main() {
           {'type': 'image', 'coordinates': _corners},
         );
       },
-      skip: kIsWeb,
     );
 
     // maplibre-gl-js takes any padding and clamps the latitudes.
@@ -2227,7 +2219,7 @@ void main() {
             north: 10,
             south: -10,
             east: 10,
-            padding: 1 << 40,
+            padding: 1099511627776,
           ),
           'setCameraBounds with a padding beyond 32 bits',
           code: 'INVALID_ARGUMENT',
@@ -2251,7 +2243,6 @@ void main() {
         );
         expect(latitude.message, 'Latitude must be within -90 and 90.');
       },
-      skip: kIsWeb,
     );
 
     testWidgets('a second takeSnapshot answers the first one too', (
@@ -2287,7 +2278,6 @@ void main() {
     });
   });
 
-  // Web drops these layers without an error until it makes the same change.
   group('layer adds MapLibre would draw nothing for', () {
     testWidgets(
       'a layer on a vector source without a sourceLayer fails with '
@@ -2360,7 +2350,6 @@ void main() {
           'addLineLayer with a sourceLayer',
         );
       },
-      skip: kIsWeb,
     );
 
     testWidgets(
@@ -2426,7 +2415,6 @@ void main() {
           'addCircleLayer from 0 to 24',
         );
       },
-      skip: kIsWeb,
     );
   });
 
