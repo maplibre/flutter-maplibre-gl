@@ -100,6 +100,7 @@ class MapLibreMapController extends MapLibrePlatform
     // The map goes away mid-animation: answer the waiting camera call.
     _cancelCameraAnimation();
     _removeManualPuck();
+    _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
     }
@@ -1221,7 +1222,7 @@ class MapLibreMapController extends MapLibrePlatform
     _ensureStyleReady();
     if (_map.getSource(sourceId) != null) {
       _map.removeSource(sourceId);
-      _imageSourceIds.remove(sourceId);
+      _forgetImageUrl(sourceId);
       _addedFeaturesByLayer.remove(sourceId);
     }
   }
@@ -1789,7 +1790,7 @@ class MapLibreMapController extends MapLibrePlatform
   @override
   Future<void> setStyle(dynamic styleObject) async {
     _styleReady = false;
-    _imageSourceIds.clear();
+    _forgetImageUrls();
     _addedFeaturesByLayer.clear();
     //remove old mouseenter callbacks to avoid multicalling
     _interactiveFeatureLayerIds.forEach(_detachLayerInteraction);
@@ -2766,16 +2767,22 @@ class MapLibreMapController extends MapLibrePlatform
     // Checked in the order of Android and iOS: the id before the bytes.
     _ensureStyleReady();
     _ensureNewSourceId(imageSourceId);
-    final url = await _imageDataUrl(bytes);
+    final image = await _imageBlob(bytes);
     // The decoding yields, so the style or the id may have changed since.
     _ensureStyleReady();
     _ensureNewSourceId(imageSourceId);
-    _map.addSource(imageSourceId, <String, dynamic>{
-      'type': 'image',
-      'url': url,
-      'coordinates': _corners(coordinates),
-    });
-    _imageSourceIds.add(imageSourceId);
+    final url = web.URL.createObjectURL(image);
+    try {
+      _map.addSource(imageSourceId, <String, dynamic>{
+        'type': 'image',
+        'url': url,
+        'coordinates': _corners(coordinates),
+      });
+    } catch (_) {
+      _revokeUrl(url);
+      rethrow;
+    }
+    _imageUrls[imageSourceId] = url;
   }
 
   @override
@@ -2787,7 +2794,7 @@ class MapLibreMapController extends MapLibrePlatform
     _ensureStyleReady();
     _imageSource(imageSourceId);
     // Decoded before anything changes, so a call that fails changes nothing.
-    final url = bytes == null ? null : await _imageDataUrl(bytes);
+    final image = bytes == null ? null : await _imageBlob(bytes);
     _ensureStyleReady();
     final source = _imageSource(imageSourceId);
     // updateImage would move the corners only once the image has loaded.
@@ -2797,16 +2804,34 @@ class MapLibreMapController extends MapLibrePlatform
         jsify(_corners(coordinates)),
       );
     }
-    if (url != null) {
+    if (image != null) {
+      final url = web.URL.createObjectURL(image);
       source.callMethod<JSAny?>('updateImage'.toJS, jsify({'url': url}));
-      // Its url becomes a data URL, which getSourceProperties leaves out.
-      _imageSourceIds.add(imageSourceId);
+      _forgetImageUrl(imageSourceId);
+      _imageUrls[imageSourceId] = url;
     }
   }
 
-  /// The ids of the image sources whose image came from bytes. Their url is a
-  /// data URL, which [getSourceProperties] leaves out.
-  final _imageSourceIds = <String>{};
+  /// The object URL of the image each image source shows from bytes, by
+  /// source id. [getSourceProperties] leaves it out, as Android and iOS have
+  /// no url for such a source.
+  final _imageUrls = <String, String>{};
+
+  /// Revokes the object URL of the image the image source [sourceId] shows
+  /// from bytes, if any.
+  void _forgetImageUrl(String sourceId) {
+    final url = _imageUrls.remove(sourceId);
+    if (url != null) _revokeUrl(url);
+  }
+
+  /// Revokes the object URLs of every image source shown from bytes.
+  void _forgetImageUrls() {
+    _imageUrls.values.forEach(_revokeUrl);
+    _imageUrls.clear();
+  }
+
+  /// Frees the blob behind the object URL [url].
+  static void _revokeUrl(String url) => web.URL.revokeObjectURL(url);
 
   /// The image source [imageSourceId] as maplibre-gl-js holds it. Throws
   /// `SOURCE_NOT_FOUND` when the style has no image source with that id.
@@ -2833,15 +2858,13 @@ class MapLibreMapController extends MapLibrePlatform
       [corner.longitude, corner.latitude],
   ];
 
-  /// [bytes] as a data URL an image source can load. Throws `INVALID_IMAGE`
-  /// for bytes the browser cannot decode, which maplibre-gl-js would report
-  /// only later, through an error event.
-  static Future<String> _imageDataUrl(Uint8List bytes) async {
+  /// [bytes] as a blob, for the object URL an image source loads. Throws
+  /// `INVALID_IMAGE` for bytes the browser cannot decode, which
+  /// maplibre-gl-js would report only later, through an error event.
+  static Future<web.Blob> _imageBlob(Uint8List bytes) async {
+    final blob = web.Blob([bytes.toJS].toJS);
     try {
-      final bitmap =
-          await web.window
-              .createImageBitmap(web.Blob([bytes.toJS].toJS))
-              .toDart;
+      final bitmap = await web.window.createImageBitmap(blob).toDart;
       bitmap.close();
     } catch (_) {
       throw PlatformException(
@@ -2849,9 +2872,7 @@ class MapLibreMapController extends MapLibrePlatform
         message: 'Failed to decode image bytes.',
       );
     }
-    // maplibre-gl-js reads the image from the bytes it fetches, whatever the
-    // type says.
-    return 'data:application/octet-stream;base64,${base64Encode(bytes)}';
+    return blob;
   }
 
   @override
@@ -3160,7 +3181,7 @@ class MapLibreMapController extends MapLibrePlatform
     final source = sources[sourceId];
     if (source is! Map) return null;
     final shaped = _styleShaped(source);
-    if (_imageSourceIds.contains(sourceId)) shaped.remove('url');
+    if (_imageUrls.containsKey(sourceId)) shaped.remove('url');
     return shaped;
   }
 

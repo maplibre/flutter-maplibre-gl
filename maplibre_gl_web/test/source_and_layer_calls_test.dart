@@ -9,12 +9,15 @@ import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:maplibre_gl_web/maplibre_gl_web.dart';
 import 'package:maplibre_gl_web/src/interop/ui/map_interop.dart';
 import 'package:maplibre_gl_web/src/ui/map.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
+import 'package:web/web.dart' as web;
 
 /// Stands in for a maplibre-gl-js map whose style has loaded: it keeps the
 /// sources and layers it is given, refuses to remove a source a layer uses,
@@ -218,6 +221,26 @@ Map<String, dynamic> _collection(List<Map<String, dynamic>> features) => {
   'features': features,
 };
 
+const _quad = LatLngQuad(
+  topLeft: LatLng(2, -2),
+  topRight: LatLng(2, 2),
+  bottomRight: LatLng(-2, 2),
+  bottomLeft: LatLng(-2, -2),
+);
+
+/// A PNG of [width] pixels by one.
+Uint8List _png(int width) => img.encodePng(img.Image(width: width, height: 1));
+
+/// Whether the object URL [url] still gives its blob.
+Future<bool> _isLive(String url) async {
+  try {
+    await web.window.fetch(url.toJS).toDart;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 void main() {
   late _FakeMap map;
   late MapLibreMapController controller;
@@ -230,6 +253,9 @@ void main() {
           styleReady: true,
         );
   });
+
+  TypeMatcher<PlatformException> platformError(String code) =>
+      isA<PlatformException>().having((e) => e.code, 'code', code);
 
   group('GeoJSON sources', () {
     // A JS string is a Dart String when compiling to JavaScript, so the url
@@ -320,6 +346,50 @@ void main() {
           reason: '$value',
         );
       }
+      expect(map.sources, isEmpty);
+    });
+  });
+
+  group('image sources from bytes', () {
+    test('load from an object URL that is revoked once the source no longer '
+        'shows it', () async {
+      await controller.addImageSource('image', _png(1), _quad);
+      final first = map.url('image')!;
+      expect(first, startsWith('blob:'));
+      expect(await _isLive(first), isTrue);
+      expect(await controller.getSourceProperties('image'), {
+        'type': 'image',
+        'coordinates': [
+          [-2, 2],
+          [2, 2],
+          [2, -2],
+          [-2, -2],
+        ],
+      });
+
+      await controller.updateImageSource('image', _png(2), null);
+      final second = map.url('image')!;
+      expect(second, isNot(first));
+      expect(await _isLive(first), isFalse);
+      expect(await _isLive(second), isTrue);
+
+      await controller.removeSource('image');
+      expect(await _isLive(second), isFalse);
+
+      // The id can show bytes again.
+      await controller.addImageSource('image', _png(1), _quad);
+      final third = map.url('image')!;
+      expect(await _isLive(third), isTrue);
+
+      await controller.setStyle('{"version": 8, "sources": {}, "layers": []}');
+      expect(await _isLive(third), isFalse);
+    });
+
+    test('bytes that are not an image fail with INVALID_IMAGE', () async {
+      await expectLater(
+        controller.addImageSource('image', Uint8List(4), _quad),
+        throwsA(platformError('INVALID_IMAGE')),
+      );
       expect(map.sources, isEmpty);
     });
   });
