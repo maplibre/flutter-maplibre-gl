@@ -2357,7 +2357,7 @@ void main() {
     );
 
     testWidgets(
-      'a zoom outside 0 to 24 fails with INVALID_ARGUMENT',
+      'a zoom outside 0 to 24 fails with INVALID_ARGUMENT on web only',
       (tester) async {
         final controller = await pumpMap(tester);
         await _addPoints(tester, controller);
@@ -2380,7 +2380,7 @@ void main() {
                 _sourceId,
                 'line-maxzoom',
                 const LineLayerProperties(),
-                maxzoom: 24.5,
+                maxzoom: 25,
               ),
           'background-maxzoom':
               () => controller.addBackgroundLayer(
@@ -2390,6 +2390,12 @@ void main() {
               ),
         };
         for (final call in calls.entries) {
+          if (!kIsWeb) {
+            // MapLibre Native takes any zoom, and its camera goes past 24.
+            await pumpUntil(tester, call.value(), call.key);
+            continue;
+          }
+          // MapLibre GL JS rejects a zoom outside 0 to 24.
           final error = await expectPlatformError(
             tester,
             call.value(),
@@ -2404,7 +2410,7 @@ void main() {
         }
         expect(
           await pumpUntil(tester, controller.getLayerIds(), 'getLayerIds'),
-          layersBefore,
+          kIsWeb ? layersBefore : [...layersBefore, ...calls.keys],
         );
 
         await pumpUntil(

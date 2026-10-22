@@ -112,7 +112,7 @@ typedef OnMapIdleCallback = void Function();
 ///   layer.
 /// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression.
 /// * `INVALID_ARGUMENT`: a property value has the wrong kind, a layer zoom is
-///   outside 0 to 24, or a source cannot be built from its properties.
+///   outside 0 to 24 on web, or a source cannot be built from its properties.
 /// * `INVALID_GEOJSON`: the data is not valid GeoJSON.
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
@@ -723,7 +723,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addSymbolLayer(
@@ -774,7 +774,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addLineLayer(
@@ -849,7 +849,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillLayer(
@@ -900,7 +900,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addFillExtrusionLayer(
@@ -951,7 +951,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addCircleLayer(
@@ -1160,7 +1160,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is a GeoJSON or vector source, `SOURCE_LAYER_REQUIRED` for a
   /// vector source without [sourceLayer], `INVALID_ARGUMENT` for a [minzoom]
-  /// or [maxzoom] outside 0 to 24 or a value MapLibre rejects, or
+  /// or [maxzoom] outside 0 to 24 on web or a value MapLibre rejects, or
   /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND`, `INVALID_EXPRESSION` or
   /// `STYLE_NOT_READY` (see [MapLibreMapController]).
   Future<void> addHeatmapLayer(
@@ -2229,8 +2229,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [imageSourceId] is an image or raster source, `INVALID_ARGUMENT` for a
-  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// [minzoom] or [maxzoom] outside 0 to 24 on web, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]).
   Future<void> addImageLayer(
     String layerId,
     String imageSourceId, {
@@ -2247,8 +2248,9 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Throws a [PlatformException] with code `UNSUPPORTED_SOURCE_TYPE` unless
   /// [sourceId] is an image or raster source, `INVALID_ARGUMENT` for a
-  /// [minzoom] or [maxzoom] outside 0 to 24, or `LAYER_ALREADY_EXISTS`,
-  /// `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see [MapLibreMapController]).
+  /// [minzoom] or [maxzoom] outside 0 to 24 on web, or
+  /// `LAYER_ALREADY_EXISTS`, `SOURCE_NOT_FOUND` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]).
   Future<void> addImageLayerBelow(
     String layerId,
     String sourceId,

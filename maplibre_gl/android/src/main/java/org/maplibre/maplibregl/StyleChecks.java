@@ -35,11 +35,6 @@ final class StyleChecks {
   static final String NON_FINITE_CAMERA_VALUES =
       "Zoom, bearing, tilt, offsets and padding must be finite numbers.";
 
-  /** The lowest and highest zoom a layer can have. */
-  static final double MIN_ZOOM = 0;
-
-  static final double MAX_ZOOM = 24;
-
   /** The message of a camera padding that does not fit in the 32 bits the engine takes. */
   static String paddingOutOfRange(long padding) {
     return "Padding " + padding + " does not fit in 32 bits.";
@@ -69,17 +64,6 @@ final class StyleChecks {
   static String sourceLayerRequired(String layerId, String sourceId) {
     return "Source '" + sourceId + "' is a vector source, so layer '" + layerId
         + "' requires a 'sourceLayer'.";
-  }
-
-  /** Whether {@code minzoom} and {@code maxzoom}, each null when not set, are within 0 and 24. */
-  static boolean isZoomInRange(@Nullable Double minzoom, @Nullable Double maxzoom) {
-    return (minzoom == null || (minzoom >= MIN_ZOOM && minzoom <= MAX_ZOOM))
-        && (maxzoom == null || (maxzoom >= MIN_ZOOM && maxzoom <= MAX_ZOOM));
-  }
-
-  /** The message of a layer add with a zoom outside 0 to 24. */
-  static String zoomOutOfRange(String layerId) {
-    return "The minzoom and maxzoom of layer '" + layerId + "' must be within 0 and 24.";
   }
 
   /** The style-spec type of {@code source}, or null for a source the style spec has no type for. */
