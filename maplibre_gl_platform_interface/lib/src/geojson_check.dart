@@ -10,7 +10,10 @@ const invalidGeoJsonCode = 'INVALID_GEOJSON';
 /// requires: `properties` an object or null, an `id` (if present) a string
 /// or a number, and positions of at least two finite numbers, nested to the
 /// depth of their geometry type.
-String? geoJsonError(Object? data) {
+///
+/// [onFeature] sees each Feature that passes, with its index in the
+/// `features` of a FeatureCollection, or 0 for a lone Feature.
+String? geoJsonError(Object? data, {GeoJsonFeatureVisitor? onFeature}) {
   if (data is! Map) return 'GeoJSON must be an object.';
   final type = data['type'];
   if (type == 'FeatureCollection') {
@@ -19,14 +22,19 @@ String? geoJsonError(Object? data) {
       return 'A FeatureCollection must have a "features" array.';
     }
     for (var i = 0; i < features.length; i++) {
-      final error = _featureError(features[i]);
+      final feature = features[i];
+      final error = _featureError(feature);
       if (error != null) return 'Feature $i: $error';
+      onFeature?.call(i, feature as Map);
     }
     return null;
   }
-  if (type == 'Feature') return _featureError(data);
+  if (type == 'Feature') return geoJsonFeatureError(data, onFeature: onFeature);
   return _geometryError(data);
 }
+
+/// A Feature that passed [geoJsonError] or [geoJsonFeatureError], at [index].
+typedef GeoJsonFeatureVisitor = void Function(int index, Map feature);
 
 /// Why [text] is not the JSON text of a GeoJSON object MapLibre can read, or
 /// null when it is. See [geoJsonError].
@@ -42,7 +50,10 @@ String? geoJsonTextError(String text) {
 
 /// Why [data] is not a GeoJSON Feature MapLibre can read, or null when it is.
 /// See [geoJsonError].
-String? geoJsonFeatureError(Object? data) {
+String? geoJsonFeatureError(
+  Object? data, {
+  GeoJsonFeatureVisitor? onFeature,
+}) {
   if (data is! Map) return 'GeoJSON must be an object.';
   final type = data['type'];
   if (type != 'Feature') {
@@ -50,7 +61,9 @@ String? geoJsonFeatureError(Object? data) {
         ? 'It is a $type, not a Feature.'
         : 'A Feature must have the type "Feature".';
   }
-  return _featureError(data);
+  final error = _featureError(data);
+  if (error == null) onFeature?.call(0, data);
+  return error;
 }
 
 /// The [PlatformException] every platform answers for the data of the GeoJSON

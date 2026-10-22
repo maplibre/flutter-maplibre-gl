@@ -117,7 +117,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
@@ -1081,57 +1080,9 @@ final class MapLibreMapController
         null);
   }
 
-  // Serializes features as JSON strings, so nested properties survive intact.
+  // Every feature the SDK answers with reaches Dart through FeatureJson.
   private static List<String> featuresReply(List<Feature> features) {
-    final List<String> featuresJson = new ArrayList<>();
-    if (features != null) {
-      for (Feature feature : features) {
-        featuresJson.add(featureJson(feature));
-      }
-    }
-    return featuresJson;
-  }
-
-  private static final Pattern INTEGER_ID = Pattern.compile("-?(0|[1-9][0-9]*)");
-  private static final Pattern DECIMAL_ID = Pattern.compile("-?(0|[1-9][0-9]*)\\.[0-9]+");
-
-  // The SDK hands every feature id over as a String (the engine turns numbers
-  // into text, and a missing id into ""), so toJson writes "id":"2" where iOS
-  // and web answer 2. Ids that read as numbers go back as numbers and an empty
-  // id is dropped. The limit: a string id that looks like a number, such as
-  // "2", also comes back as a number on Android, as the SDK cannot tell them
-  // apart. A fractional id arrives in its shortest form, such as "1.5".
-  private static String featureJson(Feature feature) {
-    final String id = feature.id();
-    if (id == null) {
-      return feature.toJson();
-    }
-    String number = null;
-    if (INTEGER_ID.matcher(id).matches()) {
-      try {
-        number = Long.toString(Long.parseLong(id));
-      } catch (NumberFormatException e) {
-        // Beyond a long: left as a String rather than rounded.
-      }
-    } else if (DECIMAL_ID.matcher(id).matches()) {
-      final double value = Double.parseDouble(id);
-      if (!Double.isInfinite(value)) {
-        number = Double.toString(value);
-      }
-    }
-    if (number == null && !id.isEmpty()) {
-      return feature.toJson();
-    }
-    // Serialized once without the id, which then goes in as a bare number:
-    // query results can hold thousands of features and this runs on the
-    // platform thread, so no parse and reserialize round trip.
-    final String json =
-        Feature.fromGeometry(feature.geometry(), feature.properties(), null, feature.bbox())
-            .toJson();
-    if (number == null) {
-      return json;
-    }
-    return "{\"id\":" + number + "," + json.substring(1);
+    return FeatureJson.of(features);
   }
 
   // The cluster calls answer with a FeatureCollection, which is null when the

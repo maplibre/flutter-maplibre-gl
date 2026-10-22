@@ -731,6 +731,113 @@ void main() {
     });
   });
 
+  // The Android SDK hands every feature id over as text, so native marks the
+  // features whose text id reads as a number to give them back as text.
+  group('feature ids that are text', () {
+    setUp(init);
+
+    const marker = 'maplibre_gl:string_id';
+
+    Map<String, dynamic> point(Object id) => {
+      'type': 'Feature',
+      'id': id,
+      'properties': {'name': '$id'},
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [1, 2],
+      },
+    };
+
+    Map<String, dynamic> collection(List<Object> ids) => {
+      'type': 'FeatureCollection',
+      'features': [for (final id in ids) point(id)],
+    };
+
+    /// The names of the features of [json] that carry the marker.
+    Set<String> marked(Object? json) {
+      final data = json is String ? jsonDecode(json) as Map : json! as Map;
+      final features =
+          data['type'] == 'FeatureCollection'
+              ? data['features'] as List
+              : [data];
+      return {
+        for (final feature in features.cast<Map>())
+          if ((feature['properties'] as Map).containsKey(marker))
+            (feature['properties'] as Map)['name'] as String,
+      };
+    }
+
+    const ids = <Object>[2, '2', 2.5, '2.5', '-3', 'poi-12', '02', '1e3'];
+
+    test('are marked on Android when they read as a number', () async {
+      final geojson = collection(ids);
+      final before = jsonEncode(geojson);
+
+      await platform.addGeoJsonSource('source', geojson);
+      await platform.setGeoJsonSource('source', geojson);
+      await platform.setFeatureForGeoJsonSource('source', point('7'));
+      await platform.addSource(
+        'inline',
+        GeojsonSourceProperties(data: collection(ids)),
+      );
+
+      expect(api.calls.map((call) => call.first), [
+        'sourceAddGeoJson',
+        'sourceSetGeoJson',
+        'sourceSetFeature',
+        'styleAddSource',
+      ]);
+      for (final call in api.calls.take(2)) {
+        expect(marked(call[2]), {'2', '2.5', '-3'});
+      }
+      expect(marked(api.calls[2][2]), {'7'});
+      expect(marked((api.calls[3][2]! as Map)['data']), {'2', '2.5', '-3'});
+      // The data of the app is left as it was.
+      expect(jsonEncode(geojson), before);
+    });
+
+    test('are marked in the text editGeoJsonSource takes', () async {
+      api.replies['mapEditGeoJsonSource'] = true;
+      final withText = jsonEncode(collection(['2', 2]));
+      final withoutText = jsonEncode(collection([2, 'poi-12']));
+
+      await platform.editGeoJsonSource('source', withText);
+      await platform.editGeoJsonSource('source', withoutText);
+
+      expect(marked(api.calls[0][2]), {'2'});
+      // Sent as it came when nothing needs the marker.
+      expect(api.calls[1][2], same(withoutText));
+    });
+
+    test('are marked in a large payload too', () async {
+      final big = collection([for (var i = 0; i < 200; i++) '$i']);
+
+      await platform.setGeoJsonSource('source', big);
+
+      expect(marked(api.calls.single[2]), hasLength(200));
+    });
+
+    test('are sent unmarked on iOS', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      api.replies['mapEditGeoJsonSource'] = true;
+      final geojson = collection(ids);
+
+      await platform.addGeoJsonSource('source', geojson);
+      await platform.setFeatureForGeoJsonSource('source', point('7'));
+      await platform.editGeoJsonSource('source', jsonEncode(geojson));
+      await platform.addSource(
+        'inline',
+        GeojsonSourceProperties(data: geojson),
+      );
+
+      expect(api.calls[0][2], jsonEncode(geojson));
+      expect(api.calls[1][2], jsonEncode(point('7')));
+      expect(api.calls[2][2], jsonEncode(geojson));
+      expect((api.calls[3][2]! as Map)['data'], same(geojson));
+    });
+  });
+
   group('queries', () {
     setUp(init);
 

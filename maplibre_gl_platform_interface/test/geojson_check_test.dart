@@ -266,6 +266,51 @@ void main() {
     });
   });
 
+  group('onFeature', () {
+    test('sees each Feature of a collection with its index', () {
+      final features = [_feature(_point(), id: 'a'), _feature(_point(), id: 2)];
+      final seen = <(int, Object?)>[];
+
+      expect(
+        geoJsonError(
+          _collection(features),
+          onFeature: (index, feature) => seen.add((index, feature['id'])),
+        ),
+        isNull,
+      );
+
+      expect(seen, [(0, 'a'), (1, 2)]);
+    });
+
+    test('sees a lone Feature as index 0', () {
+      final seen = <int>[];
+
+      geoJsonError(_feature(_point()), onFeature: (i, _) => seen.add(i));
+      geoJsonFeatureError(_feature(_point()), onFeature: (i, _) => seen.add(i));
+
+      expect(seen, [0, 0]);
+    });
+
+    test('sees no Feature that fails the check, nor a geometry', () {
+      final seen = <int>[];
+
+      geoJsonError(
+        _collection([
+          _feature(_point()),
+          _feature(_point([1])),
+        ]),
+        onFeature: (i, _) => seen.add(i),
+      );
+      geoJsonError(_point(), onFeature: (i, _) => seen.add(i));
+      geoJsonFeatureError(
+        _feature(_point([1])),
+        onFeature: (i, _) => seen.add(i),
+      );
+
+      expect(seen, [0]);
+    });
+  });
+
   test('the exceptions name the source and the reason', () {
     expect(
       invalidGeoJson('points', 'Why.'),

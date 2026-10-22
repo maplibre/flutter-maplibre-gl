@@ -637,12 +637,13 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<bool> editGeoJsonSource(String id, String data) async {
-    final reason =
+    final input = (data, _marksStringIds);
+    final (json, reason) =
         data.length > _geoJsonTextOffloadLength
-            ? await compute(geoJsonTextError, data)
-            : geoJsonTextError(data);
+            ? await compute(_checkGeoJsonText, input)
+            : _checkGeoJsonText(input);
     if (reason != null) throw invalidGeoJson(id, reason);
-    return _api.mapEditGeoJsonSource(id, data);
+    return _api.mapEditGeoJsonSource(id, json!);
   }
 
   @override
@@ -1006,10 +1007,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     bool feature = false,
   }) async {
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
+    final input = (geojson, _marksStringIds);
     final (json, reason) =
-        _isLargeGeoJson(geojson)
-            ? await compute(encode, geojson)
-            : encode(geojson);
+        _isLargeGeoJson(geojson) ? await compute(encode, input) : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1018,21 +1018,98 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     return json!;
   }
 
-  /// [geojson] as JSON text, or why it is not GeoJSON.
+  /// [geojson] as JSON text, or why it is not GeoJSON. With
+  /// [markStringIds], see [_withStringIdMarkers].
   static (String?, String?) _checkAndEncodeGeoJson(
-    Map<String, dynamic> geojson,
+    (Map<String, dynamic>, bool) input,
   ) {
-    final reason = geoJsonError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    final (geojson, markStringIds) = input;
+    final marked = <int>[];
+    final reason = geoJsonError(
+      geojson,
+      onFeature: markStringIds ? _collectStringIds(marked) : null,
+    );
+    if (reason != null) return (null, reason);
+    return (jsonEncode(_withStringIdMarkers(geojson, marked)), null);
   }
 
-  /// [geojson] as JSON text, or why it is not a GeoJSON Feature.
+  /// [geojson] as JSON text, or why it is not a GeoJSON Feature. With
+  /// [markStringIds], see [_withStringIdMarkers].
   static (String?, String?) _checkAndEncodeFeature(
-    Map<String, dynamic> geojson,
+    (Map<String, dynamic>, bool) input,
   ) {
-    final reason = geoJsonFeatureError(geojson);
-    return reason == null ? (jsonEncode(geojson), null) : (null, reason);
+    final (geojson, markStringIds) = input;
+    final marked = <int>[];
+    final reason = geoJsonFeatureError(
+      geojson,
+      onFeature: markStringIds ? _collectStringIds(marked) : null,
+    );
+    if (reason != null) return (null, reason);
+    return (jsonEncode(_withStringIdMarkers(geojson, marked)), null);
   }
+
+  /// [text] as it goes to native, or why it is not GeoJSON. With
+  /// [markStringIds], see [_withStringIdMarkers]; the text is encoded again
+  /// only when a feature needs the marker.
+  static (String?, String?) _checkGeoJsonText((String, bool) input) {
+    final (text, markStringIds) = input;
+    if (!markStringIds) {
+      final reason = geoJsonTextError(text);
+      return reason == null ? (text, null) : (null, reason);
+    }
+    final Object? data;
+    try {
+      data = jsonDecode(text);
+    } on FormatException {
+      return (null, geoJsonTextError(text));
+    }
+    final marked = <int>[];
+    final reason = geoJsonError(data, onFeature: _collectStringIds(marked));
+    if (reason != null) return (null, reason);
+    if (marked.isEmpty) return (text, null);
+    return (jsonEncode(_withStringIdMarkers(data! as Map, marked)), null);
+  }
+
+  /// Whether this platform needs [_stringIdMarker]: the Android SDK hands
+  /// every feature id over as text, so native cannot tell `"2"` from `2`.
+  static bool get _marksStringIds =>
+      defaultTargetPlatform == TargetPlatform.android;
+
+  /// The property that marks a feature whose id is text that reads as a
+  /// number, so that FeatureJson.java hands the id back as text. Native
+  /// removes it from every feature it answers with.
+  static const _stringIdMarker = 'maplibre_gl:string_id';
+
+  /// The ids FeatureJson.java turns back into numbers.
+  static final _numericText = RegExp(r'^-?(0|[1-9][0-9]*)(\.[0-9]+)?$');
+
+  /// Adds to [indexes] the index of each feature whose id is text that reads
+  /// as a number.
+  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) => (
+    index,
+    feature,
+  ) {
+    final id = feature['id'];
+    if (id is String && _numericText.hasMatch(id)) indexes.add(index);
+  };
+
+  /// [geojson] with [_stringIdMarker] in the properties of the features at
+  /// [indexes]: a FeatureCollection's, or 0 for a Feature. Returns [geojson]
+  /// itself without any, and copies only what changes otherwise.
+  static Map _withStringIdMarkers(Map geojson, List<int> indexes) {
+    if (indexes.isEmpty) return geojson;
+    if (geojson['type'] == 'Feature') return _withStringIdMarker(geojson);
+    final features = List<Object?>.of(geojson['features'] as List);
+    for (final index in indexes) {
+      features[index] = _withStringIdMarker(features[index]! as Map);
+    }
+    return {...geojson, 'features': features};
+  }
+
+  static Map _withStringIdMarker(Map feature) => {
+    ...feature,
+    'properties': {...?feature['properties'] as Map?, _stringIdMarker: true},
+  };
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
   /// background isolate.
@@ -1252,8 +1329,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     if (properties is GeojsonSourceProperties &&
         data != null &&
         data is! String) {
-      final reason = geoJsonError(data);
+      final marked = <int>[];
+      final reason = geoJsonError(
+        data,
+        onFeature: _marksStringIds ? _collectStringIds(marked) : null,
+      );
       if (reason != null) throw invalidGeoJson(sourceId, reason);
+      if (marked.isNotEmpty) {
+        json['data'] = _withStringIdMarkers(data as Map, marked);
+      }
     }
     await _api.styleAddSource(sourceId, json);
   }
