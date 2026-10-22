@@ -636,18 +636,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<bool> editGeoJsonSource(String id, String data) async {
-    final reason =
-        data.length > _geoJsonTextOffloadLength
-            ? await compute(geoJsonTextError, data)
-            : geoJsonTextError(data);
-    if (reason != null) throw invalidGeoJson(id, reason);
-    return _api.mapEditGeoJsonSource(id, data);
+  Future<bool> editGeoJsonSource(String id, String data) {
+    return _writeGeoJson(id, () async {
+      final reason =
+          data.length > _geoJsonTextOffloadLength
+              ? await compute(geoJsonTextError, data)
+              : geoJsonTextError(data);
+      if (reason != null) throw invalidGeoJson(id, reason);
+      return _api.mapEditGeoJsonSource(id, data);
+    });
   }
 
   @override
-  Future<bool> editGeoJsonUrl(String id, String url) async {
-    return _api.mapEditGeoJsonUrl(id, url);
+  Future<bool> editGeoJsonUrl(String id, String url) {
+    return _writeGeoJson(id, () => _api.mapEditGeoJsonUrl(id, url));
   }
 
   @override
@@ -951,24 +953,26 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   /// Pending GeoJSON write per source id. See [_writeGeoJson].
-  final Map<String, Future<void>> _pendingGeoJsonWrites = {};
+  final Map<String, Future<Object?>> _pendingGeoJsonWrites = {};
 
-  /// Runs [write] after any GeoJSON write already in flight for [sourceId].
+  /// Runs [write] after any GeoJSON write already in flight for [sourceId],
+  /// and at once when there is none.
   ///
-  /// Encoding can finish asynchronously, and it takes longer the larger the
-  /// payload is. Two writes fired without `await` on the same source would
-  /// otherwise be able to reach native in reverse order, leaving the source
-  /// holding the older payload. Chaining per source id keeps native in call
-  /// order.
-  Future<void> _writeGeoJson(String sourceId, Future<void> Function() write) {
+  /// Checking and encoding can finish asynchronously, and take longer the
+  /// larger the payload is. Two writes fired without `await` on the same
+  /// source would otherwise be able to reach native in reverse order, leaving
+  /// the source holding the older data. Chaining per source id keeps native
+  /// in call order. Every call that sets the data of a GeoJSON source goes
+  /// through here.
+  Future<T> _writeGeoJson<T>(String sourceId, Future<T> Function() write) {
     final pending = _pendingGeoJsonWrites[sourceId];
     // A failed write must not block the writes queued behind it, so its error
     // is ignored for chaining purposes only. Callers still see it through the
     // future returned here.
-    final next = (pending == null
-            ? Future<void>.value()
-            : pending.then<void>((_) {}, onError: (_) {}))
-        .then((_) => write());
+    final next =
+        pending == null
+            ? write()
+            : pending.then<void>((_) {}, onError: (_) {}).then((_) => write());
     _pendingGeoJsonWrites[sourceId] = next;
     unawaited(
       next.then<void>((_) {}, onError: (_) {}).whenComplete(() {
@@ -1048,7 +1052,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// per ring, so a single ring of 50k points has a `coordinates` length of 1.
   /// The same applies to `MultiLineString`, `MultiPolygon` and
   /// `GeometryCollection`.
-  static bool _isLargeGeoJson(Map<String, dynamic> geojson) {
+  static bool _isLargeGeoJson(Map<dynamic, dynamic> geojson) {
     const limit = _geoJsonOffloadPositionCount;
     final features = geojson['features'];
     if (features is List) {
@@ -1249,14 +1253,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final json = properties.toJson();
     // A string is the url of the data.
     final data = jsonValueOf(json['data']);
-    if (properties is GeojsonSourceProperties &&
-        data != null &&
-        data is! String) {
-      final (plain, reason) = _checkSourceData(data);
-      if (reason != null) throw invalidGeoJson(sourceId, reason);
-      json['data'] = plain;
+    if (properties is! GeojsonSourceProperties ||
+        data == null ||
+        data is String) {
+      return _api.styleAddSource(sourceId, json);
     }
-    await _api.styleAddSource(sourceId, json);
+    return _writeGeoJson(sourceId, () async {
+      final (plain, reason) =
+          data is Map && _isLargeGeoJson(data)
+              ? await compute(_checkSourceData, data)
+              : _checkSourceData(data);
+      if (reason != null) throw invalidGeoJson(sourceId, reason);
+      await _api.styleAddSource(sourceId, {...json, 'data': plain});
+    });
   }
 
   /// [data], the GeoJSON data of `addSource`, with what `jsonEncode` writes in
