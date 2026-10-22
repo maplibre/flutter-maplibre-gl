@@ -417,6 +417,7 @@ class MapLibreMapController extends MapLibrePlatform
     CameraUpdate cameraUpdate, {
     Duration? duration,
   }) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
 
     // Use the existing CameraOptions wrapper which has proper WASM-compatible accessors
@@ -442,10 +443,19 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<bool?> moveCamera(CameraUpdate cameraUpdate) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     _cancelCameraAnimation();
     _map.jumpTo(cameraOptions);
     return true;
+  }
+
+  /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for an update with a
+  /// value that is NaN or infinite. maplibre-gl-js would throw an error of its
+  /// own or move to a camera it cannot draw.
+  static void _checkCameraUpdate(CameraUpdate update) {
+    final error = checks.cameraUpdateError(update);
+    if (error != null) throw checks.invalidArgument(error);
   }
 
   /// Starts the camera animation [start] begins and completes when it ends:
@@ -715,6 +725,7 @@ class MapLibreMapController extends MapLibrePlatform
     Duration? duration,
     CameraAnimationInterpolation? interpolation,
   }) async {
+    _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     final around = cameraOptions.around;
     final bearing = cameraOptions.bearing;
@@ -1822,6 +1833,9 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<LatLng> toLatLng(Point<num> screenLocation) async {
+    if (!checks.isFinite(screenLocation.x, screenLocation.y)) {
+      throw checks.invalidArgument(checks.nonFiniteScreenPoint);
+    }
     final lngLat = _map.unproject(
       geo_point.Point(screenLocation.x, screenLocation.y),
     );
@@ -1830,6 +1844,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async {
+    _checkLatLngs([latLng]);
     final screenPosition = _map.project(
       LngLat(latLng.longitude, latLng.latitude),
     );
@@ -1842,6 +1857,7 @@ class MapLibreMapController extends MapLibrePlatform
   Future<List<Point<num>>> toScreenLocationBatch(
     Iterable<LatLng> latLngs,
   ) async {
+    _checkLatLngs(latLngs);
     return latLngs
         .map((latLng) {
           final screenPosition = _map.project(
@@ -1850,6 +1866,16 @@ class MapLibreMapController extends MapLibrePlatform
           return Point(screenPosition.x.round(), screenPosition.y.round());
         })
         .toList(growable: false);
+  }
+
+  /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for a latitude or
+  /// longitude in [latLngs] that is NaN or infinite.
+  static void _checkLatLngs(Iterable<LatLng> latLngs) {
+    for (final latLng in latLngs) {
+      if (!checks.isFinite(latLng.latitude, latLng.longitude)) {
+        throw checks.invalidArgument(checks.nonFiniteCoordinates);
+      }
+    }
   }
 
   @override
@@ -2081,6 +2107,17 @@ class MapLibreMapController extends MapLibrePlatform
     required double east,
     required int padding,
   }) async {
+    // maplibre-gl-js takes any padding and clamps the latitudes, where
+    // Android and iOS fail.
+    if (!checks.isFinite(north, east) || !checks.isFinite(south, west)) {
+      throw checks.invalidArgument(checks.nonFiniteCoordinates);
+    }
+    if (north.abs() > 90 || south.abs() > 90) {
+      throw checks.invalidArgument(checks.latitudeOutOfRange);
+    }
+    if (padding < -0x80000000 || padding > 0x7FFFFFFF) {
+      throw checks.invalidArgument(checks.paddingOutOfRange(padding));
+    }
     _cancelCameraAnimation();
     _map.fitBounds(LngLatBounds(LngLat(west, south), LngLat(east, north)), {
       'padding': padding,
@@ -2793,9 +2830,11 @@ class MapLibreMapController extends MapLibrePlatform
     Uint8List bytes,
     LatLngQuad coordinates,
   ) async {
-    // Checked in the order of Android and iOS: the id before the bytes.
+    // Checked in the order of Android and iOS: the id, the corners, then the
+    // bytes.
     _ensureStyleReady();
     _ensureNewSourceId(imageSourceId);
+    _checkLatLngs(_cornerLatLngs(coordinates));
     final image = await _imageBlob(bytes);
     // The decoding yields, so the style or the id may have changed since.
     _ensureStyleReady();
@@ -2822,6 +2861,7 @@ class MapLibreMapController extends MapLibrePlatform
   ) async {
     _ensureStyleReady();
     _imageSource(imageSourceId);
+    if (coordinates != null) _checkLatLngs(_cornerLatLngs(coordinates));
     // Decoded before anything changes, so a call that fails changes nothing.
     final image = bytes == null ? null : await _imageBlob(bytes);
     _ensureStyleReady();
@@ -2875,15 +2915,18 @@ class MapLibreMapController extends MapLibrePlatform
     return source;
   }
 
+  /// The four corners of [quad].
+  static List<LatLng> _cornerLatLngs(LatLngQuad quad) => [
+    quad.topLeft,
+    quad.topRight,
+    quad.bottomRight,
+    quad.bottomLeft,
+  ];
+
   /// The corners of an image source in the order maplibre-gl-js takes them:
   /// top left, top right, bottom right, bottom left, each as [lng, lat].
   static List<List<double>> _corners(LatLngQuad quad) => [
-    for (final corner in [
-      quad.topLeft,
-      quad.topRight,
-      quad.bottomRight,
-      quad.bottomLeft,
-    ])
+    for (final corner in _cornerLatLngs(quad))
       [corner.longitude, corner.latitude],
   ];
 

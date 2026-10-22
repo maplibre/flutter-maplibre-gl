@@ -1,6 +1,7 @@
 // The checks the web layer and source calls make before maplibre-gl-js sees
 // them, so they answer what Android and iOS answer.
 import 'package:flutter/services.dart';
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_web/src/style_checks.dart';
 
@@ -462,6 +463,73 @@ void main() {
       expect(hexColorError('circle-color', 'red'), isNull);
       expect(hexColorError('circle-color', ['get', 'color']), isNull);
       expect(hexColorError('circle-radius', '#ggg'), isNull);
+    });
+  });
+
+  group('cameraUpdateError', () {
+    const nan = double.nan;
+    const coordinates = 'Latitude and longitude must be finite numbers.';
+    const values =
+        'Zoom, bearing, tilt, offsets and padding must be finite numbers.';
+
+    test('names the coordinates first, then the other values', () {
+      for (final (update, reason) in <(CameraUpdate, String)>[
+        (CameraUpdate.newLatLng(const LatLng(nan, 0)), coordinates),
+        (
+          CameraUpdate.newCameraPosition(
+            const CameraPosition(target: LatLng(0, nan), zoom: nan),
+          ),
+          coordinates,
+        ),
+        (
+          CameraUpdate.newLatLngBounds(
+            LatLngBounds(
+              southwest: const LatLng(0, 0),
+              northeast: const LatLng(1, double.infinity),
+            ),
+          ),
+          coordinates,
+        ),
+        (CameraUpdate.newLatLngZoom(const LatLng(0, 0), nan), values),
+        (
+          CameraUpdate.newLatLngBounds(
+            LatLngBounds(
+              southwest: const LatLng(0, 0),
+              northeast: const LatLng(1, 1),
+            ),
+            left: nan,
+          ),
+          values,
+        ),
+        (
+          CameraUpdate.newCameraPosition(
+            const CameraPosition(target: LatLng(0, 0), bearing: nan),
+          ),
+          values,
+        ),
+        (CameraUpdate.scrollBy(nan, 0), values),
+        (CameraUpdate.zoomBy(nan), values),
+        (CameraUpdate.zoomBy(1, const Offset(0, nan)), values),
+        (CameraUpdate.zoomTo(double.infinity), values),
+        (CameraUpdate.bearingTo(nan), values),
+        (CameraUpdate.tiltTo(nan), values),
+      ]) {
+        expect(cameraUpdateError(update), reason, reason: '${update.toJson()}');
+      }
+    });
+
+    test('is null for an update MapLibre can take', () {
+      for (final update in [
+        CameraUpdate.newLatLng(const LatLng(1, 2)),
+        CameraUpdate.newCameraPosition(
+          const CameraPosition(target: LatLng(1, 2), zoom: 3),
+        ),
+        CameraUpdate.zoomIn(),
+        CameraUpdate.zoomOut(),
+        CameraUpdate.zoomBy(1, const Offset(1, 2)),
+      ]) {
+        expect(cameraUpdateError(update), isNull, reason: '${update.toJson()}');
+      }
     });
   });
 

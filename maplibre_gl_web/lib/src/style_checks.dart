@@ -1,4 +1,6 @@
 import 'package:flutter/services.dart';
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
+    show CameraUpdate;
 
 /// The checks the web layer and source calls make before they reach
 /// maplibre-gl-js, with the codes and messages Android and iOS answer for the
@@ -263,3 +265,62 @@ String? hexColorError(String property, Object? value) {
 final _hexColor = RegExp(
   r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$',
 );
+
+/// The message of a latitude or longitude that is NaN or infinite, which
+/// MapLibre cannot place.
+const nonFiniteCoordinates = 'Latitude and longitude must be finite numbers.';
+
+/// The message of a camera update with a zoom, angle, offset or padding that
+/// is NaN or infinite.
+const nonFiniteCameraValues =
+    'Zoom, bearing, tilt, offsets and padding must be finite numbers.';
+
+/// The message of a screen point that is NaN or infinite.
+const nonFiniteScreenPoint = 'Screen coordinates must be finite numbers.';
+
+/// The message of a latitude beyond the poles.
+const latitudeOutOfRange = 'Latitude must be within -90 and 90.';
+
+/// The message of a camera padding that does not fit in the 32 bits MapLibre
+/// Native takes.
+String paddingOutOfRange(int padding) =>
+    'Padding $padding does not fit in 32 bits.';
+
+/// An `INVALID_ARGUMENT` error with [message].
+PlatformException invalidArgument(String message) =>
+    PlatformException(code: 'INVALID_ARGUMENT', message: message);
+
+/// Whether [a] and [b], such as a latitude and a longitude, are finite.
+bool isFinite(num a, num b) => a.isFinite && b.isFinite;
+
+/// Why [update] cannot move the camera, or null when it can: a coordinate,
+/// then any other value, that is NaN or infinite.
+String? cameraUpdateError(CameraUpdate update) {
+  final json = update.toJson() as List;
+  final coordinates = <Object?>[];
+  final values = <Object?>[];
+  switch (json.first) {
+    case 'newCameraPosition':
+      final position = json[1] as Map;
+      coordinates.add(position['target']);
+      values.addAll([position['bearing'], position['tilt'], position['zoom']]);
+    case 'newLatLng':
+      coordinates.add(json[1]);
+    case 'newLatLngBounds':
+      coordinates.addAll(json[1] as List);
+      values.addAll(json.skip(2));
+    case 'newLatLngZoom':
+      coordinates.add(json[1]);
+      values.add(json[2]);
+    case 'zoomBy':
+      values.add(json[1]);
+      if (json.length > 2) values.addAll(json[2] as List);
+    default:
+      values.addAll(json.skip(1));
+  }
+  bool finite(Object? value) => value is! num || value.isFinite;
+  if (!coordinates.every((latLng) => latLng is List && latLng.every(finite))) {
+    return nonFiniteCoordinates;
+  }
+  return values.every(finite) ? null : nonFiniteCameraValues;
+}

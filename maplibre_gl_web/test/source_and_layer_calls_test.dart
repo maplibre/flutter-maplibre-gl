@@ -8,6 +8,7 @@ library;
 import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
+import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -723,6 +724,116 @@ void main() {
         isNull,
         reason: 'the property set before it is put back',
       );
+    });
+  });
+
+  group('values that are not finite', () {
+    const nan = double.nan;
+
+    test('fail the camera calls with INVALID_ARGUMENT', () async {
+      final calls = <String, (String, Future<Object?> Function())>{
+        'moveCamera newLatLng': (
+          'Latitude and longitude must be finite numbers.',
+          () => controller.moveCamera(
+            CameraUpdate.newLatLng(const LatLng(nan, 0)),
+          ),
+        ),
+        'animateCamera zoomTo': (
+          'Zoom, bearing, tilt, offsets and padding must be finite numbers.',
+          () => controller.animateCamera(CameraUpdate.zoomTo(nan)),
+        ),
+        'easeCamera zoomBy focus': (
+          'Zoom, bearing, tilt, offsets and padding must be finite numbers.',
+          () => controller.easeCamera(
+            CameraUpdate.zoomBy(1, const Offset(nan, 0)),
+          ),
+        ),
+        'toScreenLocation': (
+          'Latitude and longitude must be finite numbers.',
+          () => controller.toScreenLocation(const LatLng(0, double.infinity)),
+        ),
+        'toScreenLocationBatch': (
+          'Latitude and longitude must be finite numbers.',
+          () => controller.toScreenLocationBatch(const [
+            LatLng(1, 1),
+            LatLng(nan, 0),
+          ]),
+        ),
+        'toLatLng': (
+          'Screen coordinates must be finite numbers.',
+          () => controller.toLatLng(const Point(nan, 10)),
+        ),
+        'setCameraBounds NaN': (
+          'Latitude and longitude must be finite numbers.',
+          () => controller.setCameraBounds(
+            west: nan,
+            north: 10,
+            south: -10,
+            east: 10,
+            padding: 0,
+          ),
+        ),
+        'setCameraBounds latitude': (
+          'Latitude must be within -90 and 90.',
+          () => controller.setCameraBounds(
+            west: -10,
+            north: 95,
+            south: -10,
+            east: 10,
+            padding: 0,
+          ),
+        ),
+        'setCameraBounds padding': (
+          'Padding 4294967296 does not fit in 32 bits.',
+          () => controller.setCameraBounds(
+            west: -10,
+            north: 10,
+            south: -10,
+            east: 10,
+            padding: 4294967296,
+          ),
+        ),
+      };
+      for (final MapEntry(key: label, value: (message, call))
+          in calls.entries) {
+        await expectLater(
+          call(),
+          throwsA(
+            platformError(
+              'INVALID_ARGUMENT',
+            ).having((e) => e.message, 'message', message),
+          ),
+          reason: label,
+        );
+      }
+    });
+
+    test('fail the image source calls before they change anything', () async {
+      const nanQuad = LatLngQuad(
+        topLeft: LatLng(2, -2),
+        topRight: LatLng(2, nan),
+        bottomRight: LatLng(-2, 2),
+        bottomLeft: LatLng(-2, -2),
+      );
+      final nonFinite = platformError('INVALID_ARGUMENT').having(
+        (e) => e.message,
+        'message',
+        'Latitude and longitude must be finite numbers.',
+      );
+
+      await expectLater(
+        controller.addImageSource('image', _png(1), nanQuad),
+        throwsA(nonFinite),
+      );
+      expect(map.sources, isEmpty);
+
+      await controller.addImageSource('image', _png(1), _quad);
+      final url = map.url('image');
+      await expectLater(
+        controller.updateImageSource('image', _png(2), nanQuad),
+        throwsA(nonFinite),
+      );
+      expect(map.url('image'), url);
     });
   });
 }
