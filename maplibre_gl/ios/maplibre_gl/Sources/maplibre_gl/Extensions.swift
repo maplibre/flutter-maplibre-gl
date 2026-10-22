@@ -150,33 +150,6 @@ extension PgEdgeInsets {
     }
 }
 
-extension UIImage {
-    static func loadFromFile(imagePath: String, imageName: String) -> UIImage? {
-        // Add the trailing slash in path if missing.
-        let path = imagePath.hasSuffix("/") ? imagePath : "\(imagePath)/"
-        // Build scale dependant image path.
-        var scale = UIScreen.main.scale
-        var absolutePath = "\(path)\(scale)x/\(imageName)"
-        // Check if the image exists, if not try a an unscaled path.
-        if Bundle.main.path(forResource: absolutePath, ofType: nil) == nil {
-            absolutePath = "\(path)\(imageName)"
-        } else {
-            // found asset with higher resolution - increase scale even further to compensate
-            scale *= scale
-        }
-        // Load image if it exists.
-        if let path = Bundle.main.path(forResource: absolutePath, ofType: nil) {
-            let imageUrl = URL(fileURLWithPath: path)
-            if let imageData: Data = try? Data(contentsOf: imageUrl),
-               let image = UIImage(data: imageData, scale: scale)
-            {
-                return image
-            }
-        }
-        return nil
-    }
-}
-
 public extension UIColor {
     /// The color of a CSS hex color: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`,
     /// with the alpha last, as MapLibre reads it on Android and web. Nil for

@@ -326,8 +326,14 @@ class MapLibreMapController extends MapLibrePlatform
         return;
       }
 
-      final bytes = await rootBundle.load(imagePath);
-      await addImage(imagePath, bytes.buffer.asUint8List());
+      // Sized like Image.asset: the 2.0x or 3.0x variant AssetImage picks for
+      // this screen, at its own ratio. A file without variants is 1x, which is
+      // the addImage default here. AssetIcons on Android and iOS do the same.
+      final key = await AssetImage(imagePath).obtainKey(
+        ImageConfiguration(devicePixelRatio: web.window.devicePixelRatio),
+      );
+      final bytes = await rootBundle.load(key.name);
+      await addImage(imagePath, bytes.buffer.asUint8List(), false, key.scale);
     } catch (_) {
       // Ignore, so MapLibre can continue without the image.
     }

@@ -2086,31 +2086,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    private func loadIconImage(name: String) -> UIImage? {
-        // Build up the full path of the asset.
-        // First find the last '/' ans split the image name in the asset directory and the image file name.
-        if let range = name.range(of: "/", options: [.backwards]) {
-            let directory = String(name[..<range.lowerBound])
-            let assetPath = registrar.lookupKey(forAsset: "\(directory)/")
-            let fileName = String(name[range.upperBound...])
-            // If we can load the image from file then add it to the map.
-            return UIImage.loadFromFile(
-                imagePath: assetPath,
-                imageName: fileName
-            )
-        }
-        return nil
-    }
-
-    private func addIconImageToMap(iconImageName: String) {
-        // Check if the image has already been added to the map.
-        if mapView.style?.image(forName: iconImageName) == nil {
-            if let imageFromAsset = loadIconImage(name: iconImageName) {
-                mapView.style?.setImage(imageFromAsset, forName: iconImageName)
-            }
-        }
-    }
-
     private func updateMyLocationEnabled() {
         if myLocationEnabled {
             restartLocationPulseIfNeeded()
@@ -2456,9 +2431,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
-    // handle missing images
+    // An image the style does not have may name a Flutter asset.
     func mapView(_: MLNMapView, didFailToLoadImage name: String) -> UIImage? {
-        return loadIconImage(name: name)
+        return AssetIcons.load(
+            mainPath: registrar.lookupKey(forAsset: name),
+            screenScale: UIScreen.main.scale
+        )
     }
 
     func mapView(

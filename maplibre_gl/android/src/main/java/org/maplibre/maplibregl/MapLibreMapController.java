@@ -8,7 +8,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.content.res.AssetFileDescriptor;
 import android.os.Bundle;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -105,10 +104,7 @@ import org.maplibre.android.snapshotter.MapSnapshot;
 import org.maplibre.android.snapshotter.MapSnapshotter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -612,7 +608,11 @@ final class MapLibreMapController
     mapView.addOnStyleImageMissingListener(
         (id) -> {
           DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-          final Bitmap bitmap = getScaledImage(id, displayMetrics.density);
+          final Bitmap bitmap =
+              AssetIcons.load(
+                  mapView.getContext().getAssets(),
+                  MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(id),
+                  displayMetrics.density);
           if (bitmap != null) {
             mapLibreMap.getStyle().addImage(id, bitmap);
           }
@@ -4822,63 +4822,6 @@ final class MapLibreMapController
     }
     return context.checkPermission(
         permission, android.os.Process.myPid(), android.os.Process.myUid());
-  }
-
-  /**
-   * Tries to find highest scale image for display type
-   *
-   * @param imageId
-   * @param density
-   * @return
-   */
-  private Bitmap getScaledImage(String imageId, float density) {
-    AssetFileDescriptor assetFileDescriptor;
-
-    // Split image path into parts.
-    List<String> imagePathList = Arrays.asList(imageId.split("/"));
-    List<String> assetPathList = new ArrayList<>();
-
-    // "On devices with a device pixel ratio of 1.8, the asset .../2.0x/my_icon.png would be chosen.
-    // For a device pixel ratio of 2.7, the asset .../3.0x/my_icon.png would be chosen."
-    // Source: https://flutter.dev/docs/development/ui/assets-and-images#resolution-aware
-    for (int i = (int) Math.ceil(density); i > 0; i--) {
-      String assetPath;
-      if (i == 1) {
-        // If density is 1.0x then simply take the default asset path
-        assetPath = MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(imageId);
-      } else {
-        // Build a resolution aware asset path as follows:
-        // <directory asset>/<ratio>/<image name>
-        // where ratio is 1.0x, 2.0x or 3.0x.
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int j = 0; j < imagePathList.size() - 1; j++) {
-          stringBuilder.append(imagePathList.get(j));
-          stringBuilder.append("/");
-        }
-        stringBuilder.append(((float) i) + "x");
-        stringBuilder.append("/");
-        stringBuilder.append(imagePathList.get(imagePathList.size() - 1));
-        assetPath = MapLibreMapsPlugin.flutterAssets.getAssetFilePathByName(stringBuilder.toString());
-      }
-      // Build up a list of resolution aware asset paths.
-      assetPathList.add(assetPath);
-    }
-
-    // Iterate over asset paths and get the highest scaled asset (as a bitmap).
-    Bitmap bitmap = null;
-    for (String assetPath : assetPathList) {
-      try {
-        // Read path (throws exception if doesn't exist).
-        assetFileDescriptor = mapView.getContext().getAssets().openFd(assetPath);
-        InputStream assetStream = assetFileDescriptor.createInputStream();
-        bitmap = BitmapFactory.decodeStream(assetStream);
-        assetFileDescriptor.close(); // Close for memory
-        break; // If exists, break
-      } catch (IOException e) {
-        // Skip
-      }
-    }
-    return bitmap;
   }
 
   // The gestures manager for feature drags. Without a move threshold any move, even one of zero
