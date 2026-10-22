@@ -1,131 +1,113 @@
 package org.maplibre.maplibregl
 
 import android.util.Log
-import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * The calls of one map, from Dart. Each one is rebuilt as the method call the
- * per-map method channel used to deliver, with the same name and argument
- * keys, and handed to the handler that channel fed: [MapLibreMapController.onMethodCall].
- * That keeps every check and error code of the handler as it was.
+ * The calls of one map, from Dart. Each one goes to the [MapCalls] method of
+ * the same name, with the same arguments, which answers through a
+ * [MethodChannel.Result]: [PigeonMethodResult] hands that answer to Pigeon.
  *
- * The handler is typed as a [MethodChannel.MethodCallHandler], which the
- * controller implements, because the controller is a package-private Java
- * class: Kotlin does not let an internal constructor expose it.
+ * Every call but [mapWaitForMap], [mapPause] and [mapResume] needs the native
+ * map, which is null while the MapView is being rebuilt after the activity was
+ * recreated. Such a call is answered MAP_NOT_READY then, without reaching [map].
  */
-internal class MapHostApi(
-    private val handler: MethodChannel.MethodCallHandler,
-) : MapLibreMapHostApi {
+internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
 
+    // Answered once the map is ready.
     override fun mapWaitForMap(callback: (Result<Unit>) -> Unit) =
-        unit("map#waitForMap", null, callback)
+        answer(PigeonMethodResult.unit(callback)) { map.mapWaitForMap(it) }
 
     override fun mapUpdate(options: Map<String, Any?>, callback: (Result<Any?>) -> Unit) =
-        any("map#update", hashMapOf("options" to options), callback)
+        any(callback) { map.mapUpdate(options, it) }
 
     override fun cameraAnimate(
         cameraUpdate: List<Any?>,
         duration: Long?,
         callback: (Result<Boolean?>) -> Unit,
-    ) = call(
-        "camera#animate",
-        hashMapOf("cameraUpdate" to cameraUpdate, "duration" to duration),
-        callback,
-    ) { it as Boolean? }
+    ) = call(callback, { it as Boolean? }) { map.cameraAnimate(cameraUpdate, duration, it) }
 
     override fun cameraMove(cameraUpdate: List<Any?>, callback: (Result<Boolean?>) -> Unit) =
-        call("camera#move", hashMapOf("cameraUpdate" to cameraUpdate), callback) { it as Boolean? }
+        call(callback, { it as Boolean? }) { map.cameraMove(cameraUpdate, it) }
 
     override fun mapUpdateMyLocationTrackingMode(mode: Long, callback: (Result<Unit>) -> Unit) =
-        unit("map#updateMyLocationTrackingMode", hashMapOf("mode" to mode), callback)
+        unit(callback) { map.mapUpdateMyLocationTrackingMode(mode, it) }
 
     override fun locationComponentSetTrackingCameraOptions(
         tilt: Double,
         duration: Long?,
         callback: (Result<Boolean?>) -> Unit,
-    ) = call(
-        "locationComponent#setTrackingCameraOptions",
-        hashMapOf("tilt" to tilt, "duration" to duration),
-        callback,
-    ) { it as Boolean? }
+    ) = call(callback, { it as Boolean? }) {
+        map.locationComponentSetTrackingCameraOptions(tilt, duration, it)
+    }
 
-    // The legacy arguments were the update map itself.
     override fun locationComponentSetManualLocation(
         update: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("locationComponent#setManualLocation", update, callback)
+    ) = unit(callback) { map.locationComponentSetManualLocation(update, it) }
 
     override fun mapMatchMapLanguageWithDeviceDefault(callback: (Result<Unit>) -> Unit) =
-        unit("map#matchMapLanguageWithDeviceDefault", null, callback)
+        unit(callback) { map.mapMatchMapLanguageWithDeviceDefault(it) }
 
     override fun mapUpdateContentInsets(
         bounds: Map<String, Double>,
         animated: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "map#updateContentInsets",
-        hashMapOf("bounds" to bounds, "animated" to animated),
-        callback,
-    )
+    ) = unit(callback) { map.mapUpdateContentInsets(bounds, animated, it) }
 
     override fun mapSetMapLanguage(language: String, callback: (Result<Unit>) -> Unit) =
-        unit("map#setMapLanguage", hashMapOf("language" to language), callback)
+        unit(callback) { map.mapSetMapLanguage(language, it) }
 
     override fun mapSetTelemetryEnabled(enabled: Boolean, callback: (Result<Unit>) -> Unit) =
-        unit("map#setTelemetryEnabled", hashMapOf("enabled" to enabled), callback)
+        unit(callback) { map.mapSetTelemetryEnabled(enabled, it) }
 
     override fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit) =
-        call("map#getTelemetryEnabled", null, callback) { it as Boolean }
+        call(callback, { it as Boolean }) { map.mapGetTelemetryEnabled(it) }
 
     override fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit) =
-        unit("map#setMaximumFps", hashMapOf("fps" to fps), callback)
+        unit(callback) { map.mapSetMaximumFps(fps, it) }
 
     override fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit) =
-        unit("map#forceOnlineMode", null, callback)
+        unit(callback) { map.mapForceOnlineMode(it) }
 
-    override fun mapPause(callback: (Result<Unit>) -> Unit) = unit("map#pause", null, callback)
+    override fun mapPause(callback: (Result<Unit>) -> Unit) =
+        answer(PigeonMethodResult.unit(callback)) { map.mapPause(it) }
 
-    override fun mapResume(callback: (Result<Unit>) -> Unit) = unit("map#resume", null, callback)
+    override fun mapResume(callback: (Result<Unit>) -> Unit) =
+        answer(PigeonMethodResult.unit(callback)) { map.mapResume(it) }
 
     override fun cameraEase(
         cameraUpdate: List<Any?>,
         duration: Long?,
         interpolation: String?,
         callback: (Result<Boolean>) -> Unit,
-    ) {
-        val arguments =
-            hashMapOf<String, Any?>("cameraUpdate" to cameraUpdate, "duration" to duration)
-        // Left out when null, as the legacy call did.
-        if (interpolation != null) {
-            arguments["interpolation"] = interpolation
-        }
-        call("camera#ease", arguments, callback) { it as Boolean }
+    ) = call(callback, { it as Boolean }) {
+        map.cameraEase(cameraUpdate, duration, interpolation, it)
     }
 
     override fun mapQueryCameraPosition(callback: (Result<Any?>) -> Unit) =
-        any("map#queryCameraPosition", null, callback)
+        any(callback) { map.mapQueryCameraPosition(it) }
 
     override fun mapEditGeoJsonSource(id: String, data: String, callback: (Result<Any?>) -> Unit) =
-        any("map#editGeoJsonSource", hashMapOf("id" to id, "data" to data), callback)
+        any(callback) { map.mapEditGeoJsonSource(id, data, it) }
 
     override fun mapEditGeoJsonUrl(id: String, url: String, callback: (Result<Any?>) -> Unit) =
-        any("map#editGeoJsonUrl", hashMapOf("id" to id, "url" to url), callback)
+        any(callback) { map.mapEditGeoJsonUrl(id, url, it) }
 
     override fun mapSetLayerFilter(id: String, filter: String, callback: (Result<Any?>) -> Unit) =
-        any("map#setLayerFilter", hashMapOf("id" to id, "filter" to filter), callback)
+        any(callback) { map.mapSetLayerFilter(id, filter, it) }
 
-    override fun mapGetStyle(callback: (Result<Any?>) -> Unit) = any("map#getStyle", null, callback)
+    override fun mapGetStyle(callback: (Result<Any?>) -> Unit) =
+        any(callback) { map.mapGetStyle(it) }
 
     override fun mapSetCustomHeaders(
         headers: Map<String, String>,
         filter: List<String>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("map#setCustomHeaders", hashMapOf("headers" to headers, "filter" to filter), callback)
+    ) = unit(callback) { map.mapSetCustomHeaders(headers, filter, it) }
 
-    // The legacy arguments were an empty map.
     override fun mapGetCustomHeaders(callback: (Result<Any?>) -> Unit) =
-        any("map#getCustomHeaders", hashMapOf<String, Any?>(), callback)
+        any(callback) { map.mapGetCustomHeaders(it) }
 
     override fun mapQueryRenderedFeaturesAtPoint(
         x: Double,
@@ -133,11 +115,7 @@ internal class MapHostApi(
         layerIds: List<String>,
         filter: List<Any?>?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#queryRenderedFeatures",
-        hashMapOf("x" to x, "y" to y, "layerIds" to layerIds, "filter" to filter),
-        callback,
-    )
+    ) = any(callback) { map.mapQueryRenderedFeaturesAtPoint(x, y, layerIds, filter, it) }
 
     override fun mapQueryRenderedFeaturesInRect(
         left: Double,
@@ -147,50 +125,31 @@ internal class MapHostApi(
         layerIds: List<String>,
         filter: String?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#queryRenderedFeatures",
-        hashMapOf(
-            "left" to left,
-            "top" to top,
-            "right" to right,
-            "bottom" to bottom,
-            "layerIds" to layerIds,
-            "filter" to filter,
-        ),
-        callback,
-    )
+    ) = any(callback) {
+        map.mapQueryRenderedFeaturesInRect(left, top, right, bottom, layerIds, filter, it)
+    }
 
     override fun mapQuerySourceFeatures(
         sourceId: String,
         sourceLayerId: String?,
         filter: List<Any?>?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#querySourceFeatures",
-        hashMapOf("sourceId" to sourceId, "sourceLayerId" to sourceLayerId, "filter" to filter),
-        callback,
-    )
+    ) = any(callback) { map.mapQuerySourceFeatures(sourceId, sourceLayerId, filter, it) }
 
-    // The handler answers an Integer.
+    // The SDK answers an int.
     override fun sourceGetClusterExpansionZoom(
         sourceId: String,
         clusterId: Long,
         callback: (Result<Long>) -> Unit,
-    ) = call(
-        "source#getClusterExpansionZoom",
-        hashMapOf("sourceId" to sourceId, "clusterId" to clusterId),
-        callback,
-    ) { (it as Number).toLong() }
+    ) = call(callback, { (it as Number).toLong() }) {
+        map.sourceGetClusterExpansionZoom(sourceId, clusterId, it)
+    }
 
     override fun sourceGetClusterChildren(
         sourceId: String,
         clusterId: Long,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getClusterChildren",
-        hashMapOf("sourceId" to sourceId, "clusterId" to clusterId),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetClusterChildren(sourceId, clusterId, it) }
 
     override fun sourceGetClusterLeaves(
         sourceId: String,
@@ -198,28 +157,19 @@ internal class MapHostApi(
         limit: Long,
         offset: Long,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getClusterLeaves",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "clusterId" to clusterId,
-            "limit" to limit,
-            "offset" to offset,
-        ),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetClusterLeaves(sourceId, clusterId, limit, offset, it) }
 
     override fun mapInvalidateAmbientCache(callback: (Result<Unit>) -> Unit) =
-        unit("map#invalidateAmbientCache", null, callback)
+        unit(callback) { map.mapInvalidateAmbientCache(it) }
 
     override fun mapClearAmbientCache(callback: (Result<Unit>) -> Unit) =
-        unit("map#clearAmbientCache", null, callback)
+        unit(callback) { map.mapClearAmbientCache(it) }
 
     override fun locationComponentGetLastLocation(callback: (Result<Any?>) -> Unit) =
-        any("locationComponent#getLastLocation", null, callback)
+        any(callback) { map.locationComponentGetLastLocation(it) }
 
     override fun mapGetVisibleRegion(callback: (Result<Any?>) -> Unit) =
-        any("map#getVisibleRegion", null, callback)
+        any(callback) { map.mapGetVisibleRegion(it) }
 
     override fun styleAddImage(
         name: String,
@@ -227,11 +177,7 @@ internal class MapHostApi(
         length: Long,
         sdf: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addImage",
-        hashMapOf("name" to name, "bytes" to bytes, "length" to length, "sdf" to sdf),
-        callback,
-    )
+    ) = unit(callback) { map.styleAddImage(name, bytes, length, sdf, it) }
 
     override fun styleAddImageSource(
         imageSourceId: String,
@@ -239,16 +185,9 @@ internal class MapHostApi(
         length: Long,
         coordinates: List<Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addImageSource",
-        hashMapOf(
-            "imageSourceId" to imageSourceId,
-            "bytes" to bytes,
-            "length" to length,
-            "coordinates" to coordinates,
-        ),
-        callback,
-    )
+    ) = addSource(imageSourceId, callback) {
+        map.styleAddImageSource(imageSourceId, bytes, length, coordinates, it)
+    }
 
     override fun styleUpdateImageSource(
         imageSourceId: String,
@@ -256,39 +195,22 @@ internal class MapHostApi(
         length: Long?,
         coordinates: List<Any?>?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#updateImageSource",
-        hashMapOf(
-            "imageSourceId" to imageSourceId,
-            "bytes" to bytes,
-            "length" to length,
-            "coordinates" to coordinates,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.styleUpdateImageSource(imageSourceId, bytes, length, coordinates, it) }
 
     override fun mapToScreenLocation(
         latitude: Double,
         longitude: Double,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "map#toScreenLocation",
-        hashMapOf("latitude" to latitude, "longitude" to longitude),
-        callback,
-    )
+    ) = any(callback) { map.mapToScreenLocation(latitude, longitude, it) }
 
-    // The handler answers a double[].
+    // Answered with the screen points as a double[], x and y in turn.
     override fun mapToScreenLocationBatch(
         coordinates: DoubleArray,
         callback: (Result<DoubleArray>) -> Unit,
-    ) = call(
-        "map#toScreenLocationBatch",
-        hashMapOf("coordinates" to coordinates),
-        callback,
-    ) { it as DoubleArray }
+    ) = call(callback, { it as DoubleArray }) { map.mapToScreenLocationBatch(coordinates, it) }
 
     override fun styleRemoveSource(sourceId: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#removeSource", hashMapOf("sourceId" to sourceId), callback)
+        unit(callback) { map.styleRemoveSource(sourceId, it) }
 
     override fun styleAddLayer(
         imageLayerId: String,
@@ -296,16 +218,9 @@ internal class MapHostApi(
         minzoom: Double?,
         maxzoom: Double?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addLayer",
-        hashMapOf(
-            "imageLayerId" to imageLayerId,
-            "imageSourceId" to imageSourceId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-        ),
-        callback,
-    )
+    ) = addLayer(imageLayerId, callback) {
+        map.styleAddLayer(imageLayerId, imageSourceId, minzoom, maxzoom, it)
+    }
 
     override fun styleAddLayerBelow(
         imageLayerId: String,
@@ -314,59 +229,44 @@ internal class MapHostApi(
         minzoom: Double?,
         maxzoom: Double?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addLayerBelow",
-        hashMapOf(
-            "imageLayerId" to imageLayerId,
-            "imageSourceId" to imageSourceId,
-            "belowLayerId" to belowLayerId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-        ),
-        callback,
-    )
+    ) = addLayer(imageLayerId, callback) {
+        map.styleAddLayerBelow(imageLayerId, imageSourceId, belowLayerId, minzoom, maxzoom, it)
+    }
 
     override fun styleRemoveLayer(layerId: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#removeLayer", hashMapOf("layerId" to layerId), callback)
+        unit(callback) { map.styleRemoveLayer(layerId, it) }
 
     override fun styleMoveLayer(
         layerId: String,
         belowLayerId: String?,
         callback: (Result<Unit>) -> Unit,
-    ) {
-        val arguments = hashMapOf<String, Any?>("layerId" to layerId)
-        // Left out when null, as the legacy call did.
-        if (belowLayerId != null) {
-            arguments["belowLayerId"] = belowLayerId
-        }
-        unit("style#moveLayer", arguments, callback)
-    }
+    ) = unit(callback) { map.styleMoveLayer(layerId, belowLayerId, it) }
 
     override fun styleSetFilter(layerId: String, filter: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#setFilter", hashMapOf("layerId" to layerId, "filter" to filter), callback)
+        unit(callback) { map.styleSetFilter(layerId, filter, it) }
 
     override fun styleGetFilter(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getFilter", hashMapOf("layerId" to layerId), callback)
+        any(callback) { map.styleGetFilter(layerId, it) }
 
     override fun mapToLatLng(x: Double, y: Double, callback: (Result<Any?>) -> Unit) =
-        any("map#toLatLng", hashMapOf("x" to x, "y" to y), callback)
+        any(callback) { map.mapToLatLng(x, y, it) }
 
     override fun mapGetMetersPerPixelAtLatitude(
         latitude: Double,
         callback: (Result<Any?>) -> Unit,
-    ) = any("map#getMetersPerPixelAtLatitude", hashMapOf("latitude" to latitude), callback)
+    ) = any(callback) { map.mapGetMetersPerPixelAtLatitude(latitude, it) }
 
     override fun sourceAddGeoJson(
         sourceId: String,
         geojson: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("source#addGeoJson", hashMapOf("sourceId" to sourceId, "geojson" to geojson), callback)
+    ) = addSource(sourceId, callback) { map.sourceAddGeoJson(sourceId, geojson, it) }
 
     override fun sourceSetGeoJson(
         sourceId: String,
         geojson: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit("source#setGeoJson", hashMapOf("sourceId" to sourceId, "geojson" to geojson), callback)
+    ) = unit(callback) { map.sourceSetGeoJson(sourceId, geojson, it) }
 
     override fun mapSetCameraBounds(
         west: Double,
@@ -375,17 +275,7 @@ internal class MapHostApi(
         east: Double,
         padding: Long,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "map#setCameraBounds",
-        hashMapOf(
-            "west" to west,
-            "north" to north,
-            "south" to south,
-            "east" to east,
-            "padding" to padding,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.mapSetCameraBounds(west, north, south, east, padding, it) }
 
     override fun symbolLayerAdd(
         sourceId: String,
@@ -398,13 +288,12 @@ internal class MapHostApi(
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "symbolLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.symbolLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun lineLayerAdd(
         sourceId: String,
@@ -417,23 +306,18 @@ internal class MapHostApi(
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "lineLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.lineLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun layerSetProperties(
         layerId: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setProperties",
-        hashMapOf("layerId" to layerId, "properties" to properties),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetProperties(layerId, properties, it) }
 
     override fun circleLayerAdd(
         sourceId: String,
@@ -446,13 +330,12 @@ internal class MapHostApi(
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "circleLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.circleLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun fillLayerAdd(
         sourceId: String,
@@ -465,13 +348,12 @@ internal class MapHostApi(
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "fillLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.fillLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun fillExtrusionLayerAdd(
         sourceId: String,
@@ -484,23 +366,18 @@ internal class MapHostApi(
         enableInteraction: Boolean,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "fillExtrusionLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ).apply { put("enableInteraction", enableInteraction) },
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.fillExtrusionLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter,
+            enableInteraction, properties, it,
+        )
+    }
 
     override fun styleAddSource(
         sourceId: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "style#addSource",
-        hashMapOf("sourceId" to sourceId, "properties" to properties),
-        callback,
-    )
+    ) = addSource(sourceId, callback) { map.styleAddSource(sourceId, properties, it) }
 
     override fun rasterLayerAdd(
         sourceId: String,
@@ -510,11 +387,9 @@ internal class MapHostApi(
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "rasterLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.rasterLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun hillshadeLayerAdd(
         sourceId: String,
@@ -524,11 +399,9 @@ internal class MapHostApi(
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "hillshadeLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.hillshadeLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun colorReliefLayerAdd(
         sourceId: String,
@@ -538,11 +411,9 @@ internal class MapHostApi(
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "colorReliefLayer#add",
-        sourcedLayerArguments(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.colorReliefLayerAdd(sourceId, layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun backgroundLayerAdd(
         layerId: String,
@@ -551,17 +422,9 @@ internal class MapHostApi(
         maxzoom: Double?,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "backgroundLayer#add",
-        hashMapOf(
-            "layerId" to layerId,
-            "belowLayerId" to belowLayerId,
-            "minzoom" to minzoom,
-            "maxzoom" to maxzoom,
-            "properties" to properties,
-        ),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.backgroundLayerAdd(layerId, belowLayerId, minzoom, maxzoom, properties, it)
+    }
 
     override fun heatmapLayerAdd(
         sourceId: String,
@@ -573,23 +436,17 @@ internal class MapHostApi(
         filter: String,
         properties: Map<String, Any?>,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "heatmapLayer#add",
-        filteredLayerArguments(
-            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties,
-        ),
-        callback,
-    )
+    ) = addLayer(layerId, callback) {
+        map.heatmapLayerAdd(
+            sourceId, layerId, belowLayerId, sourceLayer, minzoom, maxzoom, filter, properties, it,
+        )
+    }
 
     override fun sourceSetFeature(
         sourceId: String,
         geojsonFeature: String,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#setFeature",
-        hashMapOf("sourceId" to sourceId, "geojsonFeature" to geojsonFeature),
-        callback,
-    )
+    ) = unit(callback) { map.sourceSetFeature(sourceId, geojsonFeature, it) }
 
     override fun sourceSetFeatureState(
         sourceId: String,
@@ -597,16 +454,7 @@ internal class MapHostApi(
         state: Map<String, Any?>,
         sourceLayer: String?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#setFeatureState",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "featureId" to featureId,
-            "state" to state,
-            "sourceLayer" to sourceLayer,
-        ),
-        callback,
-    )
+    ) = unit(callback) { map.sourceSetFeatureState(sourceId, featureId, state, sourceLayer, it) }
 
     override fun sourceRemoveFeatureState(
         sourceId: String,
@@ -614,190 +462,141 @@ internal class MapHostApi(
         stateKey: String?,
         sourceLayer: String?,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "source#removeFeatureState",
-        hashMapOf(
-            "sourceId" to sourceId,
-            "featureId" to featureId,
-            "stateKey" to stateKey,
-            "sourceLayer" to sourceLayer,
-        ),
-        callback,
-    )
+    ) = unit(callback) {
+        map.sourceRemoveFeatureState(sourceId, featureId, stateKey, sourceLayer, it)
+    }
 
     override fun sourceGetFeatureState(
         sourceId: String,
         featureId: String,
         sourceLayer: String?,
         callback: (Result<Any?>) -> Unit,
-    ) = any(
-        "source#getFeatureState",
-        hashMapOf("sourceId" to sourceId, "featureId" to featureId, "sourceLayer" to sourceLayer),
-        callback,
-    )
+    ) = any(callback) { map.sourceGetFeatureState(sourceId, featureId, sourceLayer, it) }
 
     override fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit) =
-        unit("style#setLight", hashMapOf("light" to light), callback)
+        unit(callback) { map.styleSetLight(light, it) }
 
     override fun layerSetVisibility(
         layerId: String,
         visible: Boolean,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setVisibility",
-        hashMapOf("layerId" to layerId, "visible" to visible),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetVisibility(layerId, visible, it) }
 
-    // The handler answers an ArrayList of the ids that matched no layer.
+    // Answered with the ids that matched no layer.
     override fun layerSetVisibilityBatch(
         layerIds: List<String>,
         visible: Boolean,
         callback: (Result<List<String>?>) -> Unit,
-    ) = call(
-        "layer#setVisibilityBatch",
-        hashMapOf("layerIds" to layerIds, "visible" to visible),
-        callback,
-    ) { reply -> (reply as List<*>?)?.map { it as String } }
+    ) = call(callback, { reply -> (reply as List<*>?)?.map { it as String } }) {
+        map.layerSetVisibilityBatch(layerIds, visible, it)
+    }
 
     override fun layerSetZoomRange(
         layerId: String,
         minzoom: Double,
         maxzoom: Double,
         callback: (Result<Unit>) -> Unit,
-    ) = unit(
-        "layer#setZoomRange",
-        hashMapOf("layerId" to layerId, "minzoom" to minzoom, "maxzoom" to maxzoom),
-        callback,
-    )
+    ) = unit(callback) { map.layerSetZoomRange(layerId, minzoom, maxzoom, it) }
 
     override fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit) =
-        call("layer#getVisibility", hashMapOf("layerId" to layerId), callback) { it as Boolean? }
+        call(callback, { it as Boolean? }) { map.layerGetVisibility(layerId, it) }
 
-    // The legacy call always sent a map, without the sizes left unset. The
-    // handler answers a byte[].
+    // Answered with the PNG bytes.
     override fun mapTakeSnapshot(
         width: Long?,
         height: Long?,
         callback: (Result<ByteArray?>) -> Unit,
-    ) {
-        val arguments = hashMapOf<String, Any?>()
-        if (width != null) {
-            arguments["width"] = width
-        }
-        if (height != null) {
-            arguments["height"] = height
-        }
-        call("map#takeSnapshot", arguments, callback) { it as ByteArray? }
-    }
+    ) = call(callback, { it as ByteArray? }) { map.mapTakeSnapshot(width, height, it) }
 
     override fun styleGetLayerIds(callback: (Result<Any?>) -> Unit) =
-        any("style#getLayerIds", null, callback)
+        any(callback) { map.styleGetLayerIds(it) }
 
     override fun styleGetSourceIds(callback: (Result<Any?>) -> Unit) =
-        any("style#getSourceIds", null, callback)
+        any(callback) { map.styleGetSourceIds(it) }
 
     override fun styleGetLayerProperties(layerId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getLayerProperties", hashMapOf("layerId" to layerId), callback)
+        any(callback) { map.styleGetLayerProperties(layerId, it) }
 
     override fun styleGetSourceProperties(sourceId: String, callback: (Result<Any?>) -> Unit) =
-        any("style#getSourceProperties", hashMapOf("sourceId" to sourceId), callback)
+        any(callback) { map.styleGetSourceProperties(sourceId, it) }
 
     override fun styleSetStyle(style: String, callback: (Result<Unit>) -> Unit) =
-        unit("style#setStyle", hashMapOf("style" to style), callback)
+        unit(callback) { map.styleSetStyle(style, it) }
 
-    /** The keys shared by the `*Layer#add` calls that take a source layer and a filter. */
-    private fun filteredLayerArguments(
-        sourceId: String,
-        layerId: String,
-        belowLayerId: String?,
-        sourceLayer: String?,
-        minzoom: Double?,
-        maxzoom: Double?,
-        filter: String,
-        properties: Map<String, Any?>,
-    ) = hashMapOf<String, Any?>(
-        "sourceId" to sourceId,
-        "layerId" to layerId,
-        "belowLayerId" to belowLayerId,
-        "sourceLayer" to sourceLayer,
-        "minzoom" to minzoom,
-        "maxzoom" to maxzoom,
-        "filter" to filter,
-        "properties" to properties,
-    )
+    /** Runs [body], which needs the map, for a call whose answer Dart does not read. */
+    private fun unit(callback: (Result<Unit>) -> Unit, body: (MethodChannel.Result) -> Unit) =
+        withMap(PigeonMethodResult.unit(callback), body)
 
-    /** The keys of the `*Layer#add` calls that take a source but no filter. */
-    private fun sourcedLayerArguments(
-        sourceId: String,
-        layerId: String,
-        belowLayerId: String?,
-        minzoom: Double?,
-        maxzoom: Double?,
-        properties: Map<String, Any?>,
-    ) = hashMapOf<String, Any?>(
-        "sourceId" to sourceId,
-        "layerId" to layerId,
-        "belowLayerId" to belowLayerId,
-        "minzoom" to minzoom,
-        "maxzoom" to maxzoom,
-        "properties" to properties,
-    )
-
-    /** Runs a call whose answer Dart does not read. */
-    private fun unit(method: String, arguments: Any?, callback: (Result<Unit>) -> Unit) =
-        call(method, arguments, callback) { }
-
-    /** Runs a call whose answer goes to Dart as the handler gave it. */
-    private fun any(method: String, arguments: Any?, callback: (Result<Any?>) -> Unit) =
-        call(method, arguments, callback) { it }
+    /** Runs [body], which needs the map, for a call whose answer goes to Dart as it is. */
+    private fun any(callback: (Result<Any?>) -> Unit, body: (MethodChannel.Result) -> Unit) =
+        withMap(PigeonMethodResult(callback) { it }, body)
 
     /**
-     * Hands [method] with [arguments] to the handler, and its answer, turned
-     * by [convert] into the type the Pigeon method returns, to [callback].
+     * Runs [body], which needs the map, for a call whose answer [convert] turns
+     * into the type the Pigeon method returns.
      */
     private fun <T> call(
-        method: String,
-        arguments: Any?,
         callback: (Result<T>) -> Unit,
         convert: (Any?) -> T,
-    ) {
-        val result = PigeonMethodResult(callback, convert)
+        body: (MethodChannel.Result) -> Unit,
+    ) = withMap(PigeonMethodResult(callback, convert), body)
+
+    /**
+     * Runs [body], which adds a layer, unless the style already holds one
+     * with [layerId]: the map answers that call LAYER_ALREADY_EXISTS.
+     */
+    private fun addLayer(
+        layerId: String,
+        callback: (Result<Unit>) -> Unit,
+        body: (MethodChannel.Result) -> Unit,
+    ) = unit(callback) {
+        if (!map.rejectDuplicateLayerId(layerId, it)) {
+            body(it)
+        }
+    }
+
+    /**
+     * Runs [body], which adds a source, unless the style already holds one
+     * with [sourceId]: the map answers that call SOURCE_ALREADY_EXISTS.
+     */
+    private fun addSource(
+        sourceId: String,
+        callback: (Result<Unit>) -> Unit,
+        body: (MethodChannel.Result) -> Unit,
+    ) = unit(callback) {
+        if (!map.rejectDuplicateSourceId(sourceId, it)) {
+            body(it)
+        }
+    }
+
+    /** Runs [body] if the map is ready, and answers MAP_NOT_READY otherwise. */
+    private fun withMap(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) =
+        answer(result) {
+            if (map.isMapReady) {
+                body(it)
+            } else {
+                it.error(MAP_NOT_READY, MAP_NOT_READY_MESSAGE, null)
+            }
+        }
+
+    /**
+     * Runs [body] with [result]. What it throws is answered with code "error":
+     * Pigeon does not catch what an asynchronous handler throws, which would
+     * reach Dart as a channel-error.
+     */
+    private fun answer(result: MethodChannel.Result, body: (MethodChannel.Result) -> Unit) {
         try {
-            handler.onMethodCall(MethodCall(method, legacyInts(arguments)), result)
+            body(result)
         } catch (e: RuntimeException) {
-            // Pigeon does not catch what an asynchronous handler throws: it
-            // would reach Dart as a channel-error. Report it with code "error",
-            // as the method channel did.
-            Log.e(TAG, "Failed to handle $method", e)
+            Log.e(TAG, "A map call failed", e)
             result.error("error", e.message, Log.getStackTraceString(e))
         }
     }
 
     companion object {
         private const val TAG = "MapHostApi"
-
-        /**
-         * [value] with every Long that fits in 32 bits turned into an Int, in
-         * nested maps and lists too. Pigeon delivers every Dart int as a Long,
-         * while the method channel delivered an Integer when the value fit, and
-         * the handler casts to Integer. Maps and lists are copied into a
-         * HashMap and an ArrayList, the types the method channel delivered;
-         * everything else is left as it is.
-         */
-        private fun legacyInts(value: Any?): Any? = when (value) {
-            is Long -> if (value.toInt().toLong() == value) value.toInt() else value
-            is Map<*, *> -> HashMap<Any?, Any?>(value.size).also { copy ->
-                for ((key, item) in value) {
-                    copy[key] = legacyInts(item)
-                }
-            }
-            is List<*> -> ArrayList<Any?>(value.size).also { copy ->
-                for (item in value) {
-                    copy.add(legacyInts(item))
-                }
-            }
-            else -> value
-        }
+        private const val MAP_NOT_READY = "MAP_NOT_READY"
+        private const val MAP_NOT_READY_MESSAGE =
+            "Map is not ready (activity may have been recreated)"
     }
 }

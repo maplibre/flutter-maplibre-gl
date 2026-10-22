@@ -199,6 +199,19 @@ class Convert {
     return ((Number) o).intValue();
   }
 
+  /**
+   * {@code value}, a Dart int, as the int the platform API takes. Pigeon delivers every Dart int as
+   * a long: one that does not fit in 32 bits fails the call, with code "error", rather than wrap
+   * around.
+   */
+  static int toIntExact(long value) {
+    final int narrowed = (int) value;
+    if (narrowed != value) {
+      throw new IllegalArgumentException(value + " does not fit in a 32-bit int.");
+    }
+    return narrowed;
+  }
+
   static Object toJson(CameraPosition position) {
     if (position == null) {
       return null;

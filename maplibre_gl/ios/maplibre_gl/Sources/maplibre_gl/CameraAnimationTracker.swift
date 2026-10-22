@@ -2,7 +2,7 @@ import Flutter
 import MapLibre
 
 /*
- *  Answers `camera#animate` and `camera#ease` the way Android and web do: true once the camera
+ *  Answers `cameraAnimate` and `cameraEase` the way Android and web do: true once the camera
  *  arrives, false when something cuts the animation short first, such as another camera call, a
  *  gesture or new content insets.
  *
@@ -75,7 +75,7 @@ final class CameraAnimationTracker {
 
     /// Marks the running animation as cut short, by a camera call or a gesture. Called before the
     /// call moves the camera, so it also covers one MLNMapView does not flag, such as a
-    /// `camera#move` to where the camera already is.
+    /// `cameraMove` to where the camera already is.
     func interruptRunning() {
         running?.interrupted = true
         running = nil
