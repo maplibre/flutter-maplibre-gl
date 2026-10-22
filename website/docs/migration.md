@@ -47,6 +47,10 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 | `invalidLayerType` | `INVALID_LAYER_TYPE` |
 | `sourceAlreadyExists`, `duplicateSource` | `SOURCE_ALREADY_EXISTS` |
 | `layerAlreadyExists`, `duplicateLayer` | `LAYER_ALREADY_EXISTS` |
+| `styleNotFound` | `STYLE_NOT_READY` |
+| `sourceNotFound`, `noSuchSource` | `SOURCE_NOT_FOUND` |
+| `invalidSourceType` | `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source |
+| `parseError` | `INVALID_GEOJSON` |
 
 On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
 

@@ -5,6 +5,7 @@
 
 ### Added
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
+* `geoJsonError`, `geoJsonTextError`, `geoJsonFeatureError`, `invalidGeoJson` and `invalidGeoJsonFeature` check GeoJSON the way MapLibre reads it, so a platform answers `INVALID_GEOJSON` for the same data as the others (#1119).
 
 ### Changed
 * `MapLibreGlobalPlatform` declares every plugin-wide operation: offline regions, the offline database, the ambient cache, HTTP headers and `setOffline`, which `maplibre_gl` now calls through it. The new members return a future that fails with `UnimplementedError` unless a platform overrides them, so an existing implementation keeps compiling (#1114, #937).
