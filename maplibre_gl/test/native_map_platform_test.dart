@@ -993,6 +993,164 @@ void main() {
     });
   });
 
+  // MapLibre Native has no generateId, so the plugin numbers the features.
+  group('generateId', () {
+    setUp(init);
+
+    Map<String, dynamic> point(Object? id) => {
+      'type': 'Feature',
+      if (id != null) 'id': id,
+      'properties': {'name': '$id'},
+      'geometry': {
+        'type': 'Point',
+        'coordinates': [1, 2],
+      },
+    };
+
+    Map<String, dynamic> collection(List<Object?> ids) => {
+      'type': 'FeatureCollection',
+      'features': [for (final id in ids) point(id)],
+    };
+
+    /// The features of [json], a GeoJSON object or its text.
+    List<Map> featuresOf(Object? json) {
+      final data = json is String ? jsonDecode(json) as Map : json! as Map;
+      return data['type'] == 'FeatureCollection'
+          ? (data['features'] as List).cast<Map>()
+          : [data];
+    }
+
+    /// Expects the features of [json] to have the ids [expected], and no
+    /// property of the plugin.
+    void expectIds(Object? json, List<Object?> expected) {
+      final features = featuresOf(json);
+      expect([for (final feature in features) feature['id']], expected);
+      for (final feature in features) {
+        expect(
+          (feature['properties'] as Map).keys.map((key) => '$key'),
+          everyElement(isNot(startsWith('maplibre_gl:'))),
+        );
+      }
+    }
+
+    Future<void> addGenerated(String sourceId, Object data) =>
+        platform.addSource(
+          sourceId,
+          GeojsonSourceProperties(data: data, generateId: true),
+        );
+
+    test('numbers the features of the data, over their ids', () async {
+      api.replies['mapEditGeoJsonSource'] = true;
+      final geojson = collection(['2', 'poi-12', null]);
+      final before = jsonEncode(geojson);
+
+      await addGenerated('generated', geojson);
+      await platform.setGeoJsonSource('generated', collection([9, 8]));
+      await platform.editGeoJsonSource(
+        'generated',
+        jsonEncode(collection(['7'])),
+      );
+      await platform.setGeoJsonSource('generated', point('x'));
+      // Large enough to be checked on a background isolate.
+      await platform.setGeoJsonSource(
+        'generated',
+        collection([for (var i = 0; i < 200; i++) 'id-$i']),
+      );
+
+      expectIds((api.calls[0][2]! as Map)['data'], [0, 1, 2]);
+      expectIds(api.calls[1][2], [0, 1]);
+      expectIds(api.calls[2][2], [0]);
+      expectIds(api.calls[3][2], [0]);
+      expectIds(api.calls[4][2], [for (var i = 0; i < 200; i++) i]);
+      // The data of the app is left as it was.
+      expect(jsonEncode(geojson), before);
+    });
+
+    test('numbers on iOS too', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      api.replies['mapEditGeoJsonSource'] = true;
+
+      await addGenerated('generated', collection(['a', 'b']));
+      await platform.editGeoJsonSource(
+        'generated',
+        jsonEncode(collection(['c'])),
+      );
+
+      expectIds((api.calls[0][2]! as Map)['data'], [0, 1]);
+      expectIds(api.calls[1][2], [0]);
+    });
+
+    test('a feature set by setGeoJsonFeature keeps its id', () async {
+      await addGenerated('generated', collection(['a', 'b']));
+
+      await platform.setFeatureForGeoJsonSource('generated', point('1'));
+
+      expect(api.calls[1][2], jsonEncode(point('1')));
+    });
+
+    test('data from a url is not numbered, but data set later is', () async {
+      await addGenerated('generated', 'https://example.com/a.json');
+      await platform.setGeoJsonSource('generated', collection(['a']));
+
+      expect(
+        api.calls[0][2],
+        containsPair('data', 'https://example.com/a.json'),
+      );
+      expectIds(api.calls[1][2], [0]);
+    });
+
+    test('ends with the source, a new source of that id or a new '
+        'style', () async {
+      final events = platform as MapLibreMapFlutterApi;
+      Future<List<Object?>> idsSet() async {
+        api.calls.clear();
+        await platform.setGeoJsonSource('generated', collection([5]));
+        return [
+          for (final feature in featuresOf(api.calls.single[2])) feature['id'],
+        ];
+      }
+
+      await addGenerated('generated', collection([]));
+      expect(await idsSet(), [0]);
+      await platform.removeSource('generated');
+      expect(await idsSet(), [5]);
+
+      await addGenerated('generated', collection([]));
+      await platform.addGeoJsonSource('generated', collection([]));
+      expect(await idsSet(), [5]);
+
+      await addGenerated('generated', collection([]));
+      await platform.addSource(
+        'generated',
+        GeojsonSourceProperties(data: collection([])),
+      );
+      expect(await idsSet(), [5]);
+
+      await addGenerated('generated', collection([]));
+      await events.mapOnStyleLoaded();
+      expect(await idsSet(), [5]);
+    });
+
+    test('a failed add leaves the source as it was', () async {
+      await addGenerated('generated', collection([]));
+      api.errors['styleAddSource'] = PlatformException(code: 'boom');
+      await expectLater(
+        platform.addSource(
+          'generated',
+          GeojsonSourceProperties(data: collection([])),
+        ),
+        throwsA(isA<PlatformException>()),
+      );
+      api.errors.remove('styleAddSource');
+      api.calls.clear();
+
+      await platform.setGeoJsonSource('generated', collection([5]));
+
+      expectIds(api.calls.single[2], [0]);
+    });
+  });
+
   group('queries', () {
     setUp(init);
 
