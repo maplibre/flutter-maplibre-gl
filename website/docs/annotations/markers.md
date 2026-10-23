@@ -102,6 +102,10 @@ final symbols = await controller.addSymbols([
   device pixel, so the same PNG is larger on web. For the same size everywhere, pass
   the screen's ratio as `pixelRatio`:
   `addImage('my-pin', bytes, false, MediaQuery.devicePixelRatioOf(context))`.
+- **Flutter assets, by path**: a name the map lacks that is an asset path, such as
+  `iconImage: 'assets/pins/pin.png'`, is loaded from the app's assets. With `2.0x/` and
+  `3.0x/` variants next to it, the icon is sized like `Image.asset`, the same on every
+  platform. A file without variants is drawn like `addImage` without `pixelRatio`.
 
 A name the map does not have renders nothing and only logs *"image … could not be
 loaded"*, so it fails quietly.

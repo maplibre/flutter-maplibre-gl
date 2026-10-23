@@ -1,9 +1,11 @@
-// Integration tests for the size addImage draws an image at.
+// Integration tests for the size images are drawn at.
 //
 // With a pixelRatio, an image is its width in pixels divided by pixelRatio
 // wide in logical pixels on every platform. Without one, each platform keeps
 // its default: web draws one image pixel per logical pixel, Android and iOS
-// one per device pixel.
+// one per device pixel. An iconImage naming an asset with 2.0x and 3.0x
+// variants is sized like Image.asset; an asset without variants keeps the
+// addImage default.
 //
 // The width is measured where queryRenderedFeatures finds the icon, so it does
 // not depend on the exact pixels a renderer draws, as a golden would.
@@ -26,6 +28,15 @@ const _zoom = 3.0;
 /// The icon snaps to device pixels, about 1 logical px off at a ratio such as
 /// 2.625. A wrong ratio is off by 4 px or more.
 const _tolerance = 3.0;
+
+/// The width in pixels of each file in assets/icon_size. The 2.0x and 3.0x files
+/// are 1.25 times their ratio wide, so the drawn width tells which file won.
+const _assetPixels = {
+  'assets/icon_size/single.png': 40,
+  'assets/icon_size/variants.png': 40,
+  'assets/icon_size/2.0x/variants.png': 100,
+  'assets/icon_size/3.0x/variants.png': 150,
+};
 
 /// Away from tile edges at [_zoom]. The probes move along the parallel, where
 /// screen x is linear in longitude.
@@ -66,21 +77,75 @@ void main() {
           'at a device pixel ratio of $ratio',
     );
   });
+
+  testWidgets('an asset icon with variants is sized like Image.asset', (
+    tester,
+  ) async {
+    const asset = 'assets/icon_size/variants.png';
+    final ratio = tester.view.devicePixelRatio;
+    // The file Image.asset picks here, and the ratio it draws it at.
+    final key = await pumpUntil(
+      tester,
+      const AssetImage(
+        asset,
+      ).obtainKey(ImageConfiguration(devicePixelRatio: ratio)),
+      'asset variant',
+    );
+
+    final width = await _iconWidth(tester, asset: asset);
+
+    expect(
+      width,
+      closeTo(_assetPixels[key.name]! / key.scale, _tolerance),
+      reason:
+          'width in logical px of ${key.name} at a device pixel ratio of '
+          '$ratio',
+    );
+  });
+
+  testWidgets('an asset icon without variants keeps the addImage default', (
+    tester,
+  ) async {
+    const asset = 'assets/icon_size/single.png';
+    final ratio = tester.view.devicePixelRatio;
+    final pixels = _assetPixels[asset]!;
+    final expected =
+        testPlatform == TestPlatform.web ? pixels.toDouble() : pixels / ratio;
+
+    final width = await _iconWidth(tester, asset: asset);
+
+    expect(
+      width,
+      closeTo(expected, _tolerance),
+      reason:
+          'width in logical px of a $pixels px asset '
+          'at a device pixel ratio of $ratio',
+    );
+  });
 }
 
-/// Draws a [_imagePixels] square PNG added with [pixelRatio] at [_center] and
-/// returns its width in logical px.
-Future<double> _iconWidth(WidgetTester tester, {double? pixelRatio}) async {
+/// Draws an icon at [_center] and returns its width in logical px: the [asset]
+/// the map loads by its path, or else a [_imagePixels] square PNG added with
+/// [pixelRatio].
+Future<double> _iconWidth(
+  WidgetTester tester, {
+  String? asset,
+  double? pixelRatio,
+}) async {
   final controller = await pumpMap(
     tester,
     initialCameraPosition: const CameraPosition(target: _center, zoom: _zoom),
   );
-  final png = await pumpUntil(tester, _squarePng(_imagePixels), 'PNG');
-  await pumpUntil(
-    tester,
-    controller.addImage('square', png, false, pixelRatio),
-    'addImage',
-  );
+  var iconImage = asset;
+  if (iconImage == null) {
+    final png = await pumpUntil(tester, _squarePng(_imagePixels), 'PNG');
+    await pumpUntil(
+      tester,
+      controller.addImage('square', png, false, pixelRatio),
+      'addImage',
+    );
+    iconImage = 'square';
+  }
   await pumpUntil(
     tester,
     controller.addGeoJsonSource('point', {
@@ -103,8 +168,8 @@ Future<double> _iconWidth(WidgetTester tester, {double? pixelRatio}) async {
     controller.addSymbolLayer(
       'point',
       _layerId,
-      const SymbolLayerProperties(
-        iconImage: 'square',
+      SymbolLayerProperties(
+        iconImage: iconImage,
         iconAllowOverlap: true,
         // No margin around the icon in the box the query hits.
         iconPadding: 0,

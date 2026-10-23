@@ -95,6 +95,14 @@ class SymbolOptions {
   });
 
   final double? iconSize;
+
+  /// The name of an image the map has, from the style's sprite or `addImage`.
+  ///
+  /// A name the map lacks that is a Flutter asset path, such as
+  /// `assets/pins/pin.png`, is loaded from the app's assets. With `2.0x` and
+  /// `3.0x` variants it is sized like `Image.asset`, the same on every
+  /// platform; a file without variants is drawn like `addImage` without a
+  /// `pixelRatio`.
   final String? iconImage;
   final double? iconRotate;
   final Offset? iconOffset;

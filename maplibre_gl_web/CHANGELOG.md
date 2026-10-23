@@ -33,6 +33,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * A feature drag starts only after the mouse moves a little, so a click on a draggable feature is a click with no drag events, and the `start` event has a zero delta like on Android and iOS (#1077).
 * `animateCamera` and `easeCamera` complete when the camera arrives instead of when it starts, so code awaiting them runs after the animation. `animateCamera` completes with `false` when another camera call or a gesture interrupts it (#1069, #1089).
 * The offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException`: `MapLibreGlobalWeb` implements them (#1114, #937).
+* An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants uses the file nearest the screen at its own ratio, like `Image.asset`: same size, sharp on high density screens (#1131).
 
 ### Fixed
 * Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).

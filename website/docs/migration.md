@@ -199,6 +199,7 @@ None of these need a code change, but they are the places where code that worked
 * **Android**: on Android 12 and later devices without Google Play Services, high accuracy positions come from Android's `fused` provider instead of `gps`, so a coarser network fix can arrive before the GPS one.
 * A GeoJSON, image or raster-dem source url with a space or another character a url cannot hold is percent-encoded on every platform, as browsers and iOS 17 do, so an iOS file path under `Library/Application Support` loads. `editGeoJsonUrl` answers `false` for an empty url, where Android and web answered `true`.
 * Tile source `bounds` with west greater than east, which cross the antimeridian, take every longitude, so the tiles on both sides load.
+* **iOS**: an `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset`, as on Android and web: on a 3x screen about 3 times larger than before. Drop any iOS-only `iconSize` that made up for it.
 * **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
 
 ### New options

@@ -195,7 +195,7 @@ class MarkerState extends State<Marker> with TickerProviderStateMixin {
       child: RotationTransition(
         turns: _animation,
         child: Image.asset(
-          'assets/symbols/2.0x/custom-icon.png',
+          'assets/symbols/custom-icon.png',
           height: _iconSize,
         ),
       ),
