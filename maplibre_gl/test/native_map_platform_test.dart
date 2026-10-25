@@ -2353,7 +2353,7 @@ void main() {
     // must reach native rather than be rejected as a custom encoding.
     test('addSource passes the factors of a built-in encoding', () async {
       await platform.addSource(
-        'dem-mapbox',
+        'dem-default',
         const RasterDemSourceProperties(
           tiles: ['https://example.com/{z}/{x}/{y}.png'],
           // The spelled-out default is the case under test.
@@ -2372,9 +2372,9 @@ void main() {
         ),
       );
 
-      final mapbox = api.calls[0][2]! as Map;
-      expect(mapbox['encoding'], 'mapbox');
-      expect(mapbox['redFactor'], 1.0);
+      final standard = api.calls[0][2]! as Map;
+      expect(standard['encoding'], 'mapbox');
+      expect(standard['redFactor'], 1.0);
       final terrarium = api.calls[1][2]! as Map;
       expect(terrarium['encoding'], 'terrarium');
       expect(terrarium['greenFactor'], 2.0);

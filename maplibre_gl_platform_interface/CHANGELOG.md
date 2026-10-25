@@ -2,6 +2,7 @@
 
 ### Actions needed
 * `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed, as Android and iOS no longer answer them. A platform package or a test fake extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and `MapLibreMethodChannel.useHybridComposition` is now `MapLibreMap.useHybridComposition` in `maplibre_gl`. Until a platform registers, the defaults are placeholders, and `isRegistered` on both classes tells whether one did. The unused `onInfoWindowTappedPlatform` callback is removed too (#NNNN).
 
 ### Added
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
@@ -15,7 +16,6 @@
 
 ### Deprecated
 * `MapLibrePlatform.setLayerFilter` is deprecated. Use `setFilter` (#1055).
-* `MapLibreMethodChannel` is deprecated. Android and iOS now register a Pigeon-based `MapLibrePlatform` from `maplibre_gl`, so this class no longer reaches native code; it stays exported for compatibility (#1115).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 

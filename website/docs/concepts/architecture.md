@@ -54,7 +54,7 @@ The widget creates the controller (and the platform bridge) once the native view
 
 On **Android and iOS**, the controller communicates with the native MapLibre SDK through messages generated with [Pigeon](https://pub.dev/packages/pigeon) from `maplibre_gl/pigeons/messages.dart`, which give Dart, Kotlin and Swift one typed contract. Each map has its own `MapLibreMapHostApi` for the calls down and `MapLibreMapFlutterApi` for the events up, told apart by the map's id. The plugin-wide calls that need no map (offline regions, the offline database, the ambient cache, HTTP headers, `preWarm`) go through `MapLibreGlobalHostApi`. Each call still crosses the Dart-to-native boundary and is asynchronous.
 
-On **Web**, there is no MethodChannel. Instead, the web implementation uses `dart:js_interop` to call MapLibre GL JS directly in the browser. The same `MapLibreMapController` API is exposed, but the underlying calls go to JavaScript.
+On **Web**, there is no native side to message. Instead, the web implementation uses `dart:js_interop` to call MapLibre GL JS directly in the browser. The same `MapLibreMapController` API is exposed, but the underlying calls go to JavaScript.
 
 ## Platform differences
 
