@@ -21,11 +21,17 @@ class MapLibreNativePlugin {
     @visibleForTesting MapLibreGlobalHostApi? globalHostApi,
     @visibleForTesting MapLibreMapHostApi Function(int id)? mapHostApi,
   }) {
-    MapLibreGlobalPlatform.instance = _MapLibreNativeGlobalPlatform(
-      globalHostApi ?? MapLibreGlobalHostApi(),
-    );
-    MapLibrePlatform.createInstance = () => _MapLibreNativePlatform(mapHostApi);
+    _installGlobal(globalHostApi);
+    _installMap(mapHostApi);
   }
+
+  static void _installGlobal([MapLibreGlobalHostApi? api]) =>
+      MapLibreGlobalPlatform.instance = _MapLibreNativeGlobalPlatform(
+        api ?? MapLibreGlobalHostApi(),
+      );
+
+  static void _installMap([MapLibreMapHostApi Function(int id)? hostApi]) =>
+      MapLibrePlatform.createInstance = () => _MapLibreNativePlatform(hostApi);
 }
 
 /// The [MapLibreGlobalPlatform] of Android and iOS, talking to the native

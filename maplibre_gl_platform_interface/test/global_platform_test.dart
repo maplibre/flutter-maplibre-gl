@@ -1,67 +1,38 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late List<MethodCall> methodCalls;
-
-  setUp(() {
-    methodCalls = [];
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          const MethodChannel('plugins.flutter.io/maplibre_gl'),
-          (methodCall) async {
-            methodCalls.add(methodCall);
-            return null;
-          },
-        );
-  });
-
   group('MapLibreGlobalPlatform', () {
-    test('defaults to the method-channel implementation', () {
-      expect(
-        MapLibreGlobalPlatform.instance,
-        isA<MapLibreGlobalMethodChannel>(),
+    late MapLibreGlobalPlatform unregistered;
+
+    setUp(() => unregistered = MapLibreGlobalPlatform.instance);
+    tearDown(() => MapLibreGlobalPlatform.instance = unregistered);
+
+    test('is not registered until an instance is installed', () {
+      expect(MapLibreGlobalPlatform.isRegistered, isFalse);
+
+      MapLibreGlobalPlatform.instance = _PreWarmOnlyPlatform();
+      expect(MapLibreGlobalPlatform.isRegistered, isTrue);
+
+      MapLibreGlobalPlatform.instance = unregistered;
+      expect(MapLibreGlobalPlatform.isRegistered, isFalse);
+    });
+
+    // App code awaits preWarm() and ensureWebLibraryLoaded() unconditionally,
+    // so on a host where nothing registered both have to complete.
+    test('the default completes preWarm and ensureLibraryLoaded', () async {
+      await expectLater(unregistered.preWarm(), completes);
+      await expectLater(unregistered.ensureLibraryLoaded(), completes);
+    });
+
+    test('the default fails the other calls', () async {
+      await expectLater(
+        unregistered.getListOfRegions(),
+        throwsA(isA<UnimplementedError>()),
       );
     });
-  });
-
-  group('MapLibreGlobalMethodChannel', () {
-    test('preWarm sends the preWarm method call', () async {
-      await MapLibreGlobalMethodChannel().preWarm();
-
-      expect(methodCalls.length, 1);
-      expect(methodCalls[0].method, 'preWarm');
-    });
-
-    test('preWarm swallows MissingPluginException', () async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/maplibre_gl'),
-            (methodCall) async {
-              throw MissingPluginException('not implemented');
-            },
-          );
-
-      await expectLater(MapLibreGlobalMethodChannel().preWarm(), completes);
-    });
-
-    // Android and iOS have nothing to load, so the default implementation
-    // must stay an immediate no-op: app code awaits ensureWebLibraryLoaded()
-    // unconditionally on every platform.
-    test(
-      'ensureLibraryLoaded completes without touching the channel',
-      () async {
-        await expectLater(
-          MapLibreGlobalMethodChannel().ensureLibraryLoaded(),
-          completes,
-        );
-
-        expect(methodCalls, isEmpty);
-      },
-    );
   });
 
   // A platform written before the plugin-wide calls joined the class

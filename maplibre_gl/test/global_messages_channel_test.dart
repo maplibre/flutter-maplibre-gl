@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl/src/native/messages.g.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
-    show MapLibreGlobalMethodChannel, MapLibreGlobalPlatform;
+    show MapLibreGlobalPlatform;
 
 const _hostApi = 'dev.flutter.pigeon.maplibre_gl.MapLibreGlobalHostApi';
 const _onDownloadEvent =
@@ -29,13 +29,15 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late _FakeHost host;
+  // The default, as no registrant runs in tests.
+  final unregistered = MapLibreGlobalPlatform.instance;
 
   setUp(() => host = _FakeHost());
 
   tearDown(() {
     host.dispose();
     MapLibreOfflineDownloadFlutterApi.setUp(null);
-    MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel();
+    MapLibreGlobalPlatform.instance = unregistered;
   });
 
   final regionJson = json.encode({

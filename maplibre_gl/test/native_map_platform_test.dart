@@ -68,9 +68,6 @@ void main() {
   group('registration', () {
     test('registerWith makes createInstance build the Pigeon platform', () {
       expect(platform, isA<MapLibreMapFlutterApi>());
-      // The deprecated method channel platform is what must be gone.
-      // ignore: deprecated_member_use
-      expect(platform, isNot(isA<MapLibreMethodChannel>()));
     });
 
     testWidgets(
@@ -79,8 +76,8 @@ void main() {
       (tester) async {
         // The default factory, as in an isolate where the registrant of the
         // app never ran.
-        // ignore: deprecated_member_use
-        MapLibrePlatform.createInstance = MapLibreMethodChannel.new;
+        MapLibrePlatform.createInstance = previousFactory;
+        expect(MapLibrePlatform.isRegistered, isFalse);
         // The platform view itself has no native side here.
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -103,18 +100,30 @@ void main() {
     );
 
     testWidgets(
-      'a map keeps a subclass of the method channel platform',
+      'a map keeps a platform a package installed',
       variant: TargetPlatformVariant.only(TargetPlatform.iOS),
       (tester) async {
-        // A package that installed its own platform, built on the deprecated
-        // default, did so on purpose.
-        MapLibrePlatform appFactory() => _AppMethodChannel();
+        MapLibrePlatform appFactory() => _AppPlatform();
         MapLibrePlatform.createInstance = appFactory;
 
         await tester.pumpWidget(MaterialApp(home: MapLibreMap()));
 
-        expect(find.byKey(_AppMethodChannel.viewKey), findsOneWidget);
+        expect(find.byKey(_AppPlatform.viewKey), findsOneWidget);
         expect(MapLibrePlatform.createInstance, same(appFactory));
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'a map says the platform is not supported where nothing registered',
+      variant: TargetPlatformVariant.only(TargetPlatform.linux),
+      (tester) async {
+        MapLibrePlatform.createInstance = previousFactory;
+
+        await tester.pumpWidget(MaterialApp(home: MapLibreMap()));
+
+        expect(find.textContaining('is not yet supported'), findsOneWidget);
+        expect(MapLibrePlatform.isRegistered, isFalse);
         await tester.pumpWidget(const SizedBox());
       },
     );
@@ -317,6 +326,23 @@ void main() {
       ]);
     });
 
+    // Native receives the interpolation by index, so each value has to land on
+    // the one with the same name.
+    test('easeCamera sends each interpolation as itself', () async {
+      api.replies['cameraEase'] = true;
+      for (final interpolation in CameraAnimationInterpolation.values) {
+        await platform.easeCamera(
+          CameraUpdate.zoomIn(),
+          interpolation: interpolation,
+        );
+      }
+
+      expect(
+        [for (final call in api.calls) (call[3]! as Enum).name],
+        [for (final value in CameraAnimationInterpolation.values) value.name],
+      );
+    });
+
     test('every kind of update reaches native as its own class', () async {
       PgLatLng latLng(double latitude, double longitude) =>
           PgLatLng(latitude: latitude, longitude: longitude);
@@ -476,11 +502,12 @@ void main() {
       expect(api.calls.single[7], isNull);
     });
 
-    test('addHeatmapLayer encodes the filter', () async {
+    test('addHeatmapLayer encodes the filter and the source layer', () async {
       await platform.addHeatmapLayer(
         'source',
         'heat',
         const {},
+        sourceLayer: 'quakes',
         filter: ['has', 'weight'],
       );
 
@@ -490,7 +517,7 @@ void main() {
           'source',
           'heat',
           null,
-          null,
+          'quakes',
           null,
           null,
           '["has","weight"]',
@@ -591,6 +618,30 @@ void main() {
       expect(api.calls, [
         ['sourceAddGeoJson', 'source', jsonEncode(big)],
         ['sourceSetGeoJson', 'source', jsonEncode(small)],
+      ]);
+    });
+
+    // Many small features take the background path by their count alone.
+    test('a many-feature collection reaches native intact', () async {
+      final geojson = {
+        'type': 'FeatureCollection',
+        'features': [
+          for (var i = 0; i < 500; i++)
+            {
+              'type': 'Feature',
+              'properties': {'n': i},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [i * 0.01, i * 0.02],
+              },
+            },
+        ],
+      };
+
+      await platform.setGeoJsonSource('source', geojson);
+
+      expect(api.calls, [
+        ['sourceSetGeoJson', 'source', jsonEncode(geojson)],
       ]);
     });
 
@@ -2097,6 +2148,12 @@ void main() {
       ]);
     });
 
+    test('setTrackingCameraOptions reports a cancelled animation', () async {
+      api.replies['locationComponentSetTrackingCameraOptions'] = false;
+
+      expect(await platform.setTrackingCameraOptions(tilt: 30), isFalse);
+    });
+
     test('setManualLocation sends the update', () async {
       await platform.setManualLocation(
         ManualLocationUpdate(
@@ -2290,6 +2347,37 @@ void main() {
       );
 
       expect(api.calls.single.take(2), ['styleAddSource', 'dem']);
+    });
+
+    // A style copied from JSON spells out the encoding and its factors, which
+    // must reach native rather than be rejected as a custom encoding.
+    test('addSource passes the factors of a built-in encoding', () async {
+      await platform.addSource(
+        'dem-mapbox',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          // The spelled-out default is the case under test.
+          // ignore: avoid_redundant_argument_values
+          encoding: 'mapbox',
+          redFactor: 1.0,
+          baseShift: 0.0,
+        ),
+      );
+      await platform.addSource(
+        'dem-terrarium',
+        const RasterDemSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}.png'],
+          encoding: 'terrarium',
+          greenFactor: 2.0,
+        ),
+      );
+
+      final mapbox = api.calls[0][2]! as Map;
+      expect(mapbox['encoding'], 'mapbox');
+      expect(mapbox['redFactor'], 1.0);
+      final terrarium = api.calls[1][2]! as Map;
+      expect(terrarium['encoding'], 'terrarium');
+      expect(terrarium['greenFactor'], 2.0);
     });
 
     test('removeSource sends the id', () async {
@@ -2800,6 +2888,11 @@ void main() {
         stateKey: 'hover',
         sourceLayer: 'layer',
       );
+      await platform.removeFeatureState(
+        'source',
+        featureId: '1',
+        sourceLayer: 'layer',
+      );
       await platform.removeFeatureState('source');
 
       expect(api.calls, [
@@ -2811,6 +2904,7 @@ void main() {
           'layer',
         ],
         ['sourceRemoveFeatureState', 'source', '1', 'hover', 'layer'],
+        ['sourceRemoveFeatureState', 'source', '1', null, 'layer'],
         ['sourceRemoveFeatureState', 'source', null, null, null],
       ]);
     });
@@ -3746,12 +3840,13 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   Future<void> styleSetStyle(String style) => _call('styleSetStyle', [style]);
 }
 
-/// A platform a package built on the deprecated method channel platform and
-/// installed through [MapLibrePlatform.createInstance]. It shows its own view,
-/// so the test can tell that the map used it.
-// ignore: deprecated_member_use
-class _AppMethodChannel extends MapLibreMethodChannel {
+/// A platform a package installed through [MapLibrePlatform.createInstance].
+/// It shows its own view, so the test can tell that the map used it.
+class _AppPlatform extends MapLibrePlatform {
   static const viewKey = Key('app platform view');
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   @override
   Widget buildView(
