@@ -1579,17 +1579,6 @@ void main() {
         ['sourceGetFeatureState', 'source', '1', 'layer'],
       ]);
     });
-
-    test('feature state fails on iOS without reaching native', () {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      addTearDown(() => debugDefaultTargetPlatformOverride = null);
-
-      expect(
-        () => platform.setFeatureState('source', '1', {'hover': true}),
-        throwsUnsupportedError,
-      );
-      expect(api.calls, isEmpty);
-    });
   });
 
   group('takeSnapshot', () {
@@ -2922,31 +2911,31 @@ void main() {
       ]);
     });
 
-    test('every feature state call fails on iOS without reaching native', () {
+    test('feature state reaches native on iOS', () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      api.replies['sourceGetFeatureState'] = '{"hover":true}';
 
-      expect(
-        () => platform.removeFeatureState('source', featureId: '1'),
-        throwsA(
-          isA<UnsupportedError>().having(
-            (e) => e.message,
-            'message',
-            startsWith('removeFeatureState is not available on iOS'),
-          ),
-        ),
+      await platform.setFeatureState('source', '1', {'hover': true});
+      await platform.removeFeatureState('source', featureId: '1');
+      final state = await platform.getFeatureState(
+        'source',
+        '1',
+        sourceLayer: 'layer',
       );
-      expect(
-        () => platform.getFeatureState('source', '1'),
-        throwsA(
-          isA<UnsupportedError>().having(
-            (e) => e.message,
-            'message',
-            startsWith('getFeatureState is not available on iOS'),
-          ),
-        ),
-      );
-      expect(api.calls, isEmpty);
+
+      expect(state, {'hover': true});
+      expect(api.calls, [
+        [
+          'sourceSetFeatureState',
+          'source',
+          '1',
+          {'hover': true},
+          null,
+        ],
+        ['sourceRemoveFeatureState', 'source', '1', null, null],
+        ['sourceGetFeatureState', 'source', '1', 'layer'],
+      ]);
     });
   });
 
