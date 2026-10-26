@@ -73,7 +73,7 @@ Engines: [maplibre-native](https://github.com/maplibre/maplibre-native) (Android
 | All layer types (Symbol to Hillshade) | ✅ | ✅ | ✅ |
 | GeoJSON, vector, raster & PMTiles sources | ✅ | ✅ | ✅ |
 | Offline regions | ✅ | ✅ | ❌ |
-| Feature state | ✅ | ❌ | ✅ |
+| Feature state | ✅ | ✅ | ✅ |
 
 See the full [feature matrix](https://maplibre.org/flutter-maplibre-gl/compare/feature-matrix/) for details.
 

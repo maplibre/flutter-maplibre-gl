@@ -34,6 +34,7 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -2990,7 +2991,23 @@ final class MapLibreMapController
     if (source == null) {
       return;
     }
-    final JsonObject stateJson = new Gson().toJsonTree(state).getAsJsonObject();
+    // Nulls are kept: a null value overwrites the key, as on iOS and web,
+    // where the default Gson would drop it and leave the old value in place.
+    // A NaN or an infinity has no JSON form, and Gson refuses it.
+    final JsonObject stateJson;
+    try {
+      stateJson = new GsonBuilder().serializeNulls().create().toJsonTree(state).getAsJsonObject();
+    } catch (IllegalArgumentException | JsonParseException e) {
+      result.error(
+          StyleChecks.INVALID_ARGUMENT,
+          "The state for feature '"
+              + featureId
+              + "' on source '"
+              + sourceId
+              + "' is not valid JSON: it holds a non-finite number, or a value of a type JSON cannot carry.",
+          null);
+      return;
+    }
     final boolean applied =
         source instanceof VectorSource
             ? ((VectorSource) source).setFeatureState(sourceLayer, featureId, stateJson)

@@ -5,7 +5,7 @@
 // querySourceFeatures, the shape of the features every query returns,
 // queryRenderedFeatures and queryRenderedFeaturesInRect with layer ids and
 // filters, the cluster inspection calls on a clustered GeoJSON source, and the
-// feature state calls (on iOS, their documented UnsupportedError).
+// feature state calls.
 //
 // None of this can be mocked meaningfully: source features come out of the
 // native tiler, rendered features out of a real render pass, clusters out of
@@ -527,25 +527,7 @@ void main() {
   });
 
   group('feature state', () {
-    testWidgets('is unsupported on iOS', (tester) async {
-      if (testPlatform != TestPlatform.ios) return;
-      final controller = await _pumpMapWithPoints(tester);
-
-      // Documented on the controller: the iOS SDK has no feature state API, so
-      // every call fails with an UnsupportedError before reaching native.
-      await _expectUnsupported(
-        controller.setFeatureState(_sourceId, '1', {'selected': true}),
-      );
-      await _expectUnsupported(
-        controller.getFeatureState(_sourceId, '1'),
-      );
-      await _expectUnsupported(
-        controller.removeFeatureState(_sourceId),
-      );
-    });
-
     testWidgets('reads null before any state is set', (tester) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
 
       // Null, not an empty map, so an app can tell "nothing set" from "set to
@@ -561,7 +543,6 @@ void main() {
     });
 
     testWidgets('reads back what was set', (tester) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
 
       await _setState(tester, controller, '1', {'selected': true, 'score': 7});
@@ -583,7 +564,6 @@ void main() {
     testWidgets('removes one key with featureId and stateKey', (
       tester,
     ) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
       await _setState(tester, controller, '1', {'selected': true, 'score': 7});
       await _waitForState(tester, controller, '1', {
@@ -606,7 +586,6 @@ void main() {
     testWidgets('removes a whole feature state with featureId alone', (
       tester,
     ) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
       await _setState(tester, controller, '1', {'selected': true, 'score': 7});
       await _setState(tester, controller, '2', {'selected': true});
@@ -630,7 +609,6 @@ void main() {
     });
 
     testWidgets('resets the whole source with no featureId', (tester) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
       await _setState(tester, controller, '1', {'score': 7});
       await _setState(tester, controller, '2', {'selected': true});
@@ -646,7 +624,6 @@ void main() {
     });
 
     testWidgets('rejects a stateKey without a featureId', (tester) async {
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithPoints(tester);
       await _setState(tester, controller, '1', {'score': 7});
       await _waitForState(tester, controller, '1', {'score': 7});
@@ -898,11 +875,6 @@ Future<void> _waitForState(
     'getFeatureState $featureId == $expected',
   );
 }
-
-/// The iOS guard throws before any channel call, so the future has already
-/// failed and needs no frames pumped to settle.
-Future<void> _expectUnsupported(Future<Object?> future) =>
-    expectLater(future, throwsUnsupportedError);
 
 Map<String, dynamic> _point(
   int id,

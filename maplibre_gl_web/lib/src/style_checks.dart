@@ -237,6 +237,47 @@ PlatformException notGeoJsonSource(
       'to ${clustered ? 'clustered ' : ''}GeoJSON sources.',
 );
 
+/// The error of a feature state call on the source [sourceId], of the type
+/// [type], which holds no feature state: only GeoJSON and vector sources do.
+PlatformException notFeatureStateSource(String sourceId, String type) =>
+    PlatformException(
+      code: 'UNSUPPORTED_SOURCE_TYPE',
+      message:
+          "Source '$sourceId' is a $type source. Feature state only applies "
+          'to GeoJSON and vector sources.',
+    );
+
+/// The error of a feature state call on the vector source [sourceId] that
+/// names no source layer.
+PlatformException featureStateSourceLayerRequired(String sourceId) =>
+    PlatformException(
+      code: 'SOURCE_LAYER_REQUIRED',
+      message:
+          "Source '$sourceId' is a vector source, so feature state calls on "
+          "it require a 'sourceLayer'.",
+    );
+
+/// The error of a feature state that JSON cannot carry: a non-finite number,
+/// or a value of a type JSON has no form for.
+PlatformException featureStateNotJson(String sourceId, String featureId) =>
+    invalidArgument(
+      "The state for feature '$featureId' on source '$sourceId' is not valid "
+      'JSON: it holds a non-finite number, or a value of a type JSON cannot '
+      'carry.',
+    );
+
+/// Whether [value] is made of what JSON can carry: null, booleans, finite
+/// numbers, strings, lists, and maps with string keys.
+bool isJsonValue(Object? value) {
+  if (value == null || value is bool || value is String) return true;
+  if (value is num) return value.isFinite;
+  if (value is List) return value.every(isJsonValue);
+  if (value is Map) {
+    return value.entries.every((e) => e.key is String && isJsonValue(e.value));
+  }
+  return false;
+}
+
 /// Why [value] of [property], a layer property, is not a color, or null. Only
 /// a hex color is checked: MapLibre Native reads one with digits that are not
 /// hex, such as `#ggg`, as black, where maplibre-gl-js rejects it with a

@@ -42,6 +42,7 @@
 
 ### Added
 * `removeLayerFilter(layerId)` removes a layer's filter (#1055).
+* **Android, iOS, Web**: feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) works on iOS, so it runs on all three platforms instead of throwing an `UnsupportedError` on iOS, with the same errors everywhere: `SOURCE_NOT_FOUND` for a missing source, `UNSUPPORTED_SOURCE_TYPE` for one that is not GeoJSON or vector, `SOURCE_LAYER_REQUIRED` for a vector source without `sourceLayer`, and `INVALID_ARGUMENT` for a state with `NaN` or an infinity. Web used to skip the first three, and Android dropped a `null` value from the state, so the old value stayed. `promoteId` stays web only, so features need a top-level `id` in the GeoJSON. See the [feature state guide](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) (#951, #1145).
 * `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan: `none`, `short` or `normal` (#1032).
 * **iOS**: `MapLibreMap.hapticFeedbackEnabled` turns off the light vibration played when the user rotates the map back to north (#1036).
 * **Android, iOS**: `setMaximumAmbientCacheSize(bytes)` sets the size limit of the ambient tile cache; `0` turns it off (#1037).

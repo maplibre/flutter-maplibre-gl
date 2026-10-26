@@ -211,6 +211,7 @@ None of these need a code change, but they are the places where code that worked
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
+* **iOS**: [feature state](advanced/feature-state.md) works instead of throwing an `UnsupportedError`, so a platform guard around those calls can go. `promoteId` is still ignored outside web, so features must carry a top-level `id` in the GeoJSON.
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
 * **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null`.

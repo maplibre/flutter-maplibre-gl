@@ -341,8 +341,6 @@ void main() {
   testWidgets('feature state follows the feature with that id', (
     tester,
   ) async {
-    // The iOS SDK has no feature state API: see geojson_query_test.dart.
-    if (testPlatform == TestPlatform.ios) return;
     final controller = await _pumpMapWithFeatures(
       tester,
       circleRadius: _bigByState,
@@ -471,8 +469,6 @@ void main() {
     });
 
     testWidgets('in feature state', (tester) async {
-      // The iOS SDK has no feature state API: see geojson_query_test.dart.
-      if (testPlatform == TestPlatform.ios) return;
       final controller = await _pumpMapWithFeatures(
         tester,
         generateId: true,

@@ -19,6 +19,8 @@ enum MethodCallError: Error {
     /// A layer on a vector source that names no source layer.
     case sourceLayerRequired(layerId: String, sourceId: String)
     case layerNotFound(layerId: String)
+    /// A feature state call on a vector source that names no source layer.
+    case featureStateSourceLayerRequired(sourceId: String)
     /// A call that needs a style while none is loaded.
     case styleNotReady
     case sourceAlreadyExists(sourceId: String)
@@ -41,6 +43,8 @@ enum MethodCallError: Error {
         case .sourceNotFound:
             return "SOURCE_NOT_FOUND"
         case .sourceLayerRequired:
+            return "SOURCE_LAYER_REQUIRED"
+        case .featureStateSourceLayerRequired:
             return "SOURCE_LAYER_REQUIRED"
         case .layerNotFound:
             return "LAYER_NOT_FOUND_ERROR"
@@ -73,6 +77,9 @@ enum MethodCallError: Error {
         case let .sourceLayerRequired(layerId, sourceId):
             return "Source '\(sourceId)' is a vector source, so layer '\(layerId)' requires a "
                 + "'sourceLayer'."
+        case let .featureStateSourceLayerRequired(sourceId):
+            return "Source '\(sourceId)' is a vector source, so feature state calls on it "
+                + "require a 'sourceLayer'."
         case .layerNotFound:
             return "Layer not found"
         case .styleNotReady:
@@ -99,7 +106,7 @@ enum MethodCallError: Error {
         case let .layerAlreadyExists(layerId):
             return "Layer with id \(layerId) already exists."
         case .unsupportedSourceType, .invalidArgument, .invalidGeoJson, .sourceNotFound,
-             .sourceLayerRequired, .styleNotReady:
+             .sourceLayerRequired, .featureStateSourceLayerRequired, .styleNotReady:
             return nil
         }
     }

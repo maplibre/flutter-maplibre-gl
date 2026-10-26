@@ -67,7 +67,7 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     <tr><td>Color relief layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Background layer</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Data-driven expressions</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Feature state</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Feature state</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Clustering</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Cluster inspection</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
   </tbody>
@@ -114,9 +114,6 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     Hover events exist only on the web build (MapLibre GL JS); on Android and iOS use tap
     and long-press instead, and guard hover-only logic with `kIsWeb`. The browser has no
     long-press gesture, so on web `onMapLongClick` fires on a double-click.
-
-!!! note "Feature state on iOS"
-    [Feature state](../advanced/feature-state.md) works on Android and web. On iOS the calls throw an `UnsupportedError`, because the MapLibre iOS SDK does not expose the API yet.
 
 !!! note "Projection, terrain and sky on Android and iOS"
     `setProjection()`, `setTerrain()`, `setSky()` and `setGlobalStateProperty()` throw an `UnsupportedError` on Android and iOS: MapLibre Native implements none of them yet, so the map stays a flat mercator projection there. See [Globe, Terrain and Sky](../advanced/globe-terrain-sky.md).

@@ -19,9 +19,6 @@ import '../../shared/shared.dart';
 /// removeFeatureState with featureId and stateKey to deselect one state,
 /// a bare removeFeatureState to reset the whole source, and getFeatureState
 /// to read back what the platform actually stores.
-///
-/// Feature state runs on web and Android. It is not available on iOS,
-/// because the MapLibre iOS SDK does not expose the API yet.
 class FeatureStateExample extends ExamplePage {
   const FeatureStateExample({super.key})
     : super(
@@ -31,41 +28,8 @@ class FeatureStateExample extends ExamplePage {
         needsLocationPermission: false,
       );
 
-  /// Feature state needs support in the underlying MapLibre SDK, which web
-  /// and Android have. The iOS SDK does not expose the API yet.
-  static bool get isSupported =>
-      kIsWeb || defaultTargetPlatform == TargetPlatform.android;
-
   @override
-  Widget build(BuildContext context) {
-    if (!isSupported) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.fact_check, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Feature State Example',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'This example is available on web and Android. It is not '
-                'available on iOS yet, because the MapLibre iOS SDK does not '
-                'expose the feature state API.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return const _FeatureStateBody();
-  }
+  Widget build(BuildContext context) => const _FeatureStateBody();
 }
 
 class _FeatureStateBody extends StatefulWidget {
@@ -103,8 +67,9 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     if (controller == null) return;
 
     // On web promoteId makes the STATE_ID property the feature id; the
-    // Android SDK does not expose promoteId, so there the features are keyed
-    // by the top-level `id` member each feature in this dataset also carries.
+    // Android and iOS SDKs do not expose promoteId, so there the features are
+    // keyed by the top-level `id` member each feature in this dataset also
+    // carries.
     await controller.addSource(
       _sourceId,
       const GeojsonSourceProperties(
@@ -171,9 +136,9 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     final feature = features.first;
     // Always pass the id queryRenderedFeatures reports, never one computed
     // here: with promoteId the web id is the promoted STATE_ID string while
-    // on Android it is the top-level integer, and in this dataset several of
-    // them differ by zero padding ("04" against 4). An id built on the Dart
-    // side would silently miss on one platform or the other.
+    // on Android and iOS it is the top-level integer, and in this dataset
+    // several of them differ by zero padding ("04" against 4). An id built on
+    // the Dart side would silently miss on one platform or the other.
     final featureId = feature['id']?.toString();
     if (featureId == null) return;
     final stateName = feature['properties']?['STATE_NAME'] as String?;
@@ -197,7 +162,12 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     // Read the state back from the platform instead of echoing what was just
     // written: showing what getFeatureState actually returns is the point of
     // the panel below.
-    final reported = await controller.getFeatureState(_sourceId, featureId);
+    final reported = await _readStateUntil(
+      controller,
+      featureId,
+      (state) =>
+          (state?['selected'] == true) == _selectedIds.contains(featureId),
+    );
 
     if (mounted) {
       setState(() {
@@ -206,6 +176,23 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
         _lastReportedState = reported;
       });
     }
+  }
+
+  /// Reads the state of [featureId] until [settled] accepts it, for up to a
+  /// second, and returns the last read. Android and iOS apply a removal on the
+  /// next rendered frame, so a read right after one can still show the removed
+  /// keys.
+  Future<Map<String, dynamic>?> _readStateUntil(
+    MapLibreMapController controller,
+    String featureId,
+    bool Function(Map<String, dynamic>? state) settled,
+  ) async {
+    var state = await controller.getFeatureState(_sourceId, featureId);
+    for (var attempt = 0; attempt < 20 && !settled(state); attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      state = await controller.getFeatureState(_sourceId, featureId);
+    }
+    return state;
   }
 
   Future<void> _clearAll() async {
@@ -222,7 +209,11 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     final reported =
         lastId == null
             ? null
-            : await controller.getFeatureState(_sourceId, lastId);
+            : await _readStateUntil(
+              controller,
+              lastId,
+              (state) => state?['selected'] != true,
+            );
 
     if (mounted) {
       setState(() {
@@ -361,13 +352,6 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
                   '• The panel above shows the raw map getFeatureState '
                   'returns for the last state touched',
                   style: TextStyle(fontSize: 14, height: 1.5),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Feature state runs on web and Android. iOS is not '
-                  'supported yet, because the MapLibre iOS SDK does not '
-                  'expose the API.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
