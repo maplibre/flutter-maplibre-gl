@@ -2282,7 +2282,7 @@ final class MapLibreMapController
       result.success(null);
     } catch (RuntimeException exception) {
       Log.d(TAG, exception.toString());
-      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+      result.error("LOCALIZATION_ERROR", exception.toString(), null);
     }
   }
 
@@ -2294,7 +2294,7 @@ final class MapLibreMapController
       result.success(null);
     } catch (RuntimeException exception) {
       Log.d(TAG, exception.toString());
-      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+      result.error("LOCALIZATION_ERROR", exception.toString(), null);
     }
   }
 
@@ -2310,9 +2310,12 @@ final class MapLibreMapController
 
   @Override
   public void mapSetMaximumFps(long fps, MethodChannel.Result result) {
-    final int maximumFps = Convert.toIntExact(fps);
+    if (fps < Integer.MIN_VALUE || fps > Integer.MAX_VALUE) {
+      result.error("INVALID_ARGUMENT", "fps does not fit in a 32-bit int (got " + fps + ")", null);
+      return;
+    }
     if (mapView != null) {
-      mapView.setMaximumFps(maximumFps);
+      mapView.setMaximumFps((int) fps);
     }
     result.success(null);
   }
@@ -2329,12 +2332,12 @@ final class MapLibreMapController
   @Override
   public void mapSetCustomHeaders(
       Map<String, String> headers, List<String> filter, MethodChannel.Result result) {
-    MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
+    MapLibreHttpRequestUtil.setCustomHeaders(headers, filter, result);
   }
 
   @Override
   public void mapGetCustomHeaders(MethodChannel.Result result) {
-    result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
+    result.success(MapLibreHttpRequestUtil.getCustomHeaders());
   }
 
   @Override

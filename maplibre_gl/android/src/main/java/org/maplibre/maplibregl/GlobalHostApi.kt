@@ -6,6 +6,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodChannel
 import org.maplibre.android.net.ConnectivityReceiver
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
@@ -21,6 +22,15 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
     private val flutterAssets: FlutterPlugin.FlutterAssets = binding.flutterAssets
     private val downloadEvents = MapLibreOfflineDownloadFlutterApi(binding.binaryMessenger)
 
+    // Downloads outlive the engine that started them: activeDownloads is shared by every engine.
+    @Volatile
+    private var attached = true
+
+    /** Stops the events of this engine's downloads, which keep running, once it is gone. */
+    fun detach() {
+        attached = false
+    }
+
     // Every entry point touches MapLibre.getInstance first: the offline manager
     // and the HTTP stack expect it to exist, and it is what preWarm warms up.
     private fun ensureMapLibre() {
@@ -33,13 +43,21 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
 
     override fun installOfflineMapTiles(tilesDb: String) {
         ensureMapLibre()
+        val input = try {
+            openTilesDbFile(tilesDb)
+        } catch (e: FileNotFoundException) {
+            throw PigeonError("INVALID_ARGUMENT", "No offline tiles database at $tilesDb", null)
+        }
         val dest = File(context.filesDir, DATABASE_NAME)
         try {
-            openTilesDbFile(tilesDb).use { input ->
-                FileOutputStream(dest).use { output -> input.copyTo(output, BUFFER_SIZE) }
-            }
+            input.use { FileOutputStream(dest).use { output -> it.copyTo(output, BUFFER_SIZE) } }
         } catch (e: IOException) {
             Log.e(TAG, "Could not install the offline tiles from $tilesDb", e)
+            throw PigeonError(
+                "OFFLINE_DATABASE_ERROR",
+                "Could not install the offline tiles from $tilesDb: ${e.message}",
+                null,
+            )
         }
     }
 
@@ -82,11 +100,7 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
         maxRequestsPerHost: Long?,
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) {
-        MapLibreHttpRequestUtil.setMaxConcurrentRequests(
-            maxRequests?.toInt(),
-            maxRequestsPerHost?.toInt(),
-            it,
-        )
+        MapLibreHttpRequestUtil.setMaxConcurrentRequests(maxRequests, maxRequestsPerHost, it)
     }
 
     override fun pauseOfflineRegionDownload(id: Long, callback: (Result<Unit>) -> Unit) =
@@ -126,7 +140,7 @@ internal class GlobalHostApi(binding: FlutterPlugin.FlutterPluginBinding) : MapL
             context,
             definition,
             metadata,
-            OfflineDownloadEvents(downloadEvents, downloadId),
+            OfflineDownloadEvents(downloadEvents, downloadId) { attached },
         )
     }
 
