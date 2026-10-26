@@ -626,8 +626,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// back from the style with the `["feature-state", ...]` expression, so many
   /// features can be restyled without re-feeding the source data.
   ///
-  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
-  /// since its SDK does not expose the feature state API yet.
+  /// **Platform support**: Android, iOS and web.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The id of the feature as text, such as `'2'` for the id 2.
@@ -637,8 +636,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///   sources ignore it.
   ///
   /// Features must carry an id. On web, [addGeoJsonSource]'s `promoteId` can
-  /// promote a property into one; Android has no `promoteId`, so there the
-  /// GeoJSON itself must contain a top-level `id`.
+  /// promote a property into one; Android and iOS have no `promoteId`, so there
+  /// the GeoJSON itself must contain a top-level `id`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
@@ -662,11 +661,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// that source. If [featureId] is also specified, removes all state keys for
   /// that feature. If [stateKey] is also specified, removes only that key from
   /// the feature's state. A [stateKey] without a [featureId] is rejected on
-  /// Android, whose SDK can only drop one key from one feature or reset the
-  /// whole source; the plugin reports that rather than resetting everything.
+  /// Android and iOS, whose SDKs can only drop one key from one feature or reset
+  /// the whole source; the plugin reports that rather than resetting everything.
   ///
-  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
-  /// since its SDK does not expose the feature state API yet.
+  /// **Platform support**: Android, iOS and web.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] (Optional) The unique ID of the feature.
@@ -692,8 +690,7 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Gets the state of a feature.
   ///
-  /// **Platform support**: web and Android. iOS throws an [UnsupportedError],
-  /// since its SDK does not expose the feature state API yet.
+  /// **Platform support**: Android, iOS and web.
   ///
   /// [sourceId] The ID of the vector or GeoJSON source.
   /// [featureId] The unique ID of the feature.

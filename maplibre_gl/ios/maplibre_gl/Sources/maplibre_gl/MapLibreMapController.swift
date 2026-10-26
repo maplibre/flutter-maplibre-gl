@@ -1102,6 +1102,167 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
     }
 
+    // MARK: Dart calls: feature state
+
+    func sourceSetFeatureState(
+        sourceId: String,
+        featureId: String,
+        state: [String: Any?],
+        sourceLayer: String?,
+        result: @escaping FlutterResult
+    ) {
+        let target: FeatureStateTarget
+        switch featureStateTarget(sourceId: sourceId, sourceLayer: sourceLayer) {
+        case let .failure(error):
+            result(error.flutterError)
+            return
+        case let .success(found):
+            target = found
+        }
+        // The state goes to the renderer as JSON. A non-finite number or a
+        // value of a type JSON cannot carry would be raised as an exception
+        // there, so it is refused up front.
+        let stateObject = state.mapValues { $0 ?? NSNull() }
+        guard JSONSerialization.isValidJSONObject(stateObject) else {
+            result(MethodCallError.invalidArgument(
+                message: "The state for feature '\(featureId)' on source '\(sourceId)' is not "
+                    + "valid JSON: it holds a non-finite number, or a value of a type JSON "
+                    + "cannot carry."
+            ).flutterError)
+            return
+        }
+        var applied = false
+        let exception = MapLibreGLCatchException {
+            switch target {
+            case let .shape(source):
+                applied = source.setFeatureState(featureID: featureId, state: stateObject)
+            case let .vector(source, sourceLayerId):
+                applied = source.setFeatureState(
+                    sourceLayerID: sourceLayerId,
+                    featureID: featureId,
+                    state: stateObject
+                )
+            }
+        }
+        guard exception == nil, applied else {
+            // The SDK setters return false instead of throwing; surfacing that
+            // as an error keeps a rejected call from looking like a success.
+            result(FlutterError(
+                code: "FEATURE_STATE_NOT_APPLIED",
+                message: "setFeatureState for feature '\(featureId)' on source '\(sourceId)' was "
+                    + "rejected by the SDK. This usually means the source is no longer attached "
+                    + "to the map.",
+                details: nil
+            ))
+            return
+        }
+        result(nil)
+    }
+
+    func sourceRemoveFeatureState(
+        sourceId: String,
+        featureId: String?,
+        stateKey: String?,
+        sourceLayer: String?,
+        result: @escaping FlutterResult
+    ) {
+        // A stateKey lives inside one feature's state, so without a featureId
+        // there is nothing the SDK could remove it from.
+        if featureId == nil, stateKey != nil {
+            result(MethodCallError.invalidArgument(
+                message: "removeFeatureState with a 'stateKey' also requires the 'featureId' "
+                    + "that owns the key."
+            ).flutterError)
+            return
+        }
+        let target: FeatureStateTarget
+        switch featureStateTarget(sourceId: sourceId, sourceLayer: sourceLayer) {
+        case let .failure(error):
+            result(error.flutterError)
+            return
+        case let .success(found):
+            target = found
+        }
+        // Which arguments are present picks the operation, matching Android
+        // and web: both drop one key, featureId alone drops that feature's
+        // whole state, neither resets the whole source (or source layer).
+        var applied = false
+        let exception = MapLibreGLCatchException {
+            switch target {
+            case let .shape(source):
+                if let featureId = featureId, let stateKey = stateKey {
+                    applied = source.removeFeatureState(featureID: featureId, stateKey: stateKey)
+                } else if let featureId = featureId {
+                    applied = source.removeFeatureState(featureID: featureId)
+                } else {
+                    applied = source.resetFeatureStates()
+                }
+            case let .vector(source, sourceLayerId):
+                if let featureId = featureId, let stateKey = stateKey {
+                    applied = source.removeFeatureState(
+                        sourceLayerID: sourceLayerId,
+                        featureID: featureId,
+                        stateKey: stateKey
+                    )
+                } else if let featureId = featureId {
+                    applied = source.removeFeatureState(
+                        sourceLayerID: sourceLayerId,
+                        featureID: featureId
+                    )
+                } else {
+                    applied = source.resetFeatureStates(sourceLayerID: sourceLayerId)
+                }
+            }
+        }
+        guard exception == nil, applied else {
+            result(FlutterError(
+                code: "FEATURE_STATE_NOT_APPLIED",
+                message: "removeFeatureState on source '\(sourceId)' was rejected by the SDK. "
+                    + "This usually means the source is no longer attached to the map.",
+                details: nil
+            ))
+            return
+        }
+        result(nil)
+    }
+
+    func sourceGetFeatureState(
+        sourceId: String,
+        featureId: String,
+        sourceLayer: String?,
+        result: @escaping FlutterResult
+    ) {
+        let target: FeatureStateTarget
+        switch featureStateTarget(sourceId: sourceId, sourceLayer: sourceLayer) {
+        case let .failure(error):
+            result(error.flutterError)
+            return
+        case let .success(found):
+            target = found
+        }
+        var state: [String: Any]?
+        _ = MapLibreGLCatchException {
+            switch target {
+            case let .shape(source):
+                state = source.featureState(featureID: featureId)
+            case let .vector(source, sourceLayerId):
+                state = source.featureState(sourceLayerID: sourceLayerId, featureID: featureId)
+            }
+        }
+        // Sent as a JSON string so nested values survive the channel intact,
+        // like styleGetLayerProperties. No state must stay null rather than
+        // become an empty map: the Dart return type is nullable and callers
+        // tell "no state" from an empty state.
+        guard let state = state, !state.isEmpty,
+              JSONSerialization.isValidJSONObject(state),
+              let json = jsonString(from: state)
+        else {
+            result(nil)
+            return
+        }
+        result(json)
+    }
+
     func mapEditGeoJsonSource(id srcId: String, data srcData: String, result: @escaping FlutterResult) {
         guard let style = self.mapView.style else {
             result(false)
@@ -3359,6 +3520,45 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         return .invalidGeoJson(
             message: "The data for source '\(sourceId)' is not GeoJSON: \(reason)"
         )
+    }
+
+    /// The source a feature state call addresses, with the source layer a
+    /// vector source needs.
+    private enum FeatureStateTarget {
+        case shape(MLNShapeSource)
+        case vector(MLNVectorTileSource, sourceLayer: String)
+    }
+
+    /// Resolves the source a feature state call addresses.
+    ///
+    /// Only GeoJSON and vector sources carry the API. On a vector source every
+    /// call is scoped to a source layer, so a missing `sourceLayer` would leave
+    /// the call with nothing to address; that is rejected here once instead of
+    /// in each feature state call.
+    private func featureStateTarget(
+        sourceId: String,
+        sourceLayer: String?
+    ) -> Result<FeatureStateTarget, MethodCallError> {
+        guard let style = mapView.style else {
+            return .failure(.styleNotReady)
+        }
+        guard let source = style.source(withIdentifier: sourceId) else {
+            return .failure(.sourceNotFound(sourceId: sourceId))
+        }
+        if let vectorSource = source as? MLNVectorTileSource {
+            guard let sourceLayer = sourceLayer else {
+                return .failure(.featureStateSourceLayerRequired(sourceId: sourceId))
+            }
+            return .success(.vector(vectorSource, sourceLayer: sourceLayer))
+        }
+        if let shapeSource = source as? MLNShapeSource {
+            return .success(.shape(shapeSource))
+        }
+        let typeName = String(describing: type(of: source)).replacingOccurrences(of: "MLN", with: "")
+        return .failure(.unsupportedSourceType(
+            message: "Source '\(sourceId)' is a \(typeName). Feature state only applies to "
+                + "GeoJSON and vector sources."
+        ))
     }
 
     /// Resolves the shape source a cluster-inspection call addresses.

@@ -1710,20 +1710,6 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     );
   }
 
-  /// Guard shared by the feature state methods: only the MapLibre Android SDK
-  /// exposes the feature state API, so on iOS the call has no native
-  /// counterpart to reach. Failing here keeps the error clear instead of
-  /// surfacing as an unanswered call.
-  static void _ensureFeatureStateAvailable(String methodName) {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      throw UnsupportedError(
-        '$methodName is not available on iOS because the MapLibre iOS SDK '
-        'does not expose the feature state API yet. '
-        'Feature state is supported on Android and web.',
-      );
-    }
-  }
-
   @override
   Future<void> setFeatureState(
     String sourceId,
@@ -1731,7 +1717,6 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateAvailable('setFeatureState');
     await _inOrder(
       [_sourceKey(sourceId)],
       () => _api.sourceSetFeatureState(sourceId, featureId, state, sourceLayer),
@@ -1745,7 +1730,6 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String? stateKey,
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateAvailable('removeFeatureState');
     await _inOrder(
       [_sourceKey(sourceId)],
       () => _api.sourceRemoveFeatureState(
@@ -1763,7 +1747,6 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     String featureId, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateAvailable('getFeatureState');
     // Native sends the state as JSON text, so nested values arrive intact,
     // and sends null, not an empty object, when the feature has no state,
     // because callers tell the two apart.

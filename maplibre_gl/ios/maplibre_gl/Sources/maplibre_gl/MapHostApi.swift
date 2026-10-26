@@ -454,8 +454,7 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
-    // The feature state calls have no iOS implementation: Dart rejects them
-    // before sending, and they are answered not implemented otherwise.
+    // MARK: Feature state
 
     func sourceSetFeatureState(
         sourceId: String,
@@ -464,7 +463,15 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        run(voidResult(completion), notImplemented)
+        run(voidResult(completion)) {
+            $0.sourceSetFeatureState(
+                sourceId: sourceId,
+                featureId: featureId,
+                state: state,
+                sourceLayer: sourceLayer,
+                result: $1
+            )
+        }
     }
 
     func sourceRemoveFeatureState(
@@ -474,7 +481,15 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        run(voidResult(completion), notImplemented)
+        run(voidResult(completion)) {
+            $0.sourceRemoveFeatureState(
+                sourceId: sourceId,
+                featureId: featureId,
+                stateKey: stateKey,
+                sourceLayer: sourceLayer,
+                result: $1
+            )
+        }
     }
 
     func sourceGetFeatureState(
@@ -483,7 +498,14 @@ final class MapHostApi: MapLibreMapHostApi {
         sourceLayer: String?,
         completion: @escaping (Result<String?, Error>) -> Void
     ) {
-        run(pigeonResult(completion) { $0 as? String }, notImplemented)
+        run(pigeonResult(completion) { $0 as? String }) {
+            $0.sourceGetFeatureState(
+                sourceId: sourceId,
+                featureId: featureId,
+                sourceLayer: sourceLayer,
+                result: $1
+            )
+        }
     }
 
     // MARK: Style
@@ -1037,12 +1059,6 @@ final class MapHostApi: MapLibreMapHostApi {
 }
 
 // MARK: Results
-
-/// Answers a call iOS does not implement. `pigeonResult` turns the answer
-/// into the `notImplemented` error.
-private func notImplemented(_: MapLibreMapController, _ result: @escaping FlutterResult) {
-    result(FlutterMethodNotImplemented)
-}
 
 /// Like `pigeonResult`, for a return the schema declares non-null. An answer
 /// `convert` cannot read fails the call with the error Pigeon's Dart side
