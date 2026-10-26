@@ -1454,8 +1454,8 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getStyle();
   }
 
-  /// Sets custom HTTP headers that are injected into network requests made by
-  /// this map instance.
+  /// Sets custom HTTP headers that are injected into the network requests
+  /// MapLibre makes.
   ///
   /// [headers] is a map of header name to value. Pass an empty map to clear
   /// all previously set headers.
@@ -1466,10 +1466,11 @@ class MapLibreMapController extends ChangeNotifier {
   /// matches if it is found anywhere in the URL: anchor it with `^` and `$` to
   /// match the whole URL.
   ///
-  /// This is a **per-map** API and takes effect immediately: subsequent tile
-  /// requests will carry the new headers. To apply headers globally to all map
-  /// instances without URL filtering, use the top-level [setHttpHeaders]
-  /// function instead.
+  /// Although it is called on a controller, the headers apply to every map in
+  /// the app, and the last call replaces those of earlier ones. They take
+  /// effect immediately: subsequent requests carry the new headers. For
+  /// headers on every request without a filter, the top-level
+  /// [setHttpHeaders] does the same before any map exists.
   ///
   /// Example: restrict an API key to a specific tile host:
   /// ```dart
@@ -1500,7 +1501,7 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setCustomHeaders(headers, filter);
   }
 
-  /// Returns the custom HTTP headers currently set on this map instance.
+  /// Returns the custom HTTP headers currently set, for every map in the app.
   ///
   /// Returns the headers previously set via [setCustomHeaders]. Does not
   /// include headers set via the global [setHttpHeaders] function.
