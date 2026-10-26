@@ -10,19 +10,20 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
-* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119):
+* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119, #1143):
   * **iOS**: `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
   * **iOS**: `invalidExpression` is now `INVALID_EXPRESSION`
   * **iOS**: `invalidLayerType` is now `INVALID_LAYER_TYPE`
   * **iOS**: `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
   * **iOS**: `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
   * **Android**: `MAPBOX CACHE ERROR` from the controller's `invalidateAmbientCache` and `clearAmbientCache` is now `AMBIENT_CACHE_ERROR`
+  * **Android**: `MAPBOX LOCALIZATION PLUGIN ERROR` from `setMapLanguage` and `matchMapLanguageWithDeviceDefault` is now `LOCALIZATION_ERROR`
   * **iOS**: `styleNotFound` is now `STYLE_NOT_READY`
   * **iOS**: `sourceNotFound` and `noSuchSource` are now `SOURCE_NOT_FOUND`
   * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
   * **iOS**: `parseError` is now `INVALID_GEOJSON`
   * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #1140):
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #1140, #1143):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
@@ -36,6 +37,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
   * `getClusterLeaves` throws `INVALID_ARGUMENT` for a negative `limit` or `offset`. iOS read them as 0 and Android passed them on to MapLibre.
   * **Android, iOS**: `downloadOfflineRegion` and `updateOfflineRegionMetadata` throw `INVALID_ARGUMENT` for metadata `jsonEncode` cannot encode, such as `NaN` or a map with keys that are not strings. Other metadata is stored as `jsonEncode` writes it, so a `Uint8List`, which iOS rejected, is a list of numbers on both platforms.
+  * **Android, iOS**: `installOfflineMapTiles` throws `INVALID_ARGUMENT` when there is no file at the path or asset, and `OFFLINE_DATABASE_ERROR` when the copy fails. iOS crashed on a missing asset, and both reported success after a failed copy.
+* **Android**: the `filter` of `setCustomHeaders` matches a pattern found anywhere in the URL, as on iOS and as documented; anchor it with `^` and `$` to keep matching the whole URL (#1143).
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls, and `MapLibreMethodChannel` is removed. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115, #1133).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
@@ -75,10 +78,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **Web**: `animateCamera` and `easeCamera` used to complete when the camera started. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
   * **iOS**: `animateCamera` and `easeCamera` complete with `true`, or `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`. `moveCamera` completes with `true` instead of `null`.
   * **Android, iOS**: when the map is disposed, or its Android activity destroyed, before the camera arrives, `animateCamera` and `easeCamera` complete with `false` instead of never completing. Check `mounted` or `controller.isDisposed` before using the controller or calling `setState` there.
-* Calls that cannot run fail with an error that says why, instead of a `MissingPluginException` (#1111, #1114, #1115):
+* Calls that cannot run fail with an error that says why, instead of a `MissingPluginException` (#1111, #1114, #1115, #1143):
   * **iOS, Web**: `setOffline` throws an `UnsupportedError`. MapLibre iOS and maplibre-gl-js have no offline switch, so the call never had an effect there; call it on Android only.
   * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call. MapLibre GL JS has no offline storage (#937).
   * **Android, iOS**: a call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`.
+  * **Web**: `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError` instead of an `UnimplementedError`. MapLibre GL JS has no per-URL headers.
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one; set `fillOutlineColor` to keep the old look (#1074).
 * **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web can play video sources (#1119).
 * **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as iOS does. It sends no events: follow it with `getOfflineRegionStatus` (#1119).
@@ -87,6 +91,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#1131).
 * **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#1142).
 * **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#1142).
+* **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#1143).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -175,6 +180,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * A region whose stored metadata cannot be read is listed with empty metadata, as on Android, instead of left out, and `getListOfRegions` lists regions imported without plugin metadata, as `mergeOfflineRegions` does.
   * Offline download progress events come at most every 100 ms, as on Android, so a region served from the cache no longer floods the app with events.
   * After a hot restart, a map from before the restart no longer sends its events to the new map that took its view id.
+* **Android**: fixes from the review of the switch to Pigeon (#1143):
+  * `setHttpHeaders`, the controller's `setCustomHeaders` and `setOfflineMaxConcurrentRequests` apply together instead of undoing each other, so a header no longer disappears after `setOfflineMaxConcurrentRequests`. Setting headers keeps MapLibre's limit of 20 requests per host instead of lowering it to 5.
+  * Changing the headers while tiles load can no longer crash the app, and a `setCustomHeaders` filter that is not a valid pattern matches no URL, as on iOS, instead of crashing on the next request.
+  * Offline region metadata that is not a JSON object, for example from a database merged with `mergeOfflineRegions`, reads as an empty map, as on iOS, instead of crashing `getListOfRegions`, `mergeOfflineRegions` and `updateOfflineRegionMetadata`. A failure inside an offline call fails that call instead of crashing the app.
+  * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
+  * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

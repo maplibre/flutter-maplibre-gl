@@ -26,6 +26,7 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
   private Lifecycle lifecycle;
   private Context context;
   private MapLibreMapFactory mapFactory;
+  private GlobalHostApi globalHostApi;
 
   public MapLibreMapsPlugin() {
     // no-op
@@ -41,8 +42,8 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     // INFO level includes informational messages, warnings, and errors while suppressing verbose HTTP logs
     Logger.setVerbosity(Logger.INFO);
 
-    MapLibreGlobalHostApi.Companion.setUp(
-        binding.getBinaryMessenger(), new GlobalHostApi(binding), "");
+    globalHostApi = new GlobalHostApi(binding);
+    MapLibreGlobalHostApi.Companion.setUp(binding.getBinaryMessenger(), globalHostApi, "");
 
     binding
         .getPlatformViewRegistry()
@@ -69,6 +70,10 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     MapLibreGlobalHostApi.Companion.setUp(binding.getBinaryMessenger(), null, "");
+    if (globalHostApi != null) {
+      globalHostApi.detach();
+      globalHostApi = null;
+    }
   }
 
   /**

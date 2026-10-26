@@ -223,6 +223,9 @@ final class MapLibreMapController
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean manualLocationSource = false;
+  // The manual location sent while the puck is hidden, shown once it is visible again.
+  private final PendingManualLocation<Location> pendingManualLocation =
+      new PendingManualLocation<>();
   private int myLocationTrackingMode = 0;
   private int myLocationRenderMode = 0;
   private LocationPuckStyle myLocationStyle = LocationPuckStyle.DEFAULT;
@@ -2282,7 +2285,7 @@ final class MapLibreMapController
       result.success(null);
     } catch (RuntimeException exception) {
       Log.d(TAG, exception.toString());
-      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+      result.error("LOCALIZATION_ERROR", exception.toString(), null);
     }
   }
 
@@ -2294,7 +2297,7 @@ final class MapLibreMapController
       result.success(null);
     } catch (RuntimeException exception) {
       Log.d(TAG, exception.toString());
-      result.error("MAPBOX LOCALIZATION PLUGIN ERROR", exception.toString(), null);
+      result.error("LOCALIZATION_ERROR", exception.toString(), null);
     }
   }
 
@@ -2329,12 +2332,12 @@ final class MapLibreMapController
   @Override
   public void mapSetCustomHeaders(
       Map<String, String> headers, List<String> filter, MethodChannel.Result result) {
-    MapLibreCustomHttpInterceptor.setCustomHeaders(headers, filter, result);
+    MapLibreHttpRequestUtil.setCustomHeaders(headers, filter, result);
   }
 
   @Override
   public void mapGetCustomHeaders(MethodChannel.Result result) {
-    result.success(MapLibreCustomHttpInterceptor.CustomHeaders);
+    result.success(MapLibreHttpRequestUtil.getCustomHeaders());
   }
 
   @Override
@@ -2682,14 +2685,6 @@ final class MapLibreMapController
   @Override
   public void locationComponentSetManualLocation(
       PgManualLocationUpdate update, MethodChannel.Result result) {
-    if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
-      result.error(
-          "LOCATION_COMPONENT_NOT_READY",
-          "The location component is not ready. Ensure the map was created with "
-              + "myLocationEnabled: true and locationSource: ManualLocationSource().",
-          null);
-      return;
-    }
     if (!manualLocationSource) {
       result.error(
           "MANUAL_LOCATION_SOURCE_DISABLED",
@@ -2722,10 +2717,22 @@ final class MapLibreMapController
       location.setVerticalAccuracyMeters(verticalAccuracy.floatValue());
     }
     location.setTime(update.getTimestamp());
+    // With the location off, or the component not built yet, the puck shows it once it is on.
+    pendingManualLocation.offer(location, isPuckVisible(), this::showManualLocation);
+    result.success(null);
+  }
+
+  private boolean isPuckVisible() {
+    return myLocationEnabled
+        && locationComponent != null
+        && locationComponent.isLocationComponentActivated()
+        && locationComponent.isLocationComponentEnabled();
+  }
+
+  private void showManualLocation(Location location) {
     locationComponent.forceLocationUpdate(location);
     // Keep map#onUserLocationUpdated firing, mirroring the engine path.
     onUserLocationUpdate(location);
-    result.success(null);
   }
 
   // -- Queries ----------------------------------------------------------------
@@ -4771,6 +4778,9 @@ final class MapLibreMapController
       locationComponent.setLocationComponentEnabled(myLocationEnabled);
     }
     stopLocationComponentWhileUserPaused();
+    if (isPuckVisible()) {
+      pendingManualLocation.flush(this::showManualLocation);
+    }
   }
 
   /**

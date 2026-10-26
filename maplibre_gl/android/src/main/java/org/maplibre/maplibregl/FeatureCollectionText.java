@@ -406,9 +406,12 @@ final class FeatureCollectionText {
   }
 
   // Thrown by the scan for text it does not expect. Carries no stack trace: it is control flow.
+  // The constructor that turns the trace off needs API 24, above the plugin's minSdk 23, so
+  // fillInStackTrace is skipped instead.
   private static final class Unexpected extends RuntimeException {
-    Unexpected() {
-      super(null, null, false, false);
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+      return this;
     }
   }
 }

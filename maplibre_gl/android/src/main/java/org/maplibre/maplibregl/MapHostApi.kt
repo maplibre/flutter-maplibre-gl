@@ -14,9 +14,29 @@ import io.flutter.plugin.common.MethodChannel
  */
 internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
 
-    // Answered once the map is ready.
-    override fun mapWaitForMap(callback: (Result<Unit>) -> Unit) =
-        answer(PigeonMethodResult.unit(callback)) { map.mapWaitForMap(it) }
+    /** The mapWaitForMap calls waiting for the map. */
+    private val mapWaiters = mutableListOf<MethodChannel.Result>()
+
+    /** Answers every waiting mapWaitForMap call with the answer of the map. */
+    private val allMapWaiters = object : MethodChannel.Result {
+        private fun takeAll() = mapWaiters.toList().also { mapWaiters.clear() }
+
+        override fun success(result: Any?) = takeAll().forEach { it.success(result) }
+
+        override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) =
+            takeAll().forEach { it.error(errorCode, errorMessage, errorDetails) }
+
+        override fun notImplemented() = takeAll().forEach { it.notImplemented() }
+    }
+
+    // Answered once the map is ready. The map holds one call at a time, so a call made while
+    // another waits joins it instead of taking its place.
+    override fun mapWaitForMap(callback: (Result<Unit>) -> Unit) {
+        mapWaiters.add(PigeonMethodResult.unit(callback))
+        if (mapWaiters.size == 1) {
+            answer(allMapWaiters) { map.mapWaitForMap(it) }
+        }
+    }
 
     // Answered with the camera position, or null when the map does not track it.
     override fun mapUpdate(
@@ -69,8 +89,15 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit) =
         call(callback, { it as Boolean }) { map.mapGetTelemetryEnabled(it) }
 
+    // The MapView takes an int.
     override fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit) =
-        unit(callback) { map.mapSetMaximumFps(fps, it) }
+        unit(callback) {
+            if (fps.toInt().toLong() == fps) {
+                map.mapSetMaximumFps(fps, it)
+            } else {
+                it.error("INVALID_ARGUMENT", "fps does not fit in a 32-bit int (got $fps)", null)
+            }
+        }
 
     override fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapForceOnlineMode(it) }

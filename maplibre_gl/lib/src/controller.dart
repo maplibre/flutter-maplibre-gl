@@ -1453,30 +1453,33 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.getStyle();
   }
 
-  /// Sets custom HTTP headers that are injected into network requests made by
-  /// this map instance.
+  /// Sets custom HTTP headers that are injected into the network requests
+  /// MapLibre makes.
   ///
   /// [headers] is a map of header name to value. Pass an empty map to clear
   /// all previously set headers.
   ///
   /// [filter] is a list of regular-expression strings. When non-empty, headers
   /// are only injected into requests whose URL matches **at least one** of the
-  /// patterns. When empty, headers are injected into every request.
+  /// patterns. When empty, headers are injected into every request. A pattern
+  /// matches if it is found anywhere in the URL: anchor it with `^` and `$` to
+  /// match the whole URL.
   ///
-  /// This is a **per-map** API and takes effect immediately — subsequent tile
-  /// requests will carry the new headers. To apply headers globally to all map
-  /// instances without URL filtering, use the top-level [setHttpHeaders]
-  /// function instead.
+  /// Although it is called on a controller, the headers apply to every map in
+  /// the app, and the last call replaces those of earlier ones. They take
+  /// effect immediately: subsequent requests carry the new headers. For
+  /// headers on every request without a filter, the top-level
+  /// [setHttpHeaders] does the same before any map exists.
   ///
-  /// Example — restrict an API key to a specific tile host:
+  /// Example: restrict an API key to a specific tile host:
   /// ```dart
   /// await controller.setCustomHeaders(
   ///   {'X-Api-Key': 'secret'},
-  ///   [r'https://tiles\.example\.com/.*'],
+  ///   [r'^https://tiles\.example\.com/'],
   /// );
   /// ```
   ///
-  /// Example — apply headers to all requests (no filter):
+  /// Example: apply headers to all requests (no filter):
   /// ```dart
   /// await controller.setCustomHeaders(
   ///   {'Authorization': 'Bearer $token'},
@@ -1484,10 +1487,12 @@ class MapLibreMapController extends ChangeNotifier {
   /// );
   /// ```
   ///
-  /// Example — clear all headers:
+  /// Example: clear all headers:
   /// ```dart
   /// await controller.setCustomHeaders({}, []);
   /// ```
+  ///
+  /// Android and iOS only; throws an [UnsupportedError] on web.
   Future<void> setCustomHeaders(
     Map<String, String> headers,
     List<String> filter,
@@ -1495,10 +1500,12 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setCustomHeaders(headers, filter);
   }
 
-  /// Returns the custom HTTP headers currently set on this map instance.
+  /// Returns the custom HTTP headers currently set, for every map in the app.
   ///
   /// Returns the headers previously set via [setCustomHeaders]. Does not
   /// include headers set via the global [setHttpHeaders] function.
+  ///
+  /// Android and iOS only; throws an [UnsupportedError] on web.
   Future<Map<String, String>> getCustomHeaders() async {
     return _maplibrePlatform.getCustomHeaders();
   }

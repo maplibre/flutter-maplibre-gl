@@ -20,10 +20,11 @@ class GlobalHostApi: MapLibreGlobalHostApi {
 
     func installOfflineMapTiles(tilesDb: String) throws {
         let tilesUrl = GlobalHostApi.getTilesUrl()
-        let bundlePath = getTilesDbPath(tilesDb: tilesDb)
-        NSLog(
-            "Cached tiles not found, copying from bundle... \(String(describing: bundlePath)) ==> \(tilesUrl)"
-        )
+        guard let bundlePath = getTilesDbPath(tilesDb: tilesDb),
+              FileManager.default.fileExists(atPath: bundlePath)
+        else {
+            throw invalidArgument("No offline tiles database at \(tilesDb)")
+        }
         do {
             let parentDir = tilesUrl.deletingLastPathComponent()
             try FileManager.default.createDirectory(
@@ -34,13 +35,19 @@ class GlobalHostApi: MapLibreGlobalHostApi {
             if FileManager.default.fileExists(atPath: tilesUrl.path) {
                 try FileManager.default.removeItem(atPath: tilesUrl.path)
             }
-            try FileManager.default.copyItem(atPath: bundlePath!, toPath: tilesUrl.path)
+            try FileManager.default.copyItem(atPath: bundlePath, toPath: tilesUrl.path)
             var resourceValues = URLResourceValues()
             resourceValues.isExcludedFromBackup = true
             var url = tilesUrl
             try url.setResourceValues(resourceValues)
         } catch {
-            NSLog("Error copying bundled tiles: \(error)")
+            let message = "Could not install the offline tiles from \(tilesDb)"
+            NSLog("\(message): \(error)")
+            throw PigeonError(
+                code: OfflineErrorCode.offlineDatabaseError,
+                message: "\(message): \(error.localizedDescription)",
+                details: nil
+            )
         }
     }
 

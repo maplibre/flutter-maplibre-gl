@@ -311,6 +311,43 @@ class MapHostApiTest {
     }
 
     @Test
+    fun aSecondWaitForMapJoinsTheFirst() {
+        var pending: MethodChannel.Result? = null
+        mapReady = false
+        answer = { _, result -> pending = result }
+        val first = mutableListOf<Result<Unit>>()
+        val second = mutableListOf<Result<Unit>>()
+
+        api.mapWaitForMap { first.add(it) }
+        api.mapWaitForMap { second.add(it) }
+        assertEquals(1, calls.size)
+        pending!!.success(null)
+
+        assertTrue(first.single().isSuccess)
+        assertTrue(second.single().isSuccess)
+
+        // Once answered, the next call waits for the map again.
+        api.mapWaitForMap { first.add(it) }
+        assertEquals(2, calls.size)
+        pending!!.error("MAP_DISPOSED", "The map was disposed before it finished being created", null)
+        assertEquals("MAP_DISPOSED", (first.last().exceptionOrNull() as PigeonError).code)
+        assertEquals(1, second.size)
+    }
+
+    @Test
+    fun aMaximumFpsOutsideAnIntIsAnInvalidArgument() {
+        for (fps in listOf(Int.MAX_VALUE + 1L, Int.MIN_VALUE - 1L)) {
+            val error = failure<Unit> { api.mapSetMaximumFps(fps, it) }
+
+            assertEquals("INVALID_ARGUMENT", error.code)
+        }
+        assertEquals(emptyList<Call>(), calls)
+
+        api.mapSetMaximumFps(Int.MAX_VALUE.toLong()) { }
+        assertEquals(listOf<Any?>(Int.MAX_VALUE.toLong()), calls.single().arguments)
+    }
+
+    @Test
     fun answersTheBooleanOfGetTelemetryEnabled() {
         answer = { _, result -> result.success(false) }
 

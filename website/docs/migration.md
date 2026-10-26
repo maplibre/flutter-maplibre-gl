@@ -52,7 +52,9 @@ Every platform now reports the same error codes, all in `SCREAMING_SNAKE_CASE`. 
 | `invalidSourceType` | `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source |
 | `parseError` | `INVALID_GEOJSON` |
 
-On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code.
+On Android, the controller's `invalidateAmbientCache` and `clearAmbientCache` fail with `AMBIENT_CACHE_ERROR` instead of `MAPBOX CACHE ERROR`. iOS reports the same code. `setMapLanguage` and `matchMapLanguageWithDeviceDefault` fail with `LOCALIZATION_ERROR` instead of `MAPBOX LOCALIZATION PLUGIN ERROR`; only Android can fail them.
+
+One code is Android only: `MAP_NOT_READY` fails a call made while the map view is being rebuilt after the activity was recreated, for example with "Don't keep activities". The call changes nothing. iOS and web never report it.
 
 The error codes of the offline calls and of the download `Error` events are renamed, on Android and iOS alike. See [Errors](advanced/offline-regions.md#errors) for when each code fires:
 
@@ -88,8 +90,8 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `addSource` throws `INVALID_ARGUMENT` for an image source without a `url` or four corners, and for a tiled source without `url` or `tiles` or a GeoJSON source without `data`, which web used to add. For image bytes, use `addImageSource`.
 * On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
 * On web, a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer. Android and iOS take any zoom.
+* `installOfflineMapTiles` throws `INVALID_ARGUMENT` when there is no file at the path or asset, and `OFFLINE_DATABASE_ERROR` when the copy fails. iOS crashed on a missing asset, and both platforms reported success after a failed copy.
 * On Android and iOS, GeoJSON with a NaN or infinite number, properties included, throws `INVALID_GEOJSON`, since JSON cannot hold it. It threw a `JsonUnsupportedObjectError`, and `addSource` crashed on iOS. Web takes such a number.
-* On web, `updateManualLocation` throws `MANUAL_LOCATION_SOURCE_DISABLED` without `locationSource: ManualLocationSource()`, as on Android and iOS, where it reported the location anyway.
 
 ### Android: numeric feature ids
 
@@ -204,13 +206,15 @@ None of these need a code change, but they are the places where code that worked
 
 * **iOS, Web**: `setOffline` throws an `UnsupportedError`, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
 * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`. MapLibre GL JS has no offline storage.
+* **Web**: `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError`, where they used to throw an `UnimplementedError`. MapLibre GL JS has no per-URL headers.
+* **Android**: the `filter` of `setCustomHeaders` matches a pattern found anywhere in the URL, as on iOS. A pattern such as `tiles\.example\.com` now also matches a URL that only mentions that host, so headers can reach more URLs than before. Anchor it with `^` and `$` to keep matching the whole URL.
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
 * **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null`.
-* **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`. With `myLocationEnabled` off the location is kept, without `onUserLocationUpdated`, and the puck appears there when it is turned on.
+* `updateManualLocation` works on every map created with `ManualLocationSource()`, on Android, iOS and web. With `myLocationEnabled` off the location is kept, without `onUserLocationUpdated`, and the puck appears there when it is turned on. Android threw `LOCATION_COMPONENT_NOT_READY` on a map created with the location off. On web it now throws `MANUAL_LOCATION_SOURCE_DISABLED` without `ManualLocationSource()`, as Android and iOS do, where it reported the location anyway.
 * **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry.
 * **iOS**: `getLayerProperties` reads the layer as it is now, like Android: a layer added at runtime is readable instead of `null`, colors read as `rgba(...)` text and `layout` always has `visibility`. `getSourceProperties` reads sources added at runtime too.
 * **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, mid-animation, like on web, instead of never completing, so the code after an awaited call now runs. Check `mounted` there before calling `setState`.

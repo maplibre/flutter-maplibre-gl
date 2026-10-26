@@ -33,8 +33,11 @@ bool get _isAndroidOrIOS =>
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
 
-/// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
-/// make tiles available offline.
+/// Copies the tiles database [tilesDb], an absolute path or a Flutter asset,
+/// in place of the offline database, so its tiles are available offline.
+///
+/// Throws a [PlatformException] with code `INVALID_ARGUMENT` when there is no
+/// file at [tilesDb], and `OFFLINE_DATABASE_ERROR` when the copy fails.
 Future<void> installOfflineMapTiles(String tilesDb) =>
     _global.installOfflineMapTiles(tilesDb);
 
@@ -57,8 +60,8 @@ Future<void> setOffline(bool offline) => _global.setOffline(offline);
 /// makes (tile fetches, style JSON, sprites, glyphs).
 ///
 /// This is a **global** API: the headers apply to all map instances in the
-/// process. To scope headers to specific URLs or to a single map instance,
-/// use [MaplibreMapController.setCustomHeaders] instead.
+/// process. To send headers only to some URLs, use
+/// [MaplibreMapController.setCustomHeaders] with a filter instead.
 ///
 /// Headers are applied at request time, so this method can be called before
 /// or after a [MaplibreMap] widget is created. Calling it again replaces the
