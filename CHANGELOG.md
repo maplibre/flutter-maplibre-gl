@@ -10,7 +10,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
-* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119, #PRNUM):
+* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119, #1143):
   * **iOS**: `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
   * **iOS**: `invalidExpression` is now `INVALID_EXPRESSION`
   * **iOS**: `invalidLayerType` is now `INVALID_LAYER_TYPE`
@@ -23,7 +23,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
   * **iOS**: `parseError` is now `INVALID_GEOJSON`
   * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #PRNUM):
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #1143):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
@@ -36,7 +36,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
   * **Android, iOS**: `installOfflineMapTiles` throws `INVALID_ARGUMENT` when there is no file at the path or asset, and `OFFLINE_DATABASE_ERROR` when the copy fails. iOS crashed on a missing asset, and both reported success after a failed copy.
-* **Android**: the `filter` of `setCustomHeaders` matches a pattern found anywhere in the URL, as on iOS and as documented; anchor it with `^` and `$` to keep matching the whole URL (#PRNUM).
+* **Android**: the `filter` of `setCustomHeaders` matches a pattern found anywhere in the URL, as on iOS and as documented; anchor it with `^` and `$` to keep matching the whole URL (#1143).
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
@@ -76,7 +76,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **Web**: `animateCamera` and `easeCamera` used to complete when the camera started. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
   * **iOS**: `animateCamera` and `easeCamera` complete with `true`, or `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`. `moveCamera` completes with `true` instead of `null`.
   * **Android, iOS**: when the map is disposed, or its Android activity destroyed, before the camera arrives, `animateCamera` and `easeCamera` complete with `false` instead of never completing. Check `mounted` or `controller.isDisposed` before using the controller or calling `setState` there.
-* Calls that cannot run fail with an error that says why, instead of a `MissingPluginException` (#1111, #1114, #1115, #PRNUM):
+* Calls that cannot run fail with an error that says why, instead of a `MissingPluginException` (#1111, #1114, #1115, #1143):
   * **iOS, Web**: `setOffline` throws an `UnsupportedError`. MapLibre iOS and maplibre-gl-js have no offline switch, so the call never had an effect there; call it on Android only.
   * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call. MapLibre GL JS has no offline storage (#937).
   * **Android, iOS**: a call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`.
@@ -87,9 +87,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. An app that wrote `#aarrggbb` for iOS gets other colors: move the alpha to the end. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
 * **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web, instead of throwing `LAYER_NOT_FOUND_ERROR` (#1123).
 * An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#1131).
-* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#PRNUM).
-* **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#PRNUM).
-* **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#PRNUM).
+* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#1142).
+* **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#1142).
+* **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#1143).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -171,13 +171,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **iOS**: `onCameraMove` fires for `moveCamera` and a zero duration `animateCamera`, which only reached `onCameraIdle`, and its last call before `onCameraIdle` has the position where the camera stopped instead of the frame before.
   * **Android**: `animateCamera` with a zero duration moves the camera at once, as on iOS and web, instead of failing with a generic error.
 * **Android**: `takeSnapshot` shows the area the map shows, at the screen's pixel density, as on iOS and web. Without a size it covered an area about 3x larger than the map, and with a size the image came out at 1x (#1128).
-* **iOS**: more fixes from the review of the Pigeon migration (#PRNUM):
+* **iOS**: more fixes from the review of the Pigeon migration (#1142):
   * `downloadOfflineRegion` fails with `DATABASE_RESET` when `resetOfflineDatabase` runs before the region is created, instead of never completing.
   * `updateContentInsets` completes, and `setTrackingCameraOptions` completes with `false`, when the map goes away before the camera arrives, as on Android, instead of never completing.
   * A region whose stored metadata cannot be read is listed with empty metadata, as on Android, instead of left out, and `getListOfRegions` lists regions imported without plugin metadata, as `mergeOfflineRegions` does.
   * Offline download progress events come at most every 100 ms, as on Android, so a region served from the cache no longer floods the app with events.
   * After a hot restart, a map from before the restart no longer sends its events to the new map that took its view id.
-* **Android**: fixes from the review of the switch to Pigeon (#PRNUM):
+* **Android**: fixes from the review of the switch to Pigeon (#1143):
   * `setHttpHeaders`, the controller's `setCustomHeaders` and `setOfflineMaxConcurrentRequests` apply together instead of undoing each other, so a header no longer disappears after `setOfflineMaxConcurrentRequests`. Setting headers keeps MapLibre's limit of 20 requests per host instead of lowering it to 5.
   * Changing the headers while tiles load can no longer crash the app, and a `setCustomHeaders` filter that is not a valid pattern matches no URL, as on iOS, instead of crashing on the next request.
   * Offline region metadata that is not a JSON object, for example from a database merged with `mergeOfflineRegions`, reads as an empty map, as on iOS, instead of crashing `getListOfRegions`, `mergeOfflineRegions` and `updateOfflineRegionMetadata`. A failure inside an offline call fails that call instead of crashing the app.
