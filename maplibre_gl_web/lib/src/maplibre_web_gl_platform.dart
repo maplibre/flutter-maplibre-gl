@@ -215,9 +215,8 @@ class MapLibreMapController extends MapLibrePlatform
       _mapSubscriptions.add(_map.on('mousedown', (_) => _endPress()));
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
       _mapSubscriptions.add(_map.on('mousemove', _onPointerMove));
-      // The same for a finger. A second finger also lands here first: it ends
-      // the drag at the last position and the map takes over the pinch, as on
-      // Android and iOS.
+      // The same for a finger. A second finger ends the drag at the last
+      // position and the map takes over the pinch, as on Android and iOS.
       _mapSubscriptions.add(_map.on('touchstart', (_) => _endPress()));
       _mapSubscriptions.add(_map.on('touchmove', _onTouchMove));
       _mapSubscriptions.add(_map.on('touchend', _onTouchEnd));
