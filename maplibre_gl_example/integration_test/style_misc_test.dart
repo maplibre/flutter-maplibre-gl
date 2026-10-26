@@ -305,7 +305,7 @@ void main() {
 
     if (testPlatform != TestPlatform.web) {
       // Documented on each call: MapLibre Native has none of these root
-      // objects, so the method channel refuses before reaching the platform.
+      // objects, so Dart refuses before reaching the platform.
       await _expectThrows<UnsupportedError>(
         tester,
         controller.setSky(sky),

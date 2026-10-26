@@ -863,9 +863,8 @@ class MapLibreMapOptions {
     addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
     addIfNonNull('scaleControlUnit', scaleControlUnit?.index);
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
-    // Convert the location source to a string token at the platform-channel
-    // boundary. The token -> behavior mapping (engine vs. app-provided updates)
-    // lives only on the native side.
+    // By name: Android and iOS map it to PgLocationSource, web to its own
+    // setting.
     addIfNonNull('locationSource', switch (locationSource) {
       ManualLocationSource() => 'manual',
       PlatformLocationSource() => 'platform',
