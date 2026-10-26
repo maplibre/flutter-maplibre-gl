@@ -89,8 +89,15 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapGetTelemetryEnabled(callback: (Result<Boolean>) -> Unit) =
         call(callback, { it as Boolean }) { map.mapGetTelemetryEnabled(it) }
 
+    // The MapView takes an int.
     override fun mapSetMaximumFps(fps: Long, callback: (Result<Unit>) -> Unit) =
-        unit(callback) { map.mapSetMaximumFps(fps, it) }
+        unit(callback) {
+            if (fps.toInt().toLong() == fps) {
+                map.mapSetMaximumFps(fps, it)
+            } else {
+                it.error("INVALID_ARGUMENT", "fps does not fit in a 32-bit int (got $fps)", null)
+            }
+        }
 
     override fun mapForceOnlineMode(callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.mapForceOnlineMode(it) }

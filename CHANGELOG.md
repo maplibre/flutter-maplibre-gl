@@ -10,19 +10,20 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Actions needed
 * `setLayerFilter` returns `Future<void>` instead of `Future<bool>`, and throws on failure instead of returning `false`. Replace checks on the result with a `try`/`catch` (#1055).
-* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119):
+* Error codes are renamed to the same codes on every platform. Update any `catch` on the old ones (#1055, #1068, #1111, #1119, #PRNUM):
   * **iOS**: `layerNotFound` is now `LAYER_NOT_FOUND_ERROR`
   * **iOS**: `invalidExpression` is now `INVALID_EXPRESSION`
   * **iOS**: `invalidLayerType` is now `INVALID_LAYER_TYPE`
   * **iOS**: `sourceAlreadyExists` and `duplicateSource` are now `SOURCE_ALREADY_EXISTS`
   * **iOS**: `layerAlreadyExists` and `duplicateLayer` are now `LAYER_ALREADY_EXISTS`
   * **Android**: `MAPBOX CACHE ERROR` from the controller's `invalidateAmbientCache` and `clearAmbientCache` is now `AMBIENT_CACHE_ERROR`
+  * **Android**: `MAPBOX LOCALIZATION PLUGIN ERROR` from `setMapLanguage` and `matchMapLanguageWithDeviceDefault` is now `LOCALIZATION_ERROR`
   * **iOS**: `styleNotFound` is now `STYLE_NOT_READY`
   * **iOS**: `sourceNotFound` and `noSuchSource` are now `SOURCE_NOT_FOUND`
   * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
   * **iOS**: `parseError` is now `INVALID_GEOJSON`
   * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123):
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #PRNUM):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
@@ -34,6 +35,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE` instead of `SOURCE_NOT_FOUND`.
   * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
+  * **Android, iOS**: `installOfflineMapTiles` throws `INVALID_ARGUMENT` when there is no file at the path or asset, and `OFFLINE_DATABASE_ERROR` when the copy fails. iOS crashed on a missing asset, and both reported success after a failed copy.
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
@@ -172,6 +174,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * A region whose stored metadata cannot be read is listed with empty metadata, as on Android, instead of left out, and `getListOfRegions` lists regions imported without plugin metadata, as `mergeOfflineRegions` does.
   * Offline download progress events come at most every 100 ms, as on Android, so a region served from the cache no longer floods the app with events.
   * After a hot restart, a map from before the restart no longer sends its events to the new map that took its view id.
+* **Android**: fixes from the review of the switch to Pigeon (#PRNUM):
+  * `setHttpHeaders`, the controller's `setCustomHeaders` and `setOfflineMaxConcurrentRequests` apply together instead of undoing each other, so a header no longer disappears after `setOfflineMaxConcurrentRequests`. Setting headers keeps MapLibre's limit of 20 requests per host instead of lowering it to 5.
+  * Changing the headers while tiles load can no longer crash the app, and a `setCustomHeaders` filter that is not a valid pattern matches no URL, as on iOS, instead of crashing on the next request.
+  * Offline region metadata that is not a JSON object, for example from a database merged with `mergeOfflineRegions`, reads as an empty map, as on iOS, instead of crashing `getListOfRegions`, `mergeOfflineRegions` and `updateOfflineRegionMetadata`. A failure inside an offline call fails that call instead of crashing the app.
+  * `downloadOfflineRegion` and `updateOfflineRegionMetadata` reject metadata JSON cannot hold, such as a NaN, with `INVALID_ARGUMENT`, as iOS does.
+  * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
+  * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

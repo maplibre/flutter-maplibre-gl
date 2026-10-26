@@ -2310,12 +2310,9 @@ final class MapLibreMapController
 
   @Override
   public void mapSetMaximumFps(long fps, MethodChannel.Result result) {
-    if (fps < Integer.MIN_VALUE || fps > Integer.MAX_VALUE) {
-      result.error("INVALID_ARGUMENT", "fps does not fit in a 32-bit int (got " + fps + ")", null);
-      return;
-    }
+    final int maximumFps = Convert.toIntExact(fps);
     if (mapView != null) {
-      mapView.setMaximumFps((int) fps);
+      mapView.setMaximumFps(maximumFps);
     }
     result.success(null);
   }
