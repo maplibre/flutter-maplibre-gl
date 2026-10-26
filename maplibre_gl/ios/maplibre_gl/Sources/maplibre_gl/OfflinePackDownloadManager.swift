@@ -20,9 +20,20 @@ class OfflinePackDownloader {
     /// Currently managed pack
     private var pack: MLNOfflinePack?
 
+    /// The region ID `download` gave this download.
+    private var regionId: Int?
+
     /// This variable is set to true when this downloader has finished downloading and called the result method. It is used to prevent
     /// the result method being called multiple times
     private var isCompleted = false
+
+    /// When the last progress event went to Dart, and the pack state it reported.
+    private var lastProgressEventTime: TimeInterval = 0
+    private var lastProgressEventState: MLNOfflinePackState?
+
+    /// Minimum interval between progress events, as on Android: a pack served
+    /// from the cache reports hundreds of changes a second, which floods Dart.
+    private static let progressEventMinInterval: TimeInterval = 0.1
 
     // MARK: Initializers
 
@@ -49,7 +60,9 @@ class OfflinePackDownloader {
 
     /// Signals the awaiting Dart side that this download will not produce
     /// further events. Used when the caller invalidates the download via
-    /// delete or reset before it can complete naturally.
+    /// delete or reset before it can complete naturally. Also fails the call
+    /// if its pack was not created yet: the creation callback holds this
+    /// downloader weakly, so it would never answer once the caller drops it.
     func terminate(errorCode: String, errorMessage: String) {
         guard !isCompleted else { return }
         isCompleted = true
@@ -58,9 +71,13 @@ class OfflinePackDownloader {
             errorMessage: errorMessage,
             errorDetails: nil
         )
+        // Answered already when the pack was created; only the first answer counts.
+        result(FlutterError(code: errorCode, message: errorMessage, details: nil))
     }
 
-    func download() -> Int {
+    /// Starts the download and keeps this downloader in
+    /// `OfflineManagerUtils.activeDownloaders` until it ends.
+    func download() {
         let storage = MLNOfflineStorage.shared
         let tilePyramidRegion = regionDefinition.toMLNTilePyramidOfflineRegion()
 
@@ -84,13 +101,19 @@ class OfflinePackDownloader {
         let id = duplicate.flatMap { OfflineManagerUtils.dartVisibleId(for: $0) }
             ?? UUID().hashValue
         let regionData = OfflineRegion(id: id, metadata: metadata, definition: regionDefinition)
+        regionId = id
 
         if let duplicate = duplicate {
             // Tear down any tracking and in-flight download tied to the old pack so
             // we don't leak state or leave a Dart subscription hanging when we
-            // replace it. Its progress events go to its own channel, which is named
-            // per download call, so reusing the ID does not cross the two streams.
+            // replace it. Its events carry the download id Dart chose for its own
+            // call, so reusing the region ID does not cross the two streams.
             releaseDuplicate(duplicate)
+        }
+        // After the duplicate's release, which shares the ID.
+        OfflineManagerUtils.activeDownloaders[id] = self
+
+        if let duplicate = duplicate {
             duplicate.suspend()
             storage.removePack(duplicate) { [weak self] error in
                 if let error = error {
@@ -104,7 +127,6 @@ class OfflinePackDownloader {
         } else {
             addPack(tilePyramidRegion, context: regionData.prepareContext())
         }
-        return id
     }
 
     /// Clears any tracking/in-flight download tied to a pack we're about to
@@ -178,7 +200,10 @@ class OfflinePackDownloader {
     }
 
     private func onPackCreationError(error: Error?) {
-        // Reset downloading state
+        isCompleted = true
+        if let id = regionId, OfflineManagerUtils.activeDownloaders[id] === self {
+            OfflineManagerUtils.releaseDownloader(id: id)
+        }
         channelHandler.onError(
             errorCode: OfflineErrorCode.invalidRegionDefinition,
             errorMessage: error?.localizedDescription,
@@ -217,6 +242,15 @@ class OfflinePackDownloader {
                 OfflineManagerUtils.releaseDownloader(id: region.id)
             }
         } else {
+            // Throttled as on Android, except a change of state, such as a pause.
+            let now = ProcessInfo.processInfo.systemUptime
+            if pack.state == lastProgressEventState,
+               now - lastProgressEventTime < Self.progressEventMinInterval
+            {
+                return
+            }
+            lastProgressEventTime = now
+            lastProgressEventState = pack.state
             channelHandler.onProgress(
                 progress: downloadProgress,
                 completedResourceCount: packProgress.countOfResourcesCompleted,

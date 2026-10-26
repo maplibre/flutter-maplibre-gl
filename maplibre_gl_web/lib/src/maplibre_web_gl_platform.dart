@@ -582,6 +582,23 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
+    // The same checks, in the same order, as Android and iOS.
+    if (!_myLocationEnabled) {
+      throw PlatformException(
+        code: 'LOCATION_COMPONENT_NOT_READY',
+        message:
+            'The location component is not ready. Ensure the map was created '
+            'with myLocationEnabled: true and '
+            'locationSource: ManualLocationSource().',
+      );
+    }
+    if (!_manualLocationSource) {
+      throw PlatformException(
+        code: 'MANUAL_LOCATION_SOURCE_DISABLED',
+        message:
+            'Manual locations require locationSource: ManualLocationSource().',
+      );
+    }
     // On web, manual mode renders its own puck (no native engine, no
     // GeolocateControl); see [ManualLocationPuck]. The wire payload uses
     // `position: [lat, lng]`.
@@ -601,12 +618,10 @@ class MapLibreMapController extends MapLibrePlatform
     // myLocationEnabled is toggled off and on again, which disposes it.
     _lastManualFix = update;
 
-    // Move / render the puck when manual mode is active. The puck is created
-    // lazily on the first fix (a maplibre Marker crashes if added without a
-    // position), so this also builds it as needed.
-    if (_manualLocationSource && _myLocationEnabled) {
-      _showManualPuck();
-    }
+    // Move / render the puck. It is created lazily on the first fix (a
+    // maplibre Marker crashes if added without a position), so this also
+    // builds it as needed.
+    _showManualPuck();
 
     // Keep parity with the native platforms: manual updates ride the same
     // onUserLocationUpdated event path as engine updates.
@@ -691,17 +706,12 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  // MapLibre collects no telemetry, so there is nothing to switch.
   @override
-  Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
-    return;
-  }
+  Future<void> setTelemetryEnabled(bool enabled) async {}
 
   @override
-  Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
-    return false;
-  }
+  Future<bool> getTelemetryEnabled() async => false;
 
   @override
   Future<void> setMaximumFps(int fps) async {

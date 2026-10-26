@@ -15,7 +15,14 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// Takes this map's Dart calls. It holds the controller weakly.
     private let hostApi = MapHostApi()
     /// Sends this map's events to Dart.
-    private let flutterApi: MapLibreMapFlutterApi
+    private let eventApi: MapLibreMapFlutterApi
+    /// `eventApi` while this map holds its channels: after a hot restart a
+    /// newer map with the same view id takes them over, and this one's late
+    /// events would reach it.
+    private var flutterApi: MapLibreMapFlutterApi? {
+        hostApi.ownsChannels(binaryMessenger: binaryMessenger, messageChannelSuffix: channelSuffix)
+            ? eventApi : nil
+    }
 
     private var mapView: MLNMapView
     /// The snapshot being taken, if any.
@@ -46,6 +53,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// started from. Nil while the position is not tracked.
     private var lastMovePosition: PgCameraPosition?
     private let cameraAnimations = CameraAnimationTracker()
+    /// Completion handlers given to MLNMapView that have not run yet, each with
+    /// the answer `deinit` gives if the map goes away first.
+    private var completionsAnsweredOnDispose: [Int: () -> Void] = [:]
+    private var nextCompletionId = 0
     private var myLocationEnabled = false
     private var manualLocationSource = false
     /// Colors of the user-location puck, from the Dart `MyLocationStyle`.
@@ -156,6 +167,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // The map stops animating once out of its window and never runs the completion handler,
         // so answer a camera call still waiting for it with false, as Android and web do.
         cameraAnimations.cancelRunning()
+        let disposedAnswers = completionsAnsweredOnDispose.values
+        completionsAnsweredOnDispose.removeAll()
+        disposedAnswers.forEach { $0() }
+        locationPulseTimer?.invalidate()
+        locationPulseWindowTimer?.invalidate()
         mapView.removeFromSuperview()
     }
 
@@ -215,7 +231,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         let suffix = "\(viewId)"
         binaryMessenger = messenger
         channelSuffix = suffix
-        flutterApi = MapLibreMapFlutterApi(binaryMessenger: messenger, messageChannelSuffix: suffix)
+        eventApi = MapLibreMapFlutterApi(binaryMessenger: messenger, messageChannelSuffix: suffix)
 
         super.init()
 
@@ -276,12 +292,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
 
         if let params = params {
-            // if let onAttributionClickOverride = args["onAttributionClickOverride"] as? Bool {
-            //     if onAttributionClickOverride {
-            //         setupAttribution(mapView)
-            //     }
-            // }
-
             dragEnabled = params.dragEnabled
 
             if let iosLongClickDurationMs = params.iosLongClickDurationMs {
@@ -428,7 +438,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 // Defer the callback to the next run loop iteration to avoid race conditions
                 let api = flutterApi
                 DispatchQueue.main.async {
-                    api.mapOnStyleLoaded { _ in }
+                    api?.mapOnStyleLoaded { _ in }
                 }
             }
         } else {
@@ -502,8 +512,28 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         animated: Bool,
         result: @escaping FlutterResult
     ) {
-        mapView.setContentInset(insets.edgeInsets, animated: animated) {
-            result(nil)
+        // Android completes the call when the map goes away too.
+        mapView.setContentInset(
+            insets.edgeInsets,
+            animated: animated,
+            completionHandler: completion(done: { result(nil) }, disposed: { result(nil) })
+        )
+    }
+
+    /// A completion handler for MLNMapView that runs `done`, or `disposed` from
+    /// `deinit` if the map goes away first: out of its window MLNMapView stops
+    /// animating, and once deallocated it drops the handler. Only one runs.
+    private func completion(
+        done: @escaping () -> Void,
+        disposed: @escaping () -> Void
+    ) -> () -> Void {
+        let id = nextCompletionId
+        nextCompletionId += 1
+        completionsAnsweredOnDispose[id] = disposed
+        return { [weak self] in
+            // Without self, deinit has run `disposed` already.
+            guard self?.completionsAnsweredOnDispose.removeValue(forKey: id) != nil else { return }
+            done()
         }
     }
 
@@ -512,14 +542,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(nil)
     }
 
-    func mapSetTelemetryEnabled(enabled: Bool, result: @escaping FlutterResult) {
-        UserDefaults.standard.set(enabled, forKey: "MLNMapboxMetricsEnabled")
+    // MapLibre collects no telemetry, so there is nothing to switch, as on Android.
+    func mapSetTelemetryEnabled(enabled _: Bool, result: @escaping FlutterResult) {
         result(nil)
     }
 
     func mapGetTelemetryEnabled(result: @escaping FlutterResult) {
-        let telemetryEnabled = UserDefaults.standard.bool(forKey: "MLNMapboxMetricsEnabled")
-        result(telemetryEnabled)
+        result(false)
     }
 
     func mapSetMaximumFps(fps: Int64, result: @escaping FlutterResult) {
@@ -804,10 +833,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         coordinates data: FlutterStandardTypedData,
         result: @escaping FlutterResult
     ) {
-        let latLngs = data.data.withUnsafeBytes {
-            Array(
+        // An empty Data has no base address.
+        let latLngs: [Double] = data.data.withUnsafeBytes { bytes in
+            guard let base = bytes.baseAddress else { return [] }
+            return Array(
                 UnsafeBufferPointer(
-                    start: $0.baseAddress!.assumingMemoryBound(to: Double.self),
+                    start: base.assumingMemoryBound(to: Double.self),
                     count: Int(data.elementCount)
                 )
             )
@@ -2029,24 +2060,42 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.setCamera(
             camera,
             withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
-            animationTimingFunction: nil
-        ) { [weak self] in
-            // The completion runs both when the animation finishes and when it is
-            // interrupted, with no flag telling the two apart, so the pitch that
-            // actually landed decides the answer. Android reports a cancelled tilt
-            // as false the same way, and the Dart API promises that.
-            guard let self = self else {
-                result(false)
-                return
-            }
-            result(abs(self.mapView.camera.pitch - CGFloat(tilt)) < 0.5)
-        }
+            animationTimingFunction: nil,
+            completionHandler: completion(
+                done: { [weak self] in
+                    // The completion runs both when the animation finishes and when it is
+                    // interrupted, with no flag telling the two apart, so the pitch that
+                    // actually landed decides the answer. Android reports a cancelled tilt
+                    // as false the same way, and the Dart API promises that.
+                    guard let self = self else {
+                        result(false)
+                        return
+                    }
+                    result(abs(self.mapView.camera.pitch - CGFloat(tilt)) < 0.5)
+                },
+                // A tilt the map never finished, as on Android.
+                disposed: { result(false) }
+            )
+        )
     }
 
     func locationComponentSetManualLocation(
         update: PgManualLocationUpdate,
         result: @escaping FlutterResult
     ) {
+        // The same checks, in the same order, as Android.
+        guard mapView.showsUserLocation else {
+            result(
+                FlutterError(
+                    code: "LOCATION_COMPONENT_NOT_READY",
+                    message: "The location component is not ready. Ensure the map was "
+                        + "created with myLocationEnabled: true and "
+                        + "locationSource: ManualLocationSource().",
+                    details: nil
+                )
+            )
+            return
+        }
         guard manualLocationSource else {
             result(
                 FlutterError(
@@ -2067,7 +2116,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             speed: update.speed ?? -1,
             timestamp: Date(timeIntervalSince1970: Double(update.timestamp) / 1000.0)
         )
-        // The map view's delegate auto-fires map#onUserLocationUpdated.
+        // The map view's delegate then sends mapOnUserLocationUpdated.
         manualLocationManager.push(location)
         result(nil)
     }
@@ -2228,7 +2277,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     /*
      *  UITapGestureRecognizer
-     *  On tap invoke the map#onMapClick callback.
+     *  On tap send mapOnMapClick.
      */
     @IBAction func handleMapTap(sender: UITapGestureRecognizer) {
         // Get the CGPoint where the user tapped.
@@ -2240,19 +2289,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         let result = firstFeatureOnLayers(at: point)
         if let feature = result.feature {
-            flutterApi.featureOnTap(tap: PgFeatureTap(
+            flutterApi?.featureOnTap(tap: PgFeatureTap(
                 id: feature.identifier,
                 point: screenPoint,
                 latLng: latLng,
                 layerId: result.layerId
             )) { _ in }
-            // Fire map#onMapClick only if featureTapsTriggersMapClick is true
+            // Send mapOnMapClick only if featureTapsTriggersMapClick is true
             if featureTapsTriggersMapClick {
-                flutterApi.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
+                flutterApi?.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
             }
         } else {
-            // Always fire map#onMapClick when no feature is tapped
-            flutterApi.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
+            // Always send mapOnMapClick when no feature is tapped
+            flutterApi?.mapOnMapClick(point: screenPoint, latLng: latLng) { _ in }
         }
     }
 
@@ -2266,7 +2315,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
            let previous = previousDragCoordinate,
            let origin = originDragCoordinate
         {
-            flutterApi.featureOnDrag(drag: PgFeatureDrag(
+            flutterApi?.featureOnDrag(drag: PgFeatureDrag(
                 id: id,
                 point: PgScreenPoint(x: Double(point.x), y: Double(point.y)),
                 origin: origin.toPigeon(),
@@ -2354,7 +2403,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     /*
      *  UILongPressGestureRecognizer
-     *  After a long press invoke the map#onMapLongClick callback.
+     *  After a long press send mapOnMapLongClick.
      */
     @IBAction func handleMapLongPress(sender: UILongPressGestureRecognizer) {
         // Fire when the long press starts
@@ -2362,37 +2411,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // Get the CGPoint where the user tapped.
             let point = sender.location(in: mapView)
             let coordinate = mapView.convert(point, toCoordinateFrom: mapView)
-            flutterApi.mapOnMapLongClick(
+            flutterApi?.mapOnMapLongClick(
                 point: PgScreenPoint(x: Double(point.x), y: Double(point.y)),
                 latLng: coordinate.toPigeon()
             ) { _ in }
         }
     }
-
-    /* /*
-     * Override the attribution button's click target to handle the event locally.
-     * Called if the application supplies an onAttributionClick handler.
-     */
-    func setupAttribution(_ mapView: MLNMapView) {
-        mapView.attributionButton.removeTarget(
-            mapView,
-            action: #selector(mapView.showAttribution),
-            for: .touchUpInside
-        )
-        mapView.attributionButton.addTarget(
-            self,
-            action: #selector(showAttribution),
-            for: UIControl.Event.touchUpInside
-        )
-    }
-
-    /*
-     * Custom click handler for the attribution button. This callback is bound when
-     * the application specifies an onAttributionClick handler.
-     */
-    @objc func showAttribution() {
-        channel?.invokeMethod("map#onAttributionClick", arguments: [])
-    } */
 
     /*
      *  MLNMapViewDelegate
@@ -2426,7 +2450,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             // where the map's internal state is not fully ready for operations like camera animations
             let api = flutterApi
             DispatchQueue.main.async {
-                api.mapOnStyleLoaded { _ in }
+                api?.mapOnStyleLoaded { _ in }
             }
         }
     }
@@ -2473,7 +2497,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     func mapView(_: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
         scheduleLocationPuckTint()
         if let userLocation = userLocation, let location = userLocation.location {
-            flutterApi.mapOnUserLocationUpdated(
+            flutterApi?.mapOnUserLocationUpdated(
                 userLocation: location.toPigeon(),
                 heading: userLocation.heading?.toPigeon()
             ) { _ in }
@@ -2484,10 +2508,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         scheduleLocationPuckTint()
         // The raw values are those of MLNUserTrackingMode.
         if let trackingMode = PgMyLocationTrackingMode(rawValue: Int(mode.rawValue)) {
-            flutterApi.mapOnCameraTrackingChanged(mode: trackingMode) { _ in }
+            flutterApi?.mapOnCameraTrackingChanged(mode: trackingMode) { _ in }
         }
         if mode == .none {
-            flutterApi.mapOnCameraTrackingDismissed { _ in }
+            flutterApi?.mapOnCameraTrackingDismissed { _ in }
         }
     }
 
@@ -3207,7 +3231,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapViewDidBecomeIdle(_: MLNMapView) {
-        flutterApi.mapOnIdle { _ in }
+        flutterApi?.mapOnIdle { _ in }
     }
 
     // MLNMapView calls this instead of regionWillChangeAnimated, which takes no reason.
@@ -3219,7 +3243,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Whether a gesture of the user moves the camera, which Android tells
         // with REASON_API_GESTURE.
         let isGesture = !reason.isDisjoint(with: .gestures)
-        flutterApi.cameraOnMoveStarted(isGesture: isGesture) { _ in }
+        flutterApi?.cameraOnMoveStarted(isGesture: isGesture) { _ in }
         // Where the change starts, so regionDidChange can tell whether the camera moved.
         lastMovePosition = getCamera()?.toPigeon(mapView: mapView)
     }
@@ -3232,7 +3256,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private func sendCameraMove(_ position: PgCameraPosition) {
         lastMovePosition = position
-        flutterApi.cameraOnMove(position: position) { _ in }
+        flutterApi?.cameraOnMove(position: position) { _ in }
     }
 
     func mapView(_: MLNMapView, shouldChangeFrom _: MLNMapCamera, to _: MLNMapCamera) -> Bool {
@@ -3258,7 +3282,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if let position = position, position != lastMovePosition {
             sendCameraMove(position)
         }
-        flutterApi.cameraOnIdle(position: position) { _ in }
+        flutterApi?.cameraOnIdle(position: position) { _ in }
     }
 
     func addSourceGeojson(sourceId: String, geojson: String) -> Result<Void, MethodCallError> {

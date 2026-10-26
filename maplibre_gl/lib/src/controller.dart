@@ -1322,18 +1322,12 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.setMapLanguage(language);
   }
 
-  /// Enables or disables the collection of anonymized telemetry data.
-  ///
-  /// The returned [Future] completes after the change has been made on the
-  /// platform side.
+  /// Does nothing: MapLibre collects no telemetry, on any platform.
   Future<void> setTelemetryEnabled(bool enabled) async {
     return _maplibrePlatform.setTelemetryEnabled(enabled);
   }
 
-  /// Retrieves whether collection of anonymized telemetry data is enabled.
-  ///
-  /// The returned [Future] completes after the query has been made on the
-  /// platform side.
+  /// Always `false`: MapLibre collects no telemetry, on any platform.
   Future<bool> getTelemetryEnabled() async {
     return _maplibrePlatform.getTelemetryEnabled();
   }

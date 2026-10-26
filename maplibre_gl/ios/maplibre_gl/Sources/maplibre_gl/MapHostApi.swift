@@ -64,6 +64,16 @@ final class MapHostApi: MapLibreMapHostApi {
         )
     }
 
+    /// Whether this API still holds the channels `register` set up, the same
+    /// test `unregister` makes.
+    func ownsChannels(binaryMessenger: FlutterBinaryMessenger, messageChannelSuffix: String) -> Bool {
+        let channels = Channels(
+            messenger: ObjectIdentifier(binaryMessenger),
+            suffix: messageChannelSuffix
+        )
+        return Self.owners[channels] == ObjectIdentifier(self)
+    }
+
     // MARK: Map
 
     func mapWaitForMap(completion: @escaping (Result<Void, Error>) -> Void) {

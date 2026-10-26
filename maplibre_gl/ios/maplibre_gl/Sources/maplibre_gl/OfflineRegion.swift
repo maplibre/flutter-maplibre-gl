@@ -23,8 +23,14 @@ class OfflineRegion {
         self.definition = definition
     }
 
+    /// The pack context: the ID and the metadata as JSON. Metadata that is not
+    /// JSON is left out, since JSONSerialization would raise an NSException,
+    /// which Swift cannot catch; callers reject it before they get here.
     func prepareContext() -> Data {
-        let context = ["metadata": metadata, "id": id] as [String: Any]
+        let context: [String: Any] = [
+            "metadata": JSONSerialization.isValidJSONObject(metadata) ? metadata : [:],
+            "id": id,
+        ]
         let jsonData = try? JSONSerialization.data(withJSONObject: context, options: [])
         return jsonData ?? Data()
     }
@@ -41,11 +47,12 @@ class OfflineRegion {
         guard let region = pack.region as? MLNTilePyramidOfflineRegion,
               let dataObject = try? JSONSerialization.jsonObject(with: pack.context, options: []),
               let dict = dataObject as? [String: Any],
-              let id = dict["id"] as? Int,
-              let metadata = dict["metadata"] as? [String: Any] else { return nil }
+              let id = dict["id"] as? Int else { return nil }
         return OfflineRegion(
             id: id,
-            metadata: metadata,
+            // Unreadable metadata reads as empty, as on Android, rather than
+            // hiding the region.
+            metadata: dict["metadata"] as? [String: Any] ?? [:],
             definition: OfflineRegionDefinition(
                 bounds: [region.bounds.sw, region.bounds.ne].map { [$0.latitude, $0.longitude] },
                 mapStyleUrl: region.styleURL,
