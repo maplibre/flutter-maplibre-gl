@@ -106,7 +106,7 @@ A `stateKey` needs the `featureId` that owns it: on every platform, `stateKey` w
 - **IDs are text**: pass the id as text, such as `'2'` for the id `2` or `'poi-12'`. Vector tile ids are always integers.
 - **Vector sources need `sourceLayer`**: pass it to all three calls when the source is a vector tile source. GeoJSON sources ignore it.
 - **Android and iOS need a top-level `id`**: `promoteId` is web only, so on Android and iOS the ID must be in the GeoJSON itself.
-- **Android and iOS apply a change on the next frame**: `getFeatureState` right after `setFeatureState` or `removeFeatureState` can still return the old state for a moment. Read it again if you need the new one.
+- **Removals are applied on the next frame on Android and iOS**: `getFeatureState` right after `removeFeatureState` can still return the removed keys for a moment, so read it again if you need the new state. A removal on a source with no visible layer is only applied once the source is drawn.
 - **A `null` value is kept**: `{'hover': null}` sets `hover` to `null`, it does not remove the key. Use `removeFeatureState` with a `stateKey` for that.
 - **The state must be JSON**: a `NaN` or an infinite number throws `INVALID_ARGUMENT`.
 

@@ -179,9 +179,9 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
   }
 
   /// Reads the state of [featureId] until [settled] accepts it, for up to a
-  /// second, and returns the last read. Android and iOS apply a change on the
-  /// next rendered frame, so a read right after one can still show the old
-  /// state.
+  /// second, and returns the last read. Android and iOS apply a removal on the
+  /// next rendered frame, so a read right after one can still show the removed
+  /// keys.
   Future<Map<String, dynamic>?> _readStateUntil(
     MapLibreMapController controller,
     String featureId,

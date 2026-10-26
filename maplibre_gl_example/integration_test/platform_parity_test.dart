@@ -1086,6 +1086,18 @@ void main() {
         ),
         'addSource vector',
       );
+      // A removal is only applied once the source is drawn, so the source
+      // needs a visible layer even though its tiles never load.
+      await pumpUntil(
+        tester,
+        controller.addLineLayer(
+          'vector',
+          'roads-line',
+          const LineLayerProperties(lineWidth: 2),
+          sourceLayer: 'roads',
+        ),
+        'addLineLayer',
+      );
       Future<Map<String, dynamic>?> read(String id) =>
           controller.getFeatureState('vector', id, sourceLayer: 'roads');
       Future<void> settle(
