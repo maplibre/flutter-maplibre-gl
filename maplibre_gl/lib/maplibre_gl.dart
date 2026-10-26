@@ -123,6 +123,8 @@ part 'src/native_global_platform.dart';
 
 part 'src/native_map_platform.dart';
 
+part 'src/geojson_writer.dart';
+
 part 'src/layer_expressions.dart';
 
 part 'src/layer_properties.dart';
