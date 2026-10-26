@@ -10,38 +10,28 @@ part of '../maplibre_gl.dart';
 MapLibreGlobalPlatform get _global {
   // The generated registrant only runs in the app's main isolate. Elsewhere,
   // for instance in an isolate the app spawns, install the Android and iOS
-  // implementation on first use instead of leaving the default in place. The
-  // exact type check keeps a subclass that a package installed on purpose.
-  if (!kIsWeb &&
-      MapLibreGlobalPlatform.instance.runtimeType ==
-          MapLibreGlobalMethodChannel &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS)) {
-    MapLibreNativePlugin.registerWith();
+  // implementation on first use. Only when nothing is installed: a package or
+  // a test may have installed its own on purpose.
+  if (!MapLibreGlobalPlatform.isRegistered && _isAndroidOrIOS) {
+    MapLibreNativePlugin._installGlobal();
   }
   return MapLibreGlobalPlatform.instance;
 }
 
 // The same fallback for the platform of each map, which MapLibreMap creates
-// through this function. Where the registrant did not run, the factory still
-// returns the default method channel platform, which native no longer
-// answers, so the Android and iOS implementation replaces it. Only the map
-// factory is replaced: a global platform installed on its own stays.
+// through this function. Each fallback installs only its own half, so a fake
+// of the other one stays.
 MapLibrePlatform _createMapLibrePlatform() {
-  final platform = MapLibrePlatform.createInstance();
-  if (!kIsWeb &&
-      // The deprecated default is what tells that nothing registered. Only
-      // the default itself: a subclass is a platform a package installed on
-      // purpose.
-      // ignore: deprecated_member_use
-      platform.runtimeType == MapLibreMethodChannel &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS)) {
-    MapLibrePlatform.createInstance = _MapLibreNativePlatform.new;
-    return MapLibrePlatform.createInstance();
+  if (!MapLibrePlatform.isRegistered && _isAndroidOrIOS) {
+    MapLibreNativePlugin._installMap();
   }
-  return platform;
+  return MapLibrePlatform.createInstance();
 }
+
+bool get _isAndroidOrIOS =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 /// Copy tiles db file passed in to the tiles cache directory (sideloaded) to
 /// make tiles available offline.
@@ -128,7 +118,7 @@ Future<String?> getOfflineDatabasePath() => _global.getOfflineDatabasePath();
 ///
 /// Android and iOS only; throws [UnsupportedError] on web.
 Future<String?> exportOfflineDatabase(String destinationPath) async {
-  // Reject here rather than let the method channel answer first: on web that
+  // Reject here rather than let the platform answer first: on web that
   // call fails with a MissingPluginException, which is not the error this
   // documents and not one an app can tell apart from a broken registration.
   if (kIsWeb) {
@@ -148,11 +138,10 @@ Future<List<OfflineRegion>> getListOfRegions() => _global.getListOfRegions();
 /// Replaces the metadata of the offline region with the given [id] and returns
 /// the updated region.
 ///
-/// [metadata] must be JSON-encodable: strings, numbers, booleans, null, and
-/// lists and maps of those, with string keys. Other values, such as a
-/// `Uint8List`, fail on iOS with `INVALID_ARGUMENT`, while Android stores
-/// them in whatever form its JSON encoder gives them (a `Uint8List` comes
-/// back as a list of numbers).
+/// [metadata] is stored as the JSON [jsonEncode] gives it, so a `Uint8List`
+/// comes back as a list of numbers. Metadata [jsonEncode] cannot encode, such
+/// as a `NaN` or a map with keys that are not strings, throws a
+/// [PlatformException] with code `INVALID_ARGUMENT`.
 ///
 /// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
 /// has that [id].
@@ -272,7 +261,12 @@ Future<void> resetOfflineDatabase() => _global.resetOfflineDatabase();
 /// [onEvent] receives the progress of the download: [InProgress] events, then
 /// [Success], or [Error] with the [PlatformException] that stopped it. Its
 /// code says why: see [Error].
-/// [metadata] is stored with the region and must be JSON-encodable.
+/// [metadata] is stored with the region as [updateOfflineRegionMetadata]
+/// stores it, and fails the same way when it is not JSON-encodable.
+///
+/// Download events reach only the root isolate: in a background isolate,
+/// passing [onEvent] throws an [UnsupportedError]. Leave it out there and
+/// follow the download with [getOfflineRegionStatus].
 ///
 /// Throws a [PlatformException] with code `INVALID_REGION_DEFINITION` when
 /// MapLibre cannot create a region from [definition].

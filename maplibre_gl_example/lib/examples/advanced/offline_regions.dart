@@ -771,7 +771,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
       _items[index] = item.copyWith(isDownloading: true);
     });
 
-    // Use a Completer to wait for the Success/Error event from the EventChannel instead.
+    // Completed by the Success or Error event that onEvent receives.
     final completer = Completer<void>();
 
     try {
@@ -804,7 +804,7 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
         });
       }
 
-      // Wait for the actual download to complete via EventChannel.
+      // Wait for onEvent to report the end of the download.
       await completer.future;
 
       if (!mounted) return;

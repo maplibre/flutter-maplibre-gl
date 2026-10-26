@@ -426,16 +426,7 @@ class MapLibreMap extends StatefulWidget {
   ///
   /// Assign it before the first [MapLibreMap] is built, ideally before
   /// `runApp()`; maps already on screen keep the mode they were created with.
-  static bool get useHybridComposition =>
-      // Stored where it always was, which is where the Android and iOS
-      // platform reads it.
-      // ignore: deprecated_member_use
-      MapLibreMethodChannel.useHybridComposition;
-
-  static set useHybridComposition(bool useHybridComposition) =>
-      // Stored where the getter above reads it.
-      // ignore: deprecated_member_use
-      MapLibreMethodChannel.useHybridComposition = useHybridComposition;
+  static bool useHybridComposition = false;
 
   /// Where the web implementation loads MapLibre GL JS from.
   ///
@@ -872,9 +863,8 @@ class MapLibreMapOptions {
     addIfNonNull('scaleControlPosition', scaleControlPosition?.index);
     addIfNonNull('scaleControlUnit', scaleControlUnit?.index);
     addIfNonNull('locationEngineProperties', locationEnginePlatforms?.toList());
-    // Convert the location source to a string token at the platform-channel
-    // boundary. The token -> behavior mapping (engine vs. app-provided updates)
-    // lives only on the native side.
+    // By name: Android and iOS map it to PgLocationSource, web to its own
+    // setting.
     addIfNonNull('locationSource', switch (locationSource) {
       ManualLocationSource() => 'manual',
       PlatformLocationSource() => 'platform',

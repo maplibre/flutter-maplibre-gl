@@ -59,10 +59,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      // The flag lives on MapLibreMethodChannel because
-      // MapLibreMap.useHybridComposition has always stored it there.
-      // ignore: deprecated_member_use
-      final useHybridComposition = MapLibreMethodChannel.useHybridComposition;
+      final useHybridComposition = MapLibreMap.useHybridComposition;
       final params = _creationParams(
         creationParams,
         useHybridComposition: useHybridComposition,
@@ -295,7 +292,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> cameraOnMoveStarted(bool isGesture) async {
-    // Not exposed yet, as the method channel never passed it on: telling the
+    // Not exposed yet, as the plugin never passed it on: telling the
     // user's moves from the app's is #1019.
     onCameraMoveStartedPlatform(null);
   }
@@ -869,6 +866,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+    // Nothing to ask native: iOS cannot read an empty buffer.
+    if (latLngs.isEmpty) return [];
     final coordinates = Float64List.fromList(
       latLngs.map((e) => [e.latitude, e.longitude]).expand((e) => e).toList(),
     );
@@ -1144,23 +1143,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     if (belowLayerId != null) _layerKey(belowLayerId),
   ];
 
-  /// Thresholds above which GeoJSON encoding moves to a background isolate:
-  /// the number of features in a collection, and the number of coordinate
-  /// positions anywhere in the payload.
-  ///
-  /// Native only accepts a JSON string, so the encode happens either way, and
-  /// `jsonEncode` on the main isolate froze the UI on large geometries (#366).
-  /// Above these thresholds the encode goes through [compute]; below them it
-  /// stays synchronous, since spawning an isolate would make the common case
-  /// slower and asynchronous for nothing. The trade-offs behind the values
-  /// are measured in the documentation of the same thresholds in the
-  /// platform interface, which this class replaced on Android and iOS.
-  static const _geoJsonOffloadFeatureCount = 100;
-  static const _geoJsonOffloadPositionCount = 2000;
-
   /// Checks [geojson], the data of the source [sourceId] or with [feature] one
   /// of its features, and encodes it to a JSON string, on a background
-  /// isolate when the payload is large (see [_isLargeGeoJson]). Throws
+  /// isolate when the payload is large (see [isLargeGeoJson]). Throws
   /// `INVALID_GEOJSON` for data that is not valid GeoJSON.
   static Future<String> _encodeGeoJson(
     Map<String, dynamic> geojson,
@@ -1171,7 +1156,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
     final input = (geojson, ids);
     final (json, reason) =
-        _isLargeGeoJson(geojson) ? await compute(encode, input) : encode(input);
+        isLargeGeoJson(geojson) ? await compute(encode, input) : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1338,67 +1323,6 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
   /// background isolate.
   static const _geoJsonTextOffloadLength = 100000;
-
-  /// Whether [geojson] is large enough that encoding it should move off the
-  /// main isolate.
-  ///
-  /// Counting stops as soon as the threshold is reached, so this costs at most
-  /// [_geoJsonOffloadPositionCount] steps no matter how large the payload is.
-  /// Counting positions instead of the length of the top-level `coordinates`
-  /// array is what makes this correct for areas: a `Polygon` holds one entry
-  /// per ring, so a single ring of 50k points has a `coordinates` length of 1.
-  /// The same applies to `MultiLineString`, `MultiPolygon` and
-  /// `GeometryCollection`.
-  static bool _isLargeGeoJson(Map<dynamic, dynamic> geojson) {
-    const limit = _geoJsonOffloadPositionCount;
-    final features = geojson['features'];
-    if (features is List) {
-      if (features.length >= _geoJsonOffloadFeatureCount) return true;
-      var positions = 0;
-      for (final feature in features) {
-        if (feature is! Map) continue;
-        positions += _countGeometryPositions(
-          feature['geometry'],
-          limit - positions,
-        );
-        if (positions >= limit) return true;
-      }
-      return false;
-    }
-    return _countGeometryPositions(geojson['geometry'] ?? geojson, limit) >=
-        limit;
-  }
-
-  /// Counts the coordinate positions of a single geometry, giving up once
-  /// [limit] is reached. The result is capped at [limit].
-  static int _countGeometryPositions(Object? geometry, int limit) {
-    if (limit <= 0 || geometry is! Map) return 0;
-    if (geometry['type'] == 'GeometryCollection') {
-      final geometries = geometry['geometries'];
-      if (geometries is! List) return 0;
-      var positions = 0;
-      for (final child in geometries) {
-        positions += _countGeometryPositions(child, limit - positions);
-        if (positions >= limit) return positions;
-      }
-      return positions;
-    }
-    return _countPositions(geometry['coordinates'], limit);
-  }
-
-  /// Counts positions inside a `coordinates` value of any nesting depth, giving
-  /// up once [limit] is reached. A position is a list of numbers, so a list
-  /// whose first entry is a number counts as one position.
-  static int _countPositions(Object? coordinates, int limit) {
-    if (limit <= 0 || coordinates is! List || coordinates.isEmpty) return 0;
-    if (coordinates.first is num) return 1;
-    var positions = 0;
-    for (final child in coordinates) {
-      positions += _countPositions(child, limit - positions);
-      if (positions >= limit) return positions;
-    }
-    return positions;
-  }
 
   @override
   Future<void> setCameraBounds({
@@ -1594,7 +1518,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       generateIds: generateIds,
       () => _writeGeoJson(sourceId, () async {
         final (plain, reason) =
-            data is Map && _isLargeGeoJson(data)
+            data is Map && isLargeGeoJson(data)
                 ? await compute(_checkSourceData, input)
                 : _checkSourceData(input);
         if (reason != null) throw invalidGeoJson(sourceId, reason);

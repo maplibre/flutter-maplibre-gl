@@ -16,12 +16,23 @@ part of '../maplibre_gl_platform_interface.dart';
 /// this class keeps compiling. The error arrives through the returned future,
 /// not as a throw from the call itself.
 abstract class MapLibreGlobalPlatform {
+  static final MapLibreGlobalPlatform _unregistered =
+      _UnregisteredGlobalPlatform();
+
   /// The instance behind the global functions in `maplibre_gl`, such as
   /// `preWarm()`, `ensureWebLibraryLoaded()` and the offline region calls.
   ///
-  /// Defaults to [MapLibreGlobalMethodChannel]. Platform packages replace it
-  /// when they register themselves.
-  static MapLibreGlobalPlatform instance = MapLibreGlobalMethodChannel();
+  /// Platform packages replace it when they register themselves, and tests
+  /// can replace it with a fake. Until then [preWarm] and
+  /// [ensureLibraryLoaded] do nothing and the other calls fail with
+  /// [UnimplementedError].
+  static MapLibreGlobalPlatform instance = _unregistered;
+
+  /// Whether [instance] was replaced, by a platform package or a test.
+  ///
+  /// Assigning back the instance read before any replacement makes this
+  /// `false` again.
+  static bool get isRegistered => !identical(instance, _unregistered);
 
   /// Starts up the underlying map engine ahead of the first map widget.
   Future<void> preWarm();
@@ -118,27 +129,14 @@ abstract class MapLibreGlobalPlatform {
       Future<T>.error(UnimplementedError('$method() is not implemented.'));
 }
 
-/// The default [MapLibreGlobalPlatform] until a platform registers its own.
-///
-/// Android and iOS now register an implementation of their own from
-/// `maplibre_gl`, so this class only answers [preWarm] and
-/// [ensureLibraryLoaded] for a host where no implementation registered.
-class MapLibreGlobalMethodChannel extends MapLibreGlobalPlatform {
-  static const _channel = MethodChannel('plugins.flutter.io/maplibre_gl');
+/// The [MapLibreGlobalPlatform] of a host where no implementation registered,
+/// such as a desktop app.
+class _UnregisteredGlobalPlatform extends MapLibreGlobalPlatform {
+  // Warming up is optional and there is no library to load, so both complete
+  // and app code can await them on every host.
+  @override
+  Future<void> preWarm() async {}
 
   @override
-  Future<void> preWarm() async {
-    try {
-      await _channel.invokeMethod('preWarm');
-    } on MissingPluginException {
-      // Platform doesn't implement preWarm; no-op.
-    }
-  }
-
-  @override
-  Future<void> ensureLibraryLoaded() async {
-    // Nothing to load: the native SDKs ship inside the app binary. Kept a
-    // completed future rather than a throw so app code can await it
-    // unconditionally on every platform.
-  }
+  Future<void> ensureLibraryLoaded() async {}
 }

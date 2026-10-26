@@ -277,10 +277,10 @@ class ManualLocationUpdate {
   /// Time the location was observed. Defaults to [DateTime.now] when omitted.
   final DateTime? timestamp;
 
-  /// Serializes this update for the platform channel.
+  /// This update as a map, which the web implementation reads.
   ///
-  /// Mirrors existing conventions: [LatLng] becomes `[lat, lng]`, the timestamp
-  /// becomes epoch milliseconds, and null fields are omitted.
+  /// [LatLng] becomes `[lat, lng]`, the timestamp becomes epoch milliseconds,
+  /// and null fields are omitted.
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
       'position': <double>[target.latitude, target.longitude],
