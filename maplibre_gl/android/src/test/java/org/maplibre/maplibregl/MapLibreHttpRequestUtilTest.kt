@@ -29,7 +29,7 @@ class MapLibreHttpRequestUtilTest {
     @Before
     fun setUp() {
         MapLibreHttpRequestUtil.resetForTest()
-        MapLibreHttpRequestUtil.install = java.util.function.Consumer { installed.add(it) }
+        MapLibreHttpRequestUtil.install = MapLibreHttpRequestUtil.ClientInstaller { installed.add(it) }
     }
 
     @After
@@ -186,7 +186,7 @@ class MapLibreHttpRequestUtilTest {
 
     @Test
     fun aClientThatCannotBeInstalledAnswersHttpClientError() {
-        MapLibreHttpRequestUtil.install = java.util.function.Consumer { throw IllegalStateException("no") }
+        MapLibreHttpRequestUtil.install = MapLibreHttpRequestUtil.ClientInstaller { throw IllegalStateException("no") }
 
         assertEquals("HTTP_CLIENT_ERROR", failure { MapLibreHttpRequestUtil.setHttpHeaders(emptyMap(), it) }.code)
     }

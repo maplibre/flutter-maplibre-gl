@@ -2,12 +2,11 @@ package org.maplibre.maplibregl
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.function.Consumer
 
 /** A manual location sent while the puck is hidden waits for it, and only the newest one does. */
 class PendingManualLocationTest {
     private val shown = mutableListOf<String>()
-    private val show = Consumer<String> { shown.add(it) }
+    private val show = PendingManualLocation.Show<String> { shown.add(it) }
     private val pending = PendingManualLocation<String>()
 
     @Test

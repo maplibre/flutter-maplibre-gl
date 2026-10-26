@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import okhttp3.Dispatcher;
@@ -139,12 +137,24 @@ abstract class MapLibreHttpRequestUtil {
     }
   }
 
+  // These two stand in for java.util.function, which needs API 24, above the plugin's minSdk 23.
+
+  /** Takes a built client. */
+  interface ClientInstaller {
+    void install(OkHttpClient client);
+  }
+
+  /** Turns the current settings into the next ones. */
+  private interface SettingsChange {
+    Settings apply(Settings current);
+  }
+
   // Replaced whole under the class lock. A client keeps the instance it was built from, so
   // OkHttp's threads never see a change half made.
   private static volatile Settings settings = Settings.EMPTY;
 
   /** Where a built client goes. Tests replace it, as the SDK's needs Android. */
-  static Consumer<OkHttpClient> install = client -> HttpRequestUtil.setOkHttpClient(client);
+  static ClientInstaller install = client -> HttpRequestUtil.setOkHttpClient(client);
 
   static void setHttpHeaders(Map<String, String> headers, MethodChannel.Result result) {
     update(current -> current.withHeaders(headers), result);
@@ -193,10 +203,10 @@ abstract class MapLibreHttpRequestUtil {
 
   /** Installs a client built from the settings {@code change} makes, then publishes them. */
   private static synchronized void update(
-      UnaryOperator<Settings> change, MethodChannel.Result result) {
+      SettingsChange change, MethodChannel.Result result) {
     Settings next = change.apply(settings);
     try {
-      install.accept(buildClient(next));
+      install.install(buildClient(next));
     } catch (RuntimeException e) {
       result.error(HTTP_CLIENT_ERROR, e.getMessage(), null);
       return;
