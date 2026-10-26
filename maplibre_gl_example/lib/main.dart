@@ -226,8 +226,7 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const FillLayerExample(),
   const LineLayerExample(),
   const BackgroundLayerExample(),
-  // Feature state is available on web and Android, not on iOS yet.
-  if (FeatureStateExample.isSupported) const FeatureStateExample(),
+  const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),
   const LiveSymbolsExample(),
   const EditStyleLayerDraggableExample(),

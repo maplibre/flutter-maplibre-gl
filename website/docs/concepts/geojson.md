@@ -115,7 +115,7 @@ Filter by id with `["id"]`. On web the legacy filter syntax, such as `["==", "$i
 
 A source added with `addSource` and `generateId: true` gives each feature its index as id, over any id it had. MapLibre Native has no `generateId`, so on Android and iOS the plugin numbers the data it sets, but not data loaded from a URL.
 
-Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on web and Android. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source. It is not available on iOS yet, because the MapLibre iOS SDK does not expose the API.
+Feature state (`setFeatureState`, `getFeatureState`, `removeFeatureState`) is supported on Android, iOS and web. It lets you restyle individual features, for example recoloring many of them every frame, without re-feeding the whole GeoJSON source.
 
 ## `promoteId`: web only
 
