@@ -49,6 +49,8 @@ import 'package:collection/collection.dart';
 import 'package:maplibre_gl_platform_interface/download_region_status.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 
+import 'src/geojson_size.dart';
+
 // Generated from pigeons/messages.dart: the messages to Android and iOS.
 import 'src/native/messages.g.dart';
 
@@ -86,9 +88,6 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         ManualLocationSource,
         ManualLocationUpdate,
         MapLibreJsSource,
-        // Deprecated, and still exported for the apps that reference it.
-        // ignore: deprecated_member_use
-        MapLibreMethodChannel,
         MapLibrePlatform,
         MinMaxZoomPreference,
         MyLocationRenderMode,

@@ -144,9 +144,9 @@ class _LiveSymbolsBodyState extends State<_LiveSymbolsBody> {
       );
     }
     if (_mode == _Mode.offDuringUpdates) {
-      // The three calls share one channel, so they reach the map in order:
-      // the new data is placed in the frame it arrives, then fades return
-      // for the rest of the map.
+      // Each call is awaited, so they reach the map in order: the new data
+      // is placed in the frame it arrives, then fades return for the rest of
+      // the map.
       await controller.setSymbolPlacementTransitionsEnabled(false);
       await controller.setGeoJsonSource(_sourceId, _vehicles());
       await controller.setSymbolPlacementTransitionsEnabled(true);

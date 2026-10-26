@@ -237,7 +237,7 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
       final styleLoad = ++_styleLoadCount;
       // Dispose old managers before re-creating them for the new style.
-      // This prevents stale in-flight method channel calls from racing
+      // This prevents stale in-flight platform calls from racing
       // with a new style that has cleared the native Style reference.
       try {
         await fillManager?.dispose();
@@ -491,11 +491,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// Turns MapLibre's placement transitions on or off now, without a widget
   /// rebuild. See [MapLibreMap.symbolPlacementTransitionsEnabled].
   ///
-  /// Sent on the same channel as source updates, so a call made before
-  /// [setGeoJsonSource] reaches the platform before it: turning transitions
-  /// off around an update places what changed in the frame it arrives, and
-  /// turning them back on afterwards restores the fades and makes the map
-  /// draw its final state.
+  /// Each call reaches the platform on its own channel, so only `await` keeps
+  /// the order: await this before [setGeoJsonSource] to place what changed in
+  /// the frame it arrives, then await the update before turning transitions
+  /// back on, which restores the fades and makes the map draw its final state.
   Future<void> setSymbolPlacementTransitionsEnabled(bool enabled) =>
       _updateMapOptions({'symbolPlacementTransitionsEnabled': enabled});
 
@@ -2101,7 +2100,9 @@ class MapLibreMapController extends ChangeNotifier {
   /// The original points belonging to a cluster, as GeoJSON features.
   ///
   /// Paginated: [limit] is how many to return, [offset] how many to skip. To
-  /// read a whole cluster at once, pass its `point_count` as [limit].
+  /// read a whole cluster at once, pass its `point_count` as [limit]. A
+  /// negative [limit] or [offset] throws a [PlatformException] with code
+  /// `INVALID_ARGUMENT`.
   ///
   /// [sourceId] is a GeoJSON source added with `cluster: true`. [clusterId] is
   /// the `cluster_id` property of the cluster feature. Each point has the `id`
@@ -2116,6 +2117,12 @@ class MapLibreMapController extends ChangeNotifier {
     int limit = 10,
     int offset = 0,
   }) async {
+    if (limit < 0 || offset < 0) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message: 'limit and offset must be 0 or more, not $limit and $offset.',
+      );
+    }
     return _maplibrePlatform.getClusterLeaves(
       sourceId,
       clusterId,

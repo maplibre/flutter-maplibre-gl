@@ -21,11 +21,17 @@ class MapLibreNativePlugin {
     @visibleForTesting MapLibreGlobalHostApi? globalHostApi,
     @visibleForTesting MapLibreMapHostApi Function(int id)? mapHostApi,
   }) {
-    MapLibreGlobalPlatform.instance = _MapLibreNativeGlobalPlatform(
-      globalHostApi ?? MapLibreGlobalHostApi(),
-    );
-    MapLibrePlatform.createInstance = () => _MapLibreNativePlatform(mapHostApi);
+    _installGlobal(globalHostApi);
+    _installMap(mapHostApi);
   }
+
+  static void _installGlobal([MapLibreGlobalHostApi? api]) =>
+      MapLibreGlobalPlatform.instance = _MapLibreNativeGlobalPlatform(
+        api ?? MapLibreGlobalHostApi(),
+      );
+
+  static void _installMap([MapLibreMapHostApi Function(int id)? hostApi]) =>
+      MapLibrePlatform.createInstance = () => _MapLibreNativePlatform(hostApi);
 }
 
 /// The [MapLibreGlobalPlatform] of Android and iOS, talking to the native
@@ -107,7 +113,9 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
     int id,
     Map<String, dynamic> metadata,
   ) async => OfflineRegion.fromMap(
-    json.decode(await _api.updateOfflineRegionMetadata(id, metadata)),
+    json.decode(
+      await _api.updateOfflineRegionMetadata(id, _jsonMetadata(metadata)),
+    ),
   );
 
   @override
@@ -169,7 +177,18 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
     Map<String, dynamic> metadata = const {},
     void Function(DownloadRegionStatus event)? onEvent,
   }) async {
-    if (!_listeningForDownloads) {
+    final jsonMetadata = _jsonMetadata(metadata);
+    // Only an isolate that gets download events sets up their handler: a
+    // background isolate cannot, and native sends those events to the root
+    // isolate alone.
+    if (onEvent != null && !_listeningForDownloads) {
+      if (ServicesBinding.rootIsolateToken == null) {
+        throw UnsupportedError(
+          'downloadOfflineRegion cannot take onEvent outside the root '
+          'isolate: download events reach only the root isolate. Leave '
+          'onEvent out and follow the download with getOfflineRegionStatus.',
+        );
+      }
       MapLibreOfflineDownloadFlutterApi.setUp(this);
       _listeningForDownloads = true;
     }
@@ -180,7 +199,7 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
       regionJson = await _api.downloadOfflineRegion(
         downloadId,
         definition.toMap(),
-        metadata,
+        jsonMetadata,
       );
     } catch (_) {
       // A call that fails, for instance on a definition native cannot read,
@@ -220,6 +239,23 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
       _downloadListeners.remove(downloadId);
     }
     listener(status);
+  }
+
+  /// [metadata] as the JSON values native stores, so both platforms store the
+  /// same thing: a `Uint8List`, for instance, becomes a list of numbers.
+  ///
+  /// Throws INVALID_ARGUMENT when [metadata] cannot be encoded as JSON.
+  static Map<String, dynamic> _jsonMetadata(Map<String, dynamic> metadata) {
+    try {
+      return (json.decode(json.encode(metadata)) as Map).cast();
+      // The error of jsonEncode, for a value it cannot write.
+      // ignore: avoid_catching_errors
+    } on JsonUnsupportedObjectError catch (e) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message: 'The offline region metadata is not JSON-encodable: $e',
+      );
+    }
   }
 
   static List<OfflineRegion> _regionsFromJson(String regionsJson) =>
