@@ -36,7 +36,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
   * **Android, iOS**: `installOfflineMapTiles` throws `INVALID_ARGUMENT` when there is no file at the path or asset, and `OFFLINE_DATABASE_ERROR` when the copy fails. iOS crashed on a missing asset, and both reported success after a failed copy.
-  * **Android**: `updateManualLocation` throws `LOCATION_COMPONENT_NOT_READY` after `myLocationEnabled` is set to `false`, as on iOS and web, instead of doing nothing.
 * **Android**: the `filter` of `setCustomHeaders` matches a pattern found anywhere in the URL, as on iOS and as documented; anchor it with `^` and `$` to keep matching the whole URL (#PRNUM).
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115).
@@ -90,6 +89,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#1131).
 * **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#PRNUM).
 * **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#PRNUM).
+* **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#PRNUM).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
