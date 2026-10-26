@@ -2,7 +2,7 @@
 // web, errors included: feature queries and filters, image sources, layer
 // adds (missing or incompatible source, belowLayerId, filter, property
 // values, source layer, zoom range), setLayerProperties, the GeoJSON source
-// calls and their data, the feature state errors, addSource, removeSource, getSourceProperties of image
+// calls and their data, feature state, addSource, removeSource, getSourceProperties of image
 // sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, the calls
 // made while no style is loaded, updateManualLocation while myLocationEnabled
 // is off, and telemetry.
@@ -24,6 +24,7 @@ import 'dart:convert';
 import 'dart:math' show Point;
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, rootBundle;
@@ -939,7 +940,6 @@ void main() {
     testWidgets('a missing source fails with SOURCE_NOT_FOUND', (
       tester,
     ) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
 
       final calls = <String, Future<Object?> Function()>{
@@ -962,7 +962,6 @@ void main() {
 
     testWidgets('a source that is not GeoJSON or vector fails with '
         'UNSUPPORTED_SOURCE_TYPE', (tester) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
       final image = await _loadPng(tester, 'assets/sydney0.png');
       await pumpUntil(
@@ -989,7 +988,6 @@ void main() {
 
     testWidgets('a vector source without a sourceLayer fails with '
         'SOURCE_LAYER_REQUIRED', (tester) async {
-      if (kIsWeb) return;
       final controller = await pumpMap(tester);
       await pumpUntil(
         tester,
@@ -1014,6 +1012,149 @@ void main() {
           code: 'SOURCE_LAYER_REQUIRED',
         );
       }
+    });
+
+    testWidgets(
+      'a state with a NaN or an infinity fails with INVALID_ARGUMENT',
+      (
+        tester,
+      ) async {
+        final controller = await pumpMap(tester);
+        await _addPoints(tester, controller);
+
+        for (final bad in [
+          {'a': double.nan},
+          {'a': double.infinity},
+          {
+            'a': [
+              1,
+              {'b': double.negativeInfinity},
+            ],
+          },
+        ]) {
+          await expectPlatformError(
+            tester,
+            controller.setFeatureState(_sourceId, '1', bad),
+            'setFeatureState with $bad',
+            code: 'INVALID_ARGUMENT',
+          );
+        }
+        expect(
+          await pumpUntil(
+            tester,
+            controller.getFeatureState(_sourceId, '1'),
+            'getFeatureState after the rejected calls',
+          ),
+          isNull,
+        );
+      },
+    );
+
+    testWidgets('a null in the state is kept', (tester) async {
+      final controller = await pumpMap(tester);
+      await _addPoints(tester, controller);
+
+      await pumpUntil(
+        tester,
+        controller.setFeatureState(_sourceId, '1', {'hover': true}),
+        'setFeatureState',
+      );
+      await pumpUntil(
+        tester,
+        controller.setFeatureState(_sourceId, '1', {'hover': null}),
+        'setFeatureState with a null',
+      );
+      await pumpUntilValue(
+        tester,
+        () => controller.getFeatureState(_sourceId, '1'),
+        (state) =>
+            state != null &&
+            state.containsKey('hover') &&
+            state['hover'] == null,
+        'getFeatureState holds hover as null',
+      );
+    });
+
+    testWidgets('a vector source with a sourceLayer sets, reads and removes '
+        'state', (tester) async {
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.addSource(
+          'vector',
+          const VectorSourceProperties(tiles: [_tileUrl]),
+        ),
+        'addSource vector',
+      );
+      Future<Map<String, dynamic>?> read(String id) =>
+          controller.getFeatureState('vector', id, sourceLayer: 'roads');
+      Future<void> settle(
+        String id,
+        Map<String, dynamic>? expected,
+      ) => pumpUntilValue<Map<String, dynamic>?>(
+        tester,
+        () => read(id),
+        (state) => const DeepCollectionEquality().equals(state, expected),
+        'getFeatureState $id == $expected',
+      );
+
+      await pumpUntil(
+        tester,
+        controller.setFeatureState('vector', '1', {
+          'a': 1,
+          'b': true,
+        }, sourceLayer: 'roads'),
+        'setFeatureState 1',
+      );
+      await pumpUntil(
+        tester,
+        controller.setFeatureState('vector', '2', {
+          'a': 2,
+        }, sourceLayer: 'roads'),
+        'setFeatureState 2',
+      );
+      await settle('1', {'a': 1, 'b': true});
+      await settle('2', {'a': 2});
+      // Another source layer holds no state of its own.
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getFeatureState('vector', '1', sourceLayer: 'rivers'),
+          'getFeatureState in another source layer',
+        ),
+        isNull,
+      );
+
+      await pumpUntil(
+        tester,
+        controller.removeFeatureState(
+          'vector',
+          featureId: '1',
+          stateKey: 'b',
+          sourceLayer: 'roads',
+        ),
+        'removeFeatureState one key',
+      );
+      await settle('1', {'a': 1});
+
+      await pumpUntil(
+        tester,
+        controller.removeFeatureState(
+          'vector',
+          featureId: '1',
+          sourceLayer: 'roads',
+        ),
+        'removeFeatureState one feature',
+      );
+      await settle('1', null);
+      await settle('2', {'a': 2});
+
+      await pumpUntil(
+        tester,
+        controller.removeFeatureState('vector', sourceLayer: 'roads'),
+        'removeFeatureState the source layer',
+      );
+      await settle('2', null);
     });
   });
 

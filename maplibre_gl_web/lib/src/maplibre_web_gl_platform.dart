@@ -1058,6 +1058,25 @@ class MapLibreMapController extends MapLibrePlatform
     details: reason,
   );
 
+  /// Checks the source a feature state call addresses, with the errors
+  /// Android and iOS answer: `STYLE_NOT_READY`, `SOURCE_NOT_FOUND`,
+  /// `UNSUPPORTED_SOURCE_TYPE` for a source that is not GeoJSON or vector, and
+  /// `SOURCE_LAYER_REQUIRED` for a vector source without [sourceLayer].
+  /// maplibre-gl-js only fires an error event for each of them, which the
+  /// caller never sees.
+  void _ensureFeatureStateSource(String sourceId, String? sourceLayer) {
+    _ensureStyleReady();
+    final type = _sourceType(sourceId);
+    if (type == null) throw _sourceNotFound(sourceId);
+    if (type == 'vector') {
+      if (sourceLayer == null) {
+        throw checks.featureStateSourceLayerRequired(sourceId);
+      }
+    } else if (type != 'geojson') {
+      throw checks.notFeatureStateSource(sourceId, type);
+    }
+  }
+
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
     final jsSource = _jsSource(sourceId);
@@ -3188,6 +3207,10 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
+    _ensureFeatureStateSource(sourceId, sourceLayer);
+    if (!checks.isJsonValue(state)) {
+      throw checks.featureStateNotJson(sourceId, featureId);
+    }
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
@@ -3217,6 +3240,7 @@ class MapLibreMapController extends MapLibrePlatform
       );
     }
 
+    _ensureFeatureStateSource(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
@@ -3232,6 +3256,7 @@ class MapLibreMapController extends MapLibrePlatform
     String featureId, {
     String? sourceLayer,
   }) async {
+    _ensureFeatureStateSource(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),

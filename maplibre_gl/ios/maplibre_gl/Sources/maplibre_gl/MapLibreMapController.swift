@@ -1147,12 +1147,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         guard exception == nil, applied else {
             // The SDK setters return false instead of throwing; surfacing that
             // as an error keeps a rejected call from looking like a success.
-            result(FlutterError(
-                code: "FEATURE_STATE_NOT_APPLIED",
-                message: "setFeatureState for feature '\(featureId)' on source '\(sourceId)' was "
-                    + "rejected by the SDK. This usually means the source is no longer attached "
-                    + "to the map.",
-                details: nil
+            result(featureStateNotApplied(
+                "setFeatureState for feature '\(featureId)' on source '\(sourceId)'",
+                exception
             ))
             return
         }
@@ -1215,12 +1212,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
         guard exception == nil, applied else {
-            result(FlutterError(
-                code: "FEATURE_STATE_NOT_APPLIED",
-                message: "removeFeatureState on source '\(sourceId)' was rejected by the SDK. "
-                    + "This usually means the source is no longer attached to the map.",
-                details: nil
-            ))
+            result(featureStateNotApplied("removeFeatureState on source '\(sourceId)'", exception))
             return
         }
         result(nil)
@@ -1241,7 +1233,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             target = found
         }
         var state: [String: Any]?
-        _ = MapLibreGLCatchException {
+        let exception = MapLibreGLCatchException {
             switch target {
             case let .shape(source):
                 state = source.featureState(featureID: featureId)
@@ -1249,15 +1241,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 state = source.featureState(sourceLayerID: sourceLayerId, featureID: featureId)
             }
         }
-        // Sent as a JSON string so nested values survive the channel intact,
-        // like styleGetLayerProperties. No state must stay null rather than
-        // become an empty map: the Dart return type is nullable and callers
-        // tell "no state" from an empty state.
-        guard let state = state, !state.isEmpty,
-              JSONSerialization.isValidJSONObject(state),
-              let json = jsonString(from: state)
-        else {
+        if let exception = exception {
+            result(featureStateNotApplied(
+                "getFeatureState for feature '\(featureId)' on source '\(sourceId)'",
+                exception
+            ))
+            return
+        }
+        // The SDK answers nil for a feature with no state, which must stay null
+        // rather than become an empty map: the Dart return type is nullable and
+        // callers tell "no state" from an empty state. The state goes as a JSON
+        // string so nested values survive the channel intact, like
+        // styleGetLayerProperties. JSONSerialization raises an Objective-C
+        // exception for an object it considers invalid, so it is asked first.
+        guard let state = state else {
             result(nil)
+            return
+        }
+        guard JSONSerialization.isValidJSONObject(state), let json = jsonString(from: state) else {
+            result(featureStateNotApplied(
+                "getFeatureState for feature '\(featureId)' on source '\(sourceId)'",
+                nil,
+                reason: "The state is not valid JSON."
+            ))
             return
         }
         result(json)
@@ -3519,6 +3525,24 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private func unreadableGeoJson(sourceId: String, _ reason: String) -> MethodCallError {
         return .invalidGeoJson(
             message: "The data for source '\(sourceId)' is not GeoJSON: \(reason)"
+        )
+    }
+
+    /// The error of a feature state call the SDK did not carry out, with the
+    /// reason of the exception it raised, or `reason`, or that the source is
+    /// probably no longer attached to the map, which is what it answers false for.
+    private func featureStateNotApplied(
+        _ call: String,
+        _ exception: NSException?,
+        reason: String? = nil
+    ) -> FlutterError {
+        let why = exception.map { Self.filterRejection($0) }
+            ?? reason
+            ?? "This usually means the source is no longer attached to the map."
+        return FlutterError(
+            code: "FEATURE_STATE_NOT_APPLIED",
+            message: "\(call) was rejected by the SDK. \(why)",
+            details: nil
         )
     }
 

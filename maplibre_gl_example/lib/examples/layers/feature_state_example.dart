@@ -161,10 +161,13 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
 
     // Read the state back from the platform instead of echoing what was just
     // written: showing what getFeatureState actually returns is the point of
-    // the panel below. iOS applies a removal on the next rendered frame, so
-    // give it one before reading.
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    final reported = await controller.getFeatureState(_sourceId, featureId);
+    // the panel below.
+    final reported = await _readStateUntil(
+      controller,
+      featureId,
+      (state) =>
+          (state?['selected'] == true) == _selectedIds.contains(featureId),
+    );
 
     if (mounted) {
       setState(() {
@@ -173,6 +176,23 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
         _lastReportedState = reported;
       });
     }
+  }
+
+  /// Reads the state of [featureId] until [settled] accepts it, for up to a
+  /// second, and returns the last read. Android and iOS apply a change on the
+  /// next rendered frame, so a read right after one can still show the old
+  /// state.
+  Future<Map<String, dynamic>?> _readStateUntil(
+    MapLibreMapController controller,
+    String featureId,
+    bool Function(Map<String, dynamic>? state) settled,
+  ) async {
+    var state = await controller.getFeatureState(_sourceId, featureId);
+    for (var attempt = 0; attempt < 20 && !settled(state); attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      state = await controller.getFeatureState(_sourceId, featureId);
+    }
+    return state;
   }
 
   Future<void> _clearAll() async {
@@ -184,14 +204,16 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     await controller.removeFeatureState(_sourceId);
 
     // Re-read the last touched feature so the panel keeps showing the
-    // platform truth instead of a stale map. iOS applies a removal on the next
-    // rendered frame, so give it one before reading.
-    await Future<void>.delayed(const Duration(milliseconds: 100));
+    // platform truth instead of a stale map.
     final lastId = _lastTouchedId;
     final reported =
         lastId == null
             ? null
-            : await controller.getFeatureState(_sourceId, lastId);
+            : await _readStateUntil(
+              controller,
+              lastId,
+              (state) => state?['selected'] != true,
+            );
 
     if (mounted) {
       setState(() {

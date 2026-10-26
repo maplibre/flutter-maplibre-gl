@@ -521,4 +521,85 @@ void main() {
       'to clustered GeoJSON sources.',
     );
   });
+
+  group('feature state', () {
+    test('a source that holds no feature state names its type', () {
+      expect(
+        notFeatureStateSource('tiles', 'raster'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'UNSUPPORTED_SOURCE_TYPE')
+            .having(
+              (e) => e.message,
+              'message',
+              "Source 'tiles' is a raster source. Feature state only applies "
+                  'to GeoJSON and vector sources.',
+            ),
+      );
+    });
+
+    test('a vector source needs a source layer', () {
+      expect(
+        featureStateSourceLayerRequired('tiles'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'SOURCE_LAYER_REQUIRED')
+            .having(
+              (e) => e.message,
+              'message',
+              "Source 'tiles' is a vector source, so feature state calls on "
+                  "it require a 'sourceLayer'.",
+            ),
+      );
+    });
+
+    test('a state JSON cannot carry is INVALID_ARGUMENT', () {
+      expect(
+        featureStateNotJson('points', '1'),
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'INVALID_ARGUMENT')
+            .having(
+              (e) => e.message,
+              'message',
+              "The state for feature '1' on source 'points' is not valid "
+                  'JSON: it holds a non-finite number, or a value of a type '
+                  'JSON cannot carry.',
+            ),
+      );
+    });
+
+    test('isJsonValue accepts what JSON carries, nulls included', () {
+      expect(
+        isJsonValue({
+          'a': null,
+          'b': true,
+          'c': 1.5,
+          'd': 'x',
+          'e': [
+            1,
+            null,
+            {'f': 2},
+          ],
+        }),
+        isTrue,
+      );
+    });
+
+    test('isJsonValue refuses non-finite numbers, deep or not', () {
+      expect(isJsonValue({'a': double.nan}), isFalse);
+      expect(isJsonValue({'a': double.infinity}), isFalse);
+      expect(
+        isJsonValue({
+          'a': [
+            1,
+            {'b': double.negativeInfinity},
+          ],
+        }),
+        isFalse,
+      );
+    });
+
+    test('isJsonValue refuses other types and keys that are not text', () {
+      expect(isJsonValue({'a': DateTime(2020)}), isFalse);
+      expect(isJsonValue({1: 'a'}), isFalse);
+    });
+  });
 }
