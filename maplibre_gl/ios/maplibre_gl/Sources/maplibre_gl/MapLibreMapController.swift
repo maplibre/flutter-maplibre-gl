@@ -35,7 +35,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var symbolPlacementTransitionsEnabled = true
     private var isFirstStyleLoad = true
     private var onStyleLoadedCalled = false
-    private var mapReadyResult: FlutterResult?
+    /// The mapWaitForMap calls waiting for the style, answered together as on
+    /// Android: keeping only the last one left the others unanswered.
+    private var mapReadyResults: [FlutterResult] = []
     private var previousDragCoordinate: CLLocationCoordinate2D?
     private var originDragCoordinate: CLLocationCoordinate2D?
     private var dragFeature: MLNFeature?
@@ -133,10 +135,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Drive the view out of its window and drop the remaining references so
         // the engine is reclaimed promptly when the platform view is removed.
         NotificationCenter.default.removeObserver(self)
-        // Fails a mapWaitForMap still waiting for the style, whose Dart future
-        // would otherwise never complete.
-        if let waitingResult = mapReadyResult {
-            mapReadyResult = nil
+        // Fails the mapWaitForMap calls still waiting for the style, whose Dart
+        // futures would otherwise never complete.
+        let waitingForMap = mapReadyResults
+        mapReadyResults.removeAll()
+        for waitingResult in waitingForMap {
             waitingResult(FlutterError(
                 code: "MAP_DISPOSED",
                 message: "The map was disposed before it finished being created",
@@ -442,7 +445,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 }
             }
         } else {
-            mapReadyResult = result
+            mapReadyResults.append(result)
         }
     }
 
@@ -2437,12 +2440,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         // A parked mapWaitForMap is answered once: a later style load, after
         // a setStyle, must not reply to the same message again.
-        let waitingResult = mapReadyResult
-        mapReadyResult = nil
-        waitingResult?(nil)
+        let waitingResults = mapReadyResults
+        mapReadyResults.removeAll()
+        waitingResults.forEach { $0(nil) }
 
         // On first launch we only fire onStyleLoaded if mapWaitForMap has already been called
-        if !isFirstStyleLoad || waitingResult != nil {
+        if !isFirstStyleLoad || !waitingResults.isEmpty {
             isFirstStyleLoad = false
 
             onStyleLoadedCalled = true
