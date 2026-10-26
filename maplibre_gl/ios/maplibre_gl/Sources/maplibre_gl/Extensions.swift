@@ -62,7 +62,7 @@ extension MLNCameraChangeReason {
 }
 
 extension CLLocation {
-    /// The location as `map#onUserLocationUpdated` reports it, timestamp in
+    /// The location as `mapOnUserLocationUpdated` reports it, timestamp in
     /// milliseconds since the epoch.
     func toPigeon() -> PgUserLocation {
         return PgUserLocation(
@@ -78,7 +78,7 @@ extension CLLocation {
 }
 
 extension CLHeading {
-    /// The heading as `map#onUserLocationUpdated` reports it, timestamp in
+    /// The heading as `mapOnUserLocationUpdated` reports it, timestamp in
     /// milliseconds since the epoch.
     func toPigeon() -> PgUserHeading {
         return PgUserHeading(

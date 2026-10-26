@@ -85,6 +85,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: a hex color with alpha, `#rgba` or `#rrggbbaa`, reads the alpha last, as in CSS and on Android and web. An app that wrote `#aarrggbb` for iOS gets other colors: move the alpha to the end. The plugin's `UIColor(hexString:)` extension reads it the same way (#1123).
 * **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web, instead of throwing `LAYER_NOT_FOUND_ERROR` (#1123).
 * An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform: the file nearest the screen, at its own ratio. iOS drew these icons up to 3 times smaller and web always used the main file. An asset without variants keeps the `addImage` default size (#1131).
+* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#1142).
+* **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#1142).
 
 ### Fixed
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
@@ -167,6 +169,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **iOS**: `onCameraMove` fires for `moveCamera` and a zero duration `animateCamera`, which only reached `onCameraIdle`, and its last call before `onCameraIdle` has the position where the camera stopped instead of the frame before.
   * **Android**: `animateCamera` with a zero duration moves the camera at once, as on iOS and web, instead of failing with a generic error.
 * **Android**: `takeSnapshot` shows the area the map shows, at the screen's pixel density, as on iOS and web. Without a size it covered an area about 3x larger than the map, and with a size the image came out at 1x (#1128).
+* **iOS**: more fixes from the review of the Pigeon migration (#1142):
+  * `downloadOfflineRegion` fails with `DATABASE_RESET` when `resetOfflineDatabase` runs before the region is created, instead of never completing.
+  * `updateContentInsets` completes, and `setTrackingCameraOptions` completes with `false`, when the map goes away before the camera arrives, as on Android, instead of never completing.
+  * A region whose stored metadata cannot be read is listed with empty metadata, as on Android, instead of left out, and `getListOfRegions` lists regions imported without plugin metadata, as `mergeOfflineRegions` does.
+  * Offline download progress events come at most every 100 ms, as on Android, so a region served from the cache no longer floods the app with events.
+  * After a hot restart, a map from before the restart no longer sends its events to the new map that took its view id.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

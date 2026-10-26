@@ -582,34 +582,43 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setManualLocation(ManualLocationUpdate update) async {
+    // The one check Android and iOS make too.
+    if (!_manualLocationSource) {
+      throw PlatformException(
+        code: 'MANUAL_LOCATION_SOURCE_DISABLED',
+        message:
+            'Manual locations require locationSource: ManualLocationSource().',
+      );
+    }
+    _myLastLocation = update.target;
+    // Kept so the puck shows up here when myLocationEnabled turns on, also
+    // after it was toggled off, which disposes the puck.
+    _lastManualFix = update;
+    // While myLocationEnabled is off the puck stays hidden and, as on Android
+    // and iOS, no update is reported.
+    if (!_myLocationEnabled) return;
+
     // On web, manual mode renders its own puck (no native engine, no
-    // GeolocateControl); see [ManualLocationPuck]. The wire payload uses
-    // `position: [lat, lng]`.
+    // GeolocateControl); see [ManualLocationPuck]. It is created lazily on
+    // the first fix (a maplibre Marker crashes if added without a position),
+    // so this also builds it as needed.
+    _showManualPuck();
+    _reportManualFix(update);
+  }
+
+  /// Reports [update] through onUserLocationUpdated, the path engine updates
+  /// take on the native platforms.
+  void _reportManualFix(ManualLocationUpdate update) {
+    // The wire payload uses `position: [lat, lng]`.
     final map = update.toMap();
     final position = (map['position'] as List).cast<num>();
     final latLng = LatLng(position[0].toDouble(), position[1].toDouble());
-    _myLastLocation = latLng;
-
     final horizontalAccuracy = (map['horizontalAccuracy'] as num?)?.toDouble();
     final verticalAccuracy = (map['verticalAccuracy'] as num?)?.toDouble();
     final altitude = (map['altitude'] as num?)?.toDouble();
     final bearing = (map['bearing'] as num?)?.toDouble();
     final speed = (map['speed'] as num?)?.toDouble();
     final timestampMs = map['timestamp'] as int;
-
-    // Kept so the puck can be restored at the last known position when
-    // myLocationEnabled is toggled off and on again, which disposes it.
-    _lastManualFix = update;
-
-    // Move / render the puck when manual mode is active. The puck is created
-    // lazily on the first fix (a maplibre Marker crashes if added without a
-    // position), so this also builds it as needed.
-    if (_manualLocationSource && _myLocationEnabled) {
-      _showManualPuck();
-    }
-
-    // Keep parity with the native platforms: manual updates ride the same
-    // onUserLocationUpdated event path as engine updates.
     onUserLocationUpdatedPlatform(
       UserLocation(
         position: latLng,
@@ -691,17 +700,12 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  // MapLibre collects no telemetry, so there is nothing to switch.
   @override
-  Future<void> setTelemetryEnabled(bool enabled) async {
-    print('Telemetry not available in web');
-    return;
-  }
+  Future<void> setTelemetryEnabled(bool enabled) async {}
 
   @override
-  Future<bool> getTelemetryEnabled() async {
-    print('Telemetry not available in web');
-    return false;
-  }
+  Future<bool> getTelemetryEnabled() async => false;
 
   @override
   Future<void> setMaximumFps(int fps) async {
@@ -1673,15 +1677,19 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   void setMyLocationEnabled(bool myLocationEnabled) {
+    final wasEnabled = _myLocationEnabled;
     _myLocationEnabled = myLocationEnabled;
     if (myLocationEnabled) {
       if (_manualLocationSource) {
-        // Never use the browser geolocation control in manual mode. Re-enabling
-        // replays the last fix so the puck comes back where it was, the way the
-        // native components do; without one it is built on the next fix pushed
-        // via setManualLocation.
+        // Never use the browser geolocation control in manual mode. Enabling
+        // replays the last fix, also one pushed while disabled, so the puck
+        // shows up there and reports it, as iOS does; without one it is built
+        // on the next fix pushed via setManualLocation.
         _removeGeolocateControl();
         _showManualPuck();
+        if (!wasEnabled) {
+          if (_lastManualFix case final fix?) _reportManualFix(fix);
+        }
       } else {
         _addGeolocateControl();
       }

@@ -20,7 +20,16 @@ class OfflineManagerUtils {
         registrar _: FlutterPluginRegistrar,
         channelHandler: OfflineDownloadEvents
     ) {
-        // Prepare downloader
+        // The pack context is JSON. JSONSerialization raises an NSException,
+        // which Swift cannot catch, for a value that is not, such as bytes or NaN.
+        guard JSONSerialization.isValidJSONObject(metadata) else {
+            result(FlutterError(
+                code: OfflineErrorCode.invalidArgument,
+                message: "Metadata is not JSON serializable",
+                details: nil
+            ))
+            return
+        }
         let downloader = OfflinePackDownloader(
             result: result,
             channelHandler: channelHandler,
@@ -31,10 +40,7 @@ class OfflineManagerUtils {
         // The duplicate check in download() reads the stored packs, so wait for
         // them: before they load it would miss an existing pack of the same area.
         whenPacksLoaded {
-            // Download region
-            let id = downloader.download()
-            // retain downloader by its generated id
-            activeDownloaders[id] = downloader
+            downloader.download()
         }
     }
 
@@ -139,9 +145,7 @@ class OfflineManagerUtils {
     }
 
     private static func listRegions(result: @escaping FlutterResult, packs: [MLNOfflinePack]) {
-        let regionsArgs = packs.compactMap { pack in
-            OfflineRegion.fromOfflinePack(pack)?.toDictionary()
-        }
+        let regionsArgs = packs.compactMap(regionDictionary(for:))
         guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
               let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
         else {
@@ -173,8 +177,7 @@ class OfflineManagerUtils {
             result(missingRegionError(id: id))
             return
         }
-        // JSONSerialization in prepareContext raises an NSException, which Swift
-        // cannot catch, for metadata that is not JSON.
+        // The pack context is JSON, so metadata that is not cannot be stored.
         guard JSONSerialization.isValidJSONObject(metadata) else {
             result(FlutterError(
                 code: OfflineErrorCode.invalidArgument,

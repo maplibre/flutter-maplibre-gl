@@ -7,8 +7,7 @@ import MapLibre
 /// Assigned to `mapView.locationManager` when the map is created with
 /// `locationSource: ManualLocationSource()`. The app pushes updates via
 /// ``push(_:)`` (driven from the `locationComponentSetManualLocation` call);
-/// the map view's delegate then fires `map#onUserLocationUpdated`
-/// automatically.
+/// the map view's delegate then sends `mapOnUserLocationUpdated`.
 class ManualLocationManager: NSObject, MLNLocationManager {
     weak var delegate: MLNLocationManagerDelegate?
 
