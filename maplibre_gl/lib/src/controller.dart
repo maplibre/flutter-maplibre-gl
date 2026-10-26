@@ -1491,6 +1491,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// ```dart
   /// await controller.setCustomHeaders({}, []);
   /// ```
+  ///
+  /// Android and iOS only; throws an [UnsupportedError] on web.
   Future<void> setCustomHeaders(
     Map<String, String> headers,
     List<String> filter,
@@ -1502,6 +1504,8 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// Returns the headers previously set via [setCustomHeaders]. Does not
   /// include headers set via the global [setHttpHeaders] function.
+  ///
+  /// Android and iOS only; throws an [UnsupportedError] on web.
   Future<Map<String, String>> getCustomHeaders() async {
     return _maplibrePlatform.getCustomHeaders();
   }

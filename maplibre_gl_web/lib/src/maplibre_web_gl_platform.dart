@@ -844,21 +844,20 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, String> headers,
     List<String> filter,
   ) async {
-    // Web implementation: MapLibre GL JS doesn't have direct custom headers setting
-    print(
-      'setCustomHeaders called in web, headers: ${headers.keys.toList()}, '
-      'filter: $filter',
+    // The browser makes the requests of maplibre-gl-js, which offers no
+    // per-URL headers.
+    throw UnsupportedError(
+      'setCustomHeaders is not available on web. Custom headers are supported '
+      'on Android and iOS.',
     );
-    // For future implementation, we could use MapLibre GL JS HTTP configuration
-    throw UnimplementedError();
   }
 
   @override
   Future<Map<String, String>> getCustomHeaders() async {
-    // Web implementation: MapLibre GL JS doesn't have direct custom headers retrieval
-    print('getCustomHeaders called in web');
-    // For future implementation, we could use MapLibre GL JS HTTP configuration
-    throw UnimplementedError();
+    throw UnsupportedError(
+      'getCustomHeaders is not available on web. Custom headers are supported '
+      'on Android and iOS.',
+    );
   }
 
   @override
