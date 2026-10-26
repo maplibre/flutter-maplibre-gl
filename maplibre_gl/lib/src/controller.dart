@@ -237,7 +237,7 @@ class MapLibreMapController extends ChangeNotifier {
     _maplibrePlatform.onMapStyleLoadedPlatform.add((_) async {
       final styleLoad = ++_styleLoadCount;
       // Dispose old managers before re-creating them for the new style.
-      // This prevents stale in-flight method channel calls from racing
+      // This prevents stale in-flight platform calls from racing
       // with a new style that has cleared the native Style reference.
       try {
         await fillManager?.dispose();

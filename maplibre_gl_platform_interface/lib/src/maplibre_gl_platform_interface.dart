@@ -51,30 +51,24 @@ enum CameraAnimationInterpolation {
   fastOutLinearIn,
 }
 
-/// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibrePlatform {
-  // The deprecated class stays the default for a host where no
-  // implementation registered; the maplibre_gl plugin replaces it on Android,
-  // iOS and web.
-  // ignore: deprecated_member_use_from_same_package
-  static MapLibreMethodChannel? _instance;
+  static const MapLibrePlatform Function() _unregistered =
+      _UnregisteredMapLibrePlatform.new;
 
-  /// The default instance of [MapLibrePlatform] to use.
+  /// Builds the platform of each map.
   ///
-  /// Defaults to the deprecated `MapLibreMethodChannel`, which native code no
-  /// longer answers: the `maplibre_gl` plugin replaces it with its own
-  /// implementation on Android, iOS and web.
-  ///
-  /// Platform-specific plugins should set this with their own platform-specific
-  /// class that extends [MapLibrePlatform] when they register themselves.
-  static MapLibrePlatform Function() createInstance =
-      // Same default as _instance above.
-      // ignore: deprecated_member_use_from_same_package
-      () => _instance ?? MapLibreMethodChannel();
+  /// Platform packages replace it when they register themselves, and tests
+  /// can replace it with a fake. Until then it builds a placeholder that shows
+  /// that the platform is not supported and answers no call.
+  static MapLibrePlatform Function() createInstance = _unregistered;
 
-  final onInfoWindowTappedPlatform = ArgumentCallbacks<String>();
+  /// Whether [createInstance] was replaced, by a platform package or a test.
+  ///
+  /// Assigning back the factory read before any replacement makes this
+  /// `false` again.
+  static bool get isRegistered => !identical(createInstance, _unregistered);
 
   final onFeatureTappedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
@@ -563,7 +557,6 @@ abstract class MapLibrePlatform {
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
-    onInfoWindowTappedPlatform.clear();
     onFeatureTappedPlatform.clear();
     onFeatureHoverPlatform.clear();
     onFeatureDraggedPlatform.clear();
@@ -580,4 +573,22 @@ abstract class MapLibrePlatform {
     onMapIdlePlatform.clear();
     onUserLocationUpdatedPlatform.clear();
   }
+}
+
+/// The platform of a map on a host where no implementation registered, such
+/// as a desktop app. It shows that the platform is not supported, and any
+/// call throws an [UnsupportedError].
+class _UnregisteredMapLibrePlatform extends MapLibrePlatform {
+  @override
+  Widget buildView(
+    Map<String, dynamic> creationParams,
+    OnPlatformViewCreatedCallback onPlatformViewCreated,
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+  ) => Text('$defaultTargetPlatform is not yet supported by the maps plugin');
+
+  @override
+  Never noSuchMethod(Invocation invocation) =>
+      throw UnsupportedError(
+        'No MapLibre implementation is registered for $defaultTargetPlatform.',
+      );
 }

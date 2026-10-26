@@ -16,6 +16,8 @@ import 'package:maplibre_gl_web/src/js_loader.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // The default, as no registrant runs in tests.
+  final unregistered = MapLibreGlobalPlatform.instance;
 
   setUp(() {
     MapLibreJsLoader.debugReset();
@@ -27,7 +29,7 @@ void main() {
     MapLibreJsLoader.debugReset();
     MapLibreJsSource.configured = null;
     globalContext.delete('maplibregl'.toJS);
-    MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel();
+    MapLibreGlobalPlatform.instance = unregistered;
   });
 
   group('MapLibreJsLoader.ensureLoaded', () {

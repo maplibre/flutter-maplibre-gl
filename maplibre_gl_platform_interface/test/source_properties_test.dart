@@ -3,6 +3,13 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 
 void main() {
   group('VectorSourceProperties', () {
+    // Native reads this key by name, so a rename has to fail here rather than
+    // silently stop working on device.
+    test('toJson writes volatile', () {
+      const props = VectorSourceProperties(volatile: true);
+      expect(props.toJson()['volatile'], true);
+    });
+
     test('toJson includes type "vector"', () {
       const props = VectorSourceProperties();
       final json = props.toJson();
@@ -145,6 +152,12 @@ void main() {
   });
 
   group('GeojsonSourceProperties', () {
+    // Native reads this key by name, as above.
+    test('toJson writes clusterMinPoints', () {
+      const props = GeojsonSourceProperties(cluster: true, clusterMinPoints: 5);
+      expect(props.toJson()['clusterMinPoints'], 5);
+    });
+
     test('toJson includes type "geojson"', () {
       const props = GeojsonSourceProperties();
       final json = props.toJson();

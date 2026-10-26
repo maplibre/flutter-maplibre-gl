@@ -14,12 +14,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:maplibre_gl/src/native/messages.g.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
-    show MapLibreGlobalMethodChannel, MapLibreGlobalPlatform;
+    show MapLibreGlobalPlatform;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late _FakeGlobalHostApi api;
+  // The default, as no registrant runs in tests.
+  final unregistered = MapLibreGlobalPlatform.instance;
 
   final fakeRegionJson = json.encode({
     'id': 1,
@@ -51,9 +53,7 @@ void main() {
     MapLibreNativePlugin.registerWith(globalHostApi: api);
   });
 
-  tearDown(
-    () => MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel(),
-  );
+  tearDown(() => MapLibreGlobalPlatform.instance = unregistered);
 
   /// What native does while a download runs: an event for the download
   /// Dart started, tagged with the id Dart chose.
@@ -509,9 +509,7 @@ void main() {
   // isolate the app spawns, so the first global call installs the Android and
   // iOS implementation itself when the default is still in place.
   group('the first global call', () {
-    setUp(
-      () => MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel(),
-    );
+    setUp(() => MapLibreGlobalPlatform.instance = unregistered);
     tearDown(() => debugDefaultTargetPlatformOverride = null);
 
     for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
@@ -550,16 +548,13 @@ void main() {
 
         await MapLibreMap.ensureWebLibraryLoaded();
 
-        expect(
-          MapLibreGlobalPlatform.instance,
-          isA<MapLibreGlobalMethodChannel>(),
-        );
+        expect(MapLibreGlobalPlatform.isRegistered, isFalse);
       });
     }
 
-    test('keeps a subclass of the default a package installed', () async {
+    test('keeps an implementation a package installed', () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      final custom = _CustomGlobalMethodChannel();
+      final custom = _CustomGlobalPlatform();
       MapLibreGlobalPlatform.instance = custom;
 
       expect(await getListOfRegions(), isEmpty);
@@ -577,11 +572,30 @@ void main() {
         ['deleteOfflineRegion', 1],
       ]);
     });
+
+    test('keeps the map platform a test installed', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      final previous = MapLibrePlatform.createInstance;
+      addTearDown(() => MapLibrePlatform.createInstance = previous);
+      MapLibrePlatform appFactory() => previous();
+      MapLibrePlatform.createInstance = appFactory;
+
+      await MapLibreMap.ensureWebLibraryLoaded();
+
+      expect(MapLibreGlobalPlatform.isRegistered, isTrue);
+      expect(MapLibrePlatform.createInstance, same(appFactory));
+    });
   });
 }
 
-/// A package's own take on the default implementation.
-class _CustomGlobalMethodChannel extends MapLibreGlobalMethodChannel {
+/// A package's own implementation.
+class _CustomGlobalPlatform extends MapLibreGlobalPlatform {
+  @override
+  Future<void> preWarm() async {}
+
+  @override
+  Future<void> ensureLibraryLoaded() async {}
+
   @override
   Future<List<OfflineRegion>> getListOfRegions() async => [];
 }
