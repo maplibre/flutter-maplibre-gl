@@ -24,8 +24,7 @@ import 'dart:convert';
 import 'dart:math' show Point;
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
@@ -2644,8 +2643,6 @@ void main() {
     testWidgets('updateManualLocation keeps the location while '
         'myLocationEnabled is off, and the puck shows up there when it turns '
         'on', (tester) async {
-      // Android takes this rule in a change of its own; drop this line with it.
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) return;
       final enabled = ValueNotifier(false);
       addTearDown(enabled.dispose);
       final created = Completer<MapLibreMapController>();
