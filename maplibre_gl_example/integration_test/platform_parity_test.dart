@@ -2,7 +2,7 @@
 // web, errors included: feature queries and filters, image sources, layer
 // adds (missing or incompatible source, belowLayerId, filter, property
 // values, source layer, zoom range), setLayerProperties, the GeoJSON source
-// calls and their data, addSource, removeSource, getSourceProperties of image
+// calls and their data, the feature state errors, addSource, removeSource, getSourceProperties of image
 // sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, the calls
 // made while no style is loaded, updateManualLocation while myLocationEnabled
 // is off, and telemetry.
@@ -932,6 +932,88 @@ void main() {
           2,
         ],
       );
+    });
+  });
+
+  group('feature state', () {
+    testWidgets('a missing source fails with SOURCE_NOT_FOUND', (
+      tester,
+    ) async {
+      if (kIsWeb) return;
+      final controller = await pumpMap(tester);
+
+      final calls = <String, Future<Object?> Function()>{
+        'setFeatureState':
+            () => controller.setFeatureState('no-such-source', '1', {'a': 1}),
+        'getFeatureState':
+            () => controller.getFeatureState('no-such-source', '1'),
+        'removeFeatureState':
+            () => controller.removeFeatureState('no-such-source'),
+      };
+      for (final call in calls.entries) {
+        await expectPlatformError(
+          tester,
+          call.value(),
+          '${call.key} on a missing source',
+          code: 'SOURCE_NOT_FOUND',
+        );
+      }
+    });
+
+    testWidgets('a source that is not GeoJSON or vector fails with '
+        'UNSUPPORTED_SOURCE_TYPE', (tester) async {
+      if (kIsWeb) return;
+      final controller = await pumpMap(tester);
+      final image = await _loadPng(tester, 'assets/sydney0.png');
+      await pumpUntil(
+        tester,
+        controller.addImageSource('image', image, _quad),
+        'addImageSource',
+      );
+
+      final calls = <String, Future<Object?> Function()>{
+        'setFeatureState':
+            () => controller.setFeatureState('image', '1', {'a': 1}),
+        'getFeatureState': () => controller.getFeatureState('image', '1'),
+        'removeFeatureState': () => controller.removeFeatureState('image'),
+      };
+      for (final call in calls.entries) {
+        await expectPlatformError(
+          tester,
+          call.value(),
+          '${call.key} on an image source',
+          code: 'UNSUPPORTED_SOURCE_TYPE',
+        );
+      }
+    });
+
+    testWidgets('a vector source without a sourceLayer fails with '
+        'SOURCE_LAYER_REQUIRED', (tester) async {
+      if (kIsWeb) return;
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.addSource(
+          'vector',
+          const VectorSourceProperties(tiles: [_tileUrl]),
+        ),
+        'addSource vector',
+      );
+
+      final calls = <String, Future<Object?> Function()>{
+        'setFeatureState':
+            () => controller.setFeatureState('vector', '1', {'a': 1}),
+        'getFeatureState': () => controller.getFeatureState('vector', '1'),
+        'removeFeatureState': () => controller.removeFeatureState('vector'),
+      };
+      for (final call in calls.entries) {
+        await expectPlatformError(
+          tester,
+          call.value(),
+          '${call.key} on a vector source without a sourceLayer',
+          code: 'SOURCE_LAYER_REQUIRED',
+        );
+      }
     });
   });
 
