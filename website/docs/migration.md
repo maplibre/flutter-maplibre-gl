@@ -78,6 +78,8 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR` (it did nothing on Android and web).
 * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS` (Android ignored it, web failed with a generic error).
 * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
+* `getClusterLeaves` throws `INVALID_ARGUMENT` for a negative `limit` or `offset`. iOS read them as 0 and Android passed them on to MapLibre.
+* On Android and iOS, `downloadOfflineRegion` and `updateOfflineRegionMetadata` throw `INVALID_ARGUMENT` for metadata `jsonEncode` cannot encode, such as `NaN` or a map with keys that are not strings. Other metadata is stored as `jsonEncode` writes it, so a `Uint8List`, which iOS rejected, is a list of numbers on both platforms.
 * `addImage` throws `STYLE_NOT_READY` before the style has loaded on iOS, as on Android, and `INVALID_IMAGE` for bytes that are not an image.
 * `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply on Android and iOS.
 * A layer whose type cannot draw its source, such as a raster layer on a GeoJSON source, throws `UNSUPPORTED_SOURCE_TYPE`. iOS crashed, Android threw a generic error, and web added nothing or a layer that drew nothing.

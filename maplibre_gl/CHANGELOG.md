@@ -17,7 +17,7 @@
   * **iOS**: `invalidSourceType` is now `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source
   * **iOS**: `parseError` is now `INVALID_GEOJSON`
   * **Android, iOS**: the offline error codes are in `SCREAMING_SNAKE_CASE`, for example `invalidRegionDefinition` is now `INVALID_REGION_DEFINITION` and an unknown region id answers `REGION_NOT_FOUND`. The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) lists each one
-* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123):
+* Some calls that used to do nothing, or crash the app, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123, #1140):
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
@@ -29,6 +29,8 @@
   * `setGeoJsonSource` and `setGeoJsonFeature` on a source that is not GeoJSON throw `UNSUPPORTED_SOURCE_TYPE` instead of `SOURCE_NOT_FOUND`.
   * A hex color with a digit that is not hex, such as `#ggg`, throws `INVALID_ARGUMENT` instead of drawing black.
   * `addSource` throws `INVALID_ARGUMENT` for bounds, tile zoom levels or a GeoJSON url MapLibre cannot use. On Android an empty `url` counts as missing.
+  * `getClusterLeaves` throws `INVALID_ARGUMENT` for a negative `limit` or `offset`. iOS read them as 0 and Android passed them on to MapLibre.
+  * **Android, iOS**: `downloadOfflineRegion` and `updateOfflineRegionMetadata` throw `INVALID_ARGUMENT` for metadata `jsonEncode` cannot encode, such as `NaN` or a map with keys that are not strings. Other metadata is stored as `jsonEncode` writes it, so a `Uint8List`, which iOS rejected, is a list of numbers on both platforms.
 * **Android**: numeric GeoJSON feature ids stay numbers in queries and filters, so read `feature['id']` as `num` (not `String`) and compare it with `2`, not `"2"`. Ids come back as they are in the data on every platform, except for GeoJSON loaded from a URL or declared in the style: see the migration guide (#1073, #1124).
 * **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls, and `MapLibreMethodChannel` is removed. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) (#1114, #1115, #1133).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS. A feature with its id only in `properties['id']` is not updated (#1123).
@@ -130,6 +132,7 @@
 * Updating or dragging one annotation sends only that feature instead of the whole source: about 5x faster with 1,000 circles on Android (#1113).
 * **Android, iOS**: two offline downloads started together both run and each reports its own progress. The second one used to fail with `downloadOfflineRegion#setup NOT CALLED`, and the first one sent its events to the second one's `onEvent` (#1114).
 * **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `INVALID_REGION_DEFINITION`, like Android, instead of a `TypeError` (#1114).
+* **iOS**: `toScreenLocationBatch` with no points answers an empty list instead of crashing the app (#1140).
 * Android, iOS and web give the same answer in more cases (#1119):
   * No crash on a query filter MapLibre rejects (Android, iOS), nor on an invalid property expression, a layer on a source it cannot draw or an image source with missing corners (iOS). Such queries throw `INVALID_EXPRESSION`.
   * **iOS**: `getLayerIds` and `getSourceIds` before the style loads, `editGeoJsonSource` and `editGeoJsonUrl` without a style, and the image source calls with bytes that are not an image answer instead of never completing.

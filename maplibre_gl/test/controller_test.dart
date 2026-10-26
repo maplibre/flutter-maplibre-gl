@@ -728,6 +728,26 @@ void main() {
       expect(calls.first.namedArgs['limit'], 50);
       expect(calls.first.namedArgs['offset'], 100);
     });
+
+    test('getClusterLeaves rejects a negative limit or offset', () async {
+      final invalidArgument = throwsA(
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'INVALID_ARGUMENT',
+        ),
+      );
+
+      await expectLater(
+        controller.getClusterLeaves('events', 42, limit: -1),
+        invalidArgument,
+      );
+      await expectLater(
+        controller.getClusterLeaves('events', 42, offset: -1),
+        invalidArgument,
+      );
+      expect(platform.callsFor('getClusterLeaves'), isEmpty);
+    });
   });
 
   group('Snapshot delegation', () {

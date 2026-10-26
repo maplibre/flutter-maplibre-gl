@@ -218,7 +218,7 @@ void main() {
 
   group('plugin registration', () {
     test('registerWith installs the web global platform, so preWarm from '
-        'main() reaches the loader and not the method channel', () async {
+        'main() reaches the loader', () async {
       MapLibreMapPlugin.registerWith(webPluginRegistrar);
 
       expect(MapLibreGlobalPlatform.instance, isA<MapLibreGlobalWeb>());

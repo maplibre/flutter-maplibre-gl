@@ -8,6 +8,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -403,6 +404,104 @@ void main() {
       );
     });
 
+    test('a download without onEvent sets up no event handler', () async {
+      host.answer('downloadOfflineRegion', result: regionJson);
+
+      expect(await downloadOfflineRegion(definition), theRegion);
+
+      // No reply at all: nothing listens on the channel, as in a background
+      // isolate, where setting up a handler throws.
+      expect(
+        await _messenger.handlePlatformMessage(
+          _onDownloadEvent,
+          _codec.encodeMessage(<Object?>[
+            1,
+            PgOfflineDownloadEvent(status: PgOfflineDownloadStatus.start),
+          ]),
+          null,
+        ),
+        isNull,
+      );
+    });
+
+    test(
+      'onEvent in a background isolate throws before native is called',
+      () async {
+        final error = await Isolate.run(() async {
+          try {
+            await downloadOfflineRegion(
+              OfflineRegionDefinition(
+                bounds: LatLngBounds(
+                  southwest: const LatLng(10.0, 20.0),
+                  northeast: const LatLng(30.0, 40.0),
+                ),
+                mapStyleUrl: 'https://example.com/style.json',
+                minZoom: 5.0,
+                maxZoom: 15.0,
+              ),
+              onEvent: (_) {},
+            );
+            return null;
+            // The error under test.
+            // ignore: avoid_catching_errors
+          } on UnsupportedError catch (e) {
+            return e.message;
+          }
+        });
+
+        expect(error, contains('reach only the root isolate'));
+      },
+    );
+
+    group('offline region metadata', () {
+      final notJson = <String, Map<String, dynamic>>{
+        'NaN': {'value': double.nan},
+        'an object without toJson': {'value': Object()},
+        'a map with int keys': {
+          'value': {1: 'one'},
+        },
+      };
+
+      for (final MapEntry(key: what, value: metadata) in notJson.entries) {
+        test('with $what fails with INVALID_ARGUMENT before native', () async {
+          final invalidArgument = throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'INVALID_ARGUMENT',
+            ),
+          );
+
+          await expectLater(
+            updateOfflineRegionMetadata(1, metadata),
+            invalidArgument,
+          );
+          await expectLater(
+            downloadOfflineRegion(definition, metadata: metadata),
+            invalidArgument,
+          );
+          expect(host.received, isEmpty);
+        });
+      }
+
+      test('reaches native as the values jsonEncode writes', () async {
+        host.answer('updateOfflineRegionMetadata', result: regionJson);
+
+        await updateOfflineRegionMetadata(1, {
+          'bytes': Uint8List.fromList([1, 255]),
+          'when': _JsonDate(),
+        });
+
+        expect(host.received.single[1], [
+          1,
+          {
+            'bytes': [1, 255],
+            'when': '2026-01-02',
+          },
+        ]);
+      });
+    });
+
     group('download events from native', () {
       late List<DownloadRegionStatus> statuses;
       late int downloadId;
@@ -755,6 +854,11 @@ class _FakeHost {
       _messenger.setMockMessageHandler('$_hostApi.$method', null);
     }
   }
+}
+
+/// A value that only `jsonEncode` can send, through its `toJson`.
+class _JsonDate {
+  String toJson() => '2026-01-02';
 }
 
 /// A [MapLibreGlobalHostApi] method called with set arguments.

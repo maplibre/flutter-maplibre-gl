@@ -185,7 +185,7 @@ void main() {
   });
 }
 
-/// Lets the platform view answer over the method channel.
+/// Lets the platform view answer.
 Future<void> _settle(WidgetTester tester) =>
     pumpFor(tester, const Duration(milliseconds: 500));
 

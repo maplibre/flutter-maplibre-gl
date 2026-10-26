@@ -1541,6 +1541,11 @@ void main() {
       expect(coordinates, [10.0, 20.0, 30.0, 40.0]);
     });
 
+    test('toScreenLocationBatch answers no points without native', () async {
+      expect(await platform.toScreenLocationBatch(const []), isEmpty);
+      expect(api.calls, isEmpty);
+    });
+
     test('toLatLng sends doubles for an int point', () async {
       api.replies['mapToLatLng'] = PgLatLng(latitude: 1.5, longitude: 2.5);
 

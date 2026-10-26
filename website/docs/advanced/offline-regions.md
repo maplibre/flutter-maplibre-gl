@@ -80,6 +80,10 @@ Future<void> downloadRegion() async {
 
 `downloadOfflineRegion` returns an `OfflineRegion` object with the assigned `id`. Store this ID if you need to delete the region later.
 
+`metadata` is stored as `jsonEncode` writes it, so a `Uint8List` comes back as a list of numbers.
+
+Download events reach only the root isolate. In a background isolate, passing `onEvent` throws an `UnsupportedError`: leave it out and follow the download with `getOfflineRegionStatus`.
+
 !!! note "Re-downloading the same area"
     Downloading a region whose area (bounds, zoom range and style) matches an
     already-downloaded one replaces the existing region instead of creating a
@@ -258,7 +262,7 @@ Android and iOS:
 | Code | When |
 |---|---|
 | `REGION_NOT_FOUND` | `pauseOfflineRegionDownload`, `resumeOfflineRegionDownload`, `getOfflineRegionStatus`, `deleteOfflineRegion` or `updateOfflineRegionMetadata` got an id that no stored region has. |
-| `INVALID_ARGUMENT` | A negative `setOfflineTileCountLimit` limit, a `setOfflineMaxConcurrentRequests` value below 1, or, on iOS, metadata that is not JSON-encodable. |
+| `INVALID_ARGUMENT` | A negative `setOfflineTileCountLimit` limit, a `setOfflineMaxConcurrentRequests` value below 1, or metadata that `jsonEncode` cannot encode. |
 | `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from. |
 | `OFFLINE_DATABASE_ERROR` | The offline database failed the call, for example on a file `mergeOfflineRegions` cannot import. The message carries MapLibre's reason. |
 | `AMBIENT_CACHE_ERROR` | MapLibre failed to clear the ambient cache or to change its size. |
