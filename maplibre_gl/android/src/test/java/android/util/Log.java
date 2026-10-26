@@ -39,6 +39,11 @@ public final class Log {
     return writer.toString();
   }
 
+  /** OkHttp asks it when it builds a client, as it finds this class and takes the JVM for Android. */
+  public static boolean isLoggable(String tag, int level) {
+    return false;
+  }
+
   private static int print(String level, String tag, String msg, Throwable tr) {
     final String line = level + "/" + tag + ": " + msg;
     System.err.println(tr == null ? line : line + "\n" + getStackTraceString(tr));
