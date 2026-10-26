@@ -2682,7 +2682,10 @@ final class MapLibreMapController
   @Override
   public void locationComponentSetManualLocation(
       PgManualLocationUpdate update, MethodChannel.Result result) {
-    if (locationComponent == null || !locationComponent.isLocationComponentActivated()) {
+    // myLocationEnabled: false only disables the component, which stays activated.
+    if (locationComponent == null
+        || !locationComponent.isLocationComponentActivated()
+        || !myLocationEnabled) {
       result.error(
           "LOCATION_COMPONENT_NOT_READY",
           "The location component is not ready. Ensure the map was created with "

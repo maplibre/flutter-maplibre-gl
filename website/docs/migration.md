@@ -190,6 +190,7 @@ None of these need a code change, but they are the places where code that worked
 
 * **iOS, Web**: `setOffline` throws an `UnsupportedError`, where it used to fail with a `MissingPluginException`. Neither MapLibre iOS nor MapLibre GL JS can force the map offline, so call it on Android only.
 * **Web**: the offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` throw an `UnsupportedError` that names the call, where they used to fail with a `MissingPluginException`. MapLibre GL JS has no offline storage.
+* **Android**: `updateManualLocation` throws `LOCATION_COMPONENT_NOT_READY` after `myLocationEnabled` is set to `false`, as on iOS and web, where it did nothing.
 * **Android**: `CameraUpdate.scrollBy` pans the same way as on iOS and web: positive `x` moves the view east. Remove any Android-only sign flip.
 * **Android**: `setCameraBounds` `padding` is in logical pixels like on iOS and web. Drop any scaling by the device pixel ratio.
 * **iOS**: `CameraUpdate.newLatLng` and `newLatLngZoom` keep the requested zoom when the latitude changes.
