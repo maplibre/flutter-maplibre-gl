@@ -214,7 +214,14 @@ class MapLibreMapController extends MapLibrePlatform
       // on a draggable feature starts after the leftovers are cleared.
       _mapSubscriptions.add(_map.on('mousedown', (_) => _endPress()));
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
-      _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
+      _mapSubscriptions.add(_map.on('mousemove', _onPointerMove));
+      // The same for a finger. A second finger also lands here first: it ends
+      // the drag at the last position and the map takes over the pinch, as on
+      // Android and iOS.
+      _mapSubscriptions.add(_map.on('touchstart', (_) => _endPress()));
+      _mapSubscriptions.add(_map.on('touchmove', _onTouchMove));
+      _mapSubscriptions.add(_map.on('touchend', _onTouchEnd));
+      _mapSubscriptions.add(_map.on('touchcancel', (_) => _endPress()));
     }
     // Always listen to mousemove for general map mouse move events
     _mapSubscriptions.add(_map.on('mousemove', _onMapMouseMove));
@@ -340,21 +347,27 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onMouseDown(Event e, String? layerId) {
-    // Check if there are features under the mouse cursor
-    if (e.features.isEmpty) return;
+    if (_pressDraggableFeature(e)) _listenForReleaseOutside();
+  }
 
+  void _onTouchStart(Event e, String? layerId) {
+    // With a second finger the touch is the map's pinch, not a new drag.
+    if (_touchEvent(e).touches.length == 1) _pressDraggableFeature(e);
+  }
+
+  /// Starts a press on the draggable feature under [e], if there is one, and
+  /// keeps the map from panning under it. Nothing is reported yet: the press
+  /// is a click until the pointer moves past the drag threshold, as on Android
+  /// and iOS.
+  bool _pressDraggableFeature(Event e) {
+    if (e.features.isEmpty) return false;
     final isDraggable = e.features.first.getProperty('draggable');
-    if (isDraggable != null && isDraggable) {
-      // Prevent the default map drag behavior.
-      e.preventDefault();
-      final id = plainFeatureId(e.features.first.id);
-      // Nothing is reported yet: the press is a click until the pointer moves
-      // past the drag threshold, as on Android and iOS.
-      if (id != null) {
-        _featureDrag.down(id, _eventPoint(e));
-        _listenForReleaseOutside();
-      }
-    }
+    if (isDraggable == null || !isDraggable) return false;
+    e.preventDefault();
+    final id = plainFeatureId(e.features.first.id);
+    if (id == null) return false;
+    _featureDrag.down(id, _eventPoint(e));
+    return true;
   }
 
   void _onMouseUp(Event e) {
@@ -391,7 +404,7 @@ class MapLibreMapController extends MapLibrePlatform
     web.window.removeEventListener('mouseup', listener);
   }
 
-  void _onMouseMove(Event e) {
+  void _onPointerMove(Event e) {
     final payload = _featureDrag.move(_eventPoint(e), _eventLatLng(e));
     if (payload == null) return;
     if (payload['eventType'] == 'start') {
@@ -399,6 +412,33 @@ class MapLibreMapController extends MapLibrePlatform
     }
     onFeatureDraggedPlatform(payload);
   }
+
+  void _onTouchMove(Event e) {
+    if (!_featureDrag.isPressed) return;
+    final touch = _touchEvent(e);
+    // A second finger that landed off the map ends the drag too.
+    if (touch.touches.length > 1) {
+      _endPress();
+      return;
+    }
+    _onPointerMove(e);
+    // Keeps the browser from scrolling the page under the dragged feature.
+    if (_featureDrag.isDragging) touch.preventDefault();
+  }
+
+  void _onTouchEnd(Event e) {
+    final payload = _featureDrag.up(_eventPoint(e), _eventLatLng(e));
+    if (payload == null) return;
+    // The browser sends no mouse events and no click after the drag, so no
+    // tap follows it, as on Android and iOS.
+    _touchEvent(e).preventDefault();
+    _map.getCanvas().style.cursor = '';
+    onFeatureDraggedPlatform(payload);
+  }
+
+  /// The browser's touch event behind the map's touch event [e].
+  static web.TouchEvent _touchEvent(Event e) => (e.jsObject as JSObject)
+      .getProperty<web.TouchEvent>('originalEvent'.toJS);
 
   static Point<double> _eventPoint(Event e) =>
       Point<double>(e.point.x.toDouble(), e.point.y.toDouble());
@@ -2674,7 +2714,10 @@ class MapLibreMapController extends MapLibrePlatform
       _map.on('mouseenter', layerId, _handleLayerMouseMove);
       _map.on('mousemove', layerId, _handleLayerMouseMove);
       _map.on('mouseleave', layerId, _handleLayerMouseMove);
-      if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
+      if (_dragEnabled) {
+        _map.on('mousedown', layerId, _onMouseDown);
+        _map.on('touchstart', layerId, _onTouchStart);
+      }
     }
   }
 
@@ -2789,7 +2832,10 @@ class MapLibreMapController extends MapLibrePlatform
     _map.off('mouseenter', layerId, _handleLayerMouseMove);
     _map.off('mousemove', layerId, _handleLayerMouseMove);
     _map.off('mouseleave', layerId, _handleLayerMouseMove);
-    if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
+    if (_dragEnabled) {
+      _map.off('mousedown', layerId, _onMouseDown);
+      _map.off('touchstart', layerId, _onTouchStart);
+    }
   }
 
   /// Forgets the features of [layerId] under the pointer. A removed layer
