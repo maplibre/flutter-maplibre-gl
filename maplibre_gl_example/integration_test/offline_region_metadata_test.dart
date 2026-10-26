@@ -11,7 +11,8 @@
 // The offline errors group checks that both platforms answer the same code and
 // message: REGION_NOT_FOUND for an unknown id in every call that takes one,
 // and INVALID_ARGUMENT for a negative tile count limit or ambient cache size
-// and for a concurrent request limit below 1.
+// and for a concurrent request limit below 1, and on iOS for metadata that
+// is not JSON.
 //
 // The resume group pauses a download while the server holds its tiles back.
 // One case resumes it and waits for its Success event. The other comes as
@@ -31,7 +32,8 @@
 // Web has no offline regions, so there the tests return early.
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -206,6 +208,32 @@ void main() {
         code: 'INVALID_ARGUMENT',
       );
       expect(error.message, 'bytes must be >= 0 (got -1)');
+    });
+
+    testWidgets('metadata that is not JSON fails with INVALID_ARGUMENT in '
+        'native', (tester) async {
+      // iOS crashed on it. The public functions encode the metadata first.
+      if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+
+      final definition =
+          OfflineRegionDefinition(
+            bounds: LatLngBounds(
+              southwest: const LatLng(-1, -1),
+              northeast: const LatLng(1, 1),
+            ),
+            mapStyleUrl: 'https://example.invalid/style.json',
+            minZoom: 0,
+            maxZoom: 1,
+          ).toMap();
+      final error = await expectPlatformError(
+        tester,
+        MapLibreGlobalHostApi().downloadOfflineRegion(-1, definition, {
+          'n': double.nan,
+        }),
+        'downloadOfflineRegion with NaN metadata in native',
+        code: 'INVALID_ARGUMENT',
+      );
+      expect(error.message, 'Metadata is not JSON serializable');
     });
 
     testWidgets('a concurrent request limit below 1 fails with '

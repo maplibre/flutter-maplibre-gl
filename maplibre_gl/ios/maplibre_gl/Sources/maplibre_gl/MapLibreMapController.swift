@@ -848,7 +848,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return
         }
         var reply: [Double] = Array(repeating: 0.0, count: latLngs.count)
-        for i in stride(from: 0, to: latLngs.count, by: 2) {
+        for i in stride(from: 0, to: latLngs.count - 1, by: 2) {
             let coordinate = CLLocationCoordinate2DMake(latLngs[i], latLngs[i + 1])
             let returnVal = mapView.convert(coordinate, toPointTo: mapView)
             reply[i] = Double(returnVal.x)

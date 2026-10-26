@@ -1193,6 +1193,19 @@ void main() {
       }
     });
 
+    testWidgets('toScreenLocationBatch answers an empty list with an empty '
+        'list', (tester) async {
+      // iOS crashed on it.
+      final controller = await pumpMap(tester);
+
+      final batch = await pumpUntil(
+        tester,
+        controller.toScreenLocationBatch(const []),
+        'toScreenLocationBatch of no coordinates',
+      );
+      expect(batch, isEmpty);
+    });
+
     testWidgets('getMetersPerPixelAtLatitude follows web mercator', (
       tester,
     ) async {

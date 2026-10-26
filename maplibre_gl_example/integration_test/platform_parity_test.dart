@@ -3,8 +3,9 @@
 // adds (missing or incompatible source, belowLayerId, filter, property
 // values, source layer, zoom range), setLayerProperties, the GeoJSON source
 // calls and their data, addSource, removeSource, getSourceProperties of image
-// sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, and the
-// calls made while no style is loaded.
+// sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, the calls
+// made while no style is loaded, updateManualLocation without the location
+// component, and telemetry.
 //
 // The calls without a style run on Android and iOS only: web cannot drop a
 // loaded style, so a web unit test covers them there. Video sources are web
@@ -2633,6 +2634,55 @@ void main() {
           'setLayersVisibility with no ids',
         ),
         isEmpty,
+      );
+    });
+  });
+
+  group('location and telemetry', () {
+    testWidgets('updateManualLocation without myLocationEnabled fails with '
+        'LOCATION_COMPONENT_NOT_READY', (tester) async {
+      // iOS and web took the location without showing it.
+      final controller = await pumpMap(
+        tester,
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 3,
+              ),
+              locationSource: const ManualLocationSource(),
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
+      );
+
+      await expectPlatformError(
+        tester,
+        controller.updateManualLocation(
+          const ManualLocationUpdate(target: LatLng(1, 2)),
+        ),
+        'updateManualLocation without myLocationEnabled',
+        code: 'LOCATION_COMPONENT_NOT_READY',
+      );
+    });
+
+    testWidgets('telemetry stays off', (tester) async {
+      // MapLibre collects none. iOS stored the flag and answered it back.
+      final controller = await pumpMap(tester);
+
+      await pumpUntil(
+        tester,
+        controller.setTelemetryEnabled(true),
+        'setTelemetryEnabled',
+      );
+      expect(
+        await pumpUntil(
+          tester,
+          controller.getTelemetryEnabled(),
+          'getTelemetryEnabled',
+        ),
+        isFalse,
       );
     });
   });

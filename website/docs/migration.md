@@ -87,6 +87,7 @@ Calls that used to fail silently on some platforms now throw everywhere. Add a `
 * On web, `removeLayer`, `removeSource`, `setLayerProperties`, `setLayerVisibility`, `setLayersVisibility`, `getLayerProperties` and `getSourceProperties` throw `STYLE_NOT_READY` before the style has loaded, like on Android and iOS.
 * On web, a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer. Android and iOS take any zoom.
 * On Android and iOS, GeoJSON with a NaN or infinite number, properties included, throws `INVALID_GEOJSON`, since JSON cannot hold it. It threw a `JsonUnsupportedObjectError`, and `addSource` crashed on iOS. Web takes such a number.
+* `updateManualLocation` throws `LOCATION_COMPONENT_NOT_READY` without `myLocationEnabled: true`, as on Android, where iOS and web took the location without showing it. Web also throws `MANUAL_LOCATION_SOURCE_DISABLED` without `locationSource: ManualLocationSource()`, as Android and iOS do.
 
 ### Android: numeric feature ids
 
@@ -192,6 +193,7 @@ None of these need a code change, but they are the places where code that worked
 * **Web**: `querySourceFeatures` applies its `filter`, `removeFeatureState` with a `stateKey` removes only that key, and `easeCamera` and `animateCamera` complete when the camera arrives instead of when they start. `animateCamera` completes with `false` when another camera call or a gesture interrupts it.
 * **iOS**: `animateCamera` and `easeCamera` complete when the camera arrives, with `true`, and with `false` when another camera call, a gesture or `setPadding` interrupts them. `animateCamera` used to complete with `null`, right away when no duration was given, and `easeCamera` always with `true`.
 * **iOS**: `moveCamera` completes with `true` once the camera has moved, like on Android and web, instead of `null`.
+* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry.
 * **iOS**: `getLayerProperties` reads the layer as it is now, like Android: a layer added at runtime is readable instead of `null`, colors read as `rgba(...)` text and `layout` always has `visibility`. `getSourceProperties` reads sources added at runtime too.
 * **Android, iOS**: `animateCamera` and `easeCamera` complete with `false` when the map is disposed, or its Android activity destroyed, mid-animation, like on web, instead of never completing, so the code after an awaited call now runs. Check `mounted` there before calling `setState`.
 * The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer where it is instead of moving it on top.

@@ -2139,6 +2139,10 @@ class MapLibreMapController extends ChangeNotifier {
   /// The accuracy ring, the tracking modes and
   /// [MapLibreMap.onUserLocationUpdated] keep working, and no location
   /// permission is needed. Works on Android, iOS and web.
+  ///
+  /// Throws a [PlatformException] with code `LOCATION_COMPONENT_NOT_READY`
+  /// without `myLocationEnabled`, and `MANUAL_LOCATION_SOURCE_DISABLED`
+  /// without the manual source.
   Future<void> updateManualLocation(ManualLocationUpdate update) {
     return _maplibrePlatform.setManualLocation(update);
   }
