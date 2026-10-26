@@ -2119,8 +2119,7 @@ class MapLibreMapController extends ChangeNotifier {
     if (limit < 0 || offset < 0) {
       throw PlatformException(
         code: 'INVALID_ARGUMENT',
-        message:
-            'limit and offset must be 0 or more, not $limit and $offset.',
+        message: 'limit and offset must be 0 or more, not $limit and $offset.',
       );
     }
     return _maplibrePlatform.getClusterLeaves(

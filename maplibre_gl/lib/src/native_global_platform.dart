@@ -248,6 +248,8 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
   static Map<String, dynamic> _jsonMetadata(Map<String, dynamic> metadata) {
     try {
       return (json.decode(json.encode(metadata)) as Map).cast();
+      // The error of jsonEncode, for a value it cannot write.
+      // ignore: avoid_catching_errors
     } on JsonUnsupportedObjectError catch (e) {
       throw PlatformException(
         code: 'INVALID_ARGUMENT',
