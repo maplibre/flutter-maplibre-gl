@@ -1071,8 +1071,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// Runs [call] after the calls still in flight on the sources and layers
   /// of [keys], and at once when there is none.
   ///
-  /// A GeoJSON write checks and encodes its data first, on another isolate
-  /// when it is large, so it can reach native after a call made later. A
+  /// A GeoJSON write checks and encodes its data first, for some data on
+  /// another isolate, so it can reach native after a call made later. A
   /// layer added on that source would then find no source, and a write on
   /// it would be overwritten by the older data. Chaining the calls that name
   /// the same source or layer keeps native in call order, and a call on
@@ -1145,8 +1145,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// Checks [geojson], the data of the source [sourceId] or with [feature] one
   /// of its features, and encodes it to a JSON string, on a background
-  /// isolate when the payload is large (see [isLargeGeoJson]). Throws
-  /// `INVALID_GEOJSON` for data that is not valid GeoJSON.
+  /// isolate when that blocks the main one clearly less (see
+  /// [encodesInBackground]). Throws `INVALID_GEOJSON` for data that is not
+  /// valid GeoJSON.
   static Future<String> _encodeGeoJson(
     Map<String, dynamic> geojson,
     String sourceId,
@@ -1156,7 +1157,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
     final input = (geojson, ids);
     final (json, reason) =
-        isLargeGeoJson(geojson) ? await compute(encode, input) : encode(input);
+        encodesInBackground(geojson)
+            ? await compute(encode, input)
+            : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1325,7 +1328,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   };
 
   /// The length of JSON text above which [editGeoJsonSource] checks it on a
-  /// background isolate.
+  /// background isolate. Isolates share strings, so the text gets there
+  /// without a copy and the whole check leaves the main isolate: about
+  /// 0.6 ms at this length on a desktop machine.
   static const _geoJsonTextOffloadLength = 100000;
 
   @override
@@ -1521,10 +1526,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       sourceId,
       generateIds: generateIds,
       () => _writeGeoJson(sourceId, () async {
-        final (plain, reason) =
-            data is Map && isLargeGeoJson(data)
-                ? await compute(_checkSourceData, input)
-                : _checkSourceData(input);
+        // Checked in place: the check costs less than copying the data to
+        // another isolate would.
+        final (plain, reason) = _checkSourceData(input);
         if (reason != null) throw invalidGeoJson(sourceId, reason);
         await _api.styleAddSource(sourceId, {...json, 'data': plain});
       }),

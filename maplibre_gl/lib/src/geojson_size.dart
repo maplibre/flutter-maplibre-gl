@@ -1,81 +1,146 @@
-/// When GeoJSON is large enough to encode on a background isolate.
+/// Whether GeoJSON is cheaper to encode on a background isolate.
 ///
-/// Android and iOS only accept GeoJSON as a JSON string, and `jsonEncode` on
-/// the main isolate froze the UI on large geometries (#366). Above these
-/// thresholds the encode goes through `compute`; below them it stays
-/// synchronous, since spawning an isolate would make the common case slower
-/// for nothing.
+/// Android and iOS take GeoJSON as JSON text, and encoding a large geometry
+/// on the main isolate froze the UI (#366). `compute` moves the encode to
+/// another isolate, but copies the data there first, on the main isolate.
+/// The copy is cheap for coordinates and free for strings, which isolates
+/// share, but costs about as much as the encode for each feature, and several
+/// times more once it outgrows the young heap. So the encode moves only when
+/// the copy is estimated at under half of it: for long geometries and long
+/// properties, not for many small features.
 ///
-/// This buys a responsive UI, not speed: handing the payload over copies it.
-/// On a desktop machine a 100k-point line blocked the main isolate for about
-/// 46 ms inline and 30 ms offloaded, while the whole write grew from 45 ms to
-/// 72 ms. A long-lived worker isolate was measured and rejected: spawning
-/// costs about 0.1 ms, and a shared worker queues a small write behind a
-/// large one.
+/// Measured on a desktop machine, AOT: 20,000 points blocked the main isolate
+/// for 14 ms inline and 21 to 24 ms with `compute`. A 100,000-position line
+/// blocked it for 31 ms inline and 17 to 19 ms with `compute`, while the
+/// whole write grew to 53 ms.
 library;
 
-/// The number of features in a collection from which it is large.
-const geoJsonOffloadFeatureCount = 100;
+import 'dart:math' show min;
 
-/// The number of coordinate positions, anywhere in the payload, from which it
-/// is large.
-const geoJsonOffloadPositionCount = 2000;
+/// The estimated cost of encoding on the main isolate, from which the encode
+/// may move to a background isolate: about 2,000 positions.
+const int geoJsonOffloadMinCost = 2000 * _encodePosition;
 
-/// Whether [geojson] is large enough that encoding it should move off the
-/// main isolate.
+/// The number of features from which encoding stays on the main isolate:
+/// copying that many outgrows the young heap.
+const geoJsonOffloadMaxFeatures = 10000;
+
+/// Whether encoding [geojson] on a background isolate blocks the main
+/// isolate clearly less than encoding it there.
 ///
-/// Counting stops at the threshold, so this costs at most
-/// [geoJsonOffloadPositionCount] steps however large the payload is. It
-/// counts positions rather than the length of `coordinates`, which is what
-/// makes it right for areas: a `Polygon` with a single ring of 50k points has
-/// a `coordinates` length of 1. Malformed parts count as empty.
-bool isLargeGeoJson(Map<dynamic, dynamic> geojson) {
-  const limit = geoJsonOffloadPositionCount;
+/// It reads up to [_samples] features, spread over a collection, so it costs
+/// the same however large [geojson] is. Malformed parts count as empty.
+bool encodesInBackground(Map<dynamic, dynamic> geojson) {
+  final cost = _Cost();
   final features = geojson['features'];
   if (features is List) {
-    if (features.length >= geoJsonOffloadFeatureCount) return true;
-    var positions = 0;
-    for (final feature in features) {
-      if (feature is! Map) continue;
-      positions += _countGeometryPositions(
-        feature['geometry'],
-        limit - positions,
-      );
-      if (positions >= limit) return true;
+    final count = features.length;
+    if (count >= geoJsonOffloadMaxFeatures) return false;
+    final step = count <= _samples ? 1 : count / _samples;
+    final read = min(count, _samples);
+    for (var i = 0; i < read; i++) {
+      cost.feature(features[(i * step).floor()]);
     }
-    return false;
+    if (read > 0) cost.scale(count / read);
+  } else if (geojson['type'] == 'Feature') {
+    cost.feature(geojson);
+  } else {
+    cost.geometry(geojson, 0);
   }
-  return _countGeometryPositions(geojson['geometry'] ?? geojson, limit) >=
-      limit;
+  return cost.encode >= geoJsonOffloadMinCost && cost.copy * 2 <= cost.encode;
 }
 
-/// Counts the coordinate positions of a single geometry, giving up once
-/// [limit] is reached. The result is capped at [limit].
-int _countGeometryPositions(Object? geometry, int limit) {
-  if (limit <= 0 || geometry is! Map) return 0;
-  if (geometry['type'] == 'GeometryCollection') {
+/// The features [encodesInBackground] reads.
+const _samples = 32;
+
+// What each part costs on the main isolate, in nanoseconds on a desktop
+// machine: encoded in place, or copied to another isolate. Only the ratios
+// matter.
+const _encodeFeature = 300;
+const _encodePosition = 300;
+const _encodeValue = 30;
+const _encodeChar = 2;
+const _copyFeature = 300;
+const _copyPosition = 65;
+const _copyValue = 10;
+
+/// The deepest nesting of `coordinates` or `geometries` [_Cost] reads.
+const _maxDepth = 6;
+
+/// The property values of a feature [_Cost] reads.
+const _maxValues = 64;
+
+/// The estimated cost of encoding and of copying GeoJSON.
+class _Cost {
+  double encode = 0;
+  double copy = 0;
+
+  void scale(double factor) {
+    encode *= factor;
+    copy *= factor;
+  }
+
+  void feature(Object? feature) {
+    if (feature is! Map) return;
+    encode += _encodeFeature;
+    copy += _copyFeature;
+    geometry(feature['geometry'], 0);
+    values(feature['properties']);
+  }
+
+  void geometry(Object? geometry, int depth) {
+    if (geometry is! Map || depth > _maxDepth) return;
     final geometries = geometry['geometries'];
-    if (geometries is! List) return 0;
-    var positions = 0;
-    for (final child in geometries) {
-      positions += _countGeometryPositions(child, limit - positions);
-      if (positions >= limit) return positions;
+    if (geometries is List) {
+      for (final child in geometries) {
+        this.geometry(child, depth + 1);
+      }
+      return;
     }
-    return positions;
+    final positions = _positions(geometry['coordinates'], 0);
+    encode += positions * _encodePosition;
+    copy += positions * _copyPosition;
   }
-  return _countPositions(geometry['coordinates'], limit);
+
+  /// The entries of [properties]: a key or a string by its length, a list
+  /// or map by its length, without reading further.
+  void values(Object? properties) {
+    if (properties is! Map || properties.isEmpty) return;
+    var read = 0;
+    var encodeValues = 0;
+    var copyValues = 0;
+    for (final MapEntry(:key, :value) in properties.entries) {
+      if (read++ == _maxValues) break;
+      final length = switch (value) {
+        List() => value.length,
+        Map() => value.length,
+        _ => 1,
+      };
+      encodeValues += length * _encodeValue;
+      copyValues += length * _copyValue;
+      if (key is String) encodeValues += key.length * _encodeChar;
+      if (value is String) encodeValues += value.length * _encodeChar;
+    }
+    final factor = properties.length / min(properties.length, _maxValues);
+    encode += encodeValues * factor;
+    copy += copyValues * factor;
+  }
 }
 
-/// Counts positions inside a `coordinates` value of any nesting depth, giving
-/// up once [limit] is reached. A list whose first entry is a number is one
-/// position.
-int _countPositions(Object? coordinates, int limit) {
-  if (limit <= 0 || coordinates is! List || coordinates.isEmpty) return 0;
-  if (coordinates.first is num) return 1;
+/// The positions in [coordinates]: a list whose first entry is a number is
+/// one, and a list whose first entry is one counts by its length.
+int _positions(Object? coordinates, int depth) {
+  if (coordinates is! List || coordinates.isEmpty || depth > _maxDepth) {
+    return 0;
+  }
+  final first = coordinates.first;
+  if (first is num) return 1;
+  if (first is List && first.isNotEmpty && first.first is num) {
+    return coordinates.length;
+  }
   var positions = 0;
   for (final child in coordinates) {
-    positions += _countPositions(child, limit - positions);
-    if (positions >= limit) return positions;
+    positions += _positions(child, depth + 1);
   }
   return positions;
 }

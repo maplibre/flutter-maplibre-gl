@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:maplibre_gl/src/geojson_size.dart';
 import 'package:maplibre_gl/src/native/messages.g.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show geoJsonError;
@@ -623,7 +624,8 @@ void main() {
       ]);
     });
 
-    // Many small features take the background path by their count alone.
+    // Many small features are encoded in place: copying them to another
+    // isolate would block the main one longer.
     test('a many-feature collection reaches native intact', () async {
       final geojson = {
         'type': 'FeatureCollection',
@@ -842,8 +844,8 @@ void main() {
       ]);
     });
 
-    test('a large addSource is checked on another isolate and keeps its '
-        'place among the writes to a source', () async {
+    test('a large addSource keeps its place among the writes to a '
+        'source', () async {
       final big = line(40000);
       final small = line(1);
 
@@ -876,8 +878,8 @@ void main() {
       expect(api.calls, isEmpty);
     });
 
-    // A large addSource is checked on another isolate, and a layer add made
-    // right after it without await would otherwise find no source.
+    // A layer add made right after a large addSource without await would
+    // otherwise find no source.
     test('a call on a source waits for the writes to it in flight', () async {
       api.replies['mapQuerySourceFeatures'] = <String>[];
       api.replies['sourceGetClusterExpansionZoom'] = 3;
@@ -1307,11 +1309,13 @@ void main() {
         jsonEncode(collection(['7'])),
       );
       await platform.setGeoJsonSource('generated', point('x'));
-      // Large enough to be checked on a background isolate.
-      await platform.setGeoJsonSource(
-        'generated',
-        collection([for (var i = 0; i < 200; i++) 'id-$i']),
-      );
+      // Long enough properties to be encoded on a background isolate.
+      final large = collection([for (var i = 0; i < 200; i++) 'id-$i']);
+      for (final feature in large['features'] as List) {
+        (feature as Map)['properties'] = {'name': 'x' * 2000};
+      }
+      expect(encodesInBackground(large), isTrue);
+      await platform.setGeoJsonSource('generated', large);
 
       expectIds((api.calls[0][2]! as Map)['data'], [0, 1, 2]);
       expectIds(api.calls[1][2], [0, 1]);

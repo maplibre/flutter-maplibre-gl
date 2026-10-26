@@ -101,7 +101,7 @@ Sources are added with `addGeoJsonSource` and updated with `setGeoJsonSource`
 
 ### Large payloads
 
-On Android and iOS, adding or updating a source with a large payload, such as a line with tens of thousands of points or a collection of hundreds of features, is encoded on a background isolate, so the UI is not blocked for the whole encode. Smaller payloads keep the faster synchronous path. Handing the payload to the isolate still costs a copy on the calling side, so a very large source can still drop a frame.
+On Android and iOS, a payload with long geometries or long properties, such as a line with tens of thousands of points, is encoded on a background isolate, so the UI is not blocked for the whole encode. Handing the payload to the isolate costs a copy on the calling side, and for many small features, such as points, the copy costs more than the encode: those payloads, and small ones, are encoded in place. A very large source can still drop a frame either way.
 
 ## Feature ids
 
