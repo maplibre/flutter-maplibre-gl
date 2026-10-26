@@ -2135,14 +2135,13 @@ class MapLibreMapController extends ChangeNotifier {
   /// Pushes an app-provided location into the map's user-location component.
   ///
   /// Requires the map to be created with
-  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
-  /// The accuracy ring, the tracking modes and
-  /// [MapLibreMap.onUserLocationUpdated] keep working, and no location
-  /// permission is needed. Works on Android, iOS and web.
-  ///
-  /// Throws a [PlatformException] with code `LOCATION_COMPONENT_NOT_READY`
-  /// without `myLocationEnabled`, and `MANUAL_LOCATION_SOURCE_DISABLED`
-  /// without the manual source.
+  /// `locationSource: ManualLocationSource()`, or throws a
+  /// [PlatformException] with code `MANUAL_LOCATION_SOURCE_DISABLED`.
+  /// `myLocationEnabled` only shows or hides the puck: while it is off the
+  /// last location is kept, without [MapLibreMap.onUserLocationUpdated], and
+  /// the puck shows up there when it turns on. The accuracy ring and the
+  /// tracking modes keep working, and no location permission is needed.
+  /// Works on Android, iOS and web.
   Future<void> updateManualLocation(ManualLocationUpdate update) {
     return _maplibrePlatform.setManualLocation(update);
   }

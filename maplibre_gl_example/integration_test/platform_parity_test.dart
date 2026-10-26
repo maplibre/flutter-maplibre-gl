@@ -4,8 +4,8 @@
 // values, source layer, zoom range), setLayerProperties, the GeoJSON source
 // calls and their data, addSource, removeSource, getSourceProperties of image
 // sources, colors, NaN coordinates, setCameraBounds, takeSnapshot, the calls
-// made while no style is loaded, updateManualLocation without the location
-// component, and telemetry.
+// made while no style is loaded, updateManualLocation while myLocationEnabled
+// is off, and telemetry.
 //
 // The calls without a style run on Android and iOS only: web cannot drop a
 // loaded style, so a web unit test covers them there. Video sources are web
@@ -19,11 +19,13 @@
 //     --driver=test_driver/integration_test.dart \
 //     --target=integration_test/platform_parity_test.dart \
 //     -d web-server
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' show Point;
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show PlatformException, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
@@ -2639,32 +2641,107 @@ void main() {
   });
 
   group('location and telemetry', () {
-    testWidgets('updateManualLocation without myLocationEnabled fails with '
-        'LOCATION_COMPONENT_NOT_READY', (tester) async {
-      // iOS and web took the location without showing it.
-      final controller = await pumpMap(
-        tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(0, 0),
-                zoom: 3,
+    testWidgets('updateManualLocation keeps the location while '
+        'myLocationEnabled is off, and the puck shows up there when it turns '
+        'on', (tester) async {
+      // Android takes this rule in a change of its own; drop this line with it.
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) return;
+      final enabled = ValueNotifier(false);
+      addTearDown(enabled.dispose);
+      final created = Completer<MapLibreMapController>();
+      final styleLoaded = Completer<void>();
+      final updates = <UserLocation>[];
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Align(
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: 300,
+                height: 300,
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: enabled,
+                  builder:
+                      (context, on, _) => MapLibreMap(
+                        styleString: offlineStyle,
+                        initialCameraPosition: const CameraPosition(
+                          target: LatLng(0, 0),
+                          zoom: 3,
+                        ),
+                        locationSource: const ManualLocationSource(),
+                        myLocationEnabled: on,
+                        onMapCreated: (controller) {
+                          if (!created.isCompleted) {
+                            created.complete(controller);
+                          }
+                        },
+                        onStyleLoadedCallback: () {
+                          if (!styleLoaded.isCompleted) styleLoaded.complete();
+                        },
+                        onUserLocationUpdated: updates.add,
+                      ),
+                ),
               ),
-              locationSource: const ManualLocationSource(),
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: onStyleLoaded,
             ),
+          ),
+        ),
       );
+      final controller = await pumpUntil(tester, created.future, 'map');
+      await pumpUntil(tester, styleLoaded.future, 'onStyleLoaded');
 
-      await expectPlatformError(
+      Future<void> showsAt(LatLng target, String label) async {
+        await pumpUntilValue(
+          tester,
+          () async => updates.isEmpty ? null : updates.last.position,
+          (position) =>
+              position != null &&
+              (position.latitude - target.latitude).abs() < 1e-6 &&
+              (position.longitude - target.longitude).abs() < 1e-6,
+          label,
+        );
+        final shown = await pumpUntil(
+          tester,
+          controller.requestMyLocationLatLng(),
+          'requestMyLocationLatLng',
+        );
+        expect(shown?.latitude, closeTo(target.latitude, 1e-6), reason: label);
+        expect(
+          shown?.longitude,
+          closeTo(target.longitude, 1e-6),
+          reason: label,
+        );
+      }
+
+      // Off from the start: kept, not reported.
+      await pumpUntil(
         tester,
         controller.updateManualLocation(
-          const ManualLocationUpdate(target: LatLng(1, 2)),
+          const ManualLocationUpdate(target: LatLng(10, 20)),
         ),
-        'updateManualLocation without myLocationEnabled',
-        code: 'LOCATION_COMPONENT_NOT_READY',
+        'updateManualLocation while off',
       );
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(updates, isEmpty, reason: 'no update while the puck is hidden');
+
+      enabled.value = true;
+      await showsAt(const LatLng(10, 20), 'the puck after turning it on');
+
+      // Off again: the last location pushed replaces the kept one.
+      enabled.value = false;
+      await pumpFor(tester, const Duration(milliseconds: 300));
+      final reported = updates.length;
+      for (final target in const [LatLng(11, 21), LatLng(12, 22)]) {
+        await pumpUntil(
+          tester,
+          controller.updateManualLocation(ManualLocationUpdate(target: target)),
+          'updateManualLocation $target while off',
+        );
+      }
+      await pumpFor(tester, const Duration(milliseconds: 500));
+      expect(updates, hasLength(reported), reason: 'no update while hidden');
+
+      enabled.value = true;
+      await showsAt(const LatLng(12, 22), 'the puck after turning it on again');
     });
 
     testWidgets('telemetry stays off', (tester) async {

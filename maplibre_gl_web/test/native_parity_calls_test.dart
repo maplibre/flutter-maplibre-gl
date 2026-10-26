@@ -10,7 +10,7 @@ import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
 import 'package:maplibre_gl_web/maplibre_gl_web.dart';
 
 void main() {
-  test('setManualLocation without myLocationEnabled fails as on Android and '
+  test('setManualLocation without the manual source fails as on Android and '
       'iOS', () async {
     final controller = MapLibreMapController();
 
@@ -22,10 +22,24 @@ void main() {
         isA<PlatformException>().having(
           (e) => e.code,
           'code',
-          'LOCATION_COMPONENT_NOT_READY',
+          'MANUAL_LOCATION_SOURCE_DISABLED',
         ),
       ),
     );
+  });
+
+  test('setManualLocation with myLocationEnabled off keeps the location '
+      'without reporting it', () async {
+    final controller = MapLibreMapController()..setLocationSource('manual');
+    final reported = <UserLocation>[];
+    controller.onUserLocationUpdatedPlatform.add(reported.add);
+
+    await controller.setManualLocation(
+      const ManualLocationUpdate(target: LatLng(45, 9)),
+    );
+
+    expect(reported, isEmpty);
+    expect(await controller.requestMyLocationLatLng(), const LatLng(45, 9));
   });
 
   test('telemetry is always off', () async {

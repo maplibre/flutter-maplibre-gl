@@ -67,6 +67,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// then the SDK's own look is left untouched.
     private var locationPuckTinted = false
     private lazy var manualLocationManager = ManualLocationManager()
+    /// The last location the app pushed, shown again when myLocationEnabled
+    /// turns back on.
+    private var lastManualLocation: CLLocation?
     private var scrollingEnabled = true
     private var isAdjustingCameraProgrammatically = false
 
@@ -2086,19 +2089,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         update: PgManualLocationUpdate,
         result: @escaping FlutterResult
     ) {
-        // The same checks, in the same order, as Android.
-        guard mapView.showsUserLocation else {
-            result(
-                FlutterError(
-                    code: "LOCATION_COMPONENT_NOT_READY",
-                    message: "The location component is not ready. Ensure the map was "
-                        + "created with myLocationEnabled: true and "
-                        + "locationSource: ManualLocationSource().",
-                    details: nil
-                )
-            )
-            return
-        }
         guard manualLocationSource else {
             result(
                 FlutterError(
@@ -2119,8 +2109,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             speed: update.speed ?? -1,
             timestamp: Date(timeIntervalSince1970: Double(update.timestamp) / 1000.0)
         )
-        // The map view's delegate then sends mapOnUserLocationUpdated.
-        manualLocationManager.push(location)
+        // Kept for when myLocationEnabled turns on. While it is off the puck is
+        // hidden and no location reaches the map, so no update is sent.
+        lastManualLocation = location
+        if mapView.showsUserLocation {
+            // The map view's delegate then sends mapOnUserLocationUpdated.
+            manualLocationManager.push(location)
+        }
         result(nil)
     }
 
@@ -3729,6 +3724,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         }
         self.myLocationEnabled = myLocationEnabled
         updateMyLocationEnabled()
+        // The puck comes back where the app last put it, even if that was
+        // while it was hidden.
+        if myLocationEnabled, manualLocationSource, mapView.showsUserLocation,
+           let location = lastManualLocation
+        {
+            manualLocationManager.push(location)
+        }
     }
 
     func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode) {

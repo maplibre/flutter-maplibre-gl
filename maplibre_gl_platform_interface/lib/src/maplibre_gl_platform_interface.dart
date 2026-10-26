@@ -129,7 +129,10 @@ abstract class MapLibrePlatform {
   /// Pushes an app-provided location into the map's user-location component.
   ///
   /// Requires the map to be created with
-  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  /// `locationSource: ManualLocationSource()`, or fails with
+  /// `MANUAL_LOCATION_SOURCE_DISABLED`. While `myLocationEnabled` is off the
+  /// last location is kept, hidden and without `onUserLocationUpdated`, and
+  /// the puck shows up there when it turns on.
   ///
   /// Supported on Android, iOS and web.
   Future<void> setManualLocation(ManualLocationUpdate update);
