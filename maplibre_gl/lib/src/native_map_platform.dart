@@ -866,6 +866,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<List<Point>> toScreenLocationBatch(Iterable<LatLng> latLngs) async {
+    // Nothing to ask native: iOS cannot read an empty buffer.
+    if (latLngs.isEmpty) return [];
     final coordinates = Float64List.fromList(
       latLngs.map((e) => [e.latitude, e.longitude]).expand((e) => e).toList(),
     );

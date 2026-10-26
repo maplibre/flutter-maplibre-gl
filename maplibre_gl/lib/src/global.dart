@@ -138,11 +138,10 @@ Future<List<OfflineRegion>> getListOfRegions() => _global.getListOfRegions();
 /// Replaces the metadata of the offline region with the given [id] and returns
 /// the updated region.
 ///
-/// [metadata] must be JSON-encodable: strings, numbers, booleans, null, and
-/// lists and maps of those, with string keys. Other values, such as a
-/// `Uint8List`, fail on iOS with `INVALID_ARGUMENT`, while Android stores
-/// them in whatever form its JSON encoder gives them (a `Uint8List` comes
-/// back as a list of numbers).
+/// [metadata] is stored as the JSON [jsonEncode] gives it, so a `Uint8List`
+/// comes back as a list of numbers. Metadata [jsonEncode] cannot encode, such
+/// as a `NaN` or a map with keys that are not strings, throws a
+/// [PlatformException] with code `INVALID_ARGUMENT`.
 ///
 /// Throws a [PlatformException] with code `REGION_NOT_FOUND` when no region
 /// has that [id].
@@ -262,7 +261,12 @@ Future<void> resetOfflineDatabase() => _global.resetOfflineDatabase();
 /// [onEvent] receives the progress of the download: [InProgress] events, then
 /// [Success], or [Error] with the [PlatformException] that stopped it. Its
 /// code says why: see [Error].
-/// [metadata] is stored with the region and must be JSON-encodable.
+/// [metadata] is stored with the region as [updateOfflineRegionMetadata]
+/// stores it, and fails the same way when it is not JSON-encodable.
+///
+/// Download events reach only the root isolate: in a background isolate,
+/// passing [onEvent] throws an [UnsupportedError]. Leave it out there and
+/// follow the download with [getOfflineRegionStatus].
 ///
 /// Throws a [PlatformException] with code `INVALID_REGION_DEFINITION` when
 /// MapLibre cannot create a region from [definition].
