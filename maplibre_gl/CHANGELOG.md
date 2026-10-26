@@ -175,7 +175,6 @@
   * `setHttpHeaders`, the controller's `setCustomHeaders` and `setOfflineMaxConcurrentRequests` apply together instead of undoing each other, so a header no longer disappears after `setOfflineMaxConcurrentRequests`. Setting headers keeps MapLibre's limit of 20 requests per host instead of lowering it to 5.
   * Changing the headers while tiles load can no longer crash the app, and a `setCustomHeaders` filter that is not a valid pattern matches no URL, as on iOS, instead of crashing on the next request.
   * Offline region metadata that is not a JSON object, for example from a database merged with `mergeOfflineRegions`, reads as an empty map, as on iOS, instead of crashing `getListOfRegions`, `mergeOfflineRegions` and `updateOfflineRegionMetadata`. A failure inside an offline call fails that call instead of crashing the app.
-  * `downloadOfflineRegion` and `updateOfflineRegionMetadata` reject metadata JSON cannot hold, such as a NaN, with `INVALID_ARGUMENT`, as iOS does.
   * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 
