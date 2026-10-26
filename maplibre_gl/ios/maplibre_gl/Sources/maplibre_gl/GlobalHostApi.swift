@@ -41,10 +41,11 @@ class GlobalHostApi: MapLibreGlobalHostApi {
             var url = tilesUrl
             try url.setResourceValues(resourceValues)
         } catch {
-            NSLog("Could not install the offline tiles from \(tilesDb): \(error)")
+            let message = "Could not install the offline tiles from \(tilesDb)"
+            NSLog("\(message): \(error)")
             throw PigeonError(
                 code: OfflineErrorCode.offlineDatabaseError,
-                message: "Could not install the offline tiles from \(tilesDb): \(error.localizedDescription)",
+                message: "\(message): \(error.localizedDescription)",
                 details: nil
             )
         }
