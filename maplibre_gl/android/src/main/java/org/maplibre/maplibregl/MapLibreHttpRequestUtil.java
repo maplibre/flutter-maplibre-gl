@@ -86,8 +86,8 @@ abstract class MapLibreHttpRequestUtil {
     }
 
     /**
-     * The request with the global headers, then the custom headers if its URL matches a filter
-     * pattern or there is none. An empty value removes the header.
+     * The request with the global headers, then the custom headers if a filter pattern is found
+     * anywhere in its URL, as on iOS, or there is none. An empty value removes the header.
      */
     Request apply(Request request) {
       Request.Builder builder = request.newBuilder();
@@ -103,7 +103,7 @@ abstract class MapLibreHttpRequestUtil {
         return true;
       }
       for (Pattern pattern : customHeadersFilter) {
-        if (pattern.matcher(url).matches()) {
+        if (pattern.matcher(url).find()) {
           return true;
         }
       }

@@ -122,6 +122,32 @@ class MapLibreHttpRequestUtilTest {
     }
 
     @Test
+    fun aFilterPatternMatchesWhereverItIsFoundInTheUrl() {
+        succeeds { MapLibreHttpRequestUtil.setCustomHeaders(mapOf("X-Tile" to "t"), listOf("tiles\\.example"), it) }
+
+        assertEquals("t", sent(installed.last(), "https://tiles.example/1.pbf").header("X-Tile"))
+        assertEquals("t", sent(installed.last(), "https://cdn.example/?from=tiles.example").header("X-Tile"))
+        assertNull(sent(installed.last(), "https://styles.example/style.json").header("X-Tile"))
+    }
+
+    @Test
+    fun anAnchoredFilterPatternMatchesOnlyFromTheStart() {
+        succeeds {
+            MapLibreHttpRequestUtil.setCustomHeaders(mapOf("X-Tile" to "t"), listOf("^https://tiles\\.example/"), it)
+        }
+
+        assertEquals("t", sent(installed.last(), "https://tiles.example/1.pbf").header("X-Tile"))
+        assertNull(sent(installed.last(), "https://cdn.example/?from=https://tiles.example/").header("X-Tile"))
+    }
+
+    @Test
+    fun withoutAFilterTheCustomHeadersGoEverywhere() {
+        succeeds { MapLibreHttpRequestUtil.setCustomHeaders(mapOf("X-Tile" to "t"), emptyList(), it) }
+
+        assertEquals("t", sent(installed.last(), "https://styles.example/style.json").header("X-Tile"))
+    }
+
+    @Test
     fun aFilterPatternThatDoesNotCompileMatchesNothing() {
         succeeds { MapLibreHttpRequestUtil.setCustomHeaders(mapOf("X-Tile" to "t"), listOf("(["), it) }
 

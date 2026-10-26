@@ -1462,22 +1462,24 @@ class MapLibreMapController extends ChangeNotifier {
   ///
   /// [filter] is a list of regular-expression strings. When non-empty, headers
   /// are only injected into requests whose URL matches **at least one** of the
-  /// patterns. When empty, headers are injected into every request.
+  /// patterns. When empty, headers are injected into every request. A pattern
+  /// matches if it is found anywhere in the URL: anchor it with `^` and `$` to
+  /// match the whole URL.
   ///
-  /// This is a **per-map** API and takes effect immediately — subsequent tile
+  /// This is a **per-map** API and takes effect immediately: subsequent tile
   /// requests will carry the new headers. To apply headers globally to all map
   /// instances without URL filtering, use the top-level [setHttpHeaders]
   /// function instead.
   ///
-  /// Example — restrict an API key to a specific tile host:
+  /// Example: restrict an API key to a specific tile host:
   /// ```dart
   /// await controller.setCustomHeaders(
   ///   {'X-Api-Key': 'secret'},
-  ///   [r'https://tiles\.example\.com/.*'],
+  ///   [r'^https://tiles\.example\.com/'],
   /// );
   /// ```
   ///
-  /// Example — apply headers to all requests (no filter):
+  /// Example: apply headers to all requests (no filter):
   /// ```dart
   /// await controller.setCustomHeaders(
   ///   {'Authorization': 'Bearer $token'},
@@ -1485,7 +1487,7 @@ class MapLibreMapController extends ChangeNotifier {
   /// );
   /// ```
   ///
-  /// Example — clear all headers:
+  /// Example: clear all headers:
   /// ```dart
   /// await controller.setCustomHeaders({}, []);
   /// ```
