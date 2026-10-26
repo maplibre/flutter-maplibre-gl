@@ -2843,6 +2843,22 @@ void main() {
               'type': 'Feature',
             },
             point({'deep': deep(10)}, id: 2.5),
+            {
+              ...point(null),
+              'bbox': [1.5, -2, 1.5, -2],
+            },
+          ],
+        };
+        final geometry = {
+          'type': 'GeometryCollection',
+          'geometries': [
+            {
+              'type': 'LineString',
+              'coordinates': [
+                [0, 0],
+                [1, 1],
+              ],
+            },
           ],
         };
         // Deeper than the single pass goes.
@@ -2850,11 +2866,13 @@ void main() {
 
         await platform.setGeoJsonSource('source', collection);
         await platform.setFeatureForGeoJsonSource('source', text);
+        await platform.setGeoJsonSource('source', geometry);
         await platform.setGeoJsonSource('source', deeper);
 
         expect(api.calls, [
           ['sourceSetGeoJson', 'source', jsonEncode(collection)],
           ['sourceSetFeature', 'source', jsonEncode(text)],
+          ['sourceSetGeoJson', 'source', jsonEncode(geometry)],
           ['sourceSetGeoJson', 'source', jsonEncode(deeper)],
         ]);
       });
