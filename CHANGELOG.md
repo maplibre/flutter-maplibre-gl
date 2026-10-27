@@ -70,7 +70,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **Android**: on devices without Google Play Services, high accuracy uses Android's own fused provider on Android 12 and later instead of GPS only, which adds network positioning where the device has a network location provider (#1102).
 * **Android, iOS**: the plugin reaches native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, starting with the plugin-wide calls: offline regions, the offline database, the ambient cache, HTTP headers and `preWarm`. `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`; their value was always `null` (#1114).
 * **Android, iOS**: the calls and events of each map (taps, drags, camera moves, style loads, location updates) move to Pigeon too, which completes the switch of #465 (#1115, #1117, #1119).
-* **Android, iOS, Web**: feature drags and taps work the same on every platform (#1044, #1051, #1077, #1079, #PR):
+* **Android, iOS, Web**: feature drags and taps work the same on every platform (#1044, #1051, #1077, #1079, #1149):
   * A drag starts only after the finger or mouse moves a little, so a tap or click on a draggable feature stays a tap, with no drag events, and `start` has a zero delta. On Android it no longer fires `onMapLongClick`.
   * A second finger ends the drag with an `end` event and lets the map pinch.
   * **Android, iOS**: taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins. Android used about 3 logical pixels and iOS the exact point.
