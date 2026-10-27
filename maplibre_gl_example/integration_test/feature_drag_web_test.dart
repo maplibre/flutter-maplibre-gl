@@ -4,7 +4,7 @@
 // reports and the feature#onDrag payloads; the unit tests cover the tracker
 // on its own, this covers it wired to a real map. Flutter's synthesized
 // pointers do not reach the map's DOM element, so the test dispatches mouse
-// events on the map canvas, as a mouse would.
+// and touch events on the map canvas, as a mouse or a finger would.
 //
 // It imports package:web, which does not compile for Android or iOS, so it
 // is not part of all_tests.dart. Run on Chrome:
@@ -15,6 +15,7 @@
 //     -d web-server --browser-name=chrome
 //
 // The assertions only run on web; elsewhere the tests are no-ops.
+import 'dart:js_interop';
 import 'dart:math' show Point;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -183,6 +184,157 @@ void main() {
     await _settle(tester);
     expect(map.drags, isEmpty);
     expect(map.featureTaps, hasLength(1));
+  });
+
+  testWidgets('a touch on a draggable feature taps it, no drag', (
+    tester,
+  ) async {
+    if (!kIsWeb) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final fingers = _Fingers(map.canvas);
+    fingers.down(0, map.circleOnCanvas);
+    expect(fingers.up(0), isTrue, reason: 'the browser still sends the click');
+    // The mouse events and the click a browser sends after a tap.
+    final mouse = _Mouse(map.canvas);
+    mouse.down(map.circleOnCanvas);
+    mouse.up(map.circleOnCanvas);
+    mouse.click(map.circleOnCanvas);
+    await _settle(tester);
+
+    expect(map.drags, isEmpty);
+    expect(map.featureTaps, hasLength(1));
+  });
+
+  testWidgets('a touch drag moves the feature, not the map, and is no tap', (
+    tester,
+  ) async {
+    if (!kIsWeb) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
+
+    final fingers = _Fingers(map.canvas);
+    var at = map.circleOnCanvas;
+    fingers.down(0, at);
+    var pageScrolls = true;
+    for (var i = 0; i < 10; i++) {
+      at += const Point<double>(2, 0);
+      pageScrolls = fingers.move({0: at});
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(pageScrolls, isFalse, reason: 'the drag keeps the page still');
+    expect(fingers.up(0), isFalse, reason: 'no click follows the drag');
+    await _settle(tester);
+
+    expect(
+      await pumpUntil(
+        tester,
+        map.controller.getVisibleRegion(),
+        'getVisibleRegion after',
+      ),
+      before,
+    );
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types, contains(DragEventType.drag));
+    expect(types.last, DragEventType.end);
+    expect(types.where((t) => t == DragEventType.start), hasLength(1));
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    expect(map.featureTaps, isEmpty);
+    expect(map.clicks, isEmpty);
+
+    final start = map.drags.first;
+    expect(start.delta, const LatLng(0, 0));
+    expect(start.origin, start.current);
+    final end = map.drags.last;
+    expect(end.origin, start.origin);
+    expect(end.current.longitude, greaterThan(start.current.longitude));
+  });
+
+  testWidgets('a second finger ends the touch drag and the map pinches', (
+    tester,
+  ) async {
+    if (!kIsWeb) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final fingers = _Fingers(map.canvas);
+    var first = map.circleOnCanvas;
+    fingers.down(0, first);
+    for (var i = 0; i < 5; i++) {
+      first += const Point<double>(2, 0);
+      fingers.move({0: first});
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await _settle(tester);
+    final lastDrag = map.drags.last;
+    expect(lastDrag.type, DragEventType.drag);
+    final before = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion before',
+    );
+
+    // The two fingers' midpoint is still on the circle.
+    var second = first + const Point<double>(0, 20);
+    fingers.down(1, second);
+    await _settle(tester);
+
+    // One end, where the first finger last dragged the feature.
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.last, DragEventType.end);
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    final end = map.drags.last;
+    expect(end.current, lastDrag.current);
+    expect(end.delta, const LatLng(0, 0));
+    map.drags.clear();
+
+    // Spreading the fingers zooms the map and leaves the feature alone.
+    for (var i = 0; i < 10; i++) {
+      first -= const Point<double>(0, 6);
+      second += const Point<double>(0, 6);
+      fingers.move({0: first, 1: second});
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    fingers.up(1);
+    fingers.up(0);
+    await _settle(tester);
+
+    expect(map.drags, isEmpty);
+    expect(map.featureTaps, isEmpty);
+    final after = await pumpUntil(
+      tester,
+      map.controller.getVisibleRegion(),
+      'getVisibleRegion after',
+    );
+    final spanBefore = before.northeast.longitude - before.southwest.longitude;
+    final spanAfter = after.northeast.longitude - after.southwest.longitude;
+    expect(spanAfter, lessThan(spanBefore * 0.75), reason: 'the map zoomed in');
+  });
+
+  testWidgets('a cancelled touch ends the drag', (tester) async {
+    if (!kIsWeb) return;
+    final map = await _pumpMapWithDraggableCircle(tester);
+
+    final fingers = _Fingers(map.canvas);
+    var at = map.circleOnCanvas;
+    fingers.down(0, at);
+    for (var i = 0; i < 5; i++) {
+      at += const Point<double>(2, 0);
+      fingers.move({0: at});
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    fingers.cancel();
+    await _settle(tester);
+
+    final types = map.drags.map((d) => d.type).toList();
+    expect(types.first, DragEventType.start);
+    expect(types.last, DragEventType.end);
+    expect(types.where((t) => t == DragEventType.end), hasLength(1));
+    expect(map.drags.last.delta, const LatLng(0, 0));
   });
 
   testWidgets('taps, drags and hovers report the feature id as text', (
@@ -396,6 +548,75 @@ class _Mouse {
           clientY: (rect.top + at.y).round(),
           button: 0,
           buttons: buttons,
+        ),
+      ),
+    );
+  }
+}
+
+/// Dispatches the touch events of fingers on [canvas], at positions relative
+/// to its top left corner in CSS pixels. Each call returns false when a
+/// listener cancelled the event: the browser would then neither scroll nor
+/// send the mouse events and the click of a tap.
+class _Fingers {
+  _Fingers(this.canvas);
+
+  final web.HTMLCanvasElement canvas;
+  final _at = <int, Point<double>>{};
+
+  bool down(int finger, Point<double> at) {
+    _at[finger] = at;
+    return _send('touchstart', [_touch(finger, at)]);
+  }
+
+  /// Moves each finger in [to] to its point, in one event.
+  bool move(Map<int, Point<double>> to) {
+    _at.addAll(to);
+    return _send('touchmove', [
+      for (final MapEntry(:key, :value) in to.entries) _touch(key, value),
+    ]);
+  }
+
+  bool up(int finger) {
+    final at = _at.remove(finger)!;
+    return _send('touchend', [_touch(finger, at)]);
+  }
+
+  /// The browser takes every finger away, as when a system gesture starts.
+  bool cancel() {
+    final changed = [
+      for (final MapEntry(:key, :value) in _at.entries) _touch(key, value),
+    ];
+    _at.clear();
+    return _send('touchcancel', changed);
+  }
+
+  web.Touch _touch(int finger, Point<double> at) {
+    final rect = canvas.getBoundingClientRect();
+    return web.Touch(
+      web.TouchInit(
+        identifier: finger,
+        target: canvas,
+        clientX: rect.left + at.x,
+        clientY: rect.top + at.y,
+      ),
+    );
+  }
+
+  bool _send(String type, List<web.Touch> changed) {
+    final touches =
+        [
+          for (final MapEntry(:key, :value) in _at.entries) _touch(key, value),
+        ].toJS;
+    return canvas.dispatchEvent(
+      web.TouchEvent(
+        type,
+        web.TouchEventInit(
+          bubbles: true,
+          cancelable: true,
+          touches: touches,
+          targetTouches: touches,
+          changedTouches: changed.toJS,
         ),
       ),
     );

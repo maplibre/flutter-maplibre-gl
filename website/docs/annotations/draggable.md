@@ -75,8 +75,9 @@ controller.onFeatureDrag.add((
 and `delta` the movement since the previous event. `point` is the screen
 position, a `Point<double>` from `dart:math`.
 
-On Android and iOS, a second finger on the map ends the drag with an `end` at
-the last position, and the map takes over the gesture so it can pinch.
+Drags work with a finger, and on web with a mouse too. A second finger on the
+map ends the drag with an `end` at the last position, and the map takes over
+the gesture so it can pinch.
 
 ## Toggle draggable at runtime
 

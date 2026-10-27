@@ -175,6 +175,7 @@ Dragging annotations and draggable features works the same on every platform:
 
 * A drag starts only after the finger or mouse moves a little. A tap or click on a draggable feature is a plain tap with no drag events, and the `start` event has a zero delta. On Android a drag no longer fires `onMapLongClick`.
 * A second finger during a drag ends it with an `end` event and lets the map pinch. To keep dragging, the user starts a new drag.
+* On web, touch screens drag features too, not only the mouse.
 * On Android and iOS, taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins. Android used about 3 pixels and iOS the exact point, so small features are easier to hit, and a tap next to a feature can now select it. Only draggable features start a drag.
 
 If your app relied on a drag starting at touch down, or on tapping exactly next to a feature without selecting it, check those flows.
