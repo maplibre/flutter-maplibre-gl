@@ -1014,6 +1014,73 @@ void main() {
       },
     );
 
+    testWidgets(
+      'a camera call that cuts an animation short reaches onCameraIdle once',
+      (tester) async {
+        // As on Android, the camera goes on moving from the stopped animation
+        // into the new move, and onCameraIdle comes once it settles. iOS also
+        // sent one where the animation stopped (#1152). Web still does, as
+        // maplibre-gl-js fires moveend for the stopped animation.
+        var idles = 0;
+        final controller = await pumpMap(
+          tester,
+          builder:
+              (onMapCreated, onStyleLoaded) => MapLibreMap(
+                styleString: offlineStyle,
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(0, 0),
+                  zoom: 3,
+                ),
+                trackCameraPosition: true,
+                onCameraIdle: () => idles++,
+                onMapCreated: onMapCreated,
+                onStyleLoadedCallback: onStyleLoaded,
+              ),
+        );
+
+        // Let any startup camera events drain before counting.
+        await pumpFor(tester, const Duration(milliseconds: 500));
+
+        Future<void> expectOneIdle(
+          String label,
+          Future<bool?> Function() cut,
+        ) async {
+          idles = 0;
+          final animation = controller.animateCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(40, 40), 8),
+            duration: const Duration(seconds: 5),
+          );
+          await pumpFor(tester, const Duration(milliseconds: 300));
+          await pumpUntil(tester, cut(), label);
+          await pumpUntil(tester, animation, '$label: cut animateCamera');
+          await pumpUntilValue(
+            tester,
+            () async => idles,
+            (count) => count > 0,
+            '$label: onCameraIdle',
+          );
+          // Room for an extra onCameraIdle to arrive.
+          await pumpFor(tester, const Duration(milliseconds: 500));
+          expect(idles, 1, reason: label);
+        }
+
+        await expectOneIdle(
+          'animateCamera',
+          () => controller.animateCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(-10, -10), 5),
+            duration: const Duration(milliseconds: 500),
+          ),
+        );
+        await expectOneIdle(
+          'moveCamera',
+          () => controller.moveCamera(
+            CameraUpdate.newLatLng(const LatLng(-5, -5)),
+          ),
+        );
+      },
+      skip: testPlatform == TestPlatform.web,
+    );
+
     testWidgets('without trackCameraPosition only onCameraIdle fires', (
       tester,
     ) async {
