@@ -18,8 +18,14 @@ permissions:
 
 jobs:
   # Detect which parts of the repo changed so we only run the relevant jobs.
-  # `code` => Dart/native/CI sources: needs quality checks + native/web builds.
+  # `code` => Dart/native/CI sources: needs the Dart checks.
+  # `android`, `ios`, `web` => what a platform builds and tests: the shared
+  #   Dart and CI sources plus that platform's own code. A web-only PR skips
+  #   the Android and iOS jobs, and so on.
   # `docs` => anything that changes the rendered site: needs the docs build.
+  #
+  # Pushes to main and release branches, and manual runs, run every platform:
+  # a merged PR is checked on all of them, and so is a toolchain that moved.
   #
   # The doc examples (maplibre_gl_example/lib/examples/docs/**) intentionally
   # belong to BOTH: they are real Dart that must compile/lint/build (code) AND
@@ -30,14 +36,51 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      android: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.android == 'true' }}
+      ios: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.ios == 'true' }}
+      web: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.web == 'true' }}
       docs: ${{ steps.filter.outputs.docs }}
       gradle: ${{ steps.filter.outputs.gradle }}
     steps:
       - uses: actions/checkout@v6
+      - name: Run every platform on main, release branches and manual runs
+        id: scope
+        run: echo "all=${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-'))) }}" >> "$GITHUB_OUTPUT"
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # The web-only integration tests (*_web_test.dart) run on web alone;
+          # every other test also runs on Android, through all_tests.dart.
           filters: |
+            shared: &shared
+              - 'maplibre_gl/lib/**'
+              - 'maplibre_gl/pigeons/**'
+              - 'maplibre_gl/pubspec.yaml'
+              - 'maplibre_gl_platform_interface/lib/**'
+              - 'maplibre_gl_platform_interface/pubspec.yaml'
+              # Every platform resolves it, through maplibre_gl's dependencies.
+              - 'maplibre_gl_web/pubspec.yaml'
+              - 'maplibre_gl_example/lib/**'
+              - 'maplibre_gl_example/assets/**'
+              - 'maplibre_gl_example/pubspec.yaml'
+              - 'pubspec.yaml'
+              - '.github/workflows/**'
+            android:
+              - *shared
+              - 'maplibre_gl/android/**'
+              - 'maplibre_gl_example/android/**'
+              - 'maplibre_gl_example/integration_test/!(*_web_test).dart'
+              - 'maplibre_gl_example/integration_test/support/**'
+            ios:
+              - *shared
+              - 'maplibre_gl/ios/**'
+              - 'maplibre_gl_example/ios/**'
+            web:
+              - *shared
+              - 'maplibre_gl_web/**'
+              - 'maplibre_gl_example/web/**'
+              - 'maplibre_gl_example/integration_test/**'
+              - 'maplibre_gl_example/test_driver/**'
             code:
               - 'maplibre_gl/**'
               - 'maplibre_gl_platform_interface/**'
@@ -58,69 +101,20 @@ jobs:
               - '.github/gradle-compat/**'
               - '.github/workflows/flutter_ci.yml'
 
-  # Format, analysis, code generation and unit tests share one runner, so
-  # Flutter and the melos bootstrap are set up once instead of four times.
-  # Every step runs even when an earlier one fails, so one run reports all of
-  # them.
   dart-checks:
-    name: "Dart checks (format, analyze, codegen, unit tests)"
+    name: "Dart checks"
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      # Only reports: format-all also rewrites the files, which would make the
-      # codegen check below fail on the same diff.
-      - name: Check formatting
-        run: melos exec -- dart format --output=none --set-exit-if-changed .
-      - name: Static code analysis
-        if: ${{ !cancelled() }}
-        run: melos run analyze-all
-      - name: Check style spec alignment with upstream
-        if: ${{ !cancelled() }}
-        run: melos run check-style-spec
-      - name: Generate code from templates
-        if: ${{ !cancelled() }}
-        run: |
-          melos run generate
-          melos run generate:pigeon
-          melos run format-all
-      # Calls must reach native in the order Dart sends them. Pigeon's
-      # coroutine and async/await handlers re-dispatch each call, so every
-      # asynchronous method has to use @asyncCallback.
-      - name: Check the Pigeon output uses callbacks only
-        if: ${{ !cancelled() }}
-        run: |
-          # `! grep` would not fail the step under `set -e`, hence the ifs.
-          if grep -nE "suspend fun|kotlinx\.coroutines" maplibre_gl/android/src/main/java/org/maplibre/maplibregl/Messages.g.kt; then exit 1; fi
-          if grep -nE "\) async|async throws" maplibre_gl/ios/maplibre_gl/Sources/maplibre_gl/Messages.g.swift; then exit 1; fi
-      - name: Check Git changes after code generation
-        if: ${{ !cancelled() }}
-        uses: multani/git-changes-action@v1
-      - name: Run tests
-        if: ${{ !cancelled() }}
-        run: melos run test:io:coverage --no-select
-      - name: Run the code generator tests
-        if: ${{ !cancelled() }}
-        run: melos run test:scripts
-      - name: Upload coverage to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
+    uses: ./.github/workflows/_dart_checks.yml
+    with:
+      upload-coverage: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-web:
     name: "Run web tests"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -140,7 +134,7 @@ jobs:
   integration-web:
     name: "Integration tests (web)"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -183,7 +177,7 @@ jobs:
   integration-android:
     name: "Integration tests (Android emulator)"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -218,7 +212,7 @@ jobs:
   build-android:
     name: "Build Android apk"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.android == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: android
@@ -281,7 +275,7 @@ jobs:
   build-ios:
     name: "Build iOS package"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.ios == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: ios
@@ -295,7 +289,7 @@ jobs:
   build-web:
     name: "Build web"
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true'
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.docs == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: web
@@ -377,3 +371,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v5
+
+  # The one check branch protection should require. The jobs above skip whole
+  # platforms, and the "caller / job" check of a skipped reusable workflow may
+  # never report, leaving a required check waiting forever. This job reports
+  # for all of them: skipped passes, failed or cancelled fails.
+  ci-result:
+    name: "CI result"
+    if: always()
+    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, build-ios, build-web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

@@ -1,0 +1,85 @@
+name: Dart checks
+
+# Reusable Dart checks shared by Flutter CI and Scheduled CI.
+# Format, analysis, code generation and unit tests share one runner, so
+# Flutter and the melos bootstrap are set up once instead of four times.
+# Every step runs even when an earlier one fails, so one run reports all of
+# them.
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Branch to check out (empty: the commit that triggered the run)'
+        required: false
+        default: ''
+        type: string
+      flutter-channel:
+        description: 'Flutter channel (stable, beta, ...)'
+        required: false
+        default: stable
+        type: string
+      upload-coverage:
+        description: 'Upload the unit test coverage to Codecov'
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      CODECOV_TOKEN:
+        required: false
+
+jobs:
+  dart-checks:
+    name: "Format, analyze, codegen, unit tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ inputs.flutter-channel }}
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      # Only reports: format-all also rewrites the files, which would make the
+      # codegen check below fail on the same diff.
+      - name: Check formatting
+        run: melos exec -- dart format --output=none --set-exit-if-changed .
+      - name: Static code analysis
+        if: ${{ !cancelled() }}
+        run: melos run analyze-all
+      - name: Check style spec alignment with upstream
+        if: ${{ !cancelled() }}
+        run: melos run check-style-spec
+      - name: Generate code from templates
+        if: ${{ !cancelled() }}
+        run: |
+          melos run generate
+          melos run generate:pigeon
+          melos run format-all
+      # Calls must reach native in the order Dart sends them. Pigeon's
+      # coroutine and async/await handlers re-dispatch each call, so every
+      # asynchronous method has to use @asyncCallback.
+      - name: Check the Pigeon output uses callbacks only
+        if: ${{ !cancelled() }}
+        run: |
+          # `! grep` would not fail the step under `set -e`, hence the ifs.
+          if grep -nE "suspend fun|kotlinx\.coroutines" maplibre_gl/android/src/main/java/org/maplibre/maplibregl/Messages.g.kt; then exit 1; fi
+          if grep -nE "\) async|async throws" maplibre_gl/ios/maplibre_gl/Sources/maplibre_gl/Messages.g.swift; then exit 1; fi
+      - name: Check Git changes after code generation
+        if: ${{ !cancelled() }}
+        uses: multani/git-changes-action@v1
+      - name: Run tests
+        if: ${{ !cancelled() }}
+        run: melos run test:io:coverage --no-select
+      - name: Run the code generator tests
+        if: ${{ !cancelled() }}
+        run: melos run test:scripts
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() && inputs.upload-coverage }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
