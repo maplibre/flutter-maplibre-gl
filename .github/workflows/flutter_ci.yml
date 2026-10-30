@@ -272,6 +272,26 @@ jobs:
           gradle :maplibre_gl:help
           -PagpVersion=9.4.1 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
           -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
+      # Each maplibre_gl.renderer value resolves its MapLibre Android artifact, which the example
+      # app, built with the default, never checks; and a typo fails instead of falling back (#915).
+      - name: Renderer property
+        if: ${{ !cancelled() }}
+        working-directory: .github/gradle-compat
+        run: |
+          args="-PagpVersion=9.4.1 -PkgpVersion=2.4.21 -Pandroid.builtInKotlin=false -Pandroid.newDsl=false"
+          for pair in opengl:android-sdk-opengl vulkan:android-sdk-vulkan auto:android-sdk-vulkan-opengl; do
+            renderer=${pair%%:*} artifact=${pair#*:}
+            out=$(gradle :maplibre_gl:dependencies --configuration releaseRuntimeClasspath $args -Pmaplibre_gl.renderer=$renderer)
+            if ! grep -q "org.maplibre.gl:$artifact:" <<< "$out" || grep -q FAILED <<< "$out"; then
+              echo "$out"
+              echo "::error::maplibre_gl.renderer=$renderer did not resolve $artifact"
+              exit 1
+            fi
+          done
+          if gradle :maplibre_gl:help $args -Pmaplibre_gl.renderer=metal; then
+            echo "::error::an unknown maplibre_gl.renderer did not fail the build"
+            exit 1
+          fi
 
   # Also the iOS build check: a simulator build is a debug build, the same one
   # these tests compile, so a separate build job would only spend a second

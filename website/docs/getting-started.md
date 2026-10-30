@@ -62,6 +62,8 @@ If you want to show the user's location on the map, add location permissions to 
 
 For F-Droid and other builds without Google Play Services, set `maplibre_gl.playServicesLocation=false` in `android/gradle.properties`, as shown in [User Location](advanced/user-location.md#building-without-google-play-services).
 
+The map renders with OpenGL ES. To use Vulkan, set `maplibre_gl.renderer` in the same file, as shown in [Rendering backend](advanced/performance.md#rendering-backend-android).
+
 ## iOS
 
 Add a location usage description to your `Info.plist`:

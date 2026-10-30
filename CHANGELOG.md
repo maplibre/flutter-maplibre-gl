@@ -57,6 +57,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
 * **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
+* **Android**: `maplibre_gl.renderer` in `android/gradle.properties` picks the rendering backend: `opengl` (the default, as before), `vulkan`, or `auto` for Vulkan with an OpenGL ES fallback. The [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#rendering-backend-android) explains what each one costs (#915).
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).
 * `setLayersVisibility(layerIds, visible)` shows or hides several layers in one call; ids with no layer are skipped and returned (#1109).
 * **Web**: `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
