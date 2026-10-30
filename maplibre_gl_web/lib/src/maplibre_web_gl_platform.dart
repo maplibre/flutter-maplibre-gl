@@ -82,6 +82,16 @@ class MapLibreMapController extends MapLibrePlatform
   /// Numbers each [_runCameraAnimation] call, to tell its events apart.
   int _cameraAnimationCount = 0;
 
+  /// Set while [_stopCamera] runs: a moveend then sends no onCameraIdle.
+  bool _holdingCameraIdle = false;
+
+  /// Whether a moveend came while [_holdingCameraIdle] was set.
+  bool _cameraIdleHeld = false;
+
+  /// Set while [_startCameraMove] runs: the first movestart then sends no
+  /// onCameraMoveStarted.
+  bool _skipCameraMoveStarted = false;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -495,8 +505,49 @@ class MapLibreMapController extends MapLibrePlatform
     _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     _cancelCameraAnimation();
-    _map.jumpTo(cameraOptions);
+    final idleHeld = _stopCamera();
+    _startCameraMove(idleHeld, () => _map.jumpTo(cameraOptions));
     return true;
+  }
+
+  /// Stops the camera motion in progress, such as the inertia after a fling
+  /// or an animation, for a camera call that takes over from it. Android
+  /// carries on into the new move and sends onCameraIdle once, when the
+  /// camera settles, but maplibre-gl-js ends the stopped motion with a
+  /// moveend. So that moveend sends no onCameraIdle here: this returns
+  /// whether one was held back, to pass to [_startCameraMove].
+  ///
+  /// A gesture stopped mid-way ends with no moveend, so nothing is held.
+  bool _stopCamera() {
+    _cameraIdleHeld = false;
+    _holdingCameraIdle = true;
+    try {
+      _map.stop();
+    } finally {
+      _holdingCameraIdle = false;
+    }
+    return _cameraIdleHeld;
+  }
+
+  /// Runs [move], a camera change that starts with a movestart. If
+  /// [_stopCamera] held back an onCameraIdle, the app already heard
+  /// onCameraMoveStarted for the motion [move] continues, so its movestart
+  /// sends none. If [move] throws or starts no motion, the held onCameraIdle
+  /// goes out instead, as no moveend of its own will.
+  void _startCameraMove(bool idleHeld, void Function() move) {
+    if (!idleHeld) {
+      move();
+      return;
+    }
+    var started = false;
+    _skipCameraMoveStarted = true;
+    try {
+      move();
+      started = !_skipCameraMoveStarted;
+    } finally {
+      _skipCameraMoveStarted = false;
+      if (!started) _onCameraIdle(null);
+    }
   }
 
   /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for an update with a
@@ -519,7 +570,7 @@ class MapLibreMapController extends MapLibrePlatform
     // before the listeners below exist, so that moveend cannot complete this
     // call.
     _cancelCameraAnimation();
-    _map.stop();
+    final idleHeld = _stopCamera();
 
     final id = ++_cameraAnimationCount;
     // maplibre-gl-js copies the event data onto every move and moveend this
@@ -570,7 +621,7 @@ class MapLibreMapController extends MapLibrePlatform
     });
 
     try {
-      start({_cameraAnimationKey: id});
+      _startCameraMove(idleHeld, () => start({_cameraAnimationKey: id}));
     } catch (_) {
       // No moveend is coming: drop the listeners and the pending call, so
       // the next camera call does not answer this one.
@@ -1399,6 +1450,10 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onCameraMoveStarted(Event e) {
+    if (_skipCameraMoveStarted) {
+      _skipCameraMoveStarted = false;
+      return;
+    }
     onCameraMoveStartedPlatform(
       cameraMoveReason(
         e.jsObject as JSObject,
@@ -1415,6 +1470,10 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onCameraIdle(_) {
+    if (_holdingCameraIdle) {
+      _cameraIdleHeld = true;
+      return;
+    }
     onCameraIdlePlatform(_getCameraPosition());
   }
 
