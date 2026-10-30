@@ -460,11 +460,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         Convert.interpretMapLibreMapOptions(options: options, delegate: self)
         // Nil when the map does not track the camera position. A map without a
         // size has yet to show its initial camera, so that is the one it reports.
-        guard let camera = getCamera() else {
+        guard let position = getCameraPosition() else {
             result(nil)
             return
         }
-        result(pendingInitialCamera ?? camera.toPigeon(mapView: mapView))
+        result(pendingInitialCamera ?? position)
     }
 
     func mapInvalidateAmbientCache(result: @escaping FlutterResult) {
@@ -764,7 +764,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // The call started no change after all, so the camera did stop.
         if heldBackIdle {
             heldBackIdle = false
-            sendCameraIdle(getCamera()?.toPigeon(mapView: mapView))
+            sendCameraIdle(getCameraPosition())
         }
     }
 
@@ -843,9 +843,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapQueryCameraPosition(result: @escaping FlutterResult) {
         // On-demand query: read the live camera directly. Unlike the
-        // streaming paths, which go through getCamera() and honor
+        // streaming paths, which go through getCameraPosition() and honor
         // trackCameraPosition, a one-off query always returns a value.
-        result(mapView.camera.toPigeon(mapView: mapView))
+        result(mapView.pigeonCameraPosition)
     }
 
     func mapGetVisibleRegion(result: @escaping FlutterResult) {
@@ -2368,8 +2368,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
     }
 
-    private func getCamera() -> MLNMapCamera? {
-        return trackCameraPosition ? mapView.camera : nil
+    private func getCameraPosition() -> PgCameraPosition? {
+        return trackCameraPosition ? mapView.pigeonCameraPosition : nil
     }
 
     private func setMapLanguage(language: String) {
@@ -3442,13 +3442,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             flutterApi?.cameraOnMoveStarted(isGesture: isGesture) { _ in }
         }
         // Where the change starts, so regionDidChange can tell whether the camera moved.
-        lastMovePosition = getCamera()?.toPigeon(mapView: mapView)
+        lastMovePosition = getCameraPosition()
     }
 
     func mapViewRegionIsChanging(_ mapView: MLNMapView) {
-        // Never nil when the position is tracked: getCamera() answers whenever it is.
-        guard let camera = getCamera() else { return }
-        sendCameraMove(camera.toPigeon(mapView: mapView))
+        // Never nil when the position is tracked: getCameraPosition() answers whenever it is.
+        guard let position = getCameraPosition() else { return }
+        sendCameraMove(position)
     }
 
     private func sendCameraMove(_ position: PgCameraPosition) {
@@ -3474,9 +3474,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             heldBackIdle = true
             return
         }
-        // Null when the map does not track the camera position: getCamera()
+        // Null when the map does not track the camera position: getCameraPosition()
         // answers only when it does.
-        sendCameraIdle(getCamera()?.toPigeon(mapView: mapView))
+        sendCameraIdle(getCameraPosition())
     }
 
     private func sendCameraIdle(_ position: PgCameraPosition?) {
