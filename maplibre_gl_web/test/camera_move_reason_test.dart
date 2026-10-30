@@ -41,6 +41,16 @@ void main() {
     );
   });
 
+  test(
+    'a move of the mouse wheel, which has no browser event, is a gesture',
+    () {
+      expect(
+        cameraMoveReason(_moveStart(), scrollZooming: true),
+        CameraMoveReason.gesture,
+      );
+    },
+  );
+
   test('a click on the compass is programmatic, as on Android and iOS', () {
     final control = web.document.createElement('div')
       ..className = 'maplibregl-ctrl maplibregl-ctrl-group';
