@@ -54,6 +54,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /// The camera position last sent to `cameraOnMove`, or the one the current camera change
     /// started from. Nil while the position is not tracked.
     private var lastMovePosition: PgCameraPosition?
+    /// Whether a camera call of Dart is starting its change, see `replacingCameraMotion`.
+    private var isReplacingCameraMotion = false
+    /// Whether that call stopped a motion in progress and held back its `cameraOnIdle`.
+    private var heldBackIdle = false
     private let cameraAnimations = CameraAnimationTracker()
     /// Completion handlers given to MLNMapView that have not run yet, each with
     /// the answer `deinit` gives if the map goes away first.
@@ -731,17 +735,36 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
 
             cameraAnimations.track(result: result) { completion in
-                mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
+                replacingCameraMotion {
+                    mapView.setCamera(camera, withDuration: interval, animationTimingFunction: timingFunction, completionHandler: completion)
+                }
             }
         } else {
             cameraAnimations.track(result: result) { completion in
-                mapView.setCamera(
-                    camera,
-                    withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                    animationTimingFunction: nil,
-                    completionHandler: completion
-                )
+                replacingCameraMotion {
+                    mapView.setCamera(
+                        camera,
+                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                        animationTimingFunction: nil,
+                        completionHandler: completion
+                    )
+                }
             }
+        }
+    }
+
+    /// Runs `change`, a camera call of Dart. MLNMapView stops the motion in progress, such as
+    /// the deceleration after a fling, with a `regionDidChange` of its own before the new change
+    /// starts. Android sends no onCameraIdle and no second onCameraMoveStarted for that switch,
+    /// only one onCameraIdle once the camera settles, so neither goes out here either (#1152).
+    private func replacingCameraMotion(_ change: () -> Void) {
+        isReplacingCameraMotion = true
+        change()
+        isReplacingCameraMotion = false
+        // The call started no change after all, so the camera did stop.
+        if heldBackIdle {
+            heldBackIdle = false
+            sendCameraIdle(getCameraPosition())
         }
     }
 
@@ -750,7 +773,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return
         }
         cameraAnimations.interruptRunning()
-        mapView.setCamera(camera, animated: false)
+        replacingCameraMotion {
+            mapView.setCamera(camera, animated: false)
+        }
         // Always true, as on Android and web: a jump moves the camera before setCamera
         // returns, so nothing can cut it short. The Android SDK's moveCamera likewise only
         // ever calls onFinish, never onCancel.
@@ -770,15 +795,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // center shifted for the bounds padding, and padding passed to the
         // map view would stay on as camera insets after the move.
         cameraAnimations.track(result: result) { completion in
-            if let duration = duration.flatMap({ TimeInterval(exactly: $0) }) {
-                mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
-            } else {
-                mapView.setCamera(
-                    camera,
-                    withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                    animationTimingFunction: nil,
-                    completionHandler: completion
-                )
+            replacingCameraMotion {
+                if let duration = duration.flatMap({ TimeInterval(exactly: $0) }) {
+                    mapView.fly(to: camera, withDuration: duration / 1000, completionHandler: completion)
+                } else {
+                    mapView.setCamera(
+                        camera,
+                        withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                        animationTimingFunction: nil,
+                        completionHandler: completion
+                    )
+                }
             }
         }
     }
@@ -3408,7 +3435,12 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // Whether a gesture of the user moves the camera, which Android tells
         // with REASON_API_GESTURE.
         let isGesture = !reason.isDisjoint(with: .gestures)
-        flutterApi?.cameraOnMoveStarted(isGesture: isGesture) { _ in }
+        if heldBackIdle {
+            // Continues the motion it stopped, which Dart still sees as moving (#1152).
+            heldBackIdle = false
+        } else {
+            flutterApi?.cameraOnMoveStarted(isGesture: isGesture) { _ in }
+        }
         // Where the change starts, so regionDidChange can tell whether the camera moved.
         lastMovePosition = getCameraPosition()
     }
@@ -3437,9 +3469,17 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         animated: Bool
     ) {
         cameraAnimations.regionDidChange(reason: reason, animated: animated)
+        // The motion a camera call of Dart stops to start its own change (#1152).
+        if isReplacingCameraMotion && reason.contains(.transitionCancelled) {
+            heldBackIdle = true
+            return
+        }
         // Null when the map does not track the camera position: getCameraPosition()
         // answers only when it does.
-        let position = getCameraPosition()
+        sendCameraIdle(getCameraPosition())
+    }
+
+    private func sendCameraIdle(_ position: PgCameraPosition?) {
         // MLNMapView reports no change in progress for a move without animation, such as
         // moveCamera, nor for the last frame of an animation. Android sends every position the
         // camera reaches to onCameraMove before onCameraIdle, so the final one goes out here
