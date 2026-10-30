@@ -187,6 +187,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * Offline region metadata that is not a JSON object, for example from a database merged with `mergeOfflineRegions`, reads as an empty map, as on iOS, instead of crashing `getListOfRegions`, `mergeOfflineRegions` and `updateOfflineRegionMetadata`. A failure inside an offline call fails that call instead of crashing the app.
   * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
+* **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
