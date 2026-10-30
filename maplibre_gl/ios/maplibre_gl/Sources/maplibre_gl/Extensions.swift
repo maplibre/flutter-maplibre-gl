@@ -1,33 +1,27 @@
 import MapLibre
 
-extension MLNMapCamera {
-    /// The camera as the camera events and calls report it.
-    func toPigeon(mapView: MLNMapView) -> PgCameraPosition {
+extension MLNMapView {
+    /// Where the map is now, as the camera events and calls report it.
+    ///
+    /// The zoom is the map's own `zoomLevel`, not one worked out from
+    /// `camera.altitude`. The altitude is itself derived from the zoom at the
+    /// current latitude, so going back through `MLNZoomLevelForAltitude` adds
+    /// floating point noise that changes with every pan step (#1150). It also
+    /// needs the view size, so before the first layout it is not finite, which
+    /// poisons the Dart side's cached position (#903). `zoomLevel` needs
+    /// neither.
+    var pigeonCameraPosition: PgCameraPosition {
+        let camera = self.camera
         return PgCameraPosition(
-            bearing: heading,
-            target: centerCoordinate.toPigeon(),
-            tilt: Double(pitch),
-            zoom: finiteZoom(mapView: mapView)
+            bearing: camera.heading,
+            target: camera.centerCoordinate.toPigeon(),
+            tilt: Double(camera.pitch),
+            zoom: zoomLevel
         )
     }
+}
 
-    private func finiteZoom(mapView: MLNMapView) -> Double {
-        // MLNZoomLevelForAltitude derives the zoom from the view size, so a
-        // camera event that arrives before the map view has a laid-out frame
-        // divides by zero and yields a non-finite zoom. Sending that over the
-        // channel poisons the controller's cached camera position on the Dart
-        // side, and on a map nobody touches no later event arrives to correct
-        // it (#903). The map view's own zoomLevel needs no view size and is
-        // always finite, so it stands in.
-        let computedZoom = MLNZoomLevelForAltitude(
-            altitude,
-            pitch,
-            centerCoordinate.latitude,
-            mapView.frame.size
-        )
-        return computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
-    }
-
+extension MLNMapCamera {
     /// The camera at `position`, its altitude worked out for the current size
     /// of the map view.
     static func fromPigeon(_ position: PgCameraPosition, mapView: MLNMapView) -> MLNMapCamera {
