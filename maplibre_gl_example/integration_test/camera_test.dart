@@ -1018,9 +1018,8 @@ void main() {
       'a camera call that cuts an animation short reaches onCameraIdle once',
       (tester) async {
         // As on Android, the camera goes on moving from the stopped animation
-        // into the new move, and onCameraIdle comes once it settles. iOS also
-        // sent one where the animation stopped (#1152). Web still does, as
-        // maplibre-gl-js fires moveend for the stopped animation.
+        // into the new move, and onCameraIdle comes once it settles. iOS and
+        // web also sent one where the animation stopped (#1152).
         var idles = 0;
         final controller = await pumpMap(
           tester,
@@ -1072,13 +1071,19 @@ void main() {
           ),
         );
         await expectOneIdle(
+          'easeCamera',
+          () => controller.easeCamera(
+            CameraUpdate.newLatLngZoom(const LatLng(10, 10), 5),
+            duration: const Duration(milliseconds: 500),
+          ),
+        );
+        await expectOneIdle(
           'moveCamera',
           () => controller.moveCamera(
             CameraUpdate.newLatLng(const LatLng(-5, -5)),
           ),
         );
       },
-      skip: testPlatform == TestPlatform.web,
     );
 
     testWidgets('without trackCameraPosition only onCameraIdle fires', (

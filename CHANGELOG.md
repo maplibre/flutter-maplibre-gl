@@ -188,7 +188,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
-* **iOS**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped (#1156).
+* **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
