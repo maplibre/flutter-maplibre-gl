@@ -136,6 +136,25 @@ MapLibreMap(
 !!! tip "`trackCameraPosition: true`"
     Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them. The last `onCameraMove` before `onCameraIdle` has the position where the camera stopped, also after `moveCamera`.
 
+### Tell the user's moves from the app's
+
+`onCameraMoveStarted` says what started a move: `CameraMoveReason.gesture` for a pan, pinch, rotation, tilt or double tap of the user, with the fling after it, and `CameraMoveReason.programmatic` for anything else, such as a camera call, a tap on the compass or location tracking. The controller keeps it in `cameraMoveReason` until the camera stops, so `onCameraMove` can skip the moves the app makes:
+
+```dart
+MapLibreMap(
+  trackCameraPosition: true,
+  onCameraMoveStarted: (CameraMoveReason reason) {
+    // Called once per move, before onCameraMove
+  },
+  onCameraMove: (CameraPosition pos) {
+    if (controller.cameraMoveReason != CameraMoveReason.gesture) return;
+    // Only moves of the user get here
+  },
+)
+```
+
+A move that takes over another before the camera stops, such as `animateCamera` during a fling, keeps the reason of the first.
+
 ## Key APIs
 
 - [`MapLibreMapController.animateCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/animateCamera.html)
@@ -143,3 +162,4 @@ MapLibreMap(
 - [`MapLibreMapController.easeCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/easeCamera.html)
 - [`CameraUpdate`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraUpdate-class.html)
 - [`CameraPosition`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraPosition-class.html)
+- [`CameraMoveReason`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraMoveReason.html)

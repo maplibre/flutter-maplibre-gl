@@ -7,8 +7,9 @@
 // toScreenLocationBatch / toLatLng, getMetersPerPixelAtLatitude,
 // setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
-// controller's cached cameraPosition and the onCameraMove / onCameraIdle
-// callbacks, and on iOS the camera calls made on a map without a size.
+// controller's cached cameraPosition, the onCameraMoveStarted reason of a
+// camera call and the onCameraMove / onCameraIdle callbacks, and on iOS the
+// camera calls made on a map without a size.
 //
 // Each platform turns a CameraUpdate into its own SDK camera and does its own
 // projection math (density conversion on Android, altitude-based zoom on iOS,
@@ -1080,6 +1081,81 @@ void main() {
       },
       skip: testPlatform == TestPlatform.web,
     );
+
+    testWidgets('camera calls start a programmatic move', (tester) async {
+      // Gestures are not covered: synthetic touches do not reach the iOS map.
+      final reasons = <CameraMoveReason>[];
+      // The controller's reason at each onCameraMove.
+      final reasonsWhileMoving = <CameraMoveReason?>[];
+      var idles = 0;
+      MapLibreMapController? controller;
+      controller = await pumpMap(
+        tester,
+        builder:
+            (onMapCreated, onStyleLoaded) => MapLibreMap(
+              styleString: offlineStyle,
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(0, 0),
+                zoom: 3,
+              ),
+              trackCameraPosition: true,
+              onCameraMoveStarted: reasons.add,
+              onCameraMove:
+                  (_) => reasonsWhileMoving.add(controller?.cameraMoveReason),
+              onCameraIdle: () => idles++,
+              onMapCreated: onMapCreated,
+              onStyleLoadedCallback: onStyleLoaded,
+            ),
+      );
+
+      // Let any startup camera events drain before counting.
+      await pumpFor(tester, const Duration(milliseconds: 500));
+
+      Future<void> expectProgrammatic(
+        String label,
+        Future<bool?> Function() move,
+      ) async {
+        reasons.clear();
+        reasonsWhileMoving.clear();
+        idles = 0;
+        await pumpUntil(tester, move(), label);
+        await pumpUntilValue(
+          tester,
+          () async => idles,
+          (count) => count > 0,
+          '$label: onCameraIdle',
+        );
+        expect(reasons, [CameraMoveReason.programmatic], reason: label);
+        expect(reasonsWhileMoving, isNotEmpty, reason: label);
+        expect(
+          reasonsWhileMoving,
+          everyElement(CameraMoveReason.programmatic),
+          reason: label,
+        );
+        expect(controller!.cameraMoveReason, isNull, reason: label);
+      }
+
+      await expectProgrammatic(
+        'animateCamera',
+        () => controller!.animateCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(10, 10), 5),
+          duration: const Duration(milliseconds: 300),
+        ),
+      );
+      await expectProgrammatic(
+        'easeCamera',
+        () => controller!.easeCamera(
+          CameraUpdate.newLatLngZoom(const LatLng(-10, 20), 4),
+          duration: const Duration(milliseconds: 300),
+        ),
+      );
+      await expectProgrammatic(
+        'moveCamera',
+        () => controller!.moveCamera(
+          CameraUpdate.newLatLng(const LatLng(5, -5)),
+        ),
+      );
+    });
 
     testWidgets('without trackCameraPosition only onCameraIdle fires', (
       tester,

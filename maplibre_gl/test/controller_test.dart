@@ -827,18 +827,55 @@ void main() {
     });
 
     test('camera move started sets isCameraMoving to true', () {
-      platform.onCameraMoveStartedPlatform.call(null);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
 
       expect(controller.isCameraMoving, isTrue);
     });
 
     test('camera idle sets isCameraMoving to false', () {
-      platform.onCameraMoveStartedPlatform.call(null);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
       platform.onCameraIdlePlatform.call(
         const CameraPosition(target: LatLng(5, 5)),
       );
 
       expect(controller.isCameraMoving, isFalse);
+    });
+
+    test('cameraMoveReason holds the reason until the camera stops', () {
+      expect(controller.cameraMoveReason, isNull);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.programmatic);
+      expect(controller.cameraMoveReason, CameraMoveReason.programmatic);
+
+      platform.onCameraIdlePlatform.call(null);
+      expect(controller.cameraMoveReason, isNull);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
+      expect(controller.cameraMoveReason, CameraMoveReason.gesture);
+    });
+
+    test('onCameraMoveStarted gets the reason', () {
+      final reasons = <CameraMoveReason>[];
+      late final MapLibreMapController reasonController;
+      reasonController = MapLibreMapController(
+        maplibrePlatform: platform,
+        annotationOrder: AnnotationType.values,
+        annotationConsumeTapEvents: AnnotationType.values,
+        onCameraMoveStarted: (reason) {
+          // Already readable from the controller.
+          expect(reasonController.cameraMoveReason, reason);
+          reasons.add(reason);
+        },
+      );
+      addTearDown(reasonController.dispose);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.programmatic);
+
+      expect(reasons, [
+        CameraMoveReason.gesture,
+        CameraMoveReason.programmatic,
+      ]);
     });
 
     test('camera move updates cameraPosition', () {
