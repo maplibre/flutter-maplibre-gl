@@ -50,7 +50,7 @@ jobs:
         id: filter
         with:
           # The web-only integration tests (*_web_test.dart) run on web alone;
-          # every other test also runs on Android, through all_tests.dart.
+          # every other test also runs on Android and iOS, through all_tests.dart.
           filters: |
             shared: &shared
               - 'maplibre_gl/lib/**'
@@ -75,6 +75,8 @@ jobs:
               - *shared
               - 'maplibre_gl/ios/**'
               - 'maplibre_gl_example/ios/**'
+              - 'maplibre_gl_example/integration_test/!(*_web_test).dart'
+              - 'maplibre_gl_example/integration_test/support/**'
             web:
               - *shared
               - 'maplibre_gl_web/**'
@@ -130,7 +132,6 @@ jobs:
   # Integration tests drive a real map, so they reach the Java, Swift and
   # JavaScript code the unit tests only see through a mocked channel. Every
   # test builds its map from an inline style, so no job needs the network.
-  # iOS is not run here yet: a simulator run costs a macOS runner per PR.
   integration-web:
     name: "Integration tests (web)"
     needs: changes
@@ -272,13 +273,37 @@ jobs:
           -PagpVersion=9.4.1 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
           -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
 
-  build-ios:
-    name: "Build iOS package"
+  # Also the iOS build check: a simulator build is a debug build, the same one
+  # these tests compile, so a separate build job would only spend a second
+  # macOS runner.
+  integration-ios:
+    name: "Integration tests (iOS simulator)"
     needs: changes
     if: needs.changes.outputs.ios == 'true'
-    uses: ./.github/workflows/_build.yml
-    with:
-      platform: ios
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      # The newest iPhone on the newest iOS runtime the runner image ships.
+      - name: Boot a simulator
+        id: simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json | jq -r '
+            [.devices | to_entries[] | select(.key | contains("iOS"))]
+            | sort_by(.key | capture("iOS-(?<v>[0-9-]+)").v | split("-") | map(tonumber))
+            | last.value | map(select(.name | startswith("iPhone"))) | last.udid')
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+      - name: Run integration tests
+        working-directory: maplibre_gl_example
+        run: flutter test integration_test/all_tests.dart -d ${{ steps.simulator.outputs.udid }}
 
   # On main, build web in release mode and upload it so the docs deploy can
   # reuse it (no second web build). On PRs/other branches, a plain web build:
@@ -379,7 +404,7 @@ jobs:
   ci-result:
     name: "CI result"
     if: always()
-    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, build-ios, build-web]
+    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, integration-ios, build-web]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a job failed or was cancelled
