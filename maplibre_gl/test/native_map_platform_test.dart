@@ -3445,18 +3445,61 @@ void main() {
       },
     );
 
-    test(
+    testWidgets(
       'the deprecated useHybridComposition still picks the texture layer',
-      () {
-        onPlatform(TargetPlatform.android);
-        // The deprecated flag is what this test covers.
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        // The deprecated flag is what this test covers, and it wins over
+        // androidViewMode.
         // ignore: deprecated_member_use_from_same_package
         MapLibreMap.useHybridComposition = true;
-
-        expect(
-          platform.buildView(creationParams(), (_) {}, null),
-          isA<PlatformViewLink>(),
+        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          switch (call.method) {
+            case 'create':
+              // A texture id: the view is drawn by Flutter.
+              return 0;
+            case 'resize':
+              final args = call.arguments as Map;
+              return <String, Object?>{
+                'width': args['width'],
+                'height': args['height'],
+              };
+          }
+          return null;
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
         );
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(creationParams(), (_) {}, null),
+          ),
+        );
+        await tester.pump();
+
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final args = create.arguments as Map;
+        // initAndroidView, not Hybrid Composition.
+        expect(args['hybrid'], isNull);
+        expect(
+          codec.decodeMessage(
+            ByteData.sublistView(args['params'] as Uint8List),
+          ),
+          typed(textureLayer: true),
+        );
+
+        await tester.pumpWidget(const SizedBox());
       },
     );
 

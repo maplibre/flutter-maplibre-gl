@@ -52,7 +52,7 @@
 * `moveLayer(layerId, belowLayerId: ...)` moves a layer under another one, or to the top, without recreating it (#1086).
 * `setLayerZoomRange(layerId, minzoom, maxzoom)` changes the zoom range in which a layer is drawn (#1092).
 * `MapLibreMap.attributionEnabled` hides the attribution (i) button; the attribution must then be shown elsewhere (#1092).
-* **Android**: `AndroidViewMode.hybridComposition` embeds the map through Flutter's Hybrid Composition, so the system composites it. Try it when map updates wait for a Flutter frame to reach the screen. See the [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) (#1161).
+* **Android**: `AndroidViewMode.hybridComposition` embeds the map through Flutter's Hybrid Composition, so the system composites it. Try it when map updates show up late, only when something else on screen moves. See the [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) (#1161).
 * **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds the plugin without Google Play Services, for F-Droid and other FOSS builds; high accuracy then uses the platform location engine (#1102).
 * **Android**: `maplibre_gl.renderer` in `android/gradle.properties` picks the rendering backend: `opengl` (the default, as before), `vulkan`, or `auto` for Vulkan with an OpenGL ES fallback. The [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#rendering-backend-android) explains what each one costs (#1160).
 * `MapLibreMap.myLocationStyle` recolors the user-location puck: dot, bearing arrow, accuracy circle and pulse (#1101).

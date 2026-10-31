@@ -100,14 +100,14 @@ Set it before the first map is built. Each map keeps the mode it was built with.
   [`TextureView`](https://developer.android.com/reference/android/view/TextureView),
   whose content Flutter paints like an image, so the map behaves like any other
   widget ([texture layer](https://docs.flutter.dev/platform-integration/android/platform-views#texture-layer)).
-  The `translucentTextureSurface` map option also moves the map to a
-  `TextureView`, and makes it transparent.
+  The `translucentTextureSurface` map option moves the map to a transparent
+  `TextureView` in every mode.
 - **`hybridComposition`**: MapLibre keeps its `SurfaceView`, and Flutter places
   it directly on the Android screen, next to its own content, where Android
   combines the two
   ([Hybrid Composition](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition)).
-  To keep them in sync, Flutter renders on Android's UI thread while the map is
-  visible, which is where the cost comes from
+  To keep them in sync, Flutter merges its raster thread into Android's UI
+  thread while the map is visible, which is where the cost comes from
   ([Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)).
 
 `MapLibreMap.useHybridComposition = true` is the deprecated spelling of
