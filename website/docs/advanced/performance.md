@@ -75,9 +75,9 @@ below.
 
 | Mode | Use it when | What it costs |
 |------|-------------|---------------|
-| `auto` (default) | Most apps. | Fast camera moves can stutter a little, as the map goes through extra graphics buffers. |
+| `auto` (default) | Most apps. | Fast camera moves can stutter, or flash on some devices, as the map goes through extra graphics buffers. |
 | `textureLayer` | Flutter transforms, clips or animates the map. | The map renders more slowly, on every Android version. |
-| `hybridComposition` | Map updates show up late, only when something else on screen moves. | Flutter renders more slowly while the map is on screen, especially on Android 9 and older and on low-end devices. |
+| `hybridComposition` | In `textureLayer`, map updates show up late, only when something else on screen moves. | Flutter renders more slowly while the map is on screen, especially on Android 9 and older and on low-end devices. |
 
 ```dart
 void main() {
@@ -109,6 +109,8 @@ Set it before the first map is built. Each map keeps the mode it was built with.
   To keep them in sync, Flutter merges its raster thread into Android's UI
   thread while the map is visible, which is where the cost comes from
   ([Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)).
+  `translucentTextureSurface` is the only way to get a `TextureView` in this
+  mode.
 
 `MapLibreMap.useHybridComposition = true` is the deprecated spelling of
 `AndroidViewMode.textureLayer`, and wins over `androidViewMode`. Despite its name,

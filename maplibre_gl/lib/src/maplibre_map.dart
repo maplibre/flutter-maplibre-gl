@@ -28,8 +28,10 @@ enum AndroidViewMode {
 
   /// The map renders into a `SurfaceView` that Flutter places in the Android
   /// view hierarchy (Hybrid Composition), and the system composites it. Try it
-  /// when map updates show up late, only when something else on screen moves.
-  /// It costs Flutter performance while the map is on screen, see
+  /// when, in [textureLayer], map updates show up late, only when something
+  /// else on screen moves. `translucentTextureSurface` is the only way to get
+  /// a `TextureView` in this mode. It costs Flutter performance while the map
+  /// is on screen, see
   /// [Hosting native Android views](https://docs.flutter.dev/platform-integration/android/platform-views#performance).
   hybridComposition,
 }
