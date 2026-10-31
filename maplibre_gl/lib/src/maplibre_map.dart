@@ -18,7 +18,9 @@ enum AndroidViewMode {
   /// The map renders into a `TextureView`, which Flutter composites as a
   /// texture layer. The map then behaves like any other widget: Flutter
   /// content can paint over it, and it can be transformed, clipped or
-  /// animated, at a higher rendering cost.
+  /// animated, at a higher rendering cost. When the app enables Hybrid
+  /// Composition++, Flutter uses it for every platform view, so keep [auto]
+  /// there.
   textureLayer,
 }
 
@@ -437,8 +439,9 @@ class MapLibreMap extends StatefulWidget {
   /// `runApp()`; maps already on screen keep the mode they were created with.
   static AndroidViewMode androidViewMode = AndroidViewMode.auto;
 
-  /// `true` selects [AndroidViewMode.textureLayer]. Despite the name, it never
-  /// selected Flutter's Hybrid Composition.
+  /// `true` selects [AndroidViewMode.textureLayer], whatever
+  /// [androidViewMode] says. Despite the name, it does not select Flutter's
+  /// Hybrid Composition.
   @Deprecated('Use androidViewMode = AndroidViewMode.textureLayer instead')
   static bool useHybridComposition = false;
 

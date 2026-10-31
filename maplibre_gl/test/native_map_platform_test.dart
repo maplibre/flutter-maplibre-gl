@@ -3406,6 +3406,22 @@ void main() {
       },
     );
 
+    test('a map keeps the mode of its first build', () {
+      onPlatform(TargetPlatform.android);
+      expect(
+        platform.buildView(creationParams(), (_) {}, null),
+        isA<AndroidView>(),
+      );
+
+      // A rebuild after the flag changed must not swap the platform view.
+      MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
+
+      expect(
+        platform.buildView(creationParams(), (_) {}, null),
+        isA<AndroidView>(),
+      );
+    });
+
     test('iOS builds a UiKitView without the Android flag', () {
       onPlatform(TargetPlatform.iOS);
       MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;

@@ -19,6 +19,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// this never being set.
   int? _viewId;
 
+  /// Whether this map uses [AndroidViewMode.textureLayer], read on its first
+  /// build so a later change of the static flags cannot swap the widget and
+  /// recreate a platform view already on screen.
+  late final bool _textureLayer =
+      MapLibreMap.androidViewMode == AndroidViewMode.textureLayer ||
+      // The deprecated spelling of textureLayer, honored until removed.
+      // ignore: deprecated_member_use_from_same_package
+      MapLibreMap.useHybridComposition;
+
   MapLibreMapHostApi? _hostApi;
 
   MapLibreMapHostApi get _api =>
@@ -59,11 +68,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final textureLayer =
-          MapLibreMap.androidViewMode == AndroidViewMode.textureLayer ||
-          // The deprecated spelling of textureLayer, honored until removed.
-          // ignore: deprecated_member_use_from_same_package
-          MapLibreMap.useHybridComposition;
+      final textureLayer = _textureLayer;
       final params = _creationParams(
         creationParams,
         textureLayer: textureLayer,

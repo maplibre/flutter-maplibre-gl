@@ -78,7 +78,8 @@ Flutter picks its embedding mode from that view:
   Flutter composites as a texture layer, so the map behaves like a regular
   widget: Flutter content can paint over it, and the map itself can be
   transformed, clipped or animated. A `TextureView` costs more to render than a
-  `SurfaceView` on every Android version.
+  `SurfaceView` on every Android version. With Hybrid Composition++ enabled,
+  Flutter uses it for this mode too, so keep `auto` there.
 
 ```dart
 MapLibreMap.androidViewMode = AndroidViewMode.textureLayer; // before runApp()
@@ -93,8 +94,8 @@ well, additionally making it non-opaque, so reach for
 surface.
 
 `MapLibreMap.useHybridComposition = true` is the deprecated spelling of
-`AndroidViewMode.textureLayer`. Despite its name, it never selected Flutter's
-Hybrid Composition.
+`AndroidViewMode.textureLayer`, whatever `androidViewMode` says. Despite its
+name, it does not select Flutter's Hybrid Composition.
 
 ### Hybrid Composition++
 

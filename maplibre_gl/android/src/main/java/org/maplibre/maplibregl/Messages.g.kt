@@ -1586,9 +1586,10 @@ data class PgCreationParams (
    */
   val iosLongClickDurationMs: Long? = null,
   /**
-   * Android only: whether the map renders into a `TextureView`, which
-   * Flutter composites as a texture layer (`AndroidViewMode.textureLayer` in
-   * the plugin). Always false on iOS.
+   * Android only: whether the app asked for the texture layer
+   * (`AndroidViewMode.textureLayer` in the plugin), which renders the map
+   * into a `TextureView`. `translucentTextureSurface` in [options] does too.
+   * Always false on iOS.
    */
   val textureLayer: Boolean
 )

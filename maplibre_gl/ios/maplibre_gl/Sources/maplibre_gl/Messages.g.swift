@@ -1487,9 +1487,10 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
   /// iOS only: how long a press lasts before it is a long click, in
   /// milliseconds. Null keeps the platform default.
   var iosLongClickDurationMs: Int64? = nil
-  /// Android only: whether the map renders into a `TextureView`, which
-  /// Flutter composites as a texture layer (`AndroidViewMode.textureLayer` in
-  /// the plugin). Always false on iOS.
+  /// Android only: whether the app asked for the texture layer
+  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
+  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
+  /// Always false on iOS.
   var textureLayer: Bool
 
 

@@ -213,7 +213,7 @@ See [Building without Google Play Services](advanced/user-location.md#building-w
 
 ### Android: platform view mode
 
-`MapLibreMap.useHybridComposition` is deprecated. It never selected Flutter's Hybrid Composition: it moved the map to a `TextureView`, and `MapLibreMap.androidViewMode` now says so.
+`MapLibreMap.useHybridComposition` is deprecated. It does not select Flutter's Hybrid Composition: it moves the map to a `TextureView`, and `MapLibreMap.androidViewMode` now says so.
 
 ```dart
 // Before
