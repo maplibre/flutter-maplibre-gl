@@ -117,8 +117,9 @@ it does not select Hybrid Composition: that is `AndroidViewMode.hybridCompositio
 ### Hybrid Composition++
 
 Flutter's [Hybrid Composition++](https://docs.flutter.dev/platform-integration/android/platform-views#hcpp)
-lets Android combine the map with Flutter's content without the costs above: the map keeps its fast `SurfaceView`
-and still behaves like a widget. It needs Android 14 (API 34) or newer and
+lets Android combine the map with Flutter's content at a lower cost than the
+modes above: the map keeps its fast `SurfaceView` and still behaves like a
+widget. It needs Android 14 (API 34) or newer and
 Impeller with Vulkan; on other devices Flutter falls back to the mode set by
 `androidViewMode`. Where it applies, Flutter uses it whatever that mode is, so
 keep `auto`.
