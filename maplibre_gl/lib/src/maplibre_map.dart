@@ -6,22 +6,68 @@ part of '../maplibre_gl.dart';
 
 enum AnnotationType { fill, line, circle, symbol }
 
-/// How the Android map is embedded in the Flutter UI, set through
-/// [MapLibreMap.androidViewMode].
-enum AndroidViewMode {
-  /// The map renders into a `SurfaceView`, the most direct rendering path, and
-  /// Flutter picks how to embed it: Hybrid Composition++ when the app enables
-  /// it and the device supports it, otherwise Virtual Display, with its known
-  /// limits around text input, accessibility and z-order.
+/// How a map is drawn on Android, set per map with [MapLibreMap.androidView].
+/// Ignored on iOS and web.
+///
+/// Most apps keep the default. The
+/// [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android)
+/// says when to change it.
+@immutable
+class AndroidMapView {
+  const AndroidMapView({
+    this.surface = AndroidMapSurface.surfaceView,
+    this.composition = AndroidComposition.auto,
+  });
+
+  /// The Android view the map draws into.
+  final AndroidMapSurface surface;
+
+  /// How Flutter places that view among its widgets.
+  final AndroidComposition composition;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AndroidMapView &&
+      other.surface == surface &&
+      other.composition == composition;
+
+  @override
+  int get hashCode => Object.hash(surface, composition);
+
+  @override
+  String toString() =>
+      'AndroidMapView(surface: $surface, composition: $composition)';
+}
+
+/// The Android view the map draws into. See [AndroidMapView].
+enum AndroidMapSurface {
+  /// A `SurfaceView`: the fastest way to draw. The default.
+  surfaceView,
+
+  /// A `TextureView`. Try it when the map stutters or flashes on fast camera
+  /// moves. The map draws more slowly.
+  textureView,
+
+  /// A transparent [textureView]: parts of the style without a background
+  /// show the widgets behind the map.
+  translucentTextureView,
+}
+
+/// How Flutter places the map's Android view among its widgets. See
+/// [AndroidMapView].
+///
+/// When the app enables Hybrid Composition++ and the device supports it,
+/// Flutter uses it whatever the value.
+enum AndroidComposition {
+  /// Flutter picks: a texture layer for a `TextureView`, Virtual Display for a
+  /// `SurfaceView`. The default.
   auto,
 
-  /// The map renders into a `TextureView`, which Flutter composites as a
-  /// texture layer. The map then behaves like any other widget: Flutter
-  /// content can paint over it, and it can be transformed, clipped or
-  /// animated, at a higher rendering cost. When the app enables Hybrid
-  /// Composition++, Flutter uses it for every platform view, so keep [auto]
-  /// there.
-  textureLayer,
+  /// Android combines the map with Flutter's content (Hybrid Composition).
+  /// Try it when map updates show up late, only when something else on
+  /// screen moves. Flutter renders more slowly while the map is visible, see
+  /// [Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance).
+  hybridComposition,
 }
 
 typedef MapCreatedCallback = void Function(MapLibreMapController controller);
@@ -92,6 +138,11 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.circle,
     ],
     this.foregroundLoadColor = Colors.transparent,
+    this.androidView,
+    @Deprecated(
+      'Use androidView: AndroidMapView(surface: '
+      'AndroidMapSurface.translucentTextureView) instead',
+    )
     this.translucentTextureSurface = false,
   }) : assert(
          myLocationRenderMode == MyLocationRenderMode.normal ||
@@ -122,15 +173,20 @@ class MapLibreMap extends StatefulWidget {
   /// **Available only on Android. Has no effect on iOS or Web.**
   final Color? foregroundLoadColor;
 
-  /// Enable translucent texture surface for the map.
-  /// This allows the map to have a transparent background, useful for overlay scenarios.
+  /// How the map is drawn on Android. Null keeps the default, unless a
+  /// deprecated flag (`translucentTextureSurface` or
+  /// `MapLibreMap.useHybridComposition`) asks for a `TextureView`.
   ///
-  /// This moves the map into a `TextureView`, like
-  /// [AndroidViewMode.textureLayer], and additionally makes that view
-  /// non-opaque. Use [AndroidViewMode.textureLayer] when you want the
-  /// `TextureView` without the transparency.
-  ///
-  /// **Available only on Android. Has no effect on iOS or Web.**
+  /// Read on the first build: changing it later does not affect a map already
+  /// on screen. Ignored on iOS and web.
+  final AndroidMapView? androidView;
+
+  /// `true` draws the Android map into a transparent `TextureView`, while
+  /// [androidView] is null. Ignored on iOS and web.
+  @Deprecated(
+    'Use androidView: AndroidMapView(surface: '
+    'AndroidMapSurface.translucentTextureView) instead',
+  )
   final bool translucentTextureSurface;
 
   /// Defines the layer order of annotations displayed on map.
@@ -431,18 +487,13 @@ class MapLibreMap extends StatefulWidget {
   /// * All fade/transition animations have completed
   final OnMapIdleCallback? onMapIdle;
 
-  /// How the Android map is embedded in the Flutter UI. Ignored on iOS and
-  /// web. See [AndroidViewMode] and the
-  /// [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android).
-  ///
-  /// Assign it before the first [MapLibreMap] is built, ideally before
-  /// `runApp()`; maps already on screen keep the mode they were created with.
-  static AndroidViewMode androidViewMode = AndroidViewMode.auto;
-
-  /// `true` selects [AndroidViewMode.textureLayer], whatever
-  /// [androidViewMode] says. Despite the name, it does not select Flutter's
-  /// Hybrid Composition.
-  @Deprecated('Use androidViewMode = AndroidViewMode.textureLayer instead')
+  /// `true` draws every Android map into a `TextureView`, unless the map sets
+  /// [androidView]. Despite the name, it does not select Flutter's Hybrid
+  /// Composition.
+  @Deprecated(
+    'Use androidView: AndroidMapView(surface: AndroidMapSurface.textureView) '
+    'instead',
+  )
   static bool useHybridComposition = false;
 
   /// Where the web implementation loads MapLibre GL JS from.
@@ -552,6 +603,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       'styleString': widget.styleString,
       'options': MapLibreMapOptions.fromWidget(widget).toMap(),
       'dragEnabled': widget.dragEnabled,
+      if (widget.androidView != null) 'androidView': widget.androidView,
       if (widget.iosLongClickDuration != null)
         'iosLongClickDurationMilliseconds':
             widget.iosLongClickDuration!.inMilliseconds,
@@ -748,6 +800,8 @@ class MapLibreMapOptions {
         scaleControlPosition: map.scaleControlPosition,
         scaleControlUnit: map.scaleControlUnit,
         foregroundLoadColor: map.foregroundLoadColor,
+        // Still forwarded, as native reads it for the deprecated flag.
+        // ignore: deprecated_member_use_from_same_package
         translucentTextureSurface: map.translucentTextureSurface,
         featureTapsTriggersMapClick: map.featureTapsTriggersMapClick,
         symbolPlacementTransitionsEnabled:

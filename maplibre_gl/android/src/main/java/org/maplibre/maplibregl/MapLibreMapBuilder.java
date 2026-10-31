@@ -31,7 +31,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private LocationEngineRequest locationEngineRequest = null;
   private String locationSourceToken = "platform";
   private boolean translucentRequested = false;
-  private boolean textureLayerRequested = false;
+  private boolean textureViewRequested = false;
   private Integer attributionButtonColor = null;
   private Integer panInertia = null;
 
@@ -324,16 +324,16 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
     this.translucentRequested = translucentTextureSurface;
     options.translucentTextureSurface(translucentTextureSurface);
     // textureMode must be on if EITHER a translucent surface is required OR the app asked for
-    // the texture layer. Both are correctness requirements, not knobs.
-    options.textureMode(translucentRequested || textureLayerRequested);
+    // a TextureView. Both are correctness requirements, not knobs.
+    options.textureMode(translucentRequested || textureViewRequested);
   }
 
   /**
-   * Whether the map draws into a TextureView, which Flutter composites as a texture layer. Set from
-   * the creation params, not the map options.
+   * Whether the map draws into a TextureView rather than a SurfaceView. Set from the creation
+   * params, not the map options.
    */
-  public void setTextureLayer(boolean textureLayer) {
-    this.textureLayerRequested = textureLayer;
-    options.textureMode(translucentRequested || textureLayerRequested);
+  public void setTextureView(boolean textureView) {
+    this.textureViewRequested = textureView;
+    options.textureMode(translucentRequested || textureViewRequested);
   }
 }

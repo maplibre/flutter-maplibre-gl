@@ -56,58 +56,94 @@ reports Vulkan 1.0 hardware, and keeps it until the process restarts.
 !!! warning "Test before shipping"
     Vulkan is MapLibre Android's own default, but it still has
     [open issues](https://github.com/maplibre/maplibre-native/issues?q=is%3Aissue%20state%3Aopen%20label%3AVulkan).
-    Test your styles on the Android versions you support, also with
-    `AndroidViewMode.textureLayer` or `translucentTextureSurface`, which render into a
-    `TextureView`. When you report a bug, say which renderer the app uses.
+    Test your styles on the Android versions you support, also with a
+    `TextureView` surface if your app uses one. When you report a bug, say which
+    renderer the app uses.
 
 iOS renders with Metal and web with WebGL, whatever this property says.
 
 ## Platform view mode (Android)
 
-On Android the map is a platform view, and Flutter has several ways to embed one.
-`MapLibreMap.androidViewMode` picks the Android `View` the map renders into, and
-Flutter picks its embedding mode from that view:
+On Android, Flutter does not draw the map. MapLibre draws it in a native Android
+view, and Flutter places that view among your widgets, as a
+[platform view](https://docs.flutter.dev/platform-integration/android/platform-views).
+`androidView` sets both steps, for each map:
 
-- **`AndroidViewMode.auto` (the default)**: the map renders into a `SurfaceView`,
-  the most direct path Android offers. Flutter cannot redirect a `SurfaceView`'s
-  drawing into a texture, so it embeds the map through
-  [Hybrid Composition++](#hybrid-composition) when the app enables it and the
-  device supports it, and through Virtual Display otherwise, with its limits
-  around text input, accessibility and z-order.
-- **`AndroidViewMode.textureLayer`**: the map renders into a `TextureView`, which
-  Flutter composites as a texture layer, so the map behaves like a regular
-  widget: Flutter content can paint over it, and the map itself can be
-  transformed, clipped or animated. A `TextureView` costs more to render than a
-  `SurfaceView` on every Android version. With Hybrid Composition++ enabled,
-  Flutter uses it for this mode too, so keep `auto` there.
-
-```dart
-MapLibreMap.androidViewMode = AndroidViewMode.textureLayer; // before runApp()
+```mermaid
+flowchart LR
+  M[MapLibre] -- draws into --> S["surface<br/>SurfaceView or TextureView"]
+  S -- placed by --> C["composition<br/>auto or hybridComposition"]
+  C --> Y[Your screen]
 ```
 
-Set it before the first map is built. The mode is fixed once a platform view
-exists, so changing it later leaves maps already on screen untouched.
+```dart
+MapLibreMap(
+  androidView: const AndroidMapView(
+    surface: AndroidMapSurface.textureView,
+    composition: AndroidComposition.auto,
+  ),
+)
+```
 
-The `translucentTextureSurface` map option moves the map to a `TextureView` as
-well, additionally making it non-opaque, so reach for
-`AndroidViewMode.textureLayer` when you want the texture layer with an opaque
-surface.
+**Most apps should keep the default**, `surfaceView` with `auto`. On some
+devices, fast camera moves can stutter or flash with it. Change it only to fix
+one of these problems:
 
-`MapLibreMap.useHybridComposition = true` is the deprecated spelling of
-`AndroidViewMode.textureLayer`, whatever `androidViewMode` says. Despite its
-name, it does not select Flutter's Hybrid Composition.
+| Problem | `surface` | `composition` | What it costs |
+|---|---|---|---|
+| The map stutters or flashes on fast camera moves | `textureView` | `auto` | The map draws more slowly. On some devices, map updates show up late. |
+| Map updates show up late, only when something else on screen moves | `surfaceView` or `textureView` | `hybridComposition` | Flutter renders more slowly while the map is visible, especially on Android 9 and older and on low-end devices. |
+| Widgets behind the map should show through it | `translucentTextureView` | `auto` | Like `textureView`, plus blending the map with what is behind it. |
+
+Any `surface` works with any `composition`. A map keeps the view of its first
+build: changing `androidView` later does not affect a map already on screen.
+
+### What each value does
+
+`surface` is the Android view MapLibre draws into:
+
+- **`surfaceView`**: a
+  [`SurfaceView`](https://developer.android.com/reference/android/view/SurfaceView),
+  the fastest way to draw on Android.
+- **`textureView`**: a
+  [`TextureView`](https://developer.android.com/reference/android/view/TextureView),
+  which Flutter can paint like an image.
+- **`translucentTextureView`**: a transparent `TextureView`. Where the style has
+  no background, the widgets behind the map show through.
+
+`composition` is how Flutter places that view among your widgets:
+
+- **`auto`**: Flutter picks. It paints a `TextureView` as a
+  [texture layer](https://docs.flutter.dev/platform-integration/android/platform-views#texture-layer),
+  and copies a `SurfaceView` into its frame through a *Virtual Display*.
+- **`hybridComposition`**: Android combines the map with Flutter's content
+  ([Hybrid Composition](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition)).
+  To keep them in sync, Flutter runs its rendering on Android's UI thread while
+  the map is visible, which is where the cost comes from
+  ([Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)).
+
+### Deprecated flags
+
+They still work while the map sets no `androidView`:
+
+| Before | After |
+|---|---|
+| `MapLibreMap.useHybridComposition = true` | `androidView: AndroidMapView(surface: AndroidMapSurface.textureView)` |
+| `translucentTextureSurface: true` | `androidView: AndroidMapView(surface: AndroidMapSurface.translucentTextureView)` |
+
+Despite its name, `useHybridComposition` never selected Hybrid Composition: that
+is `composition: AndroidComposition.hybridComposition`.
 
 ### Hybrid Composition++
 
-Flutter's [Hybrid Composition++](https://docs.flutter.dev/platform-integration/android/platform-views)
-composites platform views through the Android OS instead of through a texture, which
-removes the reason to choose between the two modes above: the map keeps its
-`SurfaceView` and still behaves like a widget. It needs Android 14 (API 34) or
-newer, Impeller and Vulkan, and Flutter falls back to the mode configured above
-on devices that do not qualify.
+Flutter's [Hybrid Composition++](https://docs.flutter.dev/platform-integration/android/platform-views#hcpp)
+lets Android combine the map with Flutter's content at a lower cost than the
+compositions above: the map keeps its fast `SurfaceView` and still behaves like
+a widget. It needs Android 14 (API 34) or newer and Impeller with Vulkan. Where
+it applies, Flutter uses it whatever `composition` says, so keep `auto`; on
+other devices, `composition` applies as usual.
 
-It is opt-in per app, not per plugin, so nothing changes on the `maplibre_gl`
-side. Leave `androidViewMode` at `AndroidViewMode.auto` and add this to your app's
+It is enabled per app, not per map. Add this to your app's
 `AndroidManifest.xml`, inside `<application>`:
 
 ```xml
@@ -137,5 +173,5 @@ The [annotation API](../concepts/annotations-vs-layers.md) is convenient but kee
 | `MapLibreMap.preWarm()` | start engine initialization before the first map |
 | `controller.pauseMap()` / `resumeMap()` | stop and restart rendering for an off-screen map |
 | `maplibre_gl.renderer` | Android rendering backend, set in `gradle.properties`, see [Rendering backend (Android)](#rendering-backend-android) |
-| `MapLibreMap.androidViewMode` | how the Android map is embedded, see [Platform view mode (Android)](#platform-view-mode-android) |
+| `MapLibreMap(androidView: ...)` | how the Android map is drawn, see [Platform view mode (Android)](#platform-view-mode-android) |
 | `controller.setFeatureState()` | restyle single features without touching source data |

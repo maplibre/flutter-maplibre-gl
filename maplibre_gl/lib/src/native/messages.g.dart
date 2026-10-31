@@ -1660,7 +1660,7 @@ class PgCreationParams {
     this.initialCameraPosition,
     required this.dragEnabled,
     this.iosLongClickDurationMs,
-    required this.textureLayer,
+    required this.textureView,
   });
 
   /// The style to create the map with: a style JSON, URL, file path or asset
@@ -1680,11 +1680,11 @@ class PgCreationParams {
   /// milliseconds. Null keeps the platform default.
   int? iosLongClickDurationMs;
 
-  /// Android only: whether the app asked for the texture layer
-  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
-  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
+  /// Android only: whether the map renders into a `TextureView` rather than
+  /// a `SurfaceView` (`AndroidMapView.surface` in the plugin).
+  /// `translucentTextureSurface` in [options] also makes it non-opaque.
   /// Always false on iOS.
-  bool textureLayer;
+  bool textureView;
 
   List<Object?> _toList() {
     return <Object?>[
@@ -1693,7 +1693,7 @@ class PgCreationParams {
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      textureLayer,
+      textureView,
     ];
   }
 
@@ -1709,7 +1709,7 @@ class PgCreationParams {
       initialCameraPosition: result[2] as PgCameraPosition?,
       dragEnabled: result[3]! as bool,
       iosLongClickDurationMs: result[4] as int?,
-      textureLayer: result[5]! as bool,
+      textureView: result[5]! as bool,
     );
   }
 
@@ -1727,7 +1727,7 @@ class PgCreationParams {
         _deepEquals(initialCameraPosition, other.initialCameraPosition) &&
         _deepEquals(dragEnabled, other.dragEnabled) &&
         _deepEquals(iosLongClickDurationMs, other.iosLongClickDurationMs) &&
-        _deepEquals(textureLayer, other.textureLayer);
+        _deepEquals(textureView, other.textureView);
   }
 
   @override
@@ -1736,7 +1736,7 @@ class PgCreationParams {
 
   @override
   String toString() {
-    return 'PgCreationParams(styleString: $styleString, options: $options, initialCameraPosition: $initialCameraPosition, dragEnabled: $dragEnabled, iosLongClickDurationMs: $iosLongClickDurationMs, textureLayer: $textureLayer)';
+    return 'PgCreationParams(styleString: $styleString, options: $options, initialCameraPosition: $initialCameraPosition, dragEnabled: $dragEnabled, iosLongClickDurationMs: $iosLongClickDurationMs, textureView: $textureView)';
   }
 }
 

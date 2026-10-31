@@ -19,14 +19,29 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// this never being set.
   int? _viewId;
 
-  /// Whether this map uses [AndroidViewMode.textureLayer], read on its first
-  /// build so a later change of the static flags cannot swap the widget and
-  /// recreate a platform view already on screen.
-  late final bool _textureLayer =
-      MapLibreMap.androidViewMode == AndroidViewMode.textureLayer ||
-      // The deprecated spelling of textureLayer, honored until removed.
-      // ignore: deprecated_member_use_from_same_package
-      MapLibreMap.useHybridComposition;
+  /// The [AndroidMapView] of this map, read on its first build so a later
+  /// change cannot swap the widget and recreate a platform view already on
+  /// screen.
+  AndroidMapView? _androidView;
+
+  /// The [AndroidMapView] the map asks for, or the one its deprecated flags
+  /// spell, while it asks for none.
+  static AndroidMapView _androidViewOf(Map<String, dynamic> creationParams) {
+    final explicit = creationParams['androidView'] as AndroidMapView?;
+    if (explicit != null) return explicit;
+    final options = creationParams['options'] as Map<dynamic, dynamic>?;
+    if (options?['translucentTextureSurface'] == true) {
+      return const AndroidMapView(
+        surface: AndroidMapSurface.translucentTextureView,
+      );
+    }
+    // The deprecated spelling of a TextureView, honored until removed.
+    // ignore: deprecated_member_use_from_same_package
+    if (MapLibreMap.useHybridComposition) {
+      return const AndroidMapView(surface: AndroidMapSurface.textureView);
+    }
+    return const AndroidMapView();
+  }
 
   MapLibreMapHostApi? _hostApi;
 
@@ -68,12 +83,11 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final textureLayer = _textureLayer;
-      final params = _creationParams(
-        creationParams,
-        textureLayer: textureLayer,
-      );
-      if (textureLayer) {
+      final view = _androidView ??= _androidViewOf(creationParams);
+      final params = _creationParams(creationParams, android: view);
+      // With auto, AndroidView lets Flutter pick; Hybrid Composition needs
+      // the view created here.
+      if (view.composition == AndroidComposition.hybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -86,7 +100,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            final controller = PlatformViewsService.initAndroidView(
+            final controller = PlatformViewsService.initExpensiveAndroidView(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
@@ -118,10 +132,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         viewType: 'plugins.flutter.io/maplibre_gl',
         onPlatformViewCreated: onPlatformViewCreated,
         gestureRecognizers: gestureRecognizers,
-        creationParams: _creationParams(
-          creationParams,
-          textureLayer: false,
-        ),
+        creationParams: _creationParams(creationParams),
         creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
       );
     }
@@ -132,21 +143,33 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// The creation params of the platform view, from the map [MapLibreMap]
   /// builds. Native decodes them with the generated codec.
+  /// [android] is null on iOS.
   static PgCreationParams _creationParams(
     Map<String, dynamic> params, {
-    required bool textureLayer,
+    AndroidMapView? android,
   }) {
     final options = params['options'] as Map<dynamic, dynamic>?;
     final camera = params['initialCameraPosition'] as Map<dynamic, dynamic>?;
+    final mapOptions = _mapOptions(
+      options?.cast<String, dynamic>() ?? const {},
+    );
+    if (android != null) {
+      // The view decides the translucency, over the deprecated option.
+      mapOptions.translucentTextureSurface =
+          android.surface == AndroidMapSurface.translucentTextureView
+              ? true
+              : null;
+    }
     return PgCreationParams(
       styleString: params['styleString'] as String?,
-      options: _mapOptions(options?.cast<String, dynamic>() ?? const {}),
+      options: mapOptions,
       initialCameraPosition: camera == null ? null : _pgCameraPosition(camera),
       // The default of MapLibreMap.dragEnabled, and of both platforms.
       dragEnabled: params['dragEnabled'] as bool? ?? true,
       iosLongClickDurationMs:
           params['iosLongClickDurationMilliseconds'] as int?,
-      textureLayer: textureLayer,
+      textureView:
+          android != null && android.surface != AndroidMapSurface.surfaceView,
     );
   }
 
