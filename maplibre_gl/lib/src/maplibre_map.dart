@@ -8,6 +8,9 @@ enum AnnotationType { fill, line, circle, symbol }
 
 /// How the Android map is embedded in the Flutter UI, set through
 /// [MapLibreMap.androidViewMode].
+///
+/// When the app enables Hybrid Composition++ and the device supports it,
+/// Flutter uses it whatever the mode, so keep [auto] there.
 enum AndroidViewMode {
   /// The map renders into a `SurfaceView`, the most direct rendering path, and
   /// Flutter picks how to embed it: Hybrid Composition++ when the app enables
@@ -18,10 +21,15 @@ enum AndroidViewMode {
   /// The map renders into a `TextureView`, which Flutter composites as a
   /// texture layer. The map then behaves like any other widget: Flutter
   /// content can paint over it, and it can be transformed, clipped or
-  /// animated, at a higher rendering cost. When the app enables Hybrid
-  /// Composition++, Flutter uses it for every platform view, so keep [auto]
-  /// there.
+  /// animated, at a higher rendering cost.
   textureLayer,
+
+  /// The map renders into a `SurfaceView` that Flutter places in the Android
+  /// view hierarchy (Hybrid Composition), and the system composites it. Try it
+  /// when map updates wait for a Flutter frame to reach the screen. It costs
+  /// Flutter performance while the map is on screen, see
+  /// [Hosting native Android views](https://docs.flutter.dev/platform-integration/android/platform-views#performance).
+  hybridComposition,
 }
 
 typedef MapCreatedCallback = void Function(MapLibreMapController controller);
@@ -444,26 +452,6 @@ class MapLibreMap extends StatefulWidget {
   /// Hybrid Composition.
   @Deprecated('Use androidViewMode = AndroidViewMode.textureLayer instead')
   static bool useHybridComposition = false;
-
-  /// Whether the Android map is embedded through Flutter's Hybrid
-  /// Composition. Ignored on iOS and web.
-  ///
-  /// `false` (the default) creates the platform view with
-  /// `PlatformViewsService.initAndroidView`. Flutter then draws the map as a
-  /// texture when it renders into a `TextureView`, or through Virtual Display
-  /// when it renders into a `GLSurfaceView`.
-  ///
-  /// `true` creates it with `PlatformViewsService.initExpensiveAndroidView`.
-  /// The map's view is placed in the Android view hierarchy and the system
-  /// composites it, so the map keeps drawing while Flutter is idle. The mode
-  /// and its costs are described in
-  /// [Hosting native Android views](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition)
-  /// and its [Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)
-  /// section.
-  ///
-  /// Independent of [useHybridComposition], which picks the view the map
-  /// renders into. Assign before the first [MapLibreMap] is built.
-  static bool androidHybridComposition = false;
 
   /// Where the web implementation loads MapLibre GL JS from.
   ///

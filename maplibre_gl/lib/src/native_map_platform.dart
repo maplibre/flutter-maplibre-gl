@@ -19,14 +19,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// this never being set.
   int? _viewId;
 
-  /// Whether this map uses [AndroidViewMode.textureLayer], read on its first
-  /// build so a later change of the static flags cannot swap the widget and
-  /// recreate a platform view already on screen.
-  late final bool _textureLayer =
-      MapLibreMap.androidViewMode == AndroidViewMode.textureLayer ||
+  /// The [AndroidViewMode] of this map, read on its first build so a later
+  /// change of the static flags cannot swap the widget and recreate a
+  /// platform view already on screen.
+  late final AndroidViewMode _viewMode =
       // The deprecated spelling of textureLayer, honored until removed.
       // ignore: deprecated_member_use_from_same_package
-      MapLibreMap.useHybridComposition;
+      MapLibreMap.useHybridComposition
+          ? AndroidViewMode.textureLayer
+          : MapLibreMap.androidViewMode;
 
   MapLibreMapHostApi? _hostApi;
 
@@ -68,12 +69,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final textureLayer = _textureLayer;
+      final viewMode = _viewMode;
       final params = _creationParams(
         creationParams,
-        textureLayer: textureLayer,
+        textureLayer: viewMode == AndroidViewMode.textureLayer,
       );
-      if (textureLayer) {
+      if (viewMode != AndroidViewMode.auto) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -86,7 +87,13 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            final controller = PlatformViewsService.initAndroidView(
+            // initExpensiveAndroidView is Hybrid Composition; initAndroidView
+            // embeds the TextureView as a texture layer.
+            final init =
+                viewMode == AndroidViewMode.hybridComposition
+                    ? PlatformViewsService.initExpensiveAndroidView
+                    : PlatformViewsService.initAndroidView;
+            final controller = init(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,

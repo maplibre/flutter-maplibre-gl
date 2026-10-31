@@ -65,8 +65,8 @@ iOS renders with Metal and web with WebGL, whatever this property says.
 ## Platform view mode (Android)
 
 On Android the map is a platform view, and Flutter has several ways to embed one.
-`MapLibreMap.androidViewMode` picks the Android `View` the map renders into, and
-Flutter picks its embedding mode from that view:
+`MapLibreMap.androidViewMode` picks the Android `View` the map renders into and
+how Flutter embeds it:
 
 - **`AndroidViewMode.auto` (the default)**: the map renders into a `SurfaceView`,
   the most direct path Android offers. Flutter cannot redirect a `SurfaceView`'s
@@ -78,8 +78,19 @@ Flutter picks its embedding mode from that view:
   Flutter composites as a texture layer, so the map behaves like a regular
   widget: Flutter content can paint over it, and the map itself can be
   transformed, clipped or animated. A `TextureView` costs more to render than a
-  `SurfaceView` on every Android version. With Hybrid Composition++ enabled,
-  Flutter uses it for this mode too, so keep `auto` there.
+  `SurfaceView` on every Android version.
+- **`AndroidViewMode.hybridComposition`**: the map keeps its `SurfaceView`, and
+  Flutter places it in the Android view hierarchy, where the system composites
+  it ([Hybrid Composition](https://docs.flutter.dev/platform-integration/android/platform-views#hybrid-composition)).
+  Try it when map updates wait for a Flutter frame to reach the screen, for
+  example a source update made while a bottom sheet is open. While the map is
+  on screen Flutter merges its raster and platform threads, which costs
+  performance, more so on Android 9 and older and on low-end devices; see
+  Flutter's [Performance](https://docs.flutter.dev/platform-integration/android/platform-views#performance)
+  notes.
+
+With Hybrid Composition++ enabled, Flutter uses it whatever the mode, so keep
+`auto` there.
 
 ```dart
 MapLibreMap.androidViewMode = AndroidViewMode.textureLayer; // before runApp()
@@ -95,7 +106,8 @@ surface.
 
 `MapLibreMap.useHybridComposition = true` is the deprecated spelling of
 `AndroidViewMode.textureLayer`, whatever `androidViewMode` says. Despite its
-name, it does not select Flutter's Hybrid Composition.
+name, it does not select Flutter's Hybrid Composition: that is
+`AndroidViewMode.hybridComposition`.
 
 ### Hybrid Composition++
 

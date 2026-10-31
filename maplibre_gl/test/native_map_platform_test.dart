@@ -3363,6 +3363,8 @@ void main() {
         final create = viewCalls.singleWhere((c) => c.method == 'create');
         final args = create.arguments as Map;
         expect(args['viewType'], viewType);
+        // initAndroidView, not Hybrid Composition.
+        expect(args['hybrid'], isNull);
         // Encoded with the codec of the messages, which native decodes with.
         expect(
           codec.decodeMessage(
@@ -3386,6 +3388,58 @@ void main() {
           FocusManager.instance.primaryFocus?.debugLabel,
           startsWith('PlatformView'),
         );
+
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'Android with hybridComposition asks for Hybrid Composition',
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
+        // Dart creates an Android platform view by sending `create` over the
+        // platform views channel. initExpensiveAndroidView, which is Hybrid
+        // Composition, sends `hybrid: true`; initAndroidView leaves it out.
+        // The test stands in for the engine and records the call.
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          // Hybrid Composition answers no texture id: the system draws the view.
+          return null;
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
+        );
+        final created = <int>[];
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(creationParams(), created.add, null),
+          ),
+        );
+        await tester.pump();
+
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final args = create.arguments as Map;
+        expect(args['viewType'], viewType);
+        expect(args['hybrid'], isTrue);
+        // The map keeps its SurfaceView: native gets textureLayer false.
+        expect(
+          codec.decodeMessage(
+            ByteData.sublistView(args['params'] as Uint8List),
+          ),
+          typed(),
+        );
+        expect(created, [args['id']]);
+        expect(find.byType(AndroidViewSurface), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
       },
