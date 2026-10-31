@@ -519,7 +519,7 @@ class PgCreationParams {
     this.initialCameraPosition,
     required this.dragEnabled,
     this.iosLongClickDurationMs,
-    required this.useHybridComposition,
+    required this.textureLayer,
   });
 
   /// The style to create the map with: a style JSON, URL, file path or asset
@@ -539,9 +539,11 @@ class PgCreationParams {
   /// milliseconds. Null keeps the platform default.
   int? iosLongClickDurationMs;
 
-  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Android only: whether the app asked for the texture layer
+  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
+  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
   /// Always false on iOS.
-  bool useHybridComposition;
+  bool textureLayer;
 }
 
 /// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes

@@ -19,6 +19,15 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// this never being set.
   int? _viewId;
 
+  /// Whether this map uses [AndroidViewMode.textureLayer], read on its first
+  /// build so a later change of the static flags cannot swap the widget and
+  /// recreate a platform view already on screen.
+  late final bool _textureLayer =
+      MapLibreMap.androidViewMode == AndroidViewMode.textureLayer ||
+      // The deprecated spelling of textureLayer, honored until removed.
+      // ignore: deprecated_member_use_from_same_package
+      MapLibreMap.useHybridComposition;
+
   MapLibreMapHostApi? _hostApi;
 
   MapLibreMapHostApi get _api =>
@@ -59,13 +68,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final useHybridComposition = MapLibreMap.useHybridComposition;
+      final textureLayer = _textureLayer;
       final params = _creationParams(
         creationParams,
-        useHybridComposition: useHybridComposition,
+        textureLayer: textureLayer,
       );
-      final androidHybridComposition = MapLibreMap.androidHybridComposition;
-      if (useHybridComposition || androidHybridComposition) {
+      if (textureLayer) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -78,14 +86,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            // initExpensiveAndroidView is Hybrid Composition; initAndroidView
-            // is the texture layer, or Virtual Display when the map is on a
-            // SurfaceView.
-            final init =
-                androidHybridComposition
-                    ? PlatformViewsService.initExpensiveAndroidView
-                    : PlatformViewsService.initAndroidView;
-            final controller = init(
+            final controller = PlatformViewsService.initAndroidView(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
@@ -119,7 +120,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         gestureRecognizers: gestureRecognizers,
         creationParams: _creationParams(
           creationParams,
-          useHybridComposition: false,
+          textureLayer: false,
         ),
         creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
       );
@@ -133,7 +134,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// builds. Native decodes them with the generated codec.
   static PgCreationParams _creationParams(
     Map<String, dynamic> params, {
-    required bool useHybridComposition,
+    required bool textureLayer,
   }) {
     final options = params['options'] as Map<dynamic, dynamic>?;
     final camera = params['initialCameraPosition'] as Map<dynamic, dynamic>?;
@@ -145,7 +146,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       dragEnabled: params['dragEnabled'] as bool? ?? true,
       iosLongClickDurationMs:
           params['iosLongClickDurationMilliseconds'] as int?,
-      useHybridComposition: useHybridComposition,
+      textureLayer: textureLayer,
     );
   }
 

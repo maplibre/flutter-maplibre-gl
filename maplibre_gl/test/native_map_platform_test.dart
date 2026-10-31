@@ -3246,8 +3246,10 @@ void main() {
     const codec = MapLibreMapHostApi.pigeonChannelCodec;
 
     tearDown(() {
+      MapLibreMap.androidViewMode = AndroidViewMode.auto;
+      // Reset, as one test still sets the deprecated flag.
+      // ignore: deprecated_member_use_from_same_package
       MapLibreMap.useHybridComposition = false;
-      MapLibreMap.androidHybridComposition = false;
     });
 
     Map<String, dynamic> creationParams() => {
@@ -3255,12 +3257,11 @@ void main() {
     };
 
     /// What [creationParams] becomes, with the Android flag.
-    PgCreationParams typed({bool useHybridComposition = false}) =>
-        PgCreationParams(
-          options: PgMapOptions(compassEnabled: true),
-          dragEnabled: true,
-          useHybridComposition: useHybridComposition,
-        );
+    PgCreationParams typed({bool textureLayer = false}) => PgCreationParams(
+      options: PgMapOptions(compassEnabled: true),
+      dragEnabled: true,
+      textureLayer: textureLayer,
+    );
 
     void onPlatform(TargetPlatform target) {
       debugDefaultTargetPlatformOverride = target;
@@ -3313,17 +3314,17 @@ void main() {
           PgCreationParams(
             options: PgMapOptions(),
             dragEnabled: true,
-            useHybridComposition: false,
+            textureLayer: false,
           ),
         ),
       );
     });
 
     testWidgets(
-      'Android with hybrid composition creates the view itself',
+      'Android with the texture layer creates the view itself',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
-        MapLibreMap.useHybridComposition = true;
+        MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
         final messenger = tester.binding.defaultBinaryMessenger;
         final viewCalls = <MethodCall>[];
         messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
@@ -3367,7 +3368,7 @@ void main() {
           codec.decodeMessage(
             ByteData.sublistView(args['params'] as Uint8List),
           ),
-          typed(useHybridComposition: true),
+          typed(textureLayer: true),
         );
         expect(created, [args['id']]);
         expect(find.byType(AndroidViewSurface), findsOneWidget);
@@ -3390,71 +3391,40 @@ void main() {
       },
     );
 
-    testWidgets(
-      'Android with androidHybridComposition asks for Hybrid Composition',
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-      (tester) async {
-        MapLibreMap.androidHybridComposition = true;
-        // Dart creates an Android platform view by sending `create` over the
-        // platform views channel. initExpensiveAndroidView, which is Hybrid
-        // Composition, sends `hybrid: true`; initAndroidView sends
-        // `hybridFallback: true` instead. The test stands in for the engine
-        // and records the call to see which one the plugin used.
-        final messenger = tester.binding.defaultBinaryMessenger;
-        final viewCalls = <MethodCall>[];
-        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
-          call,
-        ) async {
-          viewCalls.add(call);
-          // Hybrid Composition answers no texture id: the system draws the view.
-          return null;
-        });
-        // A null handler removes the mock.
-        addTearDown(
-          () => messenger.setMockMethodCallHandler(
-            SystemChannels.platform_views,
-            null,
-          ),
-        );
-        final created = <int>[];
+    test(
+      'the deprecated useHybridComposition still picks the texture layer',
+      () {
+        onPlatform(TargetPlatform.android);
+        // The deprecated flag is what this test covers.
+        // ignore: deprecated_member_use_from_same_package
+        MapLibreMap.useHybridComposition = true;
 
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: platform.buildView(creationParams(), created.add, null),
-          ),
+        expect(
+          platform.buildView(creationParams(), (_) {}, null),
+          isA<PlatformViewLink>(),
         );
-        await tester.pump();
-
-        final create = viewCalls.singleWhere((c) => c.method == 'create');
-        final createArguments = create.arguments as Map;
-        expect(createArguments['viewType'], viewType);
-        // The core assertion: `hybrid` is what initExpensiveAndroidView sends,
-        // and `hybridFallback` what initAndroidView sends, so the plugin asked
-        // for Hybrid Composition and not the texture layer or Virtual Display.
-        expect(createArguments['hybrid'], isTrue);
-        expect(createArguments['hybridFallback'], isNull);
-        // `params` are the creation params native decodes. Native picks the
-        // view from their useHybridComposition (MapLibreMapBuilder turns it
-        // into textureMode). It is still false, the value typed() carries, so
-        // the new flag did not change what native reads to pick the view.
-        // Which view native then builds is outside what this test can see.
-        final nativeCreationParams = codec.decodeMessage(
-          ByteData.sublistView(createArguments['params'] as Uint8List),
-        );
-        expect(nativeCreationParams, typed());
-        // The plugin's own created callback still fires with this view's id.
-        expect(created, [createArguments['id']]);
-        // The PlatformViewLink branch was taken, not the plain AndroidView.
-        expect(find.byType(AndroidViewSurface), findsOneWidget);
-
-        await tester.pumpWidget(const SizedBox());
       },
     );
 
+    test('a map keeps the mode of its first build', () {
+      onPlatform(TargetPlatform.android);
+      expect(
+        platform.buildView(creationParams(), (_) {}, null),
+        isA<AndroidView>(),
+      );
+
+      // A rebuild after the flag changed must not swap the platform view.
+      MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
+
+      expect(
+        platform.buildView(creationParams(), (_) {}, null),
+        isA<AndroidView>(),
+      );
+    });
+
     test('iOS builds a UiKitView without the Android flag', () {
       onPlatform(TargetPlatform.iOS);
-      MapLibreMap.useHybridComposition = true;
+      MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
       void onCreated(int id) {}
 
       final view = platform.buildView(creationParams(), onCreated, null);
@@ -3515,7 +3485,7 @@ void main() {
           ),
           dragEnabled: false,
           iosLongClickDurationMs: 300,
-          useHybridComposition: false,
+          textureLayer: false,
         ),
       );
     });
