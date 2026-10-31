@@ -1487,9 +1487,10 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
   /// iOS only: how long a press lasts before it is a long click, in
   /// milliseconds. Null keeps the platform default.
   var iosLongClickDurationMs: Int64? = nil
-  /// Android only: whether Flutter draws the map with hybrid composition.
-  /// Always false on iOS.
-  var useHybridComposition: Bool
+  /// Android only: whether the map renders into a `TextureView`, which
+  /// Flutter composites as a texture layer (`AndroidViewMode.textureLayer` in
+  /// the plugin). Always false on iOS.
+  var textureLayer: Bool
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -1499,7 +1500,7 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
     let initialCameraPosition: PgCameraPosition? = nilOrValue(pigeonVar_list[2])
     let dragEnabled = pigeonVar_list[3] as! Bool
     let iosLongClickDurationMs: Int64? = nilOrValue(pigeonVar_list[4])
-    let useHybridComposition = pigeonVar_list[5] as! Bool
+    let textureLayer = pigeonVar_list[5] as! Bool
 
     return PgCreationParams(
       styleString: styleString,
@@ -1507,7 +1508,7 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
       initialCameraPosition: initialCameraPosition,
       dragEnabled: dragEnabled,
       iosLongClickDurationMs: iosLongClickDurationMs,
-      useHybridComposition: useHybridComposition
+      textureLayer: textureLayer
     )
   }
   func toList() -> [Any?] {
@@ -1517,14 +1518,14 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      useHybridComposition,
+      textureLayer,
     ]
   }
   static func == (lhs: PgCreationParams, rhs: PgCreationParams) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.options, rhs.options) && MessagesPigeonInternal.deepEquals(lhs.initialCameraPosition, rhs.initialCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.dragEnabled, rhs.dragEnabled) && MessagesPigeonInternal.deepEquals(lhs.iosLongClickDurationMs, rhs.iosLongClickDurationMs) && MessagesPigeonInternal.deepEquals(lhs.useHybridComposition, rhs.useHybridComposition)
+    return MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.options, rhs.options) && MessagesPigeonInternal.deepEquals(lhs.initialCameraPosition, rhs.initialCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.dragEnabled, rhs.dragEnabled) && MessagesPigeonInternal.deepEquals(lhs.iosLongClickDurationMs, rhs.iosLongClickDurationMs) && MessagesPigeonInternal.deepEquals(lhs.textureLayer, rhs.textureLayer)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -1534,11 +1535,11 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
     MessagesPigeonInternal.deepHash(value: initialCameraPosition, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: dragEnabled, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: iosLongClickDurationMs, hasher: &hasher)
-    MessagesPigeonInternal.deepHash(value: useHybridComposition, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: textureLayer, hasher: &hasher)
   }
 
   public var description: String {
-    return "PgCreationParams(styleString: \(String(describing: styleString)), options: \(String(describing: options)), initialCameraPosition: \(String(describing: initialCameraPosition)), dragEnabled: \(String(describing: dragEnabled)), iosLongClickDurationMs: \(String(describing: iosLongClickDurationMs)), useHybridComposition: \(String(describing: useHybridComposition)))"
+    return "PgCreationParams(styleString: \(String(describing: styleString)), options: \(String(describing: options)), initialCameraPosition: \(String(describing: initialCameraPosition)), dragEnabled: \(String(describing: dragEnabled)), iosLongClickDurationMs: \(String(describing: iosLongClickDurationMs)), textureLayer: \(String(describing: textureLayer)))"
   }
 }
 

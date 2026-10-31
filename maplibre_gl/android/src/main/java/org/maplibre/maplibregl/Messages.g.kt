@@ -1586,10 +1586,11 @@ data class PgCreationParams (
    */
   val iosLongClickDurationMs: Long? = null,
   /**
-   * Android only: whether Flutter draws the map with hybrid composition.
-   * Always false on iOS.
+   * Android only: whether the map renders into a `TextureView`, which
+   * Flutter composites as a texture layer (`AndroidViewMode.textureLayer` in
+   * the plugin). Always false on iOS.
    */
-  val useHybridComposition: Boolean
+  val textureLayer: Boolean
 )
  {
   companion object {
@@ -1599,8 +1600,8 @@ data class PgCreationParams (
       val initialCameraPosition = pigeonVar_list[2] as PgCameraPosition?
       val dragEnabled = pigeonVar_list[3] as Boolean
       val iosLongClickDurationMs = pigeonVar_list[4] as Long?
-      val useHybridComposition = pigeonVar_list[5] as Boolean
-      return PgCreationParams(styleString, options, initialCameraPosition, dragEnabled, iosLongClickDurationMs, useHybridComposition)
+      val textureLayer = pigeonVar_list[5] as Boolean
+      return PgCreationParams(styleString, options, initialCameraPosition, dragEnabled, iosLongClickDurationMs, textureLayer)
     }
   }
   fun toList(): List<Any?> {
@@ -1610,7 +1611,7 @@ data class PgCreationParams (
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      useHybridComposition,
+      textureLayer,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -1621,7 +1622,7 @@ data class PgCreationParams (
       return true
     }
     val other = other as PgCreationParams
-    return MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.options, other.options) && MessagesPigeonUtils.deepEquals(this.initialCameraPosition, other.initialCameraPosition) && MessagesPigeonUtils.deepEquals(this.dragEnabled, other.dragEnabled) && MessagesPigeonUtils.deepEquals(this.iosLongClickDurationMs, other.iosLongClickDurationMs) && MessagesPigeonUtils.deepEquals(this.useHybridComposition, other.useHybridComposition)
+    return MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.options, other.options) && MessagesPigeonUtils.deepEquals(this.initialCameraPosition, other.initialCameraPosition) && MessagesPigeonUtils.deepEquals(this.dragEnabled, other.dragEnabled) && MessagesPigeonUtils.deepEquals(this.iosLongClickDurationMs, other.iosLongClickDurationMs) && MessagesPigeonUtils.deepEquals(this.textureLayer, other.textureLayer)
   }
 
   override fun hashCode(): Int {
@@ -1631,11 +1632,11 @@ data class PgCreationParams (
     result = 31 * result + MessagesPigeonUtils.deepHash(this.initialCameraPosition)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.dragEnabled)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.iosLongClickDurationMs)
-    result = 31 * result + MessagesPigeonUtils.deepHash(this.useHybridComposition)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.textureLayer)
     return result
   }
   override fun toString(): String {
-    return "PgCreationParams(styleString=$styleString, options=$options, initialCameraPosition=$initialCameraPosition, dragEnabled=$dragEnabled, iosLongClickDurationMs=$iosLongClickDurationMs, useHybridComposition=$useHybridComposition)"
+    return "PgCreationParams(styleString=$styleString, options=$options, initialCameraPosition=$initialCameraPosition, dragEnabled=$dragEnabled, iosLongClickDurationMs=$iosLongClickDurationMs, textureLayer=$textureLayer)"
   }
 }
 

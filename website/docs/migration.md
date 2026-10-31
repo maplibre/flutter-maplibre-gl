@@ -211,6 +211,20 @@ maplibre_gl.playServicesLocation=false
 
 See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services). F-Droid builds also need a short `prebuild` step, described in [F-Droid](advanced/user-location.md#f-droid).
 
+### Android: platform view mode
+
+`MapLibreMap.useHybridComposition` is deprecated. It never selected Flutter's Hybrid Composition: it moved the map to a `TextureView`, and `MapLibreMap.androidViewMode` now says so.
+
+```dart
+// Before
+MapLibreMap.useHybridComposition = true;
+
+// After
+MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
+```
+
+The old flag keeps working until it is removed. See [Platform view mode (Android)](advanced/performance.md#platform-view-mode-android).
+
 ### Behaviour changes
 
 None of these need a code change, but they are the places where code that worked before starts behaving differently.

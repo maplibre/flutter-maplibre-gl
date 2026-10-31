@@ -83,7 +83,7 @@ public class MapLibreMapFactory extends PlatformViewFactory {
       builder.setStyleString(styleString);
     }
     // Not a map option: the map needs it before it builds its MapView.
-    builder.setUseHybridComposition(params.getUseHybridComposition());
+    builder.setTextureLayer(params.getTextureLayer());
   }
 
   /**

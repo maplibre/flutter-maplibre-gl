@@ -30,9 +30,9 @@ class MapLibreMapFactoryTest {
             super.setStyleString(styleString)
         }
 
-        override fun setUseHybridComposition(useHybridComposition: Boolean) {
-            calls.add("useHybridComposition $useHybridComposition")
-            super.setUseHybridComposition(useHybridComposition)
+        override fun setTextureLayer(textureLayer: Boolean) {
+            calls.add("textureLayer $textureLayer")
+            super.setTextureLayer(textureLayer)
         }
 
         override fun setCompassEnabled(compassEnabled: Boolean) {
@@ -72,7 +72,7 @@ class MapLibreMapFactoryTest {
             initialCameraPosition = PgCameraPosition(0.0, PgLatLng(45.0, 9.0), 0.0, 11.5),
             dragEnabled = false,
             iosLongClickDurationMs = 500L,
-            useHybridComposition = true,
+            textureLayer = true,
         )
 
         assertEquals(params, throughTheCodec(params))
@@ -89,7 +89,7 @@ class MapLibreMapFactoryTest {
             ),
             initialCameraPosition = PgCameraPosition(0.0, PgLatLng(45.0, 9.0), 0.0, 11.5),
             dragEnabled = false,
-            useHybridComposition = true,
+            textureLayer = true,
         )
 
         assertEquals(
@@ -100,23 +100,23 @@ class MapLibreMapFactoryTest {
                 "initialCameraPosition ${PigeonConvert.toLatLng(PgLatLng(45.0, 9.0))} 11.5",
                 "dragEnabled false",
                 "styleString assets/style.json",
-                "useHybridComposition true",
+                "textureLayer true",
             ),
             configure(throughTheCodec(params), density = 2f),
         )
     }
 
     @Test
-    fun theCompositionIsSetEvenWithoutHybridComposition() {
+    fun theTextureLayerIsSetEvenWhenOff() {
         val params = PgCreationParams(
             options = PgMapOptions(),
             dragEnabled = true,
-            useHybridComposition = false,
+            textureLayer = false,
         )
 
         // No style and no camera: the builder keeps its defaults for them.
         assertEquals(
-            listOf("dragEnabled true", "useHybridComposition false"),
+            listOf("dragEnabled true", "textureLayer false"),
             configure(throughTheCodec(params)),
         )
     }

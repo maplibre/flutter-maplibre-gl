@@ -37,34 +37,36 @@ On Android this stops the `MapView` render loop; on iOS it drops the preferred f
 ## Platform view mode (Android)
 
 On Android the map is a platform view, and Flutter has several ways to embed one.
-Which one you get is decided by the Android `View` the map renders into, and that
-is what `MapLibreMap.useHybridComposition` controls:
+`MapLibreMap.androidViewMode` picks the Android `View` the map renders into, and
+Flutter picks its embedding mode from that view:
 
-- **`false` (the default, since 0.16.0)**: the map renders into a `GLSurfaceView`.
-  Flutter cannot redirect a `SurfaceView`'s drawing into a texture, so it embeds
-  the map through Virtual Display. The map renders as directly as Android allows,
-  and you inherit Virtual Display's limitations around text input, accessibility
-  and z-order.
-- **`true`**: the map renders into a `TextureView`, which is MapLibre's
-  `textureMode`. Flutter composites it as a texture layer, so the map behaves
-  like a regular widget: Flutter content can paint over it, and the map itself
-  can be transformed, clipped or animated. A `TextureView` costs more to render
-  than a `SurfaceView` on every Android version.
+- **`AndroidViewMode.auto` (the default)**: the map renders into a `GLSurfaceView`,
+  the most direct path Android offers. Flutter cannot redirect a `SurfaceView`'s
+  drawing into a texture, so it embeds the map through
+  [Hybrid Composition++](#hybrid-composition) when the app enables it and the
+  device supports it, and through Virtual Display otherwise, with its limits
+  around text input, accessibility and z-order.
+- **`AndroidViewMode.textureLayer`**: the map renders into a `TextureView`, which
+  Flutter composites as a texture layer, so the map behaves like a regular
+  widget: Flutter content can paint over it, and the map itself can be
+  transformed, clipped or animated. A `TextureView` costs more to render than a
+  `SurfaceView` on every Android version.
 
 ```dart
-MapLibreMap.useHybridComposition = true; // call before runApp()
+MapLibreMap.androidViewMode = AndroidViewMode.textureLayer; // before runApp()
 ```
 
 Set it before the first map is built. The mode is fixed once a platform view
 exists, so changing it later leaves maps already on screen untouched.
 
-Two things about this flag are worth knowing. Despite the name it does not select
-Flutter's "Hybrid Composition" mode: both values go through
-`PlatformViewsService.initAndroidView`, and Flutter chooses Texture Layer Hybrid
-Composition or Virtual Display based on the native view it finds. And the
-`translucentTextureSurface` map option moves the map to a `TextureView` as well,
-additionally making it non-opaque, so reach for `useHybridComposition` when you
-want the texture layer with an opaque surface.
+The `translucentTextureSurface` map option moves the map to a `TextureView` as
+well, additionally making it non-opaque, so reach for
+`AndroidViewMode.textureLayer` when you want the texture layer with an opaque
+surface.
+
+`MapLibreMap.useHybridComposition = true` is the deprecated spelling of
+`AndroidViewMode.textureLayer`. Despite its name, it never selected Flutter's
+Hybrid Composition.
 
 ### Hybrid Composition++
 
@@ -76,7 +78,7 @@ newer, Impeller and Vulkan, and Flutter falls back to the mode configured above
 on devices that do not qualify.
 
 It is opt-in per app, not per plugin, so nothing changes on the `maplibre_gl`
-side. Leave `useHybridComposition` at `false` and add this to your app's
+side. Leave `androidViewMode` at `AndroidViewMode.auto` and add this to your app's
 `AndroidManifest.xml`, inside `<application>`:
 
 ```xml
@@ -105,5 +107,5 @@ The [annotation API](../concepts/annotations-vs-layers.md) is convenient but kee
 |-----|---------|
 | `MapLibreMap.preWarm()` | start engine initialization before the first map |
 | `controller.pauseMap()` / `resumeMap()` | stop and restart rendering for an off-screen map |
-| `MapLibreMap.useHybridComposition` | which Android view the map renders into, see [Platform view mode (Android)](#platform-view-mode-android) |
+| `MapLibreMap.androidViewMode` | how the Android map is embedded, see [Platform view mode (Android)](#platform-view-mode-android) |
 | `controller.setFeatureState()` | restyle single features without touching source data |
