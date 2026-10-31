@@ -33,3 +33,9 @@ gradle :maplibre_gl:help -PagpVersion=9.3.1 -PexpectKotlinOwner=agp
 
 Leave `-PexpectKotlinOwner` out to print what happens instead of asserting it. Every run reports a
 line like `gradle-compat: agp=9.3.1 builtInKotlin=false owner=kgp compileDebugKotlin=true`.
+
+The same job resolves the MapLibre Android artifact of each `maplibre_gl.renderer` value (#915):
+
+```sh
+gradle :maplibre_gl:dependencies --configuration releaseRuntimeClasspath -Pmaplibre_gl.renderer=auto
+```

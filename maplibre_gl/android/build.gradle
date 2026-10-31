@@ -27,6 +27,16 @@ apply plugin: 'com.android.library'
 def useGooglePlayServicesLocation =
         project.findProperty('maplibre_gl.playServicesLocation')?.toString()?.trim() != 'false'
 
+// MapLibre's rendering backend, from maplibre_gl.renderer in the same place: OpenGL ES by default,
+// the most proven one on older GPUs; vulkan for Vulkan only, which Google Play then requires of
+// the device; auto for both, picked at runtime, at about 10 MB more (#915).
+def mapLibreRenderer =
+        project.findProperty('maplibre_gl.renderer')?.toString()?.trim()?.toLowerCase() ?: 'opengl'
+if (!(mapLibreRenderer in ['opengl', 'vulkan', 'auto'])) {
+    throw new GradleException(
+            "maplibre_gl.renderer=$mapLibreRenderer is not supported: use opengl, vulkan or auto")
+}
+
 // Who compiles our Kotlin depends on the app: from AGP 9 the Android Gradle plugin does, but
 // only where built-in Kotlin is on, and the Flutter template turns it off (#905, #1008, #1018).
 // Flutter 3.44 and later then apply KGP for us, though not always before this script runs. So
@@ -70,14 +80,20 @@ android {
         targetCompatibility JavaVersion.VERSION_21
     }
     configurations.all {
-        // Exclude the regular (Vulkan) SDK to avoid duplicate classes with the OpenGL variant
-        // If we want to use the Vulkan-based renderer in the future, we can remove this exclusion and switch to the regular SDK dependency below.
+        // android-sdk is the Vulkan build under another name: keep it out, so it can never sit
+        // next to the artifact picked below and clash with its classes.
         exclude group: 'org.maplibre.gl', module: 'android-sdk'
     }
     dependencies {
-        // Using OpenGL instead of new Vulkan-based renderer for now, as it is more stable and has better performance on older devices.
-        // If we want to use the Vulkan-based renderer in the future, we can switch to the regular SDK dependency below and remove the exclusion above.
-        implementation 'org.maplibre.gl:android-sdk-opengl:13.7.1'
+        // One literal line per artifact, so that Dependabot and scripts/lib/generate.dart can
+        // read the version. Keep the three versions equal.
+        if (mapLibreRenderer == 'vulkan') {
+            implementation 'org.maplibre.gl:android-sdk-vulkan:13.7.1'
+        } else if (mapLibreRenderer == 'auto') {
+            implementation 'org.maplibre.gl:android-sdk-vulkan-opengl:13.7.1'
+        } else {
+            implementation 'org.maplibre.gl:android-sdk-opengl:13.7.1'
+        }
         implementation 'com.squareup.okhttp3:okhttp:5.4.0'
         // Google Play Services location gives high accuracy the fused provider. FOSS builds, such
         // as F-Droid, set maplibre_gl.playServicesLocation=false in the app's gradle.properties:

@@ -102,6 +102,11 @@ updates:
         applies-to: version-updates
         patterns:
           - com.google.android.gms:play-services-*
+      # One artifact per maplibre_gl.renderer value: they must move together.
+      maplibre-android:
+        applies-to: version-updates
+        patterns:
+          - org.maplibre.gl:*
 
   # Android Gradle (example app)
   - package-ecosystem: gradle
