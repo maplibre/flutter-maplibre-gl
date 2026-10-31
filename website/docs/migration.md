@@ -152,7 +152,7 @@ The plugin now talks to Android and iOS through typed messages generated with [P
 * A call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`, where it used to throw a `MissingPluginException`. If you caught `MissingPluginException` to ignore those calls, catch `MAP_DISPOSED` instead.
 * Tests that mock the plugin's method channels, `plugins.flutter.io/maplibre_gl` and `plugins.flutter.io/maplibre_gl_<id>`, no longer intercept anything. Install fakes instead: a subclass of `MapLibrePlatform` through `MapLibrePlatform.createInstance` for the map calls, and a subclass of `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls such as offline regions. Both come from `maplibre_gl_platform_interface`.
 * `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition` is now `MapLibreMap.useHybridComposition`.
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap.androidViewMode = AndroidViewMode.textureLayer`.
 
   ```dart
   // Before

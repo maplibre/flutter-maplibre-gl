@@ -2,7 +2,7 @@
 
 ### Actions needed
 * `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed, as Android and iOS no longer answer them. A platform package or a test fake extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and `MapLibreMethodChannel.useHybridComposition` is now `MapLibreMap.useHybridComposition` in `maplibre_gl`. Until a platform registers, the defaults are placeholders, and `isRegistered` on both classes tells whether one did. The unused `onInfoWindowTappedPlatform` callback is removed too (#1133).
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed, as Android and iOS no longer answer them. A platform package or a test fake extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap.androidViewMode = AndroidViewMode.textureLayer` in `maplibre_gl`. Until a platform registers, the defaults are placeholders, and `isRegistered` on both classes tells whether one did. The unused `onInfoWindowTappedPlatform` callback is removed too (#1133).
 
 ### Added
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
