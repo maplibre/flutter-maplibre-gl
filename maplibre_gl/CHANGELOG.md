@@ -90,6 +90,7 @@
 * **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#1143).
 
 ### Fixed
+* **Android**: with `doubleClickZoomEnabled: false`, a tap is reported when the finger lifts, as on iOS, instead of after the double-tap timeout of about 300 ms. With double-tap zoom on, taps still wait for the timeout on both platforms.
 * Disposing the map while its style is loading no longer throws an unhandled `MissingPluginException` from the annotation setup, also while the map is still being created (#1103, #1110).
 * Layer filters now behave the same on Android, iOS and web (#1055):
   * `setLayerFilter` works on every filterable layer type. On web it threw `UnimplementedError`.
