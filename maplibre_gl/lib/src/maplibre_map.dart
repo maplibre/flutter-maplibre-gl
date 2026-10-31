@@ -57,6 +57,7 @@ class MapLibreMap extends StatefulWidget {
     this.onMapLongClick,
     this.onCameraTrackingDismissed,
     this.onCameraTrackingChanged,
+    this.onCameraMoveStarted,
     this.onCameraMove,
     this.onCameraIdle,
     this.onMapIdle,
@@ -387,6 +388,11 @@ class MapLibreMap extends StatefulWidget {
   /// Called when the location tracking mode changes
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
+  /// Called when the camera starts to move, with whether a gesture of the user
+  /// or something else moved it. Also kept in
+  /// [MapLibreMapController.cameraMoveReason] until [onCameraIdle].
+  final OnCameraMoveStartedCallback? onCameraMoveStarted;
+
   /// Called with the camera position while the camera moves. The last call
   /// before [onCameraIdle] has the position where it stopped, also for a move
   /// without animation such as `moveCamera`.
@@ -615,6 +621,7 @@ class _MapLibreMapState extends State<MapLibreMap> {
       onMapLongClick: widget.onMapLongClick,
       onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
       onCameraTrackingChanged: widget.onCameraTrackingChanged,
+      onCameraMoveStarted: widget.onCameraMoveStarted,
       onCameraMove: widget.onCameraMove,
       onCameraIdle: widget.onCameraIdle,
       onMapIdle: widget.onMapIdle,

@@ -75,7 +75,7 @@ abstract class MapLibrePlatform {
   final onFeatureHoverPlatform = ArgumentCallbacks<Map<String, dynamic>>();
   final onFeatureDraggedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
-  final onCameraMoveStartedPlatform = ArgumentCallbacks<void>();
+  final onCameraMoveStartedPlatform = ArgumentCallbacks<CameraMoveReason>();
 
   final onCameraMovePlatform = ArgumentCallbacks<CameraPosition>();
 

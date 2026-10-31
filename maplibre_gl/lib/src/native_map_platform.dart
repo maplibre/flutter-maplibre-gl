@@ -292,9 +292,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> cameraOnMoveStarted(bool isGesture) async {
-    // Not exposed yet, as the plugin never passed it on: telling the
-    // user's moves from the app's is #1019.
-    onCameraMoveStartedPlatform(null);
+    onCameraMoveStartedPlatform(
+      isGesture ? CameraMoveReason.gesture : CameraMoveReason.programmatic,
+    );
   }
 
   @override

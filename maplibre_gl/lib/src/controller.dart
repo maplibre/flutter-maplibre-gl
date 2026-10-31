@@ -57,6 +57,8 @@ typedef OnCameraTrackingDismissedCallback = void Function();
 typedef OnCameraTrackingChangedCallback =
     void Function(MyLocationTrackingMode mode);
 
+typedef OnCameraMoveStartedCallback = void Function(CameraMoveReason reason);
+
 typedef OnCameraMoveCallback = void Function(CameraPosition cameraPosition);
 
 typedef OnCameraIdleCallback = void Function();
@@ -96,7 +98,7 @@ typedef OnMapIdleCallback = void Function();
 /// * the configuration options of the [MapLibreMap] widget
 /// * the [symbols], [lines], [circles] or [fills] properties
 /// (i.e. the collection of [Symbol]s, [Line]s, [Circle]s and [Fill]s added to this map via the "simple way" (see above))
-/// * the [isCameraMoving] property
+/// * the [isCameraMoving] and [cameraMoveReason] properties
 /// * the [cameraPosition] property
 ///
 /// Listeners are notified after changes have been applied on the platform side.
@@ -138,6 +140,7 @@ class MapLibreMapController extends ChangeNotifier {
     this.onMapIdle,
     this.onUserLocationUpdated,
     this.onCameraIdle,
+    this.onCameraMoveStarted,
     this.onCameraMove,
   }) : _maplibrePlatform = maplibrePlatform {
     _cameraPosition = initialCameraPosition;
@@ -207,8 +210,9 @@ class MapLibreMapController extends ChangeNotifier {
       }
     });
 
-    _maplibrePlatform.onCameraMoveStartedPlatform.add((_) {
-      _isCameraMoving = true;
+    _maplibrePlatform.onCameraMoveStartedPlatform.add((reason) {
+      _cameraMoveReason = reason;
+      onCameraMoveStarted?.call(reason);
       if (!isDisposed) notifyListeners();
     });
 
@@ -226,7 +230,7 @@ class MapLibreMapController extends ChangeNotifier {
       // The flag and the callback are unconditional: an unusable camera still
       // means the movement ended, and a stuck isCameraMoving would be worse
       // than a stale position.
-      _isCameraMoving = false;
+      _cameraMoveReason = null;
       if (isFiniteCameraPosition(cameraPosition)) {
         _cameraPosition = cameraPosition;
       }
@@ -382,6 +386,7 @@ class MapLibreMapController extends ChangeNotifier {
   final OnCameraTrackingDismissedCallback? onCameraTrackingDismissed;
   final OnCameraTrackingChangedCallback? onCameraTrackingChanged;
 
+  final OnCameraMoveStartedCallback? onCameraMoveStarted;
   final OnCameraMoveCallback? onCameraMove;
   final OnCameraIdleCallback? onCameraIdle;
 
@@ -440,8 +445,14 @@ class MapLibreMapController extends ChangeNotifier {
   Set<Fill> get fills => fillManager?.annotations ?? {};
 
   /// True if the map camera is currently moving.
-  bool get isCameraMoving => _isCameraMoving;
-  bool _isCameraMoving = false;
+  bool get isCameraMoving => _cameraMoveReason != null;
+
+  /// What started the current camera move, or null while the camera is still.
+  ///
+  /// A move that takes over another before the camera stops, such as a
+  /// camera call during the fling after a gesture, keeps the first reason.
+  CameraMoveReason? get cameraMoveReason => _cameraMoveReason;
+  CameraMoveReason? _cameraMoveReason;
 
   /// Returns the most recent camera position reported by the platform side.
   /// It only follows the camera while [MapLibreMap.trackCameraPosition] is

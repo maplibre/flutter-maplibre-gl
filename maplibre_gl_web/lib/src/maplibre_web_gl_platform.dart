@@ -1449,12 +1449,17 @@ class MapLibreMapController extends MapLibrePlatform
     });
   }
 
-  void _onCameraMoveStarted(_) {
+  void _onCameraMoveStarted(Event e) {
     if (_skipCameraMoveStarted) {
       _skipCameraMoveStarted = false;
       return;
     }
-    onCameraMoveStartedPlatform(null);
+    onCameraMoveStartedPlatform(
+      cameraMoveReason(
+        e.jsObject as JSObject,
+        scrollZooming: _map.scrollZoom.isActive(),
+      ),
+    );
   }
 
   // Positions go out only while [_trackCameraPosition] is on, as on Android
