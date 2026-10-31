@@ -7,15 +7,17 @@ part of '../maplibre_gl.dart';
 enum AnnotationType { fill, line, circle, symbol }
 
 /// How the Android map is embedded in the Flutter UI, set through
-/// [MapLibreMap.androidViewMode].
+/// [MapLibreMap.androidViewMode]. Most apps keep [auto]; the
+/// [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android)
+/// says when to pick another mode.
 ///
 /// When the app enables Hybrid Composition++ and the device supports it,
 /// Flutter uses it whatever the mode, so keep [auto] there.
 enum AndroidViewMode {
   /// The map renders into a `SurfaceView`, the most direct rendering path, and
   /// Flutter picks how to embed it: Hybrid Composition++ when the app enables
-  /// it and the device supports it, otherwise Virtual Display, with its known
-  /// limits around text input, accessibility and z-order.
+  /// it and the device supports it, otherwise Virtual Display, which costs
+  /// some graphics memory and can stutter on fast camera moves.
   auto,
 
   /// The map renders into a `TextureView`, which Flutter composites as a
@@ -26,8 +28,8 @@ enum AndroidViewMode {
 
   /// The map renders into a `SurfaceView` that Flutter places in the Android
   /// view hierarchy (Hybrid Composition), and the system composites it. Try it
-  /// when map updates wait for a Flutter frame to reach the screen. It costs
-  /// Flutter performance while the map is on screen, see
+  /// when map updates show up late, only when something else on screen moves.
+  /// It costs Flutter performance while the map is on screen, see
   /// [Hosting native Android views](https://docs.flutter.dev/platform-integration/android/platform-views#performance).
   hybridComposition,
 }
