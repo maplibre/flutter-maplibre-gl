@@ -85,12 +85,12 @@ MapLibreMap(
 )
 ```
 
-**Most apps should keep the default.** Change it only to fix one of these
-problems:
+**Most apps should keep the default**, `surfaceView` with `auto`. On some
+devices, fast camera moves can stutter or flash with it. Change it only to fix
+one of these problems:
 
 | Problem | `surface` | `composition` | What it costs |
 |---|---|---|---|
-| None: the default | `surfaceView` | `auto` | Fast camera moves can stutter, or flash on some devices. |
 | The map stutters or flashes on fast camera moves | `textureView` | `auto` | The map draws more slowly. On some devices, map updates show up late. |
 | Map updates show up late, only when something else on screen moves | `surfaceView` or `textureView` | `hybridComposition` | Flutter renders more slowly while the map is visible, especially on Android 9 and older and on low-end devices. |
 | Widgets behind the map should show through it | `translucentTextureView` | `auto` | Like `textureView`, plus blending the map with what is behind it. |

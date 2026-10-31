@@ -85,12 +85,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     if (defaultTargetPlatform == TargetPlatform.android) {
       final view = _androidView ??= _androidViewOf(creationParams);
       final params = _creationParams(creationParams, android: view);
-      // A SurfaceView, or a translucent TextureView, with auto keeps the
-      // AndroidView it has always had; the other views are created here.
-      final createsView =
-          view.composition == AndroidComposition.hybridComposition ||
-          view.surface == AndroidMapSurface.textureView;
-      if (createsView) {
+      // With auto, AndroidView lets Flutter pick; Hybrid Composition needs
+      // the view created here.
+      if (view.composition == AndroidComposition.hybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -103,13 +100,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            // initExpensiveAndroidView is Hybrid Composition; initAndroidView
-            // embeds the TextureView as a texture layer.
-            final init =
-                view.composition == AndroidComposition.hybridComposition
-                    ? PlatformViewsService.initExpensiveAndroidView
-                    : PlatformViewsService.initAndroidView;
-            final controller = init(
+            final controller = PlatformViewsService.initExpensiveAndroidView(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
@@ -159,13 +150,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }) {
     final options = params['options'] as Map<dynamic, dynamic>?;
     final camera = params['initialCameraPosition'] as Map<dynamic, dynamic>?;
-    final translucent =
-        android?.surface == AndroidMapSurface.translucentTextureView;
+    final mapOptions = _mapOptions(
+      options?.cast<String, dynamic>() ?? const {},
+    );
+    if (android != null) {
+      // The view decides the translucency, over the deprecated option.
+      mapOptions.translucentTextureSurface =
+          android.surface == AndroidMapSurface.translucentTextureView
+              ? true
+              : null;
+    }
     return PgCreationParams(
       styleString: params['styleString'] as String?,
-      // The view decides the translucency, over the deprecated option.
-      options: _mapOptions(options?.cast<String, dynamic>() ?? const {})
-        ..translucentTextureSurface = translucent ? true : null,
+      options: mapOptions,
       initialCameraPosition: camera == null ? null : _pgCameraPosition(camera),
       // The default of MapLibreMap.dragEnabled, and of both platforms.
       dragEnabled: params['dragEnabled'] as bool? ?? true,

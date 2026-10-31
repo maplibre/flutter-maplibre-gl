@@ -3333,85 +3333,26 @@ void main() {
       );
     });
 
-    testWidgets(
-      'Android with a TextureView creates the view as a texture layer',
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-      (tester) async {
-        final messenger = tester.binding.defaultBinaryMessenger;
-        final viewCalls = <MethodCall>[];
-        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
-          call,
-        ) async {
-          viewCalls.add(call);
-          switch (call.method) {
-            case 'create':
-              // A texture id: the view is drawn by Flutter.
-              return 0;
-            case 'resize':
-              final args = call.arguments as Map;
-              return <String, Object?>{
-                'width': args['width'],
-                'height': args['height'],
-              };
-          }
-          return null;
-        });
-        addTearDown(
-          () => messenger.setMockMethodCallHandler(
-            SystemChannels.platform_views,
-            null,
-          ),
-        );
-        final created = <int>[];
+    test('Android with a TextureView keeps the AndroidView', () {
+      onPlatform(TargetPlatform.android);
 
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: platform.buildView(
-              creationParams(
-                androidView: const AndroidMapView(
-                  surface: AndroidMapSurface.textureView,
-                ),
-              ),
-              created.add,
-              null,
+      expect(
+        platform.buildView(
+          creationParams(
+            androidView: const AndroidMapView(
+              surface: AndroidMapSurface.textureView,
             ),
           ),
-        );
-        await tester.pump();
-
-        final create = viewCalls.singleWhere((c) => c.method == 'create');
-        final args = create.arguments as Map;
-        expect(args['viewType'], viewType);
-        // initAndroidView, not Hybrid Composition.
-        expect(args['hybrid'], isNull);
-        // Encoded with the codec of the messages, which native decodes with.
-        expect(
-          codec.decodeMessage(
-            ByteData.sublistView(args['params'] as Uint8List),
-          ),
-          typed(textureView: true),
-        );
-        expect(created, [args['id']]);
-        expect(find.byType(AndroidViewSurface), findsOneWidget);
-
-        // Native asks for the focus when the view is touched.
-        await messenger.handlePlatformMessage(
-          SystemChannels.platform_views.name,
-          const StandardMethodCodec().encodeMethodCall(
-            MethodCall('viewFocused', created.single),
-          ),
           (_) {},
-        );
-        await tester.pump();
-        expect(
-          FocusManager.instance.primaryFocus?.debugLabel,
-          startsWith('PlatformView'),
-        );
-
-        await tester.pumpWidget(const SizedBox());
-      },
-    );
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(textureView: true),
+        ),
+      );
+    });
 
     testWidgets(
       'Android with hybridComposition asks for Hybrid Composition',
@@ -3468,66 +3409,63 @@ void main() {
         expect(created, [args['id']]);
         expect(find.byType(AndroidViewSurface), findsOneWidget);
 
+        // Native asks for the focus when the view is touched.
+        await messenger.handlePlatformMessage(
+          SystemChannels.platform_views.name,
+          const StandardMethodCodec().encodeMethodCall(
+            MethodCall('viewFocused', created.single),
+          ),
+          (_) {},
+        );
+        await tester.pump();
+        expect(
+          FocusManager.instance.primaryFocus?.debugLabel,
+          startsWith('PlatformView'),
+        );
+
         await tester.pumpWidget(const SizedBox());
       },
     );
 
-    testWidgets(
-      'the deprecated useHybridComposition still picks the texture layer',
-      variant: TargetPlatformVariant.only(TargetPlatform.android),
-      (tester) async {
+    test(
+      'the deprecated useHybridComposition still asks for a TextureView',
+      () {
+        onPlatform(TargetPlatform.android);
         // The deprecated flag is what this test covers; the map sets no
         // androidView.
         // ignore: deprecated_member_use_from_same_package
         MapLibreMap.useHybridComposition = true;
-        final messenger = tester.binding.defaultBinaryMessenger;
-        final viewCalls = <MethodCall>[];
-        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
-          call,
-        ) async {
-          viewCalls.add(call);
-          switch (call.method) {
-            case 'create':
-              // A texture id: the view is drawn by Flutter.
-              return 0;
-            case 'resize':
-              final args = call.arguments as Map;
-              return <String, Object?>{
-                'width': args['width'],
-                'height': args['height'],
-              };
-          }
-          return null;
-        });
-        addTearDown(
-          () => messenger.setMockMethodCallHandler(
-            SystemChannels.platform_views,
-            null,
-          ),
-        );
 
-        await tester.pumpWidget(
-          Directionality(
-            textDirection: TextDirection.ltr,
-            child: platform.buildView(creationParams(), (_) {}, null),
-          ),
-        );
-        await tester.pump();
-
-        final create = viewCalls.singleWhere((c) => c.method == 'create');
-        final args = create.arguments as Map;
-        // initAndroidView, not Hybrid Composition.
-        expect(args['hybrid'], isNull);
         expect(
-          codec.decodeMessage(
-            ByteData.sublistView(args['params'] as Uint8List),
+          platform.buildView(creationParams(), (_) {}, null),
+          isA<AndroidView>().having(
+            (v) => v.creationParams,
+            'creationParams',
+            typed(textureView: true),
           ),
-          typed(textureView: true),
         );
-
-        await tester.pumpWidget(const SizedBox());
       },
     );
+
+    test('translucentTextureSurface wins over useHybridComposition', () {
+      onPlatform(TargetPlatform.android);
+      // Both deprecated flags: the translucent one is more specific.
+      // ignore: deprecated_member_use_from_same_package
+      MapLibreMap.useHybridComposition = true;
+
+      expect(
+        platform.buildView(
+          creationParams(translucentTextureSurface: true),
+          (_) {},
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(textureView: true, translucent: true),
+        ),
+      );
+    });
 
     testWidgets(
       'an explicit androidView wins over the deprecated flag',
@@ -3720,10 +3658,12 @@ void main() {
       void onCreated(int id) {}
 
       final view = platform.buildView(
+        // The options reach iOS as they are; the Android view does not.
         creationParams(
           androidView: const AndroidMapView(
             surface: AndroidMapSurface.textureView,
           ),
+          translucentTextureSurface: true,
         ),
         onCreated,
         null,
@@ -3733,7 +3673,11 @@ void main() {
         view,
         isA<UiKitView>()
             .having((v) => v.viewType, 'viewType', viewType)
-            .having((v) => v.creationParams, 'creationParams', typed())
+            .having(
+              (v) => v.creationParams,
+              'creationParams',
+              typed(translucent: true),
+            )
             .having(
               (v) => v.creationParamsCodec,
               'creationParamsCodec',
