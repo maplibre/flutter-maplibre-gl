@@ -264,7 +264,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
         if: ${{ !cancelled() }}
         with:
-          gradle-version: '9.8.1'
+          gradle-version: '9.8.2'
       - name: AGP 9.4.1, built-in Kotlin off
         if: ${{ !cancelled() }}
         working-directory: .github/gradle-compat
