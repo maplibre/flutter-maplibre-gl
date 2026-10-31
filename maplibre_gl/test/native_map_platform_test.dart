@@ -3449,11 +3449,10 @@ void main() {
       'the deprecated useHybridComposition still picks the texture layer',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
-        // The deprecated flag is what this test covers, and it wins over
-        // androidViewMode.
+        // The deprecated flag is what this test covers; androidViewMode stays
+        // auto.
         // ignore: deprecated_member_use_from_same_package
         MapLibreMap.useHybridComposition = true;
-        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
         final messenger = tester.binding.defaultBinaryMessenger;
         final viewCalls = <MethodCall>[];
         messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
@@ -3497,6 +3496,51 @@ void main() {
             ByteData.sublistView(args['params'] as Uint8List),
           ),
           typed(textureLayer: true),
+        );
+
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'an explicit androidViewMode wins over the deprecated flag',
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        // An app that migrated but kept the old flag gets the mode it picked.
+        // ignore: deprecated_member_use_from_same_package
+        MapLibreMap.useHybridComposition = true;
+        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          return null;
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
+        );
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(creationParams(), (_) {}, null),
+          ),
+        );
+        await tester.pump();
+
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final args = create.arguments as Map;
+        expect(args['hybrid'], isTrue);
+        expect(
+          codec.decodeMessage(
+            ByteData.sublistView(args['params'] as Uint8List),
+          ),
+          typed(),
         );
 
         await tester.pumpWidget(const SizedBox());

@@ -113,8 +113,9 @@ Set it before the first map is built. Each map keeps the mode it was built with.
   mode.
 
 `MapLibreMap.useHybridComposition = true` is the deprecated spelling of
-`AndroidViewMode.textureLayer`, and wins over `androidViewMode`. Despite its name,
-it does not select Hybrid Composition: that is `AndroidViewMode.hybridComposition`.
+`AndroidViewMode.textureLayer`, used while `androidViewMode` is `auto`. Despite its
+name, it does not select Hybrid Composition: that is
+`AndroidViewMode.hybridComposition`.
 
 ### Hybrid Composition++
 

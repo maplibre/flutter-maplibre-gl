@@ -23,9 +23,11 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// change of the static flags cannot swap the widget and recreate a
   /// platform view already on screen.
   late final AndroidViewMode _viewMode =
-      // The deprecated spelling of textureLayer, honored until removed.
+      // The deprecated spelling of textureLayer, honored until removed. A mode
+      // the app picked explicitly wins, so a leftover flag cannot override it.
       // ignore: deprecated_member_use_from_same_package
-      MapLibreMap.useHybridComposition
+      MapLibreMap.useHybridComposition &&
+              MapLibreMap.androidViewMode == AndroidViewMode.auto
           ? AndroidViewMode.textureLayer
           : MapLibreMap.androidViewMode;
 

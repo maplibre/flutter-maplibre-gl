@@ -451,9 +451,9 @@ class MapLibreMap extends StatefulWidget {
   /// `runApp()`; maps already on screen keep the mode they were created with.
   static AndroidViewMode androidViewMode = AndroidViewMode.auto;
 
-  /// `true` selects [AndroidViewMode.textureLayer], whatever
-  /// [androidViewMode] says. Despite the name, it does not select Flutter's
-  /// Hybrid Composition.
+  /// `true` selects [AndroidViewMode.textureLayer] while [androidViewMode] is
+  /// [AndroidViewMode.auto]; any other [androidViewMode] wins. Despite the
+  /// name, it does not select Flutter's Hybrid Composition.
   @Deprecated('Use androidViewMode = AndroidViewMode.textureLayer instead')
   static bool useHybridComposition = false;
 
