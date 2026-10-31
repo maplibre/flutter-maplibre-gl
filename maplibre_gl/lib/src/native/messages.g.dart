@@ -1660,7 +1660,7 @@ class PgCreationParams {
     this.initialCameraPosition,
     required this.dragEnabled,
     this.iosLongClickDurationMs,
-    required this.useHybridComposition,
+    required this.textureLayer,
   });
 
   /// The style to create the map with: a style JSON, URL, file path or asset
@@ -1680,9 +1680,11 @@ class PgCreationParams {
   /// milliseconds. Null keeps the platform default.
   int? iosLongClickDurationMs;
 
-  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Android only: whether the app asked for the texture layer
+  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
+  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
   /// Always false on iOS.
-  bool useHybridComposition;
+  bool textureLayer;
 
   List<Object?> _toList() {
     return <Object?>[
@@ -1691,7 +1693,7 @@ class PgCreationParams {
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      useHybridComposition,
+      textureLayer,
     ];
   }
 
@@ -1707,7 +1709,7 @@ class PgCreationParams {
       initialCameraPosition: result[2] as PgCameraPosition?,
       dragEnabled: result[3]! as bool,
       iosLongClickDurationMs: result[4] as int?,
-      useHybridComposition: result[5]! as bool,
+      textureLayer: result[5]! as bool,
     );
   }
 
@@ -1725,7 +1727,7 @@ class PgCreationParams {
         _deepEquals(initialCameraPosition, other.initialCameraPosition) &&
         _deepEquals(dragEnabled, other.dragEnabled) &&
         _deepEquals(iosLongClickDurationMs, other.iosLongClickDurationMs) &&
-        _deepEquals(useHybridComposition, other.useHybridComposition);
+        _deepEquals(textureLayer, other.textureLayer);
   }
 
   @override
@@ -1734,7 +1736,7 @@ class PgCreationParams {
 
   @override
   String toString() {
-    return 'PgCreationParams(styleString: $styleString, options: $options, initialCameraPosition: $initialCameraPosition, dragEnabled: $dragEnabled, iosLongClickDurationMs: $iosLongClickDurationMs, useHybridComposition: $useHybridComposition)';
+    return 'PgCreationParams(styleString: $styleString, options: $options, initialCameraPosition: $initialCameraPosition, dragEnabled: $dragEnabled, iosLongClickDurationMs: $iosLongClickDurationMs, textureLayer: $textureLayer)';
   }
 }
 

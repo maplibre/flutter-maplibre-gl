@@ -295,7 +295,7 @@ void main() {
         ),
         dragEnabled: true,
         iosLongClickDurationMs: 300,
-        useHybridComposition: false,
+        textureLayer: false,
       );
 
       expect(codec.decodeMessage(codec.encodeMessage(params)), params);
