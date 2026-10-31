@@ -519,7 +519,7 @@ class PgCreationParams {
     this.initialCameraPosition,
     required this.dragEnabled,
     this.iosLongClickDurationMs,
-    required this.textureLayer,
+    required this.textureView,
   });
 
   /// The style to create the map with: a style JSON, URL, file path or asset
@@ -539,11 +539,11 @@ class PgCreationParams {
   /// milliseconds. Null keeps the platform default.
   int? iosLongClickDurationMs;
 
-  /// Android only: whether the app asked for the texture layer
-  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
-  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
+  /// Android only: whether the map renders into a `TextureView` rather than
+  /// a `SurfaceView` (`AndroidMapView.surface` in the plugin).
+  /// `translucentTextureSurface` in [options] also makes it non-opaque.
   /// Always false on iOS.
-  bool textureLayer;
+  bool textureView;
 }
 
 /// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes

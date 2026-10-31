@@ -3246,21 +3246,34 @@ void main() {
     const codec = MapLibreMapHostApi.pigeonChannelCodec;
 
     tearDown(() {
-      MapLibreMap.androidViewMode = AndroidViewMode.auto;
-      // Reset, as one test still sets the deprecated flag.
+      // Reset, as some tests set the deprecated flag.
       // ignore: deprecated_member_use_from_same_package
       MapLibreMap.useHybridComposition = false;
     });
 
-    Map<String, dynamic> creationParams() => {
-      'options': <String, dynamic>{'compassEnabled': true},
+    Map<String, dynamic> creationParams({
+      AndroidMapView? androidView,
+      bool? translucentTextureSurface,
+    }) => {
+      'options': <String, dynamic>{
+        'compassEnabled': true,
+        if (translucentTextureSurface != null)
+          'translucentTextureSurface': translucentTextureSurface,
+      },
+      if (androidView != null) 'androidView': androidView,
     };
 
-    /// What [creationParams] becomes, with the Android flag.
-    PgCreationParams typed({bool textureLayer = false}) => PgCreationParams(
-      options: PgMapOptions(compassEnabled: true),
+    /// What [creationParams] becomes, with the Android view.
+    PgCreationParams typed({
+      bool textureView = false,
+      bool translucent = false,
+    }) => PgCreationParams(
+      options: PgMapOptions(
+        compassEnabled: true,
+        translucentTextureSurface: translucent ? true : null,
+      ),
       dragEnabled: true,
-      textureLayer: textureLayer,
+      textureView: textureView,
     );
 
     void onPlatform(TargetPlatform target) {
@@ -3314,17 +3327,16 @@ void main() {
           PgCreationParams(
             options: PgMapOptions(),
             dragEnabled: true,
-            textureLayer: false,
+            textureView: false,
           ),
         ),
       );
     });
 
     testWidgets(
-      'Android with the texture layer creates the view itself',
+      'Android with a TextureView creates the view as a texture layer',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
-        MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
         final messenger = tester.binding.defaultBinaryMessenger;
         final viewCalls = <MethodCall>[];
         messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
@@ -3355,7 +3367,15 @@ void main() {
         await tester.pumpWidget(
           Directionality(
             textDirection: TextDirection.ltr,
-            child: platform.buildView(creationParams(), created.add, null),
+            child: platform.buildView(
+              creationParams(
+                androidView: const AndroidMapView(
+                  surface: AndroidMapSurface.textureView,
+                ),
+              ),
+              created.add,
+              null,
+            ),
           ),
         );
         await tester.pump();
@@ -3370,7 +3390,7 @@ void main() {
           codec.decodeMessage(
             ByteData.sublistView(args['params'] as Uint8List),
           ),
-          typed(textureLayer: true),
+          typed(textureView: true),
         );
         expect(created, [args['id']]);
         expect(find.byType(AndroidViewSurface), findsOneWidget);
@@ -3397,7 +3417,6 @@ void main() {
       'Android with hybridComposition asks for Hybrid Composition',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
-        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
         // Dart creates an Android platform view by sending `create` over the
         // platform views channel. initExpensiveAndroidView, which is Hybrid
         // Composition, sends `hybrid: true`; initAndroidView leaves it out.
@@ -3422,7 +3441,15 @@ void main() {
         await tester.pumpWidget(
           Directionality(
             textDirection: TextDirection.ltr,
-            child: platform.buildView(creationParams(), created.add, null),
+            child: platform.buildView(
+              creationParams(
+                androidView: const AndroidMapView(
+                  composition: AndroidComposition.hybridComposition,
+                ),
+              ),
+              created.add,
+              null,
+            ),
           ),
         );
         await tester.pump();
@@ -3431,7 +3458,7 @@ void main() {
         final args = create.arguments as Map;
         expect(args['viewType'], viewType);
         expect(args['hybrid'], isTrue);
-        // The map keeps its SurfaceView: native gets textureLayer false.
+        // The map keeps its SurfaceView: native gets textureView false.
         expect(
           codec.decodeMessage(
             ByteData.sublistView(args['params'] as Uint8List),
@@ -3449,8 +3476,8 @@ void main() {
       'the deprecated useHybridComposition still picks the texture layer',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
-        // The deprecated flag is what this test covers; androidViewMode stays
-        // auto.
+        // The deprecated flag is what this test covers; the map sets no
+        // androidView.
         // ignore: deprecated_member_use_from_same_package
         MapLibreMap.useHybridComposition = true;
         final messenger = tester.binding.defaultBinaryMessenger;
@@ -3495,7 +3522,7 @@ void main() {
           codec.decodeMessage(
             ByteData.sublistView(args['params'] as Uint8List),
           ),
-          typed(textureLayer: true),
+          typed(textureView: true),
         );
 
         await tester.pumpWidget(const SizedBox());
@@ -3503,13 +3530,12 @@ void main() {
     );
 
     testWidgets(
-      'an explicit androidViewMode wins over the deprecated flag',
+      'an explicit androidView wins over the deprecated flag',
       variant: TargetPlatformVariant.only(TargetPlatform.android),
       (tester) async {
         // An app that migrated but kept the old flag gets the mode it picked.
         // ignore: deprecated_member_use_from_same_package
         MapLibreMap.useHybridComposition = true;
-        MapLibreMap.androidViewMode = AndroidViewMode.hybridComposition;
         final messenger = tester.binding.defaultBinaryMessenger;
         final viewCalls = <MethodCall>[];
         messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
@@ -3528,7 +3554,15 @@ void main() {
         await tester.pumpWidget(
           Directionality(
             textDirection: TextDirection.ltr,
-            child: platform.buildView(creationParams(), (_) {}, null),
+            child: platform.buildView(
+              creationParams(
+                androidView: const AndroidMapView(
+                  composition: AndroidComposition.hybridComposition,
+                ),
+              ),
+              (_) {},
+              null,
+            ),
           ),
         );
         await tester.pump();
@@ -3547,28 +3581,153 @@ void main() {
       },
     );
 
-    test('a map keeps the mode of its first build', () {
+    testWidgets(
+      'Android with a TextureView and hybridComposition asks for both',
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+      (tester) async {
+        final messenger = tester.binding.defaultBinaryMessenger;
+        final viewCalls = <MethodCall>[];
+        messenger.setMockMethodCallHandler(SystemChannels.platform_views, (
+          call,
+        ) async {
+          viewCalls.add(call);
+          return null;
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(
+            SystemChannels.platform_views,
+            null,
+          ),
+        );
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: platform.buildView(
+              creationParams(
+                androidView: const AndroidMapView(
+                  surface: AndroidMapSurface.textureView,
+                  composition: AndroidComposition.hybridComposition,
+                ),
+              ),
+              (_) {},
+              null,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final create = viewCalls.singleWhere((c) => c.method == 'create');
+        final args = create.arguments as Map;
+        expect(args['hybrid'], isTrue);
+        expect(
+          codec.decodeMessage(
+            ByteData.sublistView(args['params'] as Uint8List),
+          ),
+          typed(textureView: true),
+        );
+
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    test('a map keeps the view of its first build', () {
       onPlatform(TargetPlatform.android);
       expect(
         platform.buildView(creationParams(), (_) {}, null),
         isA<AndroidView>(),
       );
 
-      // A rebuild after the flag changed must not swap the platform view.
-      MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
+      // A rebuild that asks for another view must not swap the platform view.
+      expect(
+        platform.buildView(
+          creationParams(
+            androidView: const AndroidMapView(
+              composition: AndroidComposition.hybridComposition,
+            ),
+          ),
+          (_) {},
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(),
+        ),
+      );
+    });
+
+    test('a translucent TextureView keeps the AndroidView', () {
+      onPlatform(TargetPlatform.android);
 
       expect(
-        platform.buildView(creationParams(), (_) {}, null),
-        isA<AndroidView>(),
+        platform.buildView(
+          creationParams(
+            androidView: const AndroidMapView(
+              surface: AndroidMapSurface.translucentTextureView,
+            ),
+          ),
+          (_) {},
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(textureView: true, translucent: true),
+        ),
+      );
+    });
+
+    test('the deprecated translucentTextureSurface still asks for it', () {
+      onPlatform(TargetPlatform.android);
+
+      expect(
+        platform.buildView(
+          creationParams(translucentTextureSurface: true),
+          (_) {},
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(textureView: true, translucent: true),
+        ),
+      );
+    });
+
+    test('an explicit androidView wins over translucentTextureSurface', () {
+      onPlatform(TargetPlatform.android);
+
+      expect(
+        platform.buildView(
+          creationParams(
+            androidView: const AndroidMapView(),
+            translucentTextureSurface: true,
+          ),
+          (_) {},
+          null,
+        ),
+        isA<AndroidView>().having(
+          (v) => v.creationParams,
+          'creationParams',
+          typed(),
+        ),
       );
     });
 
     test('iOS builds a UiKitView without the Android flag', () {
       onPlatform(TargetPlatform.iOS);
-      MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
       void onCreated(int id) {}
 
-      final view = platform.buildView(creationParams(), onCreated, null);
+      final view = platform.buildView(
+        creationParams(
+          androidView: const AndroidMapView(
+            surface: AndroidMapSurface.textureView,
+          ),
+        ),
+        onCreated,
+        null,
+      );
 
       expect(
         view,
@@ -3626,7 +3785,7 @@ void main() {
           ),
           dragEnabled: false,
           iosLongClickDurationMs: 300,
-          textureLayer: false,
+          textureView: false,
         ),
       );
     });

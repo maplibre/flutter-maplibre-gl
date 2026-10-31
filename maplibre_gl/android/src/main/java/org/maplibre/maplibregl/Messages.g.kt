@@ -1586,12 +1586,12 @@ data class PgCreationParams (
    */
   val iosLongClickDurationMs: Long? = null,
   /**
-   * Android only: whether the app asked for the texture layer
-   * (`AndroidViewMode.textureLayer` in the plugin), which renders the map
-   * into a `TextureView`. `translucentTextureSurface` in [options] does too.
+   * Android only: whether the map renders into a `TextureView` rather than
+   * a `SurfaceView` (`AndroidMapView.surface` in the plugin).
+   * `translucentTextureSurface` in [options] also makes it non-opaque.
    * Always false on iOS.
    */
-  val textureLayer: Boolean
+  val textureView: Boolean
 )
  {
   companion object {
@@ -1601,8 +1601,8 @@ data class PgCreationParams (
       val initialCameraPosition = pigeonVar_list[2] as PgCameraPosition?
       val dragEnabled = pigeonVar_list[3] as Boolean
       val iosLongClickDurationMs = pigeonVar_list[4] as Long?
-      val textureLayer = pigeonVar_list[5] as Boolean
-      return PgCreationParams(styleString, options, initialCameraPosition, dragEnabled, iosLongClickDurationMs, textureLayer)
+      val textureView = pigeonVar_list[5] as Boolean
+      return PgCreationParams(styleString, options, initialCameraPosition, dragEnabled, iosLongClickDurationMs, textureView)
     }
   }
   fun toList(): List<Any?> {
@@ -1612,7 +1612,7 @@ data class PgCreationParams (
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      textureLayer,
+      textureView,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -1623,7 +1623,7 @@ data class PgCreationParams (
       return true
     }
     val other = other as PgCreationParams
-    return MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.options, other.options) && MessagesPigeonUtils.deepEquals(this.initialCameraPosition, other.initialCameraPosition) && MessagesPigeonUtils.deepEquals(this.dragEnabled, other.dragEnabled) && MessagesPigeonUtils.deepEquals(this.iosLongClickDurationMs, other.iosLongClickDurationMs) && MessagesPigeonUtils.deepEquals(this.textureLayer, other.textureLayer)
+    return MessagesPigeonUtils.deepEquals(this.styleString, other.styleString) && MessagesPigeonUtils.deepEquals(this.options, other.options) && MessagesPigeonUtils.deepEquals(this.initialCameraPosition, other.initialCameraPosition) && MessagesPigeonUtils.deepEquals(this.dragEnabled, other.dragEnabled) && MessagesPigeonUtils.deepEquals(this.iosLongClickDurationMs, other.iosLongClickDurationMs) && MessagesPigeonUtils.deepEquals(this.textureView, other.textureView)
   }
 
   override fun hashCode(): Int {
@@ -1633,11 +1633,11 @@ data class PgCreationParams (
     result = 31 * result + MessagesPigeonUtils.deepHash(this.initialCameraPosition)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.dragEnabled)
     result = 31 * result + MessagesPigeonUtils.deepHash(this.iosLongClickDurationMs)
-    result = 31 * result + MessagesPigeonUtils.deepHash(this.textureLayer)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.textureView)
     return result
   }
   override fun toString(): String {
-    return "PgCreationParams(styleString=$styleString, options=$options, initialCameraPosition=$initialCameraPosition, dragEnabled=$dragEnabled, iosLongClickDurationMs=$iosLongClickDurationMs, textureLayer=$textureLayer)"
+    return "PgCreationParams(styleString=$styleString, options=$options, initialCameraPosition=$initialCameraPosition, dragEnabled=$dragEnabled, iosLongClickDurationMs=$iosLongClickDurationMs, textureView=$textureView)"
   }
 }
 
