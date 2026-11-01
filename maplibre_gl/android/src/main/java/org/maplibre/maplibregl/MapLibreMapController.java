@@ -20,6 +20,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.content.ComponentCallbacks2;
 import android.content.res.Configuration;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.TextureView;
@@ -277,6 +278,13 @@ final class MapLibreMapController
   // From the start of a drag until the last finger lifts or a second finger comes down: the map
   // gets none of the gesture.
   private boolean dragOwnsGesture;
+  // Reports taps on touch-up while reportsTapsOnTouchUp. A framework detector without a double-tap
+  // listener: it judges a tap as the map's own detector does (touch slop, long press, gesture
+  // classification, on every Android version) but does not wait for a second tap.
+  private GestureDetector tapDetector;
+  // A tap reported on touch-up whose late onMapClick from MapLibre may still come. The next touch
+  // down cancels that onMapClick, so it clears this too.
+  private boolean tapReportedOnTouchUp;
   private MapSnapshotter activeSnapshotter;
   // The takeSnapshot call activeSnapshotter answers.
   private MethodChannel.Result activeSnapshotResult;
@@ -601,14 +609,30 @@ final class MapLibreMapController
 
     if (androidGesturesManager != null) {
       androidGesturesManager.setMoveGestureListener(new MoveGestureListener());
-      mapView.setOnTouchListener(
-          new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-              return onDragTouch(v, event);
-            }
-          });
     }
+    tapDetector =
+        new GestureDetector(
+            mapView.getContext(),
+            new GestureDetector.SimpleOnGestureListener() {
+              @Override
+              public boolean onSingleTapUp(MotionEvent event) {
+                if (reportsTapsOnTouchUp()) {
+                  final PointF pointf = new PointF(event.getX(), event.getY());
+                  reportTap(pointf, mapLibreMap.getProjection().fromScreenLocation(pointf));
+                  tapReportedOnTouchUp = true;
+                }
+                return true;
+              }
+            });
+    // The listener is also a double-tap listener, which would make the detector wait.
+    tapDetector.setOnDoubleTapListener(null);
+    mapView.setOnTouchListener(
+        new View.OnTouchListener() {
+          @Override
+          public boolean onTouch(View v, MotionEvent event) {
+            return onMapTouch(v, event);
+          }
+        });
 
     mapView.addOnStyleImageMissingListener(
         (id) -> {
@@ -4213,7 +4237,33 @@ final class MapLibreMapController
 
   @Override
   public boolean onMapClick(@NonNull LatLng point) {
-    PointF pointf = mapLibreMap.getProjection().toScreenLocation(point);
+    // MapLibre confirms a single tap only after the double-tap timeout. A tap tapDetector already
+    // reported on touch-up is not reported again; any other tap is, even while double-tap zoom
+    // is off, so a tap the two detectors judge differently arrives late rather than never.
+    if (tapReportedOnTouchUp) {
+      tapReportedOnTouchUp = false;
+      return true;
+    }
+    reportTap(mapLibreMap.getProjection().toScreenLocation(point), point);
+    return true;
+  }
+
+  /**
+   * Whether taps are reported on touch-up by {@link #tapDetector} rather than from {@link
+   * #onMapClick}. True while a double tap does not zoom, which in MapLibre takes both zoom and
+   * double-tap gestures: a single tap then needs no confirmation that a second tap is not coming,
+   * and iOS reports it on touch-up in that case too.
+   */
+  private boolean reportsTapsOnTouchUp() {
+    if (mapLibreMap == null) {
+      return false;
+    }
+    final UiSettings uiSettings = mapLibreMap.getUiSettings();
+    return !(uiSettings.isZoomGesturesEnabled() && uiSettings.isDoubleTapGesturesEnabled());
+  }
+
+  /** Reports a tap at {@code pointf}: the feature under it, if any, and the map click. */
+  private void reportTap(PointF pointf, LatLng point) {
     Pair<Feature, String> featureLayerPair = firstFeatureOnLayers(pointf, false);
     final PgScreenPoint screenPoint = toScreenPoint(pointf);
     final PgLatLng latLng = new PgLatLng(point.getLatitude(), point.getLongitude());
@@ -4230,7 +4280,6 @@ final class MapLibreMapController
       // Always fire map#onMapClick when no feature is tapped
       flutterApi.mapOnMapClick(screenPoint, latLng, PigeonReplies.IGNORE);
     }
-    return true;
   }
 
   @Override
@@ -4879,6 +4928,15 @@ final class MapLibreMapController
         .getMoveGestureDetector()
         .setMoveThreshold(ViewConfiguration.get(context).getScaledTouchSlop());
     return manager;
+  }
+
+  // Every touch on the map passes through here before the map's own gesture detector sees it.
+  private boolean onMapTouch(View view, MotionEvent event) {
+    if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+      tapReportedOnTouchUp = false;
+    }
+    tapDetector.onTouchEvent(event);
+    return androidGesturesManager != null && onDragTouch(view, event);
   }
 
   private boolean onDragTouch(View view, MotionEvent event) {

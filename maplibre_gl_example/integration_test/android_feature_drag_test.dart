@@ -10,13 +10,13 @@
 //
 // The assertions only run on Android; elsewhere the tests are no-ops so the
 // suite stays green everywhere.
-import 'dart:developer' show Timeline;
 import 'dart:math' show Point;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
+import 'support/finger.dart';
 import 'support/map_harness.dart';
 
 const _center = LatLng(0, 0);
@@ -32,7 +32,7 @@ void main() {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
 
-    final finger = _Finger(tester);
+    final finger = Finger(tester);
     await finger.down(map.circleOnScreen);
     await finger.moveBy(const Offset(1, 0));
     await finger.up();
@@ -53,7 +53,7 @@ void main() {
       'getVisibleRegion before',
     );
 
-    final finger = _Finger(tester);
+    final finger = Finger(tester);
     await finger.down(map.circleOnScreen);
     for (var i = 0; i < 10; i++) {
       await finger.moveBy(const Offset(2, 0));
@@ -116,10 +116,10 @@ void main() {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
 
-    final first = _Finger(tester);
+    final first = Finger(tester);
     await first.down(map.circleOnScreen);
     // Inside the 300x300 map: a finger on its edge never reaches the view.
-    final second = _Finger(tester);
+    final second = Finger(tester);
     await second.down(map.circleOnScreen + const Offset(0, 80));
     for (var i = 0; i < 10; i++) {
       await first.moveBy(const Offset(0, -5));
@@ -137,14 +137,14 @@ void main() {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
 
-    final first = _Finger(tester);
+    final first = Finger(tester);
     await first.down(map.circleOnScreen);
     for (var i = 0; i < 5; i++) {
       await first.moveBy(const Offset(10, 0));
     }
     // Inside the 300x300 map: a finger on its edge never reaches the view,
     // and the first one would just go on dragging.
-    final second = _Finger(tester);
+    final second = Finger(tester);
     await second.down(map.circleOnScreen + const Offset(0, 80));
     for (var i = 0; i < 10; i++) {
       await first.moveBy(const Offset(0, -5));
@@ -170,7 +170,7 @@ void main() {
     if (!_onAndroid) return;
     final map = await _pumpMapWithDraggableCircle(tester);
 
-    final finger = _Finger(tester);
+    final finger = Finger(tester);
     await finger.down(map.circleOnScreen);
     // One second of slow dragging, well past the long-press timeout.
     for (var i = 0; i < 20; i++) {
@@ -201,7 +201,7 @@ Future<void> _settle(WidgetTester tester) =>
 Future<void> _expectFingerPansTheMap(
   WidgetTester tester,
   _MapProbe map,
-  _Finger finger,
+  Finger finger,
 ) async {
   final before = await pumpUntil(
     tester,
@@ -224,35 +224,6 @@ Future<void> _expectFingerPansTheMap(
     greaterThan(before.northeast.longitude),
     reason: 'the remaining finger pans the map',
   );
-}
-
-/// One finger whose events carry real timestamps.
-///
-/// Android's gesture detectors time long presses from the event's down time;
-/// the zero timestamps a plain `TestGesture` sends would make every touch a
-/// long press. Timeline.now reads the monotonic clock the MotionEvents use.
-class _Finger {
-  _Finger(this.tester);
-
-  final WidgetTester tester;
-  late TestGesture _gesture;
-
-  Duration get _now => Duration(microseconds: Timeline.now);
-
-  Future<void> down(Offset at) async {
-    _gesture = await tester.createGesture();
-    await _gesture.down(at, timeStamp: _now);
-    await tester.pump(const Duration(milliseconds: 16));
-  }
-
-  Future<void> moveBy(Offset by, {int after = 16}) async {
-    await _gesture.moveBy(by, timeStamp: _now);
-    await tester.pump(Duration(milliseconds: after));
-  }
-
-  Future<void> up() async {
-    await _gesture.up(timeStamp: _now);
-  }
 }
 
 class _Drag {
