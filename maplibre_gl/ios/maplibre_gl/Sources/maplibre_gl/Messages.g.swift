@@ -1487,11 +1487,11 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
   /// iOS only: how long a press lasts before it is a long click, in
   /// milliseconds. Null keeps the platform default.
   var iosLongClickDurationMs: Int64? = nil
-  /// Android only: whether the app asked for the texture layer
-  /// (`AndroidViewMode.textureLayer` in the plugin), which renders the map
-  /// into a `TextureView`. `translucentTextureSurface` in [options] does too.
+  /// Android only: whether the map renders into a `TextureView` rather than
+  /// a `SurfaceView` (`AndroidMapView.surface` in the plugin).
+  /// `translucentTextureSurface` in [options] also makes it non-opaque.
   /// Always false on iOS.
-  var textureLayer: Bool
+  var textureView: Bool
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
@@ -1501,7 +1501,7 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
     let initialCameraPosition: PgCameraPosition? = nilOrValue(pigeonVar_list[2])
     let dragEnabled = pigeonVar_list[3] as! Bool
     let iosLongClickDurationMs: Int64? = nilOrValue(pigeonVar_list[4])
-    let textureLayer = pigeonVar_list[5] as! Bool
+    let textureView = pigeonVar_list[5] as! Bool
 
     return PgCreationParams(
       styleString: styleString,
@@ -1509,7 +1509,7 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
       initialCameraPosition: initialCameraPosition,
       dragEnabled: dragEnabled,
       iosLongClickDurationMs: iosLongClickDurationMs,
-      textureLayer: textureLayer
+      textureView: textureView
     )
   }
   func toList() -> [Any?] {
@@ -1519,14 +1519,14 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
       initialCameraPosition,
       dragEnabled,
       iosLongClickDurationMs,
-      textureLayer,
+      textureView,
     ]
   }
   static func == (lhs: PgCreationParams, rhs: PgCreationParams) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.options, rhs.options) && MessagesPigeonInternal.deepEquals(lhs.initialCameraPosition, rhs.initialCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.dragEnabled, rhs.dragEnabled) && MessagesPigeonInternal.deepEquals(lhs.iosLongClickDurationMs, rhs.iosLongClickDurationMs) && MessagesPigeonInternal.deepEquals(lhs.textureLayer, rhs.textureLayer)
+    return MessagesPigeonInternal.deepEquals(lhs.styleString, rhs.styleString) && MessagesPigeonInternal.deepEquals(lhs.options, rhs.options) && MessagesPigeonInternal.deepEquals(lhs.initialCameraPosition, rhs.initialCameraPosition) && MessagesPigeonInternal.deepEquals(lhs.dragEnabled, rhs.dragEnabled) && MessagesPigeonInternal.deepEquals(lhs.iosLongClickDurationMs, rhs.iosLongClickDurationMs) && MessagesPigeonInternal.deepEquals(lhs.textureView, rhs.textureView)
   }
 
   func hash(into hasher: inout Hasher) {
@@ -1536,11 +1536,11 @@ struct PgCreationParams: Hashable, CustomStringConvertible {
     MessagesPigeonInternal.deepHash(value: initialCameraPosition, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: dragEnabled, hasher: &hasher)
     MessagesPigeonInternal.deepHash(value: iosLongClickDurationMs, hasher: &hasher)
-    MessagesPigeonInternal.deepHash(value: textureLayer, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: textureView, hasher: &hasher)
   }
 
   public var description: String {
-    return "PgCreationParams(styleString: \(String(describing: styleString)), options: \(String(describing: options)), initialCameraPosition: \(String(describing: initialCameraPosition)), dragEnabled: \(String(describing: dragEnabled)), iosLongClickDurationMs: \(String(describing: iosLongClickDurationMs)), textureLayer: \(String(describing: textureLayer)))"
+    return "PgCreationParams(styleString: \(String(describing: styleString)), options: \(String(describing: options)), initialCameraPosition: \(String(describing: initialCameraPosition)), dragEnabled: \(String(describing: dragEnabled)), iosLongClickDurationMs: \(String(describing: iosLongClickDurationMs)), textureView: \(String(describing: textureView)))"
   }
 }
 

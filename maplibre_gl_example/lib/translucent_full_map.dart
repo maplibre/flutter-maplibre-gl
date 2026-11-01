@@ -83,7 +83,9 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
             // This is a random color, for example purposes.
             foregroundLoadColor: Colors.purple,
             // This sets the map to be translucent.
-            translucentTextureSurface: true,
+            androidView: const AndroidMapView(
+              surface: AndroidMapSurface.translucentTextureView,
+            ),
           ),
         ],
       ),

@@ -30,9 +30,9 @@ class MapLibreMapFactoryTest {
             super.setStyleString(styleString)
         }
 
-        override fun setTextureLayer(textureLayer: Boolean) {
-            calls.add("textureLayer $textureLayer")
-            super.setTextureLayer(textureLayer)
+        override fun setTextureView(textureView: Boolean) {
+            calls.add("textureView $textureView")
+            super.setTextureView(textureView)
         }
 
         override fun setCompassEnabled(compassEnabled: Boolean) {
@@ -72,7 +72,7 @@ class MapLibreMapFactoryTest {
             initialCameraPosition = PgCameraPosition(0.0, PgLatLng(45.0, 9.0), 0.0, 11.5),
             dragEnabled = false,
             iosLongClickDurationMs = 500L,
-            textureLayer = true,
+            textureView = true,
         )
 
         assertEquals(params, throughTheCodec(params))
@@ -89,7 +89,7 @@ class MapLibreMapFactoryTest {
             ),
             initialCameraPosition = PgCameraPosition(0.0, PgLatLng(45.0, 9.0), 0.0, 11.5),
             dragEnabled = false,
-            textureLayer = true,
+            textureView = true,
         )
 
         assertEquals(
@@ -100,23 +100,23 @@ class MapLibreMapFactoryTest {
                 "initialCameraPosition ${PigeonConvert.toLatLng(PgLatLng(45.0, 9.0))} 11.5",
                 "dragEnabled false",
                 "styleString assets/style.json",
-                "textureLayer true",
+                "textureView true",
             ),
             configure(throughTheCodec(params), density = 2f),
         )
     }
 
     @Test
-    fun theTextureLayerIsSetEvenWhenOff() {
+    fun theTextureViewIsSetEvenWhenOff() {
         val params = PgCreationParams(
             options = PgMapOptions(),
             dragEnabled = true,
-            textureLayer = false,
+            textureView = false,
         )
 
         // No style and no camera: the builder keeps its defaults for them.
         assertEquals(
-            listOf("dragEnabled true", "textureLayer false"),
+            listOf("dragEnabled true", "textureView false"),
             configure(throughTheCodec(params)),
         )
     }

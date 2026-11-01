@@ -152,7 +152,7 @@ The plugin now talks to Android and iOS through typed messages generated with [P
 * A call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`, where it used to throw a `MissingPluginException`. If you caught `MissingPluginException` to ignore those calls, catch `MAP_DISPOSED` instead.
 * Tests that mock the plugin's method channels, `plugins.flutter.io/maplibre_gl` and `plugins.flutter.io/maplibre_gl_<id>`, no longer intercept anything. Install fakes instead: a subclass of `MapLibrePlatform` through `MapLibrePlatform.createInstance` for the map calls, and a subclass of `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls such as offline regions. Both come from `maplibre_gl_platform_interface`.
 * `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap.androidViewMode = AndroidViewMode.textureLayer`.
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView))`.
 
   ```dart
   // Before
@@ -213,17 +213,19 @@ See [Building without Google Play Services](advanced/user-location.md#building-w
 
 ### Android: platform view mode
 
-`MapLibreMap.useHybridComposition` is deprecated. It does not select Flutter's Hybrid Composition: it moves the map to a `TextureView`, and `MapLibreMap.androidViewMode` now says so.
+`MapLibreMap.useHybridComposition` and `translucentTextureSurface` are deprecated. The new `androidView` parameter sets, for each map, the view the map draws into and how Flutter places it.
 
 ```dart
 // Before
 MapLibreMap.useHybridComposition = true;
+MapLibreMap(translucentTextureSurface: true);
 
 // After
-MapLibreMap.androidViewMode = AndroidViewMode.textureLayer;
+MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView));
+MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.translucentTextureView));
 ```
 
-The old flag keeps working until it is removed. See [Platform view mode (Android)](advanced/performance.md#platform-view-mode-android).
+Despite its name, `useHybridComposition` never selected Hybrid Composition: that is `composition: AndroidComposition.hybridComposition`. The old flags keep working until they are removed. See [Platform view mode (Android)](advanced/performance.md#platform-view-mode-android).
 
 ### Behaviour changes
 
