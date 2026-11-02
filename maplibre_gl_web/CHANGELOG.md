@@ -1,6 +1,6 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
-## Unreleased
+## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Actions needed
 * Flutter 3.44 and Dart 3.12 are the minimum (#1177).

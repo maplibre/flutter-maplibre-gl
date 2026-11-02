@@ -3,10 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Highlights
-0.28.0 makes Android, iOS and web work alike: the same call now gives the same result, the same error code and the same gesture on every platform. On Android and iOS the plugin now talks to native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, so a call that one platform lacks is caught before a release instead of failing in your app. Most apps upgrade without code changes: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
+0.28.0 makes Android, iOS and web work alike: the same call now gives the same result, the same error code and the same gesture on every platform. On Android and iOS the plugin now talks to native code through typed messages generated with [Pigeon](https://pub.dev/packages/pigeon) instead of hand-written method channels, so a call that one platform lacks is caught before a release instead of failing in your app. It moves to MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 6.16, and brings what some platforms lacked to all of them: feature state on iOS, global state on Android and iOS, image sources on web. New calls such as `moveLayer`, `setLayerZoomRange` and `setLayersVisibility` change layers without recreating them, and on Android the map can render with Vulkan. Most apps upgrade without code changes: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
 
 ### Actions needed
 * Flutter 3.44 and Dart 3.12 are the minimum, and the Android `minSdkVersion` is 24 (Android 7.0), the default of Flutter 3.44 apps. From 3.44 Flutter builds the iOS plugin with Swift Package Manager by default, and MapLibre iOS no longer publishes to CocoaPods: an app that turned Swift Package Manager off should turn it back on. Add-to-app modules, which Flutter does not build with Swift Package Manager yet, keep using the podspec. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#minimum-versions) (#1177).
