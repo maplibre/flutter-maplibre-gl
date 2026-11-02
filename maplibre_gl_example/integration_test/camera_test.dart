@@ -1556,6 +1556,62 @@ void main() {
       expect(camera.zoom, closeTo(fitZoom, 0.4));
     });
 
+    testWidgets('setCameraBounds padding adds to the content insets', (
+      tester,
+    ) async {
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.updateContentInsets(const EdgeInsets.only(bottom: 100)),
+        'updateContentInsets',
+      );
+      await pumpUntil(
+        tester,
+        controller.setCameraBounds(
+          west: -10,
+          north: 10,
+          south: -10,
+          east: 10,
+          padding: 20,
+        ),
+        'setCameraBounds',
+      );
+
+      Future<Point<num>> screen(LatLng point) => pumpUntil(
+        tester,
+        controller.toScreenLocation(point),
+        'toScreenLocation $point',
+      );
+      // The inset and the padding leave a 260 x 160 area from (20, 20) to
+      // (280, 180), centered at (150, 100). The height limits the fit. The
+      // center is there from the start, so wait for the animated zoom too.
+      await pumpUntilValue(
+        tester,
+        () async => (
+          center: await controller.toScreenLocation(const LatLng(0, 0)),
+          north: await controller.toScreenLocation(const LatLng(10, 0)),
+        ),
+        (points) =>
+            (points.center.x - 150).abs() < 3 &&
+            (points.center.y - 100).abs() < 3 &&
+            (points.north.y - 20).abs() < 3,
+        'bounds fitted to the padded area',
+      );
+      final south = await screen(const LatLng(-10, 0));
+      expect(south.y, closeTo(180, 3), reason: 'south edge $south');
+
+      // The inset is still on after the fit and the padding is not: a later
+      // target lands at the center of the inset area.
+      await pumpUntil(
+        tester,
+        controller.moveCamera(CameraUpdate.newLatLng(const LatLng(5, 5))),
+        'moveCamera newLatLng',
+      );
+      final target = await screen(const LatLng(5, 5));
+      expect(target.x, closeTo(150, 2), reason: '$target');
+      expect(target.y, closeTo(100, 2), reason: '$target');
+    });
+
     testWidgets('minMaxZoomPreference clamps camera moves', (tester) async {
       final controller = await pumpMap(
         tester,

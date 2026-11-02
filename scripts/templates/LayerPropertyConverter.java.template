@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import static org.maplibre.maplibregl.Convert.toExactExpression;
 import static org.maplibre.maplibregl.Convert.toMap;
 
 class LayerPropertyConverter {
@@ -34,7 +35,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         {{#paint_properties_android}}
         {{^isFloatArrayProperty}}

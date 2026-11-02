@@ -1477,46 +1477,7 @@ final class MapLibreMapController
     } else if (!json.isJsonPrimitive() || !json.getAsJsonPrimitive().isBoolean()) {
       throw new IllegalArgumentException("A filter is an expression array or a boolean.");
     }
-    // Hand the engine the JSON as plain values. Expression.Converter would
-    // turn every number into a float, so an id like 123456789 became 123456792.
-    Object value = jsonToValue(json);
-    final Object[] array = value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
-    return new Expression("literal") {
-      @NonNull
-      @Override
-      public Object[] toArray() {
-        return array;
-      }
-    };
-  }
-
-  private static Object jsonToValue(JsonElement json) {
-    if (json.isJsonArray()) {
-      JsonArray array = json.getAsJsonArray();
-      Object[] values = new Object[array.size()];
-      for (int i = 0; i < values.length; i++) {
-        values[i] = jsonToValue(array.get(i));
-      }
-      return values;
-    }
-    if (json.isJsonObject()) {
-      Map<String, Object> values = new HashMap<>();
-      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
-        values.put(entry.getKey(), jsonToValue(entry.getValue()));
-      }
-      return values;
-    }
-    if (json.isJsonNull()) {
-      return null;
-    }
-    JsonPrimitive primitive = json.getAsJsonPrimitive();
-    if (primitive.isBoolean()) {
-      return primitive.getAsBoolean();
-    }
-    if (primitive.isNumber()) {
-      return primitive.getAsDouble();
-    }
-    return primitive.getAsString();
+    return Convert.toExactExpression(json);
   }
 
   private static boolean isFilterable(Layer layer) {
@@ -2597,9 +2558,18 @@ final class MapLibreMapController
             .include(locationOne) // Northeast
             .include(locationTwo) // Southwest
             .build();
-    // Padding is in logical pixels, like every other camera input.
-    mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-            (int) (logicalPadding * density)), 200);
+    // Padding is in logical pixels, like every other camera input. It is added
+    // to the map padding and does not replace it, as on iOS and web.
+    mapLibreMap.easeCamera(
+        Convert.toBoundsCameraUpdate(
+            mapLibreMap,
+            latLngBounds,
+            logicalPadding,
+            logicalPadding,
+            logicalPadding,
+            logicalPadding,
+            density),
+        200);
     // Replies once the move is started, as iOS and web do.
     result.success(null);
   }
@@ -4708,7 +4678,21 @@ final class MapLibreMapController
   }
 
   public void setLogoViewMargins(int x, int y) {
-    mapLibreMap.getUiSettings().setLogoMargins(x, 0, 0, y);
+    switch (mapLibreMap.getUiSettings().getLogoGravity()) {
+      case Gravity.TOP | Gravity.START:
+        mapLibreMap.getUiSettings().setLogoMargins(x, y, 0, 0);
+        break;
+      case Gravity.TOP | Gravity.END:
+        mapLibreMap.getUiSettings().setLogoMargins(0, y, x, 0);
+        break;
+      default:
+      case Gravity.BOTTOM | Gravity.START:
+        mapLibreMap.getUiSettings().setLogoMargins(x, 0, 0, y);
+        break;
+      case Gravity.BOTTOM | Gravity.END:
+        mapLibreMap.getUiSettings().setLogoMargins(0, 0, x, y);
+        break;
+    }
   }
 
   @Override

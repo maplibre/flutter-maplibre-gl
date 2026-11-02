@@ -17,9 +17,21 @@ class OfflineManagerUtilsTest {
     @Test
     fun readsTheMetadataOfAJsonObject() {
         assertEquals(
-            mapOf("name" to "Rome", "zoom" to 12.0),
-            OfflineManagerUtils.metadataBytesToMap("""{"name":"Rome","zoom":12}""".toByteArray()),
+            mapOf("name" to "Rome", "zoom" to 12.5),
+            OfflineManagerUtils.metadataBytesToMap("""{"name":"Rome","zoom":12.5}""".toByteArray()),
         )
+    }
+
+    @Test
+    fun readsWholeNumbersInTheMetadataAsLongs() {
+        val metadata = OfflineManagerUtils.metadataBytesToMap(
+            """{"version":2,"id":9007199254740993,"nested":{"count":3,"ratio":0.5},"list":[1,2.5]}""".toByteArray(),
+        )
+
+        assertEquals(2L, metadata["version"])
+        assertEquals(9007199254740993L, metadata["id"])
+        assertEquals(mapOf("count" to 3L, "ratio" to 0.5), metadata["nested"])
+        assertEquals(listOf(1L, 2.5), metadata["list"])
     }
 
     @Test

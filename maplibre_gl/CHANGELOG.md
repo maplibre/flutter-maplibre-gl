@@ -209,6 +209,11 @@
 * Invalid filters and camera durations fail the same way on every platform (#1184):
   * A filter with a NaN or infinite number, which JSON cannot hold, throws `INVALID_EXPRESSION` in `setLayerFilter`, the layer adds and the queries. Android and iOS threw a `JsonUnsupportedObjectError`, and web passed the number on to MapLibre GL JS.
   * `animateCamera` and `easeCamera` throw an `ArgumentError` for a negative duration, as `setTrackingCameraOptions` does. Android failed with a generic error, iOS used its default duration, and web passed it on to MapLibre GL JS.
+* **Android**: these now behave as on iOS and web (#1186):
+  * `setCameraBounds` adds its `padding` to the content insets, as on iOS and web. It dropped the insets set with `updateContentInsets` and left its padding on the map, so later bounds fits kept that margin.
+  * Whole numbers in offline region metadata read back as `int`, as on iOS, instead of `double`, so `metadata['version'] as int` no longer throws.
+  * Large numbers in layer properties and `clusterProperties`, such as feature ids in a `match`, keep their exact value instead of being rounded, so they match as on iOS and web.
+  * `logoViewMargins` move the logo away from the corner of its `logoViewPosition`, as on iOS and as the compass and attribution margins do. They were always left and bottom margins.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

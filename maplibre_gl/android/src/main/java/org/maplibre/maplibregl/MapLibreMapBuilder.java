@@ -190,13 +190,23 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   }
 
   public void setLogoViewMargins(int x, int y) {
-    options.logoMargins(
-        new int[] {
-          (int) x, // left
-          (int) 0, // top
-          (int) 0, // right
-          (int) y, // bottom
-        });
+    switch (options.getLogoGravity()) {
+      case Gravity.TOP | Gravity.START:
+        options.logoMargins(new int[] {(int) x, (int) y, 0, 0});
+        break;
+      case Gravity.TOP | Gravity.END:
+        options.logoMargins(new int[] {0, (int) y, (int) x, 0});
+        break;
+        // If the application code has not specified gravity, assume the platform
+        // default for the logo which is bottom left
+      default:
+      case Gravity.BOTTOM | Gravity.START:
+        options.logoMargins(new int[] {(int) x, 0, 0, (int) y});
+        break;
+      case Gravity.BOTTOM | Gravity.END:
+        options.logoMargins(new int[] {0, 0, (int) x, (int) y});
+        break;
+    }
   }
 
   @Override

@@ -30,6 +30,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import static org.maplibre.maplibregl.Convert.toExactExpression;
 import static org.maplibre.maplibregl.Convert.toMap;
 
 class LayerPropertyConverter {
@@ -40,7 +41,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "icon-opacity":
           properties.add(PropertyFactory.iconOpacity(expression));
@@ -295,7 +296,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "circle-radius":
           properties.add(PropertyFactory.circleRadius(expression));
@@ -365,7 +366,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "line-opacity":
           properties.add(PropertyFactory.lineOpacity(expression));
@@ -460,7 +461,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "fill-antialias":
           properties.add(PropertyFactory.fillAntialias(expression));
@@ -522,7 +523,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "fill-extrusion-opacity":
           properties.add(PropertyFactory.fillExtrusionOpacity(expression));
@@ -587,7 +588,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "raster-opacity":
           properties.add(PropertyFactory.rasterOpacity(expression));
@@ -636,7 +637,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "hillshade-illumination-direction": {
           final Float[] numberArray = wrapValueAsArray(jsonElement);
@@ -709,7 +710,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "heatmap-radius":
           properties.add(PropertyFactory.heatmapRadius(expression));
@@ -749,7 +750,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "color-relief-opacity":
           properties.add(PropertyFactory.colorReliefOpacity(expression));
@@ -780,7 +781,7 @@ class LayerPropertyConverter {
 
     for (Map.Entry<String, Object> entry : data.entrySet()) {
       final JsonElement jsonElement = entry.getValue() != null ? gson.toJsonTree(entry.getValue()) : null;
-      Expression expression = jsonElement != null ? Expression.Converter.convert(jsonElement) : null;
+      Expression expression = jsonElement != null ? toExactExpression(jsonElement) : null;
       switch (entry.getKey()) {
         case "background-color":
           properties.add(PropertyFactory.backgroundColor(expression));

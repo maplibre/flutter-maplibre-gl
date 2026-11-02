@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.offline.OfflineManager;
@@ -814,9 +816,13 @@ abstract class OfflineManagerUtils {
   static Map<String, Object> metadataBytesToMap(@Nullable byte[] metadataBytes) {
     if (metadataBytes != null) {
       try {
-        // Null for an empty or "null" payload.
+        // Null for an empty or "null" payload. Whole numbers read as Long, as
+        // on iOS, instead of Double: a version 2 stays 2, not 2.0.
         Map<String, Object> metadata =
-            new Gson().fromJson(new String(metadataBytes), HashMap.class);
+            new GsonBuilder()
+                .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+                .create()
+                .fromJson(new String(metadataBytes), HashMap.class);
         if (metadata != null) {
           return metadata;
         }
