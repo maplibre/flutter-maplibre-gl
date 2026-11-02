@@ -234,7 +234,7 @@ Future<void> main() async {
 | Flutter  | 3.44.0 |
 | Dart     | 3.12.0 |
 | Android  | API 24 (Android 7.0) |
-| iOS      | iOS 13 |
+| iOS      | iOS 15.5 |
 | Web      | WebGL2, see [Requirements](#requirements) |
 | JDK      | 21 |
 
