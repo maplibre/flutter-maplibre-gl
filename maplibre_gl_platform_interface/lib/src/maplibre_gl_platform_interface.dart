@@ -2,52 +2,37 @@ part of '../maplibre_gl_platform_interface.dart';
 
 /// Easing curve for [MapLibreMapController.easeCamera] animations.
 ///
-/// Platform support varies — iOS exposes four distinct timing functions via
-/// `CAMediaTimingFunction`, Web implements each value as a cubic Bezier passed
-/// to MapLibre GL JS's `easeTo({easing})`, while MapLibre Android only exposes
-/// a boolean `easingInterpolator` flag (linear vs. the native
-/// ease-in/ease-out). Per-value behavior is documented below.
+/// Web eases along each curve exactly. MapLibre Android offers only linear or
+/// MapLibre Native's own ease out, `(0, 0, 0.25, 1)`, used for every other
+/// value. MapLibre iOS can only ease along curves starting with `(0, 0)`, so
+/// [easeInOut] falls back to that ease out there too.
 ///
-/// When `easeCamera` is called without an interpolation, each platform uses
-/// its historical default (iOS, Android, and Web all default to an ease-in/ease-out curve).
+/// Without an interpolation, `easeCamera` uses [easeInOut], so the ease out
+/// above, on Android and iOS, and MapLibre GL JS's own `(0.25, 0.1, 0.25, 1)`
+/// on web.
 enum CameraAnimationInterpolation {
-  /// Constant velocity throughout the animation (no easing).
+  /// Constant speed throughout the animation, on every platform.
   ///
-  /// Best for continuous tracking scenarios (e.g. following a moving GPS
-  /// target) where velocity discontinuities between successive `easeCamera`
-  /// calls would produce perceptible "animated jumps".
-  ///
-  /// Fully supported on iOS, Android, and Web.
+  /// Best for continuous tracking, such as following a moving GPS target,
+  /// where each new `easeCamera` call would otherwise change speed abruptly.
   linear,
 
-  /// Accelerate at the start and decelerate at the end.
+  /// Accelerate at the start and decelerate at the end, cubic Bezier
+  /// `(0.42, 0, 0.58, 1)`.
   ///
-  /// Produces a smooth, natural-feeling movement. This is the platform
-  /// default on iOS, Android, and Web when no interpolation is specified.
+  /// Android, iOS: MapLibre Native's ease out, `(0, 0, 0.25, 1)`.
   easeInOut,
 
-  /// Decelerate towards the end of the animation.
+  /// Decelerate towards the end, cubic Bezier `(0, 0, 0.58, 1)`.
   ///
-  /// iOS: mapped to `CAMediaTimingFunctionName.easeOut`.
-  ///
-  /// Web: implemented as cubic Bezier `(0, 0, 0.58, 1)`.
-  ///
-  /// Android: MapLibre Android does not expose custom timing curves via
-  /// [easeCamera], so this falls back to the default ease-in/ease-out and
-  /// is indistinguishable from [easeInOut] on Android.
+  /// Android: MapLibre Native's ease out, `(0, 0, 0.25, 1)`.
   easeOut,
 
-  /// Material Design "fast out, linear in" curve — cubic Bezier
-  /// `(0.4, 0.0, 1.0, 1.0)`. Accelerates quickly, then approaches the target
-  /// at constant velocity.
+  /// Material Design "fast out, linear in", cubic Bezier `(0.4, 0, 1, 1)`:
+  /// accelerate and reach the target at full speed.
   ///
-  /// iOS: implemented exactly via `CAMediaTimingFunction(controlPoints:)`.
-  ///
-  /// Web: implemented exactly via MapLibre GL JS `easeTo({easing})`.
-  ///
-  /// Android: MapLibre Android does not expose custom timing curves via
-  /// [easeCamera], so this falls back to the default ease-in/ease-out and
-  /// is indistinguishable from [easeInOut] on Android.
+  /// Android: MapLibre Native's ease out, `(0, 0, 0.25, 1)`. iOS:
+  /// `(0, 0, 0.4, 0)`, within 1% of the way.
   fastOutLinearIn,
 }
 
