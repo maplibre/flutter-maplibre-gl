@@ -18,6 +18,7 @@ plugins:
 
 theme:
   name: material
+  variant: classic
   favicon: assets/icon.png
   logo: assets/icon.png
   icon:
