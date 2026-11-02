@@ -4678,7 +4678,21 @@ final class MapLibreMapController
   }
 
   public void setLogoViewMargins(int x, int y) {
-    mapLibreMap.getUiSettings().setLogoMargins(x, 0, 0, y);
+    switch (mapLibreMap.getUiSettings().getLogoGravity()) {
+      case Gravity.TOP | Gravity.START:
+        mapLibreMap.getUiSettings().setLogoMargins(x, y, 0, 0);
+        break;
+      case Gravity.TOP | Gravity.END:
+        mapLibreMap.getUiSettings().setLogoMargins(0, y, x, 0);
+        break;
+      default:
+      case Gravity.BOTTOM | Gravity.START:
+        mapLibreMap.getUiSettings().setLogoMargins(x, 0, 0, y);
+        break;
+      case Gravity.BOTTOM | Gravity.END:
+        mapLibreMap.getUiSettings().setLogoMargins(0, 0, x, y);
+        break;
+    }
   }
 
   @Override
