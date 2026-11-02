@@ -131,11 +131,10 @@ Future<void> main() async {
   // required for deduplication
   // Collect a set of all layout property names across layer types to enable
   // template logic for shared helpers / deduplication.
-  renderContext["all_layout_properties"] =
-      <dynamic>{
-        for (final type in renderContext["layerTypes"]!)
-          ...type["layout_properties"].map((p) => p["value"]),
-      }.map((p) => {"property": p}).toList();
+  renderContext["all_layout_properties"] = <dynamic>{
+    for (final type in renderContext["layerTypes"]!)
+      ...type["layout_properties"].map((p) => p["value"]),
+  }.map((p) => {"property": p}).toList();
 
   // Ordered list of templates we render. If you add a new feature, append
   // here to keep existing diff noise minimal.
@@ -185,10 +184,9 @@ Future<String> render(
   final outputPath = '$currentParentPath/${pathItems.join("/")}';
 
   print("Rendering $filename");
-  final templateFile =
-      await File(
-        '$currentParentPath/scripts/templates/$filename.template',
-      ).readAsString();
+  final templateFile = await File(
+    '$currentParentPath/scripts/templates/$filename.template',
+  ).readAsString();
 
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
@@ -200,10 +198,9 @@ Future<String> render(
 
 /// Read the MapLibre Android SDK version pinned in the plugin build.gradle.
 String readAndroidSdkVersion() {
-  final gradle =
-      File(
-        '${Directory.current.parent.path}/maplibre_gl/android/build.gradle',
-      ).readAsStringSync();
+  final gradle = File(
+    '${Directory.current.parent.path}/maplibre_gl/android/build.gradle',
+  ).readAsStringSync();
   final match = RegExp(
     r"org\.maplibre\.gl:android-sdk[\w-]*:(\d+(?:\.\d+)*)",
   ).firstMatch(gradle);
@@ -217,10 +214,9 @@ String readAndroidSdkVersion() {
 
 /// Read the MapLibre iOS SDK version pinned in the plugin podspec.
 String readIosSdkVersion() {
-  final podspec =
-      File(
-        '${Directory.current.parent.path}/maplibre_gl/ios/maplibre_gl.podspec',
-      ).readAsStringSync();
+  final podspec = File(
+    '${Directory.current.parent.path}/maplibre_gl/ios/maplibre_gl.podspec',
+  ).readAsStringSync();
   final match = RegExp(
     r"s\.dependency\s+'MapLibre',\s+'(\d+(?:\.\d+)*)'",
   ).firstMatch(podspec);
@@ -292,15 +288,14 @@ List<Map<String, dynamic>> buildStyleProperties(
 }) {
   final Map<String, dynamic> items = styleJson[key] ?? <String, dynamic>{};
 
-  final properties =
-      items.entries
-          .where(
-            (e) =>
-                platform == null ||
-                isSupportedOnPlatform(e.value, platform, platformVersion!),
-          )
-          .map((e) => buildStyleProperty(e.key, e.value))
-          .toList();
+  final properties = items.entries
+      .where(
+        (e) =>
+            platform == null ||
+            isSupportedOnPlatform(e.value, platform, platformVersion!),
+      )
+      .map((e) => buildStyleProperty(e.key, e.value))
+      .toList();
 
   // Only the paint branch of the native templates wraps a single value into the
   // array the SDK expects. No layout property is array-typed in the spec today,
@@ -362,8 +357,10 @@ Map<String, dynamic> buildStyleProperty(
     'iosName': renamedIosProperties[camelCase] ?? camelCase,
     'iosExpression': iosExpression,
     'doc': value["doc"],
-    'docSplit':
-        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
+    'docSplit': buildDocSplit(
+      value,
+      name: key,
+    ).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
     'valueAsPascalCase': ReCase(key).pascalCase,
   };
@@ -458,13 +455,26 @@ List<Map<String, dynamic>> buildSourceProperties(
 
   return items.entries
       .where((e) => e.key != "*" && e.key != "type")
+      .where((e) => isImplementedSomewhere(e.value as Map<String, dynamic>))
       .map(
         (e) => buildSourceProperty(e.key, {
           ...e.value as Map<String, dynamic>,
-          if (overrides[e.key] case final doc?) "doc": doc,
+          "doc": ?overrides[e.key],
         }),
       )
       .toList();
+}
+
+/// Whether any platform implements the property [spec] describes, or the spec
+/// says nothing about it. A source property no platform implements is left
+/// out: its spec default would go out with every source, and MapLibre GL JS
+/// rejects a source with a key its own copy of the spec does not know.
+bool isImplementedSomewhere(Map<String, dynamic> spec) {
+  final Map<String, dynamic>? sdkSupport = spec["sdk-support"];
+  if (sdkSupport == null) return true;
+  return sdkSupport.values.any(
+    (kind) => (kind as Map<String, dynamic>).values.any(isImplemented),
+  );
 }
 
 /// Source properties that are only valid under another property's setting
@@ -495,8 +505,9 @@ Map<String, dynamic> buildSourceProperty(
       swiftTypeMappingTable[value["value"]] ??
       swiftTypeMappingTable[value["value"]?["type"]];
 
-  var defaultValue =
-      conditionalSourceProperties.contains(key) ? null : value["default"];
+  var defaultValue = conditionalSourceProperties.contains(key)
+      ? null
+      : value["default"];
   if (defaultValue is List) {
     defaultValue = "const$defaultValue";
   } else if (defaultValue is String) {
@@ -509,10 +520,13 @@ Map<String, dynamic> buildSourceProperty(
     'default': defaultValue,
     'hasDefault': defaultValue != null,
     'type': nestedTypeDart == null ? typeDart : "$typeDart<$nestedTypeDart>",
-    'typeSwift':
-        nestedTypeSwift == null ? typeSwift : "$typeSwift<$nestedTypeSwift>",
-    'docSplit':
-        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
+    'typeSwift': nestedTypeSwift == null
+        ? typeSwift
+        : "$typeSwift<$nestedTypeSwift>",
+    'docSplit': buildDocSplit(
+      value,
+      name: key,
+    ).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
   };
 }
@@ -528,7 +542,7 @@ List<String> buildDocSplit(Map<String, dynamic> item, {String? name}) {
   final Map<dynamic, dynamic>? sdkSupport = item["sdk-support"];
 
   final Map<String, dynamic>? values = item["values"];
-  final result = splitIntoChunks(item["doc"]!, 70);
+  final result = splitIntoChunks(specDoc(item["doc"]!), 70);
   if (type != null) {
     result.add("");
     result.add("Type: $type");
@@ -540,7 +554,11 @@ List<String> buildDocSplit(Map<String, dynamic> item, {String? name}) {
       for (final value in values.entries) {
         result.add('  "${value.key}"');
         result.addAll(
-          splitIntoChunks("${value.value["doc"]}", 70, prefix: "     "),
+          splitIntoChunks(
+            specDoc("${value.value["doc"]}"),
+            70,
+            prefix: "     ",
+          ),
         );
       }
     }
@@ -583,28 +601,47 @@ List<String> buildSupportLines(
   return ["  $kind with ${implemented.join(", ")}$not"];
 }
 
-/// Simple greedy word-wrapping utility used for docs.
+/// Where the links the spec writes relative to its own site point.
+const styleSpecUrl = "https://maplibre.org/maplibre-style-spec/";
+
+/// A doc from the spec, ready for a dartdoc: images are dropped, since their
+/// assets live on the spec site, and links relative to that site are made
+/// absolute. Links to an anchor (`#image`) are kept as they are.
+String specDoc(String doc) => doc
+    .replaceAll(RegExp(r"\s*!\[[^\]]*\]\([^)]*\)"), "")
+    .replaceAllMapped(
+      RegExp(r"\]\((?!https?:|#)([^)]*)\)"),
+      (m) => "]($styleSpecUrl${m[1]})",
+    );
+
+/// Simple greedy word-wrapping utility used for docs. Each line of [input] is
+/// wrapped on its own, and blank lines, which separate paragraphs and lists in
+/// the spec, are kept as one empty line.
 List<String> splitIntoChunks(
   String input,
   int lineLength, {
   String prefix = "",
 }) {
-  final words = input.split(" ");
   final chunks = <String>[];
-
-  var chunk = "";
-  for (final word in words) {
-    final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
-    if (nextChunk.length > lineLength || chunk.endsWith("\n")) {
-      chunks.add(chunk.replaceAll("\n", ""));
-      chunk = prefix + word;
-    } else {
-      chunk = nextChunk;
+  for (final line in input.split("\n").map((l) => l.trim())) {
+    if (line.isEmpty) {
+      if (chunks.isNotEmpty && chunks.last.isNotEmpty) chunks.add("");
+      continue;
     }
+    var chunk = "";
+    for (final word in line.split(" ").where((w) => w.isNotEmpty)) {
+      final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
+      if (nextChunk.length > lineLength && chunk.isNotEmpty) {
+        chunks.add(chunk);
+        chunk = prefix + word;
+      } else {
+        chunk = nextChunk;
+      }
+    }
+    chunks.add(chunk);
   }
-  chunks.add(chunk);
-
-  return chunks;
+  if (chunks.isNotEmpty && chunks.last.isEmpty) chunks.removeLast();
+  return chunks.isEmpty ? [prefix] : chunks;
 }
 
 /// Build expression metadata (renaming reserved or symbolic operators to
@@ -647,8 +684,10 @@ List<Map<String, dynamic>> buildExpressionProperties(
     return <String, dynamic>{
       'value': e.key,
       'doc': e.value["doc"],
-      'docSplit':
-          buildDocSplit(e.value, name: e.key).map((s) => {"part": s}).toList(),
+      'docSplit': buildDocSplit(
+        e.value,
+        name: e.key,
+      ).map((s) => {"part": s}).toList(),
       'valueAsCamelCase': name,
       'deprecatedName': alias?.$1,
       'deprecationReason': alias?.$2,

@@ -222,17 +222,16 @@ void main() {
     final controller = await _pumpMapWithFeatures(tester);
     await _waitForAll(tester, controller);
 
-    final url =
-        Uri.dataFromString(
-          jsonEncode({
-            'type': 'FeatureCollection',
-            'features': [
-              _feature('five', 5, _features['number']!.at),
-              _feature('six', 6, _features['text']!.at),
-            ],
-          }),
-          mimeType: 'application/json',
-        ).toString();
+    final url = Uri.dataFromString(
+      jsonEncode({
+        'type': 'FeatureCollection',
+        'features': [
+          _feature('five', 5, _features['number']!.at),
+          _feature('six', 6, _features['text']!.at),
+        ],
+      }),
+      mimeType: 'application/json',
+    ).toString();
     await pumpUntil(
       tester,
       controller.editGeoJsonUrl(_sourceId, url),
@@ -448,8 +447,8 @@ void main() {
       // The same features the other way round, numbered again.
       final reversed = {
         'type': 'FeatureCollection',
-        'features':
-            (_featureCollection()['features'] as List).reversed.toList(),
+        'features': (_featureCollection()['features'] as List).reversed
+            .toList(),
       };
       await pumpUntil(
         tester,
@@ -571,7 +570,7 @@ Map<String, dynamic> _feature(
     'type': 'Point',
     'coordinates': [at.longitude, at.latitude],
   },
-  'properties': {'name': name, 'draggable': true, if (ref != null) 'ref': ref},
+  'properties': {'name': name, 'draggable': true, 'ref': ?ref},
 };
 
 Map<String, dynamic> _featureCollection({LatLng Function(LatLng at)? place}) =>
@@ -598,9 +597,9 @@ Future<MapLibreMapController> _pumpMapWithFeatures(
     tester,
     generateId
         ? controller.addSource(
-          _sourceId,
-          GeojsonSourceProperties(data: data, generateId: true),
-        )
+            _sourceId,
+            GeojsonSourceProperties(data: data, generateId: true),
+          )
         : controller.addGeoJsonSource(_sourceId, data),
     'add the source',
   );

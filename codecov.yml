@@ -1,0 +1,4 @@
+# Generated code, such as the Pigeon messages, is not written by hand: its
+# coverage says nothing about the tests, and every regeneration moves it.
+ignore:
+  - "**/*.g.dart"

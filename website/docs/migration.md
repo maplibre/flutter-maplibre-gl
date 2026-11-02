@@ -15,7 +15,13 @@ Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.c
 
 ### Minimum versions
 
-The declared Android `minSdkVersion` is now 23 (Android 6.0). MapLibre Android already required it, so an app that built with 0.27 builds with 0.28 too. Flutter, Dart and iOS minimums are unchanged; see [Minimum versions](getting-started.md#minimum-versions).
+0.28.0 needs Flutter 3.44 and Dart 3.12. Apps on an older Flutter stay on 0.27.x.
+
+iOS 15.5 is now the minimum, which MapLibre iOS 7 requires. Raise the deployment target of your app to 15.5 or later: `IPHONEOS_DEPLOYMENT_TARGET` in the Runner target of Xcode and, if your app uses CocoaPods, `platform :ios, '15.5'` in `ios/Podfile`.
+
+On iOS, Flutter 3.44 builds the plugin with Swift Package Manager by default, and MapLibre iOS no longer publishes new versions to CocoaPods. If your app turned Swift Package Manager off, turn it back on: see [Swift Package Manager](getting-started.md#swift-package-manager). Add-to-app modules, which Flutter does not build with Swift Package Manager yet, keep using CocoaPods.
+
+The Android `minSdkVersion` is now 24 (Android 7.0), the default of Flutter 3.44 apps. If your app sets a lower `minSdk` in `android/app/build.gradle`, raise it to 24. See [Minimum versions](getting-started.md#minimum-versions).
 
 ### Layer filters
 
@@ -152,7 +158,7 @@ The plugin now talks to Android and iOS through typed messages generated with [P
 * A call on a map that is already disposed throws a `PlatformException` with code `MAP_DISPOSED`, where it used to throw a `MissingPluginException`. If you caught `MissingPluginException` to ignore those calls, catch `MAP_DISPOSED` instead.
 * Tests that mock the plugin's method channels, `plugins.flutter.io/maplibre_gl` and `plugins.flutter.io/maplibre_gl_<id>`, no longer intercept anything. Install fakes instead: a subclass of `MapLibrePlatform` through `MapLibrePlatform.createInstance` for the map calls, and a subclass of `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance` for the plugin-wide calls such as offline regions. Both come from `maplibre_gl_platform_interface`.
 * `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` instead of `Future<dynamic>`. Their value was always `null`, so drop any use of it.
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition` is now `MapLibreMap.useHybridComposition`.
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed. A fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and a test restores the instance it found rather than building a new default. `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView))`.
 
   ```dart
   // Before
@@ -175,6 +181,7 @@ Dragging annotations and draggable features works the same on every platform:
 
 * A drag starts only after the finger or mouse moves a little. A tap or click on a draggable feature is a plain tap with no drag events, and the `start` event has a zero delta. On Android a drag no longer fires `onMapLongClick`.
 * A second finger during a drag ends it with an `end` event and lets the map pinch. To keep dragging, the user starts a new drag.
+* On web, touch screens drag features too, not only the mouse.
 * On Android and iOS, taps and drags find a feature within 8 logical pixels of the finger, and the nearest one wins. Android used about 3 pixels and iOS the exact point, so small features are easier to hit, and a tap next to a feature can now select it. Only draggable features start a drag.
 
 If your app relied on a drag starting at touch down, or on tapping exactly next to a feature without selecting it, check those flows.
@@ -185,6 +192,16 @@ If your app relied on a drag starting at touch down, or on tapping exactly next 
 
 * On iOS it fires for `moveCamera` and a zero duration `animateCamera` too, and its last call before `onCameraIdle` has the position where the camera stopped.
 * On web it needs `trackCameraPosition: true`, as on Android and iOS, and so does `controller.cameraPosition` to follow the camera. If your web app reads the camera position without the flag, set it.
+
+A fake `MapLibrePlatform` or a platform package now passes what started the move to `onCameraMoveStartedPlatform`, which `onCameraMoveStarted` and `controller.cameraMoveReason` report:
+
+```dart
+// Before
+onCameraMoveStartedPlatform(null);
+
+// After
+onCameraMoveStartedPlatform(CameraMoveReason.programmatic); // or .gesture
+```
 
 ### Web: browsers without WebGL2
 
@@ -199,6 +216,22 @@ maplibre_gl.playServicesLocation=false
 ```
 
 See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services). F-Droid builds also need a short `prebuild` step, described in [F-Droid](advanced/user-location.md#f-droid).
+
+### Android: platform view mode
+
+`MapLibreMap.useHybridComposition` and `translucentTextureSurface` are deprecated. The new `androidView` parameter sets, for each map, the view the map draws into and how Flutter places it.
+
+```dart
+// Before
+MapLibreMap.useHybridComposition = true;
+MapLibreMap(translucentTextureSurface: true);
+
+// After
+MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView));
+MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.translucentTextureView));
+```
+
+Despite its name, `useHybridComposition` never selected Hybrid Composition: that is `composition: AndroidComposition.hybridComposition`. The old flags keep working until they are removed. See [Platform view mode (Android)](advanced/performance.md#platform-view-mode-android).
 
 ### Behaviour changes
 
@@ -225,7 +258,7 @@ None of these need a code change, but they are the places where code that worked
 * A GeoJSON, image or raster-dem source url with a space or another character a url cannot hold is percent-encoded on every platform, as browsers and iOS 17 do, so an iOS file path under `Library/Application Support` loads. `editGeoJsonUrl` answers `false` for an empty url, where Android and web answered `true`.
 * Tile source `bounds` with west greater than east, which cross the antimeridian, take every longitude, so the tiles on both sides load.
 * **iOS**: an `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset`, as on Android and web: on a 3x screen about 3 times larger than before. Drop any iOS-only `iconSize` that made up for it.
-* **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
+* **Android, iOS**: MapLibre Android 13.7 and iOS 7 draw `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before.
 
 ### New options
 

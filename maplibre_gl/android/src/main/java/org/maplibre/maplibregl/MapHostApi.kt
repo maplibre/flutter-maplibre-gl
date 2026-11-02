@@ -530,6 +530,16 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit) =
         unit(callback) { map.styleSetLight(light, it) }
 
+    override fun styleSetGlobalStateProperty(
+        name: String,
+        value: String,
+        callback: (Result<Unit>) -> Unit,
+    ) = unit(callback) { map.styleSetGlobalStateProperty(name, value, it) }
+
+    // Answered with the global state as the JSON text of an object.
+    override fun styleGetGlobalState(callback: (Result<String>) -> Unit) =
+        call(callback, { it as String }) { map.styleGetGlobalState(it) }
+
     override fun layerSetVisibility(
         layerId: String,
         visible: Boolean,

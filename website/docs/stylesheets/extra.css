@@ -263,70 +263,18 @@ body, .md-typeset {
   transition: opacity 120ms;
 }
 .md-tabs__link:hover { opacity: 1; }
-.md-tabs__link--active {
+.md-tabs__item--active .md-tabs__link {
   opacity: 1;
   font-weight: 600;
   position: relative;
 }
-.md-tabs__link--active::after {
+.md-tabs__item--active .md-tabs__link::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0.45rem;
   height: 2px;
   background: var(--ml-blue);
   border-radius: 2px;
-}
-
-/* ---------- Search box: modern, subtle-bordered pill ---------- */
-.md-search__form {
-  position: relative;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: none;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-.md-search__form:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-.md-search__input {
-  font-size: 0.9rem;
-}
-.md-search__input::placeholder {
-  color: rgba(255, 255, 255, 0.55);
-}
-/* The search icon, slightly dimmer so the field reads calm */
-.md-search__icon[for="__search"] {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* "⌘K" keyboard hint chip on the right of the collapsed field.
-   Material renders no persistent hint, so we add one via ::after. It hides
-   once the field is focused/expanded (the input grows over it). */
-.md-search__form::after {
-  content: "⌘K";
-  position: absolute;
-  top: 50%;
-  right: 0.5rem;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 5px;
-  padding: 0.12rem 0.4rem;
-  pointer-events: none;
-  transition: opacity 100ms ease;
-}
-/* Hide the hint once the search is active (Material toggles this on focus)
-   so it never overlaps typed text */
-[data-md-toggle="search"]:checked ~ .md-header .md-search__form::after {
-  opacity: 0;
 }
 
 /* ============================================================
@@ -788,45 +736,6 @@ body, .md-typeset {
 .md-typeset .mermaid {
   margin: 1.4rem 0 1.8rem;
 }
-
-/* Brand-blue "emphasis"/"root" nodes: force WHITE label text in BOTH themes.
-   Mermaid renders labels as HTML (foreignObject); its base theme writes a dark
-   text color that, in LIGHT mode, makes the label unreadable on the blue fill.
-
-   We use [class*="emphasis"] / [class*="root"] attribute-substring matches so
-   the rule lands even if Mermaid prefixes the classDef name, and we hit EVERY
-   element type a label can use (text, tspan, span, p, div, .nodeLabel, .label).
-   !important beats both Mermaid's generated styles and Material's
-   --md-mermaid-node-fg-color variable. */
-.mermaid [class*="emphasis"] text,
-.mermaid [class*="emphasis"] tspan,
-.mermaid [class*="emphasis"] span,
-.mermaid [class*="emphasis"] p,
-.mermaid [class*="emphasis"] div,
-.mermaid [class*="emphasis"] .nodeLabel,
-.mermaid [class*="emphasis"] .label,
-.mermaid [class*="emphasis"] foreignObject *,
-.mermaid [class*="root"] text,
-.mermaid [class*="root"] tspan,
-.mermaid [class*="root"] span,
-.mermaid [class*="root"] p,
-.mermaid [class*="root"] div,
-.mermaid [class*="root"] .nodeLabel,
-.mermaid [class*="root"] .label,
-.mermaid [class*="root"] foreignObject * {
-  color: #ffffff !important;
-  fill: #ffffff !important;
-}
-.mermaid [class*="emphasis"] small,
-.mermaid [class*="root"] small {
-  color: rgba(255, 255, 255, 0.85) !important;
-  fill: rgba(255, 255, 255, 0.85) !important;
-}
-
-/* Secondary nodes (no classDef) follow Material's palette automatically,
-   but pin a readable label color per theme so the small sub-labels never
-   wash out against the auto-themed node fill. */
-.mermaid .node .nodeLabel small { opacity: 0.78; }
 
 /* ============================================================
    COMPARISON TABLE — base look is shared with plain tables above.

@@ -368,10 +368,9 @@ class Camera extends Evented {
         jsObject.cameraForBounds(bounds.jsObject),
       );
     }
-    final optionsJs =
-        options is CameraOptions
-            ? options.jsObject
-            : (options is Map ? utils.jsify(options) : options as JSAny);
+    final optionsJs = options is CameraOptions
+        ? options.jsObject
+        : (options is Map ? utils.jsify(options) : options as JSAny);
 
     return CameraOptions.fromJsObject(
       jsObject.cameraForBounds(

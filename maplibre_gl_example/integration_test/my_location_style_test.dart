@@ -43,9 +43,8 @@ void main() {
         final controller = await pumpMap(
           tester,
           initialCameraPosition: _camera,
-          builder:
-              (onMapCreated, onStyleLoaded) =>
-                  _map(onMapCreated, onStyleLoaded, style: style),
+          builder: (onMapCreated, onStyleLoaded) =>
+              _map(onMapCreated, onStyleLoaded, style: style),
         );
         await _pushFix(tester, controller);
 

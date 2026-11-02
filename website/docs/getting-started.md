@@ -62,6 +62,8 @@ If you want to show the user's location on the map, add location permissions to 
 
 For F-Droid and other builds without Google Play Services, set `maplibre_gl.playServicesLocation=false` in `android/gradle.properties`, as shown in [User Location](advanced/user-location.md#building-without-google-play-services).
 
+The map renders with OpenGL ES. To use Vulkan, set `maplibre_gl.renderer` in the same file, as shown in [Rendering backend](advanced/performance.md#rendering-backend-android).
+
 ## iOS
 
 Add a location usage description to your `Info.plist`:
@@ -71,7 +73,28 @@ Add a location usage description to your `Info.plist`:
 <string>Show your location on the map</string>
 ```
 
-The plugin ships both a Swift package and a CocoaPods podspec, so it works with Flutter's [Swift Package Manager integration](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers) and with CocoaPods. Nothing to configure either way: apps already on CocoaPods need no migration, and apps with SPM enabled need no `Podfile` on account of this plugin.
+### Swift Package Manager
+
+The plugin is a Swift package, and Flutter builds it through its [Swift Package Manager integration](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers), on by default since Flutter 3.44. A new app needs nothing more. It takes Xcode 15 or later.
+
+If your app turned Swift Package Manager off (`flutter config --list` shows `enable-swift-package-manager: false`), turn it back on for all your projects:
+
+```bash
+flutter config --enable-swift-package-manager
+```
+
+or for this app only, in `pubspec.yaml`, which also covers CI and the other developers:
+
+```yaml
+flutter:
+  config:
+    enable-swift-package-manager: true
+```
+
+The next `flutter run` or `flutter build ios` adds the Swift packages to `ios/Runner.xcodeproj`: commit that change. Plugins without a Swift package keep coming from CocoaPods, so the `Podfile` stays while the app has any. Once every plugin is a Swift package, Flutter suggests removing CocoaPods: run `pod deintegrate` in `ios/` and delete the `Podfile`.
+
+!!! note "Add-to-app"
+    A Flutter module inside a native iOS app still uses CocoaPods, since Flutter does not build modules with Swift Package Manager yet ([flutter/flutter#146957](https://github.com/flutter/flutter/issues/146957)). The plugin keeps its podspec for these apps, on MapLibre iOS 7.0.0: later versions are not published to CocoaPods.
 
 ## Web
 
@@ -208,10 +231,10 @@ Future<void> main() async {
 
 | Platform | Minimum version |
 |----------|----------------|
-| Flutter  | 3.29.0 |
-| Dart     | 3.7.0 |
-| Android  | API 23 (Android 6.0) |
-| iOS      | iOS 13 |
+| Flutter  | 3.44.0 |
+| Dart     | 3.12.0 |
+| Android  | API 24 (Android 7.0) |
+| iOS      | iOS 15.5 |
 | Web      | WebGL2, see [Requirements](#requirements) |
 | JDK      | 21 |
 

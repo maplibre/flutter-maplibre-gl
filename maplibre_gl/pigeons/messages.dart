@@ -519,7 +519,7 @@ class PgCreationParams {
     this.initialCameraPosition,
     required this.dragEnabled,
     this.iosLongClickDurationMs,
-    required this.useHybridComposition,
+    required this.textureView,
   });
 
   /// The style to create the map with: a style JSON, URL, file path or asset
@@ -539,9 +539,11 @@ class PgCreationParams {
   /// milliseconds. Null keeps the platform default.
   int? iosLongClickDurationMs;
 
-  /// Android only: whether Flutter draws the map with hybrid composition.
+  /// Android only: whether the map renders into a `TextureView` rather than
+  /// a `SurfaceView` (`AndroidMapView.surface` in the plugin).
+  /// `translucentTextureSurface` in [options] also makes it non-opaque.
   /// Always false on iOS.
-  bool useHybridComposition;
+  bool textureView;
 }
 
 /// The update [MapLibreMapHostApi.locationComponentSetManualLocation] makes
@@ -1178,6 +1180,16 @@ abstract class MapLibreMapHostApi {
   /// in Dart: native checks that each one is a constant of the right type.
   @asyncCallback
   void styleSetLight(Map<String, Object?> light);
+
+  /// Sets the property [name] of the style's global state to [value], JSON
+  /// text, so nested values and number types arrive intact. JSON `null`
+  /// resets the property to the default of the style's `state`.
+  @asyncCallback
+  void styleSetGlobalStateProperty(String name, String value);
+
+  /// Answers with the style's global state as the JSON text of an object.
+  @asyncCallback
+  String styleGetGlobalState();
 
   /// Shows or hides the layer [layerId].
   @asyncCallback

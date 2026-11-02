@@ -34,10 +34,9 @@ class _FakeMap {
     method('getLayer', ((JSString id) => _layer(id.toDart)).toJS);
     method(
       'getStyle',
-      (() =>
-              JSObject()
-                ..setProperty('sources'.toJS, JSObject())
-                ..setProperty('layers'.toJS, layers.toJS))
+      (() => JSObject()
+            ..setProperty('sources'.toJS, JSObject())
+            ..setProperty('layers'.toJS, layers.toJS))
           .toJS,
     );
     method(
@@ -50,8 +49,9 @@ class _FakeMap {
     );
     method(
       'getFilter',
-      ((JSString id) => _layer(id.toDart)!.getProperty<JSAny?>('filter'.toJS))
-          .toJS,
+      ((JSString id) => _layer(
+        id.toDart,
+      )!.getProperty<JSAny?>('filter'.toJS)).toJS,
     );
     for (final (setter, group) in [
       ('setPaintProperty', 'paint'),
@@ -159,8 +159,8 @@ class _FakeMap {
             'id': id,
             'type': 'circle',
             'source': source,
-            if (filter != null) 'filter': filter,
-            if (paint != null) 'paint': paint,
+            'filter': ?filter,
+            'paint': ?paint,
           }.jsify()!
           as JSObject,
     );
@@ -196,7 +196,7 @@ Map<String, Object?> _collection(List<Object?> ids) => {
     for (final id in ids)
       {
         'type': 'Feature',
-        if (id != null) 'id': id,
+        'id': ?id,
         'geometry': {
           'type': 'Point',
           'coordinates': [0, 0],
@@ -212,11 +212,11 @@ void main() {
 
   void useMap(_FakeMap fake) {
     map = fake;
-    controller =
-        MapLibreMapController()..debugSetMap(
-          MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
-          styleReady: true,
-        );
+    controller = MapLibreMapController()
+      ..debugSetMap(
+        MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
+        styleReady: true,
+      );
   }
 
   setUp(() {

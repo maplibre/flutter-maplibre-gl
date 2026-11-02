@@ -609,32 +609,28 @@ void main() {
       );
 
       final calls = <String, Future<Object?> Function()>{
-        'addCircleLayer':
-            () => controller.addCircleLayer(
-              'no-such-source',
-              'circles',
-              const CircleLayerProperties(),
-            ),
-        'addLayer':
-            () => controller.addLayer(
-              'no-such-source',
-              'lines',
-              const LineLayerProperties(),
-            ),
-        'addRasterLayer':
-            () => controller.addRasterLayer(
-              'no-such-source',
-              'raster',
-              const RasterLayerProperties(),
-            ),
-        'addImageLayer':
-            () => controller.addImageLayer('image-layer', 'no-such-source'),
-        'addImageLayerBelow':
-            () => controller.addImageLayerBelow(
-              'image-below',
-              'no-such-source',
-              backgroundLayerId,
-            ),
+        'addCircleLayer': () => controller.addCircleLayer(
+          'no-such-source',
+          'circles',
+          const CircleLayerProperties(),
+        ),
+        'addLayer': () => controller.addLayer(
+          'no-such-source',
+          'lines',
+          const LineLayerProperties(),
+        ),
+        'addRasterLayer': () => controller.addRasterLayer(
+          'no-such-source',
+          'raster',
+          const RasterLayerProperties(),
+        ),
+        'addImageLayer': () =>
+            controller.addImageLayer('image-layer', 'no-such-source'),
+        'addImageLayerBelow': () => controller.addImageLayerBelow(
+          'image-below',
+          'no-such-source',
+          backgroundLayerId,
+        ),
       };
       for (final call in calls.entries) {
         await expectPlatformError(
@@ -691,82 +687,82 @@ void main() {
       );
 
       final calls = <(String, String, String, String), Future<void> Function()>{
-        ('raster-on-geojson', 'raster', _sourceId, 'geojson'):
-            () => controller.addRasterLayer(
+        ('raster-on-geojson', 'raster', _sourceId, 'geojson'): () =>
+            controller.addRasterLayer(
               _sourceId,
               'raster-on-geojson',
               const RasterLayerProperties(),
             ),
-        ('image-on-geojson', 'raster', _sourceId, 'geojson'):
-            () => controller.addImageLayer('image-on-geojson', _sourceId),
-        ('image-below-on-geojson', 'raster', _sourceId, 'geojson'):
-            () => controller.addImageLayerBelow(
+        ('image-on-geojson', 'raster', _sourceId, 'geojson'): () =>
+            controller.addImageLayer('image-on-geojson', _sourceId),
+        ('image-below-on-geojson', 'raster', _sourceId, 'geojson'): () =>
+            controller.addImageLayerBelow(
               'image-below-on-geojson',
               _sourceId,
               backgroundLayerId,
             ),
-        ('hillshade-on-geojson', 'hillshade', _sourceId, 'geojson'):
-            () => controller.addHillshadeLayer(
+        ('hillshade-on-geojson', 'hillshade', _sourceId, 'geojson'): () =>
+            controller.addHillshadeLayer(
               _sourceId,
               'hillshade-on-geojson',
               const HillshadeLayerProperties(),
             ),
-        ('fill-on-raster', 'fill', 'raster', 'raster'):
-            () => controller.addFillLayer(
+        ('fill-on-raster', 'fill', 'raster', 'raster'): () =>
+            controller.addFillLayer(
               'raster',
               'fill-on-raster',
               const FillLayerProperties(),
             ),
-        ('line-on-raster', 'line', 'raster', 'raster'):
-            () => controller.addLayer(
+        ('line-on-raster', 'line', 'raster', 'raster'): () =>
+            controller.addLayer(
               'raster',
               'line-on-raster',
               const LineLayerProperties(),
             ),
-        ('hillshade-on-raster', 'hillshade', 'raster', 'raster'):
-            () => controller.addHillshadeLayer(
+        ('hillshade-on-raster', 'hillshade', 'raster', 'raster'): () =>
+            controller.addHillshadeLayer(
               'raster',
               'hillshade-on-raster',
               const HillshadeLayerProperties(),
             ),
-        ('circle-on-image', 'circle', 'image', 'image'):
-            () => controller.addCircleLayer(
+        ('circle-on-image', 'circle', 'image', 'image'): () =>
+            controller.addCircleLayer(
               'image',
               'circle-on-image',
               const CircleLayerProperties(),
             ),
-        ('symbol-on-image', 'symbol', 'image', 'image'):
-            () => controller.addSymbolLayer(
+        ('symbol-on-image', 'symbol', 'image', 'image'): () =>
+            controller.addSymbolLayer(
               'image',
               'symbol-on-image',
               const SymbolLayerProperties(),
             ),
-        ('heatmap-on-image', 'heatmap', 'image', 'image'):
-            () => controller.addHeatmapLayer(
+        ('heatmap-on-image', 'heatmap', 'image', 'image'): () =>
+            controller.addHeatmapLayer(
               'image',
               'heatmap-on-image',
               const HeatmapLayerProperties(),
             ),
-        ('extrusion-on-image', 'fill-extrusion', 'image', 'image'):
-            () => controller.addFillExtrusionLayer(
+        ('extrusion-on-image', 'fill-extrusion', 'image', 'image'): () =>
+            controller.addFillExtrusionLayer(
               'image',
               'extrusion-on-image',
               const FillExtrusionLayerProperties(),
             ),
-        ('relief-on-image', 'color-relief', 'image', 'image'):
-            () => controller.addColorReliefLayer(
+        ('relief-on-image', 'color-relief', 'image', 'image'): () =>
+            controller.addColorReliefLayer(
               'image',
               'relief-on-image',
               const ColorReliefLayerProperties(),
             ),
-        ('raster-on-dem', 'raster', 'dem', 'raster-dem'):
-            () => controller.addRasterLayer(
+        ('raster-on-dem', 'raster', 'dem', 'raster-dem'): () =>
+            controller.addRasterLayer(
               'dem',
               'raster-on-dem',
               const RasterLayerProperties(),
             ),
-        ('raster-on-vector', 'raster', 'vector', 'vector'):
-            () => controller.addLayer(
+        ('raster-on-vector', 'raster', 'vector', 'vector'): () =>
+            controller.addLayer(
               'vector',
               'raster-on-vector',
               const RasterLayerProperties(),
@@ -793,33 +789,29 @@ void main() {
 
       // The layers that can draw these sources still go in.
       final valid = <String, Future<void> Function()>{
-        'raster-on-image':
-            () => controller.addImageLayer('raster-on-image', 'image'),
-        'raster-on-raster':
-            () => controller.addRasterLayer(
-              'raster',
-              'raster-on-raster',
-              const RasterLayerProperties(),
-            ),
-        'hillshade-on-dem':
-            () => controller.addHillshadeLayer(
-              'dem',
-              'hillshade-on-dem',
-              const HillshadeLayerProperties(),
-            ),
-        'line-on-vector':
-            () => controller.addLineLayer(
-              'vector',
-              'line-on-vector',
-              const LineLayerProperties(),
-              sourceLayer: 'roads',
-            ),
-        'circle-on-geojson':
-            () => controller.addCircleLayer(
-              _sourceId,
-              'circle-on-geojson',
-              const CircleLayerProperties(),
-            ),
+        'raster-on-image': () =>
+            controller.addImageLayer('raster-on-image', 'image'),
+        'raster-on-raster': () => controller.addRasterLayer(
+          'raster',
+          'raster-on-raster',
+          const RasterLayerProperties(),
+        ),
+        'hillshade-on-dem': () => controller.addHillshadeLayer(
+          'dem',
+          'hillshade-on-dem',
+          const HillshadeLayerProperties(),
+        ),
+        'line-on-vector': () => controller.addLineLayer(
+          'vector',
+          'line-on-vector',
+          const LineLayerProperties(),
+          sourceLayer: 'roads',
+        ),
+        'circle-on-geojson': () => controller.addCircleLayer(
+          _sourceId,
+          'circle-on-geojson',
+          const CircleLayerProperties(),
+        ),
       };
       for (final call in valid.entries) {
         await pumpUntil(tester, call.value(), call.key);
@@ -843,25 +835,22 @@ void main() {
       );
 
       final calls = <String, Future<Object?> Function()>{
-        'circles':
-            () => controller.addCircleLayer(
-              _sourceId,
-              'circles',
-              const CircleLayerProperties(),
-              belowLayerId: 'no-such-layer',
-            ),
-        'image-below':
-            () => controller.addImageLayerBelow(
-              'image-below',
-              'image',
-              'no-such-layer',
-            ),
-        'second-background':
-            () => controller.addBackgroundLayer(
-              'second-background',
-              const BackgroundLayerProperties(backgroundOpacity: 0),
-              belowLayerId: 'no-such-layer',
-            ),
+        'circles': () => controller.addCircleLayer(
+          _sourceId,
+          'circles',
+          const CircleLayerProperties(),
+          belowLayerId: 'no-such-layer',
+        ),
+        'image-below': () => controller.addImageLayerBelow(
+          'image-below',
+          'image',
+          'no-such-layer',
+        ),
+        'second-background': () => controller.addBackgroundLayer(
+          'second-background',
+          const BackgroundLayerProperties(backgroundOpacity: 0),
+          belowLayerId: 'no-such-layer',
+        ),
       };
       for (final call in calls.entries) {
         await pumpUntil(tester, call.value(), 'add ${call.key}');
@@ -943,12 +932,12 @@ void main() {
       final controller = await pumpMap(tester);
 
       final calls = <String, Future<Object?> Function()>{
-        'setFeatureState':
-            () => controller.setFeatureState('no-such-source', '1', {'a': 1}),
-        'getFeatureState':
-            () => controller.getFeatureState('no-such-source', '1'),
-        'removeFeatureState':
-            () => controller.removeFeatureState('no-such-source'),
+        'setFeatureState': () =>
+            controller.setFeatureState('no-such-source', '1', {'a': 1}),
+        'getFeatureState': () =>
+            controller.getFeatureState('no-such-source', '1'),
+        'removeFeatureState': () =>
+            controller.removeFeatureState('no-such-source'),
       };
       for (final call in calls.entries) {
         await expectPlatformError(
@@ -971,8 +960,8 @@ void main() {
       );
 
       final calls = <String, Future<Object?> Function()>{
-        'setFeatureState':
-            () => controller.setFeatureState('image', '1', {'a': 1}),
+        'setFeatureState': () =>
+            controller.setFeatureState('image', '1', {'a': 1}),
         'getFeatureState': () => controller.getFeatureState('image', '1'),
         'removeFeatureState': () => controller.removeFeatureState('image'),
       };
@@ -999,8 +988,8 @@ void main() {
       );
 
       final calls = <String, Future<Object?> Function()>{
-        'setFeatureState':
-            () => controller.setFeatureState('vector', '1', {'a': 1}),
+        'setFeatureState': () =>
+            controller.setFeatureState('vector', '1', {'a': 1}),
         'getFeatureState': () => controller.getFeatureState('vector', '1'),
         'removeFeatureState': () => controller.removeFeatureState('vector'),
       };
@@ -1205,13 +1194,12 @@ void main() {
         );
 
         final calls = <String, Future<void> Function()>{
-          'setGeoJsonSource':
-              () => controller.setGeoJsonSource('image', _onePoint),
-          'setGeoJsonFeature':
-              () => controller.setGeoJsonFeature(
-                'image',
-                _point(1, _p1, {'n': 5}),
-              ),
+          'setGeoJsonSource': () =>
+              controller.setGeoJsonSource('image', _onePoint),
+          'setGeoJsonFeature': () => controller.setGeoJsonFeature(
+            'image',
+            _point(1, _p1, {'n': 5}),
+          ),
         };
         for (final call in calls.entries) {
           final error = await expectPlatformError(
@@ -1240,8 +1228,8 @@ void main() {
       );
 
       final calls = <String, Future<Object?> Function()>{
-        'getClusterExpansionZoom':
-            () => controller.getClusterExpansionZoom('image', 1),
+        'getClusterExpansionZoom': () =>
+            controller.getClusterExpansionZoom('image', 1),
         'getClusterChildren': () => controller.getClusterChildren('image', 1),
         'getClusterLeaves': () => controller.getClusterLeaves('image', 1),
       };
@@ -1569,21 +1557,21 @@ void main() {
         final data = notGeoJson.value;
         final label = notGeoJson.key;
         final calls = <String, Future<Object?> Function()>{
-          'addGeoJsonSource':
-              () => controller.addGeoJsonSource('new-source', data),
-          'setGeoJsonSource':
-              () => controller.setGeoJsonSource(_sourceId, data),
-          'addSource':
-              () => controller.addSource(
-                'new-source',
-                GeojsonSourceProperties(data: data),
-              ),
-          'editGeoJsonSource':
-              () => controller.editGeoJsonSource(_sourceId, jsonEncode(data)),
+          'addGeoJsonSource': () =>
+              controller.addGeoJsonSource('new-source', data),
+          'setGeoJsonSource': () =>
+              controller.setGeoJsonSource(_sourceId, data),
+          'addSource': () => controller.addSource(
+            'new-source',
+            GeojsonSourceProperties(data: data),
+          ),
+          'editGeoJsonSource': () =>
+              controller.editGeoJsonSource(_sourceId, jsonEncode(data)),
         };
         for (final call in calls.entries) {
-          final sourceId =
-              call.key.startsWith('add') ? 'new-source' : _sourceId;
+          final sourceId = call.key.startsWith('add')
+              ? 'new-source'
+              : _sourceId;
           final error = await expectPlatformError(
             tester,
             call.value(),
@@ -1656,15 +1644,14 @@ void main() {
       };
 
       final calls = <String, Future<Object?> Function()>{
-        'addGeoJsonSource':
-            () => controller.addGeoJsonSource('nan', data(double.nan)),
-        'setGeoJsonSource':
-            () => controller.setGeoJsonSource('nan', data(double.infinity)),
-        'addSource':
-            () => controller.addSource(
-              'nan-properties',
-              GeojsonSourceProperties(data: data(double.nan)),
-            ),
+        'addGeoJsonSource': () =>
+            controller.addGeoJsonSource('nan', data(double.nan)),
+        'setGeoJsonSource': () =>
+            controller.setGeoJsonSource('nan', data(double.infinity)),
+        'addSource': () => controller.addSource(
+          'nan-properties',
+          GeojsonSourceProperties(data: data(double.nan)),
+        ),
       };
       for (final call in calls.entries) {
         if (kIsWeb) {
@@ -1697,13 +1684,12 @@ void main() {
         final calls = <String, Future<Object?> Function()>{
           'addGeoJsonSource': () => controller.addGeoJsonSource(sourceId, data),
           'setGeoJsonSource': () => controller.setGeoJsonSource(sourceId, data),
-          'editGeoJsonSource':
-              () => controller.editGeoJsonSource(sourceId, jsonEncode(data)),
-          'addSource':
-              () => controller.addSource(
-                '$sourceId-properties',
-                GeojsonSourceProperties(data: data),
-              ),
+          'editGeoJsonSource': () =>
+              controller.editGeoJsonSource(sourceId, jsonEncode(data)),
+          'addSource': () => controller.addSource(
+            '$sourceId-properties',
+            GeojsonSourceProperties(data: data),
+          ),
         };
         for (final call in calls.entries) {
           try {
@@ -1921,69 +1907,69 @@ void main() {
               'INVALID_EXPRESSION',
               'Invalid expression',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(circleRadius: _unknownOperator),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(circleRadius: _unknownOperator),
+            ),
             (
               'a missing argument',
               'circle-radius',
               'INVALID_EXPRESSION',
               'Invalid expression',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(circleRadius: ['get']),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(circleRadius: ['get']),
+            ),
             (
               'a string for a number',
               'circle-radius',
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(circleRadius: 'big'),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(circleRadius: 'big'),
+            ),
             (
               'a string that is no color',
               'circle-color',
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(circleColor: 'not-a-color'),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(circleColor: 'not-a-color'),
+            ),
             (
               'three numbers for two',
               'circle-translate',
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(circleTranslate: [1, 2, 3]),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(circleTranslate: [1, 2, 3]),
+            ),
             (
               'an unknown enum value',
               'line-cap',
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addLineLayer(
-                  _sourceId,
-                  'bad',
-                  const LineLayerProperties(lineCap: 'pointy'),
-                ),
+              _sourceId,
+              'bad',
+              const LineLayerProperties(lineCap: 'pointy'),
+            ),
             (
               'a string for a number of a background',
               'background-opacity',
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addBackgroundLayer(
-                  'bad',
-                  const BackgroundLayerProperties(backgroundOpacity: 'half'),
-                ),
+              'bad',
+              const BackgroundLayerProperties(backgroundOpacity: 'half'),
+            ),
             // The property whose name comes first is the one named.
             (
               'two invalid values',
@@ -1991,13 +1977,13 @@ void main() {
               'INVALID_ARGUMENT',
               'Invalid value',
             ): () => controller.addCircleLayer(
-                  _sourceId,
-                  'bad',
-                  const CircleLayerProperties(
-                    circleRadius: 'big',
-                    circleColor: 'not-a-color',
-                  ),
-                ),
+              _sourceId,
+              'bad',
+              const CircleLayerProperties(
+                circleRadius: 'big',
+                circleColor: 'not-a-color',
+              ),
+            ),
           };
       for (final MapEntry(key: (label, property, code, kind), :value)
           in cases.entries) {
@@ -2645,25 +2631,22 @@ void main() {
         );
 
         final calls = <String, Future<void> Function()>{
-          'line-no-source-layer':
-              () => controller.addLineLayer(
-                'vector',
-                'line-no-source-layer',
-                const LineLayerProperties(),
-              ),
-          'fill-empty-source-layer':
-              () => controller.addFillLayer(
-                'vector',
-                'fill-empty-source-layer',
-                const FillLayerProperties(),
-                sourceLayer: '',
-              ),
-          'circle-no-source-layer':
-              () => controller.addLayer(
-                'vector',
-                'circle-no-source-layer',
-                const CircleLayerProperties(),
-              ),
+          'line-no-source-layer': () => controller.addLineLayer(
+            'vector',
+            'line-no-source-layer',
+            const LineLayerProperties(),
+          ),
+          'fill-empty-source-layer': () => controller.addFillLayer(
+            'vector',
+            'fill-empty-source-layer',
+            const FillLayerProperties(),
+            sourceLayer: '',
+          ),
+          'circle-no-source-layer': () => controller.addLayer(
+            'vector',
+            'circle-no-source-layer',
+            const CircleLayerProperties(),
+          ),
         };
         for (final call in calls.entries) {
           final error = await expectPlatformError(
@@ -2708,26 +2691,23 @@ void main() {
         );
 
         final calls = <String, Future<void> Function()>{
-          'circle-minzoom':
-              () => controller.addCircleLayer(
-                _sourceId,
-                'circle-minzoom',
-                const CircleLayerProperties(),
-                minzoom: -1,
-              ),
-          'line-maxzoom':
-              () => controller.addLineLayer(
-                _sourceId,
-                'line-maxzoom',
-                const LineLayerProperties(),
-                maxzoom: 25,
-              ),
-          'background-maxzoom':
-              () => controller.addBackgroundLayer(
-                'background-maxzoom',
-                const BackgroundLayerProperties(),
-                maxzoom: 30,
-              ),
+          'circle-minzoom': () => controller.addCircleLayer(
+            _sourceId,
+            'circle-minzoom',
+            const CircleLayerProperties(),
+            minzoom: -1,
+          ),
+          'line-maxzoom': () => controller.addLineLayer(
+            _sourceId,
+            'line-maxzoom',
+            const LineLayerProperties(),
+            maxzoom: 25,
+          ),
+          'background-maxzoom': () => controller.addBackgroundLayer(
+            'background-maxzoom',
+            const BackgroundLayerProperties(),
+            maxzoom: 30,
+          ),
         };
         for (final call in calls.entries) {
           if (!kIsWeb) {
@@ -2792,65 +2772,59 @@ void main() {
       // One at a time: a call that fails before it is awaited would be an
       // unhandled error.
       final calls = <String, Future<Object?> Function()>{
-        'addGeoJsonSource':
-            () => controller.addGeoJsonSource('new-points', _onePoint),
-        'setGeoJsonSource':
-            () => controller.setGeoJsonSource(_sourceId, _onePoint),
-        'setGeoJsonFeature':
-            () => controller.setGeoJsonFeature(
-              _sourceId,
-              _point(1, _p1, {'n': 5}),
-            ),
-        'addSource':
-            () => controller.addSource(
-              'new-source',
-              const GeojsonSourceProperties(data: _onePoint),
-            ),
-        'querySourceFeatures':
-            () => controller.querySourceFeatures(_sourceId, null, null),
-        'getClusterExpansionZoom':
-            () => controller.getClusterExpansionZoom(_sourceId, 1),
-        'addCircleLayer':
-            () => controller.addCircleLayer(
-              _sourceId,
-              'new-circles',
-              const CircleLayerProperties(),
-            ),
-        'addBackgroundLayer':
-            () => controller.addBackgroundLayer(
-              'new-background',
-              const BackgroundLayerProperties(),
-            ),
-        'setLayerFilter':
-            () => controller.setLayerFilter(backgroundLayerId, null),
+        'addGeoJsonSource': () =>
+            controller.addGeoJsonSource('new-points', _onePoint),
+        'setGeoJsonSource': () =>
+            controller.setGeoJsonSource(_sourceId, _onePoint),
+        'setGeoJsonFeature': () => controller.setGeoJsonFeature(
+          _sourceId,
+          _point(1, _p1, {'n': 5}),
+        ),
+        'addSource': () => controller.addSource(
+          'new-source',
+          const GeojsonSourceProperties(data: _onePoint),
+        ),
+        'querySourceFeatures': () =>
+            controller.querySourceFeatures(_sourceId, null, null),
+        'getClusterExpansionZoom': () =>
+            controller.getClusterExpansionZoom(_sourceId, 1),
+        'addCircleLayer': () => controller.addCircleLayer(
+          _sourceId,
+          'new-circles',
+          const CircleLayerProperties(),
+        ),
+        'addBackgroundLayer': () => controller.addBackgroundLayer(
+          'new-background',
+          const BackgroundLayerProperties(),
+        ),
+        'setLayerFilter': () =>
+            controller.setLayerFilter(backgroundLayerId, null),
         'getLayerFilter': () => controller.getLayerFilter(backgroundLayerId),
-        'setLight':
-            () => controller.setLight(const LightProperties(intensity: 0.5)),
-        'addImageSource':
-            () => controller.addImageSource('new-image', image, _quad),
-        'updateImageSource':
-            () => controller.updateImageSource('image', image, null),
-        'getLayerProperties':
-            () => controller.getLayerProperties(backgroundLayerId),
+        'setLight': () =>
+            controller.setLight(const LightProperties(intensity: 0.5)),
+        'addImageSource': () =>
+            controller.addImageSource('new-image', image, _quad),
+        'updateImageSource': () =>
+            controller.updateImageSource('image', image, null),
+        'getLayerProperties': () =>
+            controller.getLayerProperties(backgroundLayerId),
         'getSourceProperties': () => controller.getSourceProperties('image'),
         'removeSource': () => controller.removeSource('image'),
         'removeLayer': () => controller.removeLayer(backgroundLayerId),
-        'setLayerProperties':
-            () => controller.setLayerProperties(
-              backgroundLayerId,
-              const BackgroundLayerProperties(backgroundOpacity: 0.5),
-            ),
-        'setLayerVisibility':
-            () => controller.setLayerVisibility(backgroundLayerId, false),
-        'setLayersVisibility':
-            () => controller.setLayersVisibility([backgroundLayerId], false),
+        'setLayerProperties': () => controller.setLayerProperties(
+          backgroundLayerId,
+          const BackgroundLayerProperties(backgroundOpacity: 0.5),
+        ),
+        'setLayerVisibility': () =>
+            controller.setLayerVisibility(backgroundLayerId, false),
+        'setLayersVisibility': () =>
+            controller.setLayersVisibility([backgroundLayerId], false),
         'addImageLayer': () => controller.addImageLayer('image-layer', 'image'),
-        'addImageLayerBelow':
-            () => controller.addImageLayerBelow(
-              'image-below',
-              'image',
-              backgroundLayerId,
-            ),
+        'addImageLayerBelow': () => controller.addImageLayerBelow(
+          'image-below',
+          'image',
+          backgroundLayerId,
+        ),
       };
       for (final call in calls.entries) {
         final error = await expectPlatformError(
@@ -2893,25 +2867,24 @@ void main() {
                 height: 300,
                 child: ValueListenableBuilder<bool>(
                   valueListenable: enabled,
-                  builder:
-                      (context, on, _) => MapLibreMap(
-                        styleString: offlineStyle,
-                        initialCameraPosition: const CameraPosition(
-                          target: LatLng(0, 0),
-                          zoom: 3,
-                        ),
-                        locationSource: const ManualLocationSource(),
-                        myLocationEnabled: on,
-                        onMapCreated: (controller) {
-                          if (!created.isCompleted) {
-                            created.complete(controller);
-                          }
-                        },
-                        onStyleLoadedCallback: () {
-                          if (!styleLoaded.isCompleted) styleLoaded.complete();
-                        },
-                        onUserLocationUpdated: updates.add,
-                      ),
+                  builder: (context, on, _) => MapLibreMap(
+                    styleString: offlineStyle,
+                    initialCameraPosition: const CameraPosition(
+                      target: LatLng(0, 0),
+                      zoom: 3,
+                    ),
+                    locationSource: const ManualLocationSource(),
+                    myLocationEnabled: on,
+                    onMapCreated: (controller) {
+                      if (!created.isCompleted) {
+                        created.complete(controller);
+                      }
+                    },
+                    onStyleLoadedCallback: () {
+                      if (!styleLoaded.isCompleted) styleLoaded.complete();
+                    },
+                    onUserLocationUpdated: updates.add,
+                  ),
                 ),
               ),
             ),

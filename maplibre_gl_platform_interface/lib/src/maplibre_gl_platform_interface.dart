@@ -75,7 +75,7 @@ abstract class MapLibrePlatform {
   final onFeatureHoverPlatform = ArgumentCallbacks<Map<String, dynamic>>();
   final onFeatureDraggedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
-  final onCameraMoveStartedPlatform = ArgumentCallbacks<void>();
+  final onCameraMoveStartedPlatform = ArgumentCallbacks<CameraMoveReason>();
 
   final onCameraMovePlatform = ArgumentCallbacks<CameraPosition>();
 
@@ -500,6 +500,9 @@ abstract class MapLibrePlatform {
   /// Sets one property of the style's global state.
   Future<void> setGlobalStateProperty(String name, Object? value);
 
+  /// The style's global state: each property with its current value.
+  Future<Map<String, dynamic>> getGlobalState();
+
   Future<void> setLayerVisibility(String layerId, bool visible);
 
   /// Shows or hides every layer in [layerIds] with one platform call, all in
@@ -590,8 +593,7 @@ class _UnregisteredMapLibrePlatform extends MapLibrePlatform {
   ) => Text('$defaultTargetPlatform is not yet supported by the maps plugin');
 
   @override
-  Never noSuchMethod(Invocation invocation) =>
-      throw UnsupportedError(
-        'No MapLibre implementation is registered for $defaultTargetPlatform.',
-      );
+  Never noSuchMethod(Invocation invocation) => throw UnsupportedError(
+    'No MapLibre implementation is registered for $defaultTargetPlatform.',
+  );
 }

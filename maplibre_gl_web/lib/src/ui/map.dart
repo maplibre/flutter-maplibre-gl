@@ -518,8 +518,9 @@ class MapLibreMap extends Camera {
   ///  @returns {MapLibreMap} `this`
   ///  @see [Change a map's style](https://maplibre.org/maplibre-gl-js/docs/examples/setstyle/)
   MapLibreMap setStyle(dynamic style, [dynamic options]) {
-    final styleJs =
-        style is Style ? style.jsObject as JSAny : utils.jsify(style);
+    final styleJs = style is Style
+        ? style.jsObject as JSAny
+        : utils.jsify(style);
     final optionsJs = utils.jsify(options);
     return MapLibreMap.fromJsObject(jsObject.setStyle(styleJs, optionsJs));
   }
@@ -1055,6 +1056,10 @@ class MapLibreMap extends Camera {
         jsObject.setGlobalStateProperty(name, utils.jsify(value)),
       );
 
+  ///  Returns the style's global state, read by the `global-state`
+  ///  expression.
+  dynamic getGlobalState() => jsObject.getGlobalState();
+
   ///  Returns the value of the light object.
   ///
   ///  @returns {Object} light Light properties of the style.
@@ -1417,8 +1422,9 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
     if (hash != null) jsImpl.hash = hash.toJS;
     jsImpl.interactive = (interactive ?? true).toJS;
     if (container != null) {
-      jsImpl.container =
-          container is String ? container.toJS : container as JSAny;
+      jsImpl.container = container is String
+          ? container.toJS
+          : container as JSAny;
     }
     if (bearingSnap != null) jsImpl.bearingSnap = bearingSnap.toJS;
     jsImpl.pitchWithRotate = (pitchWithRotate ?? true).toJS;
@@ -1466,8 +1472,9 @@ class MapOptions extends JsObjectWrapper<MapOptionsJsImpl> {
     if (boxZoom != null) jsImpl.boxZoom = boxZoom.toJS;
     if (dragRotate != null) jsImpl.dragRotate = dragRotate.toJS;
     final dragPanValue = dragPan ?? true;
-    jsImpl.dragPan =
-        dragPanValue is bool ? dragPanValue.toJS : dragPanValue as JSAny;
+    jsImpl.dragPan = dragPanValue is bool
+        ? dragPanValue.toJS
+        : dragPanValue as JSAny;
     jsImpl.keyboard = (keyboard ?? true).toJS;
     jsImpl.doubleClickZoom = (doubleClickZoom ?? true).toJS;
     jsImpl.touchZoomRotate = (touchZoomRotate ?? true).toJS;

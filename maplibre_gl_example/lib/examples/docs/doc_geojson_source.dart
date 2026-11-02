@@ -52,19 +52,18 @@ class _DocGeoJsonSourceBodyState extends State<_DocGeoJsonSourceBody> {
     // Inline GeoJSON FeatureCollection
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
-      'features':
-          _capitals
-              .map(
-                (c) => {
-                  'type': 'Feature',
-                  'properties': {'name': c['name'], 'population': c['pop']},
-                  'geometry': {
-                    'type': 'Point',
-                    'coordinates': [c['lng'], c['lat']],
-                  },
-                },
-              )
-              .toList(),
+      'features': _capitals
+          .map(
+            (c) => {
+              'type': 'Feature',
+              'properties': {'name': c['name'], 'population': c['pop']},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [c['lng'], c['lat']],
+              },
+            },
+          )
+          .toList(),
     });
 
     await ctrl.addCircleLayer(

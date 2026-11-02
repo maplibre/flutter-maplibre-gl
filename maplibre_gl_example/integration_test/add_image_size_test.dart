@@ -62,10 +62,9 @@ void main() {
     tester,
   ) async {
     final ratio = tester.view.devicePixelRatio;
-    final expected =
-        testPlatform == TestPlatform.web
-            ? _imagePixels.toDouble()
-            : _imagePixels / ratio;
+    final expected = testPlatform == TestPlatform.web
+        ? _imagePixels.toDouble()
+        : _imagePixels / ratio;
 
     final width = await _iconWidth(tester);
 
@@ -109,8 +108,9 @@ void main() {
     const asset = 'assets/icon_size/single.png';
     final ratio = tester.view.devicePixelRatio;
     final pixels = _assetPixels[asset]!;
-    final expected =
-        testPlatform == TestPlatform.web ? pixels.toDouble() : pixels / ratio;
+    final expected = testPlatform == TestPlatform.web
+        ? pixels.toDouble()
+        : pixels / ratio;
 
     final width = await _iconWidth(tester, asset: asset);
 

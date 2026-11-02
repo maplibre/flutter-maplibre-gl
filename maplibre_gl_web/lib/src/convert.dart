@@ -49,10 +49,9 @@ class Convert {
         tiltGesturesEnabled: options['tiltGesturesEnabled'],
         zoomGesturesEnabled: options['zoomGesturesEnabled'],
         doubleClickZoomEnabled: options['doubleClickZoomEnabled'],
-        panInertia:
-            options['panInertia'] is int
-                ? PanInertia.values[options['panInertia']]
-                : PanInertia.normal,
+        panInertia: options['panInertia'] is int
+            ? PanInertia.values[options['panInertia']]
+            : PanInertia.normal,
       );
     }
 
@@ -103,9 +102,8 @@ class Convert {
       sink.setAttributionEnabled(options['attributionEnabled']);
     }
     if (options.containsKey('attributionButtonPosition')) {
-      final position =
-          AttributionButtonPosition
-              .values[options['attributionButtonPosition']];
+      final position = AttributionButtonPosition
+          .values[options['attributionButtonPosition']];
       sink.setAttributionButtonAlignment(position);
     }
     if (options.containsKey('attributionButtonMargins')) {
@@ -423,10 +421,9 @@ class Convert {
     if (options.geometry != null) {
       geometry = Geometry(
         type: geometry.type,
-        coordinates:
-            options.geometry!
-                .map((latLng) => [latLng.longitude, latLng.latitude])
-                .toList(),
+        coordinates: options.geometry!
+            .map((latLng) => [latLng.longitude, latLng.latitude])
+            .toList(),
       );
     }
     if (options.draggable != null) {

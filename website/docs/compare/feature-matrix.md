@@ -86,7 +86,7 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     <tr><td>Terrain (raster DEM elevation)</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Sky &amp; atmosphere</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
     <tr><td>Light (3D shading)</td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Constants</span></td><td><span class="cell-ic"><span class="ic ic--mid">●</span> Constants</span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
-    <tr><td>Global state</td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--no">✘</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
+    <tr><td>Global state</td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td><td><span class="cell-ic"><span class="ic ic--yes">✔</span></span></td></tr>
   </tbody>
 </table>
 </div>
@@ -116,7 +116,7 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     long-press gesture, so on web `onMapLongClick` fires on a double-click.
 
 !!! note "Projection, terrain and sky on Android and iOS"
-    `setProjection()`, `setTerrain()`, `setSky()` and `setGlobalStateProperty()` throw an `UnsupportedError` on Android and iOS: MapLibre Native implements none of them yet, so the map stays a flat mercator projection there. See [Globe, Terrain and Sky](../advanced/globe-terrain-sky.md).
+    `setProjection()`, `setTerrain()` and `setSky()` throw an `UnsupportedError` on Android and iOS: MapLibre Native implements none of them yet, so the map stays a flat mercator projection there. See [Globe, Terrain and Sky](../advanced/globe-terrain-sky.md).
 
 !!! note "Light on Android and iOS"
     `setLight()` works on all three platforms, but MapLibre Native takes constant values only. An expression for `anchor`, `position`, `color` or `intensity` is rejected with `INVALID_ARGUMENT` on Android and iOS; web accepts it.

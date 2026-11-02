@@ -78,8 +78,9 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
 
   // Current stacking order, topmost layer first. Kept in sync with the
   // native layer stack via [MapLibreMapController.moveLayer].
-  final List<String> _layerOrder =
-      _demoLayers.reversed.map((l) => l.id).toList();
+  final List<String> _layerOrder = _demoLayers.reversed
+      .map((l) => l.id)
+      .toList();
 
   void _onMapCreated(MapLibreMapController controller) {
     setState(() => _controller = controller);
@@ -123,7 +124,6 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
     final previousOrder = List<String>.of(_layerOrder);
     late final String movedId;
     setState(() {
-      if (newIndex > oldIndex) newIndex -= 1;
       movedId = _layerOrder.removeAt(oldIndex);
       _layerOrder.insert(newIndex, movedId);
     });
@@ -191,14 +191,8 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
               itemCount: _layerOrder.length,
-              // `onReorder` is deprecated after Flutter 3.41 in favour of
-              // `onReorderItem`, but the latter is only available from
-              // Flutter 3.44. Keep `onReorder` to stay compatible with the
-              // minimum supported Flutter version.
-              // ignore: deprecated_member_use
-              onReorder:
-                  (oldIndex, newIndex) =>
-                      unawaited(_onReorder(oldIndex, newIndex)),
+              onReorderItem: (oldIndex, newIndex) =>
+                  unawaited(_onReorder(oldIndex, newIndex)),
               itemBuilder: (context, index) {
                 final layerId = _layerOrder[index];
                 final layer = _layerFor(layerId);

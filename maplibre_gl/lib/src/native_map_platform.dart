@@ -19,6 +19,30 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// this never being set.
   int? _viewId;
 
+  /// The [AndroidMapView] of this map, read on its first build so a later
+  /// change cannot swap the widget and recreate a platform view already on
+  /// screen.
+  AndroidMapView? _androidView;
+
+  /// The [AndroidMapView] the map asks for, or the one its deprecated flags
+  /// spell, while it asks for none.
+  static AndroidMapView _androidViewOf(Map<String, dynamic> creationParams) {
+    final explicit = creationParams['androidView'] as AndroidMapView?;
+    if (explicit != null) return explicit;
+    final options = creationParams['options'] as Map<dynamic, dynamic>?;
+    if (options?['translucentTextureSurface'] == true) {
+      return const AndroidMapView(
+        surface: AndroidMapSurface.translucentTextureView,
+      );
+    }
+    // The deprecated spelling of a TextureView, honored until removed.
+    // ignore: deprecated_member_use_from_same_package
+    if (MapLibreMap.useHybridComposition) {
+      return const AndroidMapView(surface: AndroidMapSurface.textureView);
+    }
+    return const AndroidMapView();
+  }
+
   MapLibreMapHostApi? _hostApi;
 
   MapLibreMapHostApi get _api =>
@@ -59,12 +83,11 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     if (defaultTargetPlatform == TargetPlatform.android) {
-      final useHybridComposition = MapLibreMap.useHybridComposition;
-      final params = _creationParams(
-        creationParams,
-        useHybridComposition: useHybridComposition,
-      );
-      if (useHybridComposition) {
+      final view = _androidView ??= _androidViewOf(creationParams);
+      final params = _creationParams(creationParams, android: view);
+      // AndroidView lets Flutter draw the map into its frame; Hybrid
+      // Composition needs the view created here.
+      if (view.composition == AndroidComposition.hybridComposition) {
         return PlatformViewLink(
           viewType: 'plugins.flutter.io/maplibre_gl',
           surfaceFactory: (context, controller) {
@@ -77,7 +100,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
             );
           },
           onCreatePlatformView: (viewParams) {
-            final controller = PlatformViewsService.initAndroidView(
+            final controller = PlatformViewsService.initExpensiveAndroidView(
               id: viewParams.id,
               viewType: 'plugins.flutter.io/maplibre_gl',
               layoutDirection: TextDirection.ltr,
@@ -109,10 +132,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         viewType: 'plugins.flutter.io/maplibre_gl',
         onPlatformViewCreated: onPlatformViewCreated,
         gestureRecognizers: gestureRecognizers,
-        creationParams: _creationParams(
-          creationParams,
-          useHybridComposition: false,
-        ),
+        creationParams: _creationParams(creationParams),
         creationParamsCodec: MapLibreMapHostApi.pigeonChannelCodec,
       );
     }
@@ -123,21 +143,33 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// The creation params of the platform view, from the map [MapLibreMap]
   /// builds. Native decodes them with the generated codec.
+  /// [android] is null on iOS.
   static PgCreationParams _creationParams(
     Map<String, dynamic> params, {
-    required bool useHybridComposition,
+    AndroidMapView? android,
   }) {
     final options = params['options'] as Map<dynamic, dynamic>?;
     final camera = params['initialCameraPosition'] as Map<dynamic, dynamic>?;
+    final mapOptions = _mapOptions(
+      options?.cast<String, dynamic>() ?? const {},
+    );
+    if (android != null) {
+      // The view decides the translucency, over the deprecated option.
+      mapOptions.translucentTextureSurface =
+          android.surface == AndroidMapSurface.translucentTextureView
+          ? true
+          : null;
+    }
     return PgCreationParams(
       styleString: params['styleString'] as String?,
-      options: _mapOptions(options?.cast<String, dynamic>() ?? const {}),
+      options: mapOptions,
       initialCameraPosition: camera == null ? null : _pgCameraPosition(camera),
       // The default of MapLibreMap.dragEnabled, and of both platforms.
       dragEnabled: params['dragEnabled'] as bool? ?? true,
       iosLongClickDurationMs:
           params['iosLongClickDurationMilliseconds'] as int?,
-      useHybridComposition: useHybridComposition,
+      textureView:
+          android != null && android.surface != AndroidMapSurface.surfaceView,
     );
   }
 
@@ -165,23 +197,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final locationSource = options['locationSource'] as String?;
     return PgMapOptions(
       compassEnabled: flag('compassEnabled'),
-      cameraTargetBounds:
-          targetBounds == null
-              ? null
-              : PgCameraTargetBounds(
-                bounds:
-                    targetBounds.first == null
-                        ? null
-                        : _pgLatLngBounds(targetBounds.first as List<dynamic>),
-              ),
+      cameraTargetBounds: targetBounds == null
+          ? null
+          : PgCameraTargetBounds(
+              bounds: targetBounds.first == null
+                  ? null
+                  : _pgLatLngBounds(targetBounds.first as List<dynamic>),
+            ),
       styleString: options['styleString'] as String?,
-      minMaxZoomPreference:
-          zoomRange == null
-              ? null
-              : PgMinMaxZoomPreference(
-                minZoom: (zoomRange[0] as num?)?.toDouble(),
-                maxZoom: (zoomRange[1] as num?)?.toDouble(),
-              ),
+      minMaxZoomPreference: zoomRange == null
+          ? null
+          : PgMinMaxZoomPreference(
+              minZoom: (zoomRange[0] as num?)?.toDouble(),
+              maxZoom: (zoomRange[1] as num?)?.toDouble(),
+            ),
       rotateGesturesEnabled: flag('rotateGesturesEnabled'),
       scrollGesturesEnabled: flag('scrollGesturesEnabled'),
       tiltGesturesEnabled: flag('tiltGesturesEnabled'),
@@ -199,18 +228,17 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         PgMyLocationRenderMode.values,
         'myLocationRenderMode',
       ),
-      myLocationStyle:
-          puckStyle == null
-              ? null
-              : PgMyLocationStyle(
-                fillColor: puckStyle['fillColor'] as int?,
-                bearingColor: puckStyle['bearingColor'] as int?,
-                accuracyColor: puckStyle['accuracyColor'] as int?,
-                accuracyCircleEnabled:
-                    puckStyle['accuracyCircleEnabled'] as bool? ?? true,
-                pulseEnabled: puckStyle['pulseEnabled'] as bool?,
-                pulseColor: puckStyle['pulseColor'] as int?,
-              ),
+      myLocationStyle: puckStyle == null
+          ? null
+          : PgMyLocationStyle(
+              fillColor: puckStyle['fillColor'] as int?,
+              bearingColor: puckStyle['bearingColor'] as int?,
+              accuracyColor: puckStyle['accuracyColor'] as int?,
+              accuracyCircleEnabled:
+                  puckStyle['accuracyCircleEnabled'] as bool? ?? true,
+              pulseEnabled: puckStyle['pulseEnabled'] as bool?,
+              pulseColor: puckStyle['pulseColor'] as int?,
+            ),
       logoEnabled: flag('logoEnabled'),
       logoViewPosition: enumAt(PgOrnamentPosition.values, 'logoViewPosition'),
       logoViewMargins: margins('logoViewMargins'),
@@ -226,12 +254,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       ),
       attributionButtonMargins: margins('attributionButtonMargins'),
       attributionButtonColor: options['attributionButtonColor'] as int?,
-      locationEngineProperties:
-          engine == null ? null : _locationEngineProperties(engine),
-      locationSource:
-          locationSource == null
-              ? null
-              : PgLocationSource.values.byName(locationSource),
+      locationEngineProperties: engine == null
+          ? null
+          : _locationEngineProperties(engine),
+      locationSource: locationSource == null
+          ? null
+          : PgLocationSource.values.byName(locationSource),
       foregroundLoadColor: options['foregroundLoadColor'] as int?,
       translucentTextureSurface: flag('translucentTextureSurface'),
       featureTapsTriggersMapClick: flag('featureTapsTriggersMapClick'),
@@ -292,9 +320,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> cameraOnMoveStarted(bool isGesture) async {
-    // Not exposed yet, as the plugin never passed it on: telling the
-    // user's moves from the app's is #1019.
-    onCameraMoveStartedPlatform(null);
+    onCameraMoveStartedPlatform(
+      isGesture ? CameraMoveReason.gesture : CameraMoveReason.programmatic,
+    );
   }
 
   @override
@@ -358,20 +386,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         speed: userLocation.speed,
         horizontalAccuracy: userLocation.horizontalAccuracy,
         verticalAccuracy: userLocation.verticalAccuracy,
-        heading:
-            heading == null
-                ? null
-                : UserHeading(
-                  magneticHeading: heading.magneticHeading,
-                  trueHeading: heading.trueHeading,
-                  headingAccuracy: heading.headingAccuracy,
-                  x: heading.x,
-                  y: heading.y,
-                  z: heading.z,
-                  timestamp: DateTime.fromMillisecondsSinceEpoch(
-                    heading.timestamp,
-                  ),
+        heading: heading == null
+            ? null
+            : UserHeading(
+                magneticHeading: heading.magneticHeading,
+                trueHeading: heading.trueHeading,
+                headingAccuracy: heading.headingAccuracy,
+                x: heading.x,
+                y: heading.y,
+                z: heading.z,
+                timestamp: DateTime.fromMillisecondsSinceEpoch(
+                  heading.timestamp,
                 ),
+              ),
         timestamp: DateTime.fromMillisecondsSinceEpoch(userLocation.timestamp),
       ),
     );
@@ -468,10 +495,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         case 'zoomBy':
           return PgCameraUpdateZoomBy(
             amount: at(1),
-            focus:
-                values.length > 2
-                    ? _pgScreenPoint(values[2] as List<dynamic>)
-                    : null,
+            focus: values.length > 2
+                ? _pgScreenPoint(values[2] as List<dynamic>)
+                : null,
           );
         case 'zoomIn':
           return PgCameraUpdateZoomIn();
@@ -638,10 +664,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   Future<bool> editGeoJsonSource(String id, String data) {
     final input = (data, _featureIdsOf(id));
     return _writeGeoJson(id, () async {
-      final (json, reason) =
-          data.length > _geoJsonTextOffloadLength
-              ? await compute(_checkGeoJsonText, input)
-              : _checkGeoJsonText(input);
+      final (json, reason) = data.length > _geoJsonTextOffloadLength
+          ? await compute(_checkGeoJsonText, input)
+          : _checkGeoJsonText(input);
       if (reason != null) throw invalidGeoJson(id, reason);
       return _api.mapEditGeoJsonSource(id, json!);
     });
@@ -1012,10 +1037,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojsonFeature,
   ) {
     // A feature replaces the one with its id, so it keeps that id.
-    final ids =
-        _featureIdsOf(sourceId) == _FeatureIds.generate
-            ? _FeatureIds.asTheyAre
-            : _defaultFeatureIds;
+    final ids = _featureIdsOf(sourceId) == _FeatureIds.generate
+        ? _FeatureIds.asTheyAre
+        : _defaultFeatureIds;
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetFeature(
         sourceId,
@@ -1032,8 +1056,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// What the data the plugin sets to the source [sourceId] gets for its ids.
   _FeatureIds _featureIdsOf(String sourceId) =>
       _generatedIdSources.contains(sourceId)
-          ? _FeatureIds.generate
-          : _defaultFeatureIds;
+      ? _FeatureIds.generate
+      : _defaultFeatureIds;
 
   /// What the ids of GeoJSON data get on this platform, without `generateId`.
   static _FeatureIds get _defaultFeatureIds =>
@@ -1088,21 +1112,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }) {
     final names = keys.toSet();
     final pending = {
-      for (final name in names)
-        if (_pendingCalls[name] case final future?) future,
+      for (final name in names) ?_pendingCalls[name],
     };
     if (pending.isEmpty && !always) return call();
     // A failed call must not block the calls queued behind it, so its error
     // is ignored for chaining purposes only. Callers still see it through
     // the future returned here.
-    final next =
-        pending.isEmpty
-            ? call()
-            : Future.wait(
-              pending.map(
-                (future) => future.then<void>((_) {}, onError: (_) {}),
-              ),
-            ).then((_) => call());
+    final next = pending.isEmpty
+        ? call()
+        : Future.wait(
+            pending.map(
+              (future) => future.then<void>((_) {}, onError: (_) {}),
+            ),
+          ).then((_) => call());
     for (final name in names) {
       _pendingCalls[name] = next;
     }
@@ -1156,10 +1178,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }) async {
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
     final input = (geojson, ids);
-    final (json, reason) =
-        encodesInBackground(geojson)
-            ? await compute(encode, input)
-            : encode(input);
+    final (json, reason) = encodesInBackground(geojson)
+        ? await compute(encode, input)
+        : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1246,8 +1267,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final marked = <int>[];
     final reason = check(
       geojson,
-      onFeature:
-          ids == _FeatureIds.markStringIds ? _collectStringIds(marked) : null,
+      onFeature: ids == _FeatureIds.markStringIds
+          ? _collectStringIds(marked)
+          : null,
     );
     if (reason != null) return (null, reason);
     return switch (ids) {
@@ -1293,13 +1315,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// Adds to [indexes] the index of each feature whose id is text that reads
   /// as a number.
-  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) => (
-    index,
-    feature,
-  ) {
-    final id = feature['id'];
-    if (id is String && _numericText.hasMatch(id)) indexes.add(index);
-  };
+  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) =>
+      (
+        index,
+        feature,
+      ) {
+        final id = feature['id'];
+        if (id is String && _numericText.hasMatch(id)) indexes.add(index);
+      };
 
   /// [geojson] with [_stringIdMarker] in the properties of the features at
   /// [indexes]: a FeatureCollection's, or 0 for a Feature. Returns [geojson]
@@ -1800,11 +1823,32 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> setGlobalStateProperty(String name, Object? value) async {
-    throw UnsupportedError(
-      'setGlobalStateProperty is not available on Android and iOS because '
-      'MapLibre Native does not implement global state yet. '
-      'Global state is supported on web.',
-    );
+    // Sent as JSON text, so nested values and number types arrive intact.
+    // Only what JSON carries goes, as on web: no toJson() objects.
+    final String json;
+    try {
+      json = jsonEncode(
+        value,
+        toEncodable: (object) => throw JsonUnsupportedObjectError(object),
+      );
+      // The error of jsonEncode, for a value it cannot write.
+      // ignore: avoid_catching_errors
+    } on JsonUnsupportedObjectError {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            "The value of global state property '$name' is not valid JSON: it "
+            'holds a non-finite number, or a value of a type JSON cannot '
+            'carry.',
+      );
+    }
+    await _api.styleSetGlobalStateProperty(name, json);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    final state = await _api.styleGetGlobalState();
+    return (jsonDecode(state) as Map).cast<String, dynamic>();
   }
 
   @override

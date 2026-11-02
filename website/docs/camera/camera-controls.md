@@ -9,7 +9,7 @@ The camera defines what the user sees: the center position, zoom level, bearing 
   loading="lazy"
 ></iframe>
 
-Press the button to fly between cities around the world.
+Press the button to fly between cities around the world, or pan the map yourself: **Search this area** shows up only after your own moves, never after the flight.
 
 ## `animateCamera`: smooth animation
 
@@ -136,6 +136,64 @@ MapLibreMap(
 !!! tip "`trackCameraPosition: true`"
     Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them. The last `onCameraMove` before `onCameraIdle` has the position where the camera stopped, also after `moveCamera`.
 
+### Tell the user's moves from the app's
+
+`onCameraMoveStarted` fires once at the start of every move, with or without `trackCameraPosition`, and says what started it:
+
+| `CameraMoveReason` | Started by |
+|---|---|
+| `gesture` | A pan, pinch, rotation, tilt or double tap of the user, and the fling after it. On web also the mouse wheel and the keyboard |
+| `programmatic` | Anything else: `animateCamera`, `easeCamera`, `moveCamera`, a tap on the compass, location tracking |
+
+While the camera moves, `controller.cameraMoveReason` holds the same value. It is `null` when the camera is still, inside `onCameraIdle` too.
+
+A move that takes over another before the camera stops, such as `animateCamera` during a fling, stays one move: one `onCameraMoveStarted` with the reason of the first, one `onCameraIdle` at the end.
+
+#### Close a popup when the user moves the map
+
+```dart
+MapLibreMap(
+  onCameraMoveStarted: (reason) {
+    if (reason == CameraMoveReason.gesture) closePopup();
+  },
+)
+```
+
+Your own `animateCamera` to the selected feature leaves the popup open.
+
+#### Show "Search this area" after the user pans
+
+Keep the reason from `onCameraMoveStarted`, since the controller's is already `null` in `onCameraIdle`:
+
+```dart
+var movedByUser = false;
+
+MapLibreMap(
+  onCameraMoveStarted: (reason) {
+    movedByUser = reason == CameraMoveReason.gesture;
+    hideSearchButton();
+  },
+  onCameraIdle: () {
+    if (movedByUser) showSearchButton();
+  },
+)
+```
+
+The demo at the top of this page does exactly this.
+
+#### Skip the app's own moves in `onCameraMove`
+
+```dart
+MapLibreMap(
+  trackCameraPosition: true,
+  onMapCreated: (c) => controller = c,
+  onCameraMove: (position) {
+    if (controller?.cameraMoveReason != CameraMoveReason.gesture) return;
+    showCoordinates(position.target);  // only while the user drags
+  },
+)
+```
+
 ## Key APIs
 
 - [`MapLibreMapController.animateCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/animateCamera.html)
@@ -143,3 +201,4 @@ MapLibreMap(
 - [`MapLibreMapController.easeCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/easeCamera.html)
 - [`CameraUpdate`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraUpdate-class.html)
 - [`CameraPosition`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraPosition-class.html)
+- [`CameraMoveReason`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraMoveReason.html)

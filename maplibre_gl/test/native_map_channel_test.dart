@@ -295,7 +295,7 @@ void main() {
         ),
         dragEnabled: true,
         iosLongClickDurationMs: 300,
-        useHybridComposition: false,
+        textureView: false,
       );
 
       expect(codec.decodeMessage(codec.encodeMessage(params)), params);
@@ -364,12 +364,11 @@ void main() {
     test('an error reply reaches Dart as a PlatformException', () async {
       onHost(
         'styleRemoveLayer',
-        (_) =>
-            throw PlatformException(
-              code: 'LAYER_NOT_FOUND',
-              message: 'No layer with id missing',
-              details: {'layerId': 'missing'},
-            ),
+        (_) => throw PlatformException(
+          code: 'LAYER_NOT_FOUND',
+          message: 'No layer with id missing',
+          details: {'layerId': 'missing'},
+        ),
       );
 
       await expectLater(
@@ -521,10 +520,10 @@ void main() {
     });
 
     test('the camera events', () async {
-      var moveStarts = 0;
+      final moveStarts = <CameraMoveReason>[];
       final moves = <CameraPosition?>[];
       final idles = <CameraPosition?>[];
-      platform.onCameraMoveStartedPlatform.add((_) => moveStarts++);
+      platform.onCameraMoveStartedPlatform.add(moveStarts.add);
       platform.onCameraMovePlatform.add(moves.add);
       platform.onCameraIdlePlatform.add(idles.add);
 
@@ -541,7 +540,10 @@ void main() {
         tilt: 10,
         zoom: 12,
       );
-      expect(moveStarts, 2);
+      expect(moveStarts, [
+        CameraMoveReason.gesture,
+        CameraMoveReason.programmatic,
+      ]);
       expect(moves, [position]);
       expect(idles, [
         const CameraPosition(
@@ -737,6 +739,8 @@ void main() {
       'sourceRemoveFeatureState',
       'sourceGetFeatureState',
       'styleSetLight',
+      'styleSetGlobalStateProperty',
+      'styleGetGlobalState',
       'layerSetVisibility',
       'layerSetVisibilityBatch',
       'layerSetZoomRange',

@@ -119,9 +119,10 @@ class _FakeMap {
     for (final kind in ['Paint', 'Layout']) {
       method(
         'get${kind}Property',
-        ((JSString layerId, JSString name) =>
-                _properties(layerId.toDart, kind)[name.toDart])
-            .toJS,
+        ((JSString layerId, JSString name) => _properties(
+          layerId.toDart,
+          kind,
+        )[name.toDart]).toJS,
       );
       method(
         'set${kind}Property',
@@ -213,11 +214,11 @@ class _FakeMap {
 
   /// Reports [message] in an error event, as maplibre-gl-js does.
   void fire(String message) {
-    final event =
-        JSObject()..setProperty(
-          'error'.toJS,
-          JSObject()..setProperty('message'.toJS, message.toJS),
-        );
+    final event = JSObject()
+      ..setProperty(
+        'error'.toJS,
+        JSObject()..setProperty('message'.toJS, message.toJS),
+      );
     for (final listener in List.of(errorListeners)) {
       listener.callAsFunction(null, event);
     }
@@ -295,11 +296,11 @@ void main() {
 
   setUp(() {
     map = _FakeMap();
-    controller =
-        MapLibreMapController()..debugSetMap(
-          MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
-          styleReady: true,
-        );
+    controller = MapLibreMapController()
+      ..debugSetMap(
+        MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
+        styleReady: true,
+      );
   });
 
   TypeMatcher<PlatformException> platformError(String code) =>
@@ -562,28 +563,25 @@ void main() {
 
     test('a zoom outside 0 to 24 fails with INVALID_ARGUMENT', () async {
       final calls = <String, Future<void> Function()>{
-        'circles':
-            () => controller.addCircleLayer(
-              'points',
-              'circles',
-              const {},
-              minzoom: 25,
-              enableInteraction: true,
-            ),
-        'lines':
-            () => controller.addLineLayer(
-              'points',
-              'lines',
-              const {},
-              maxzoom: -1,
-              enableInteraction: false,
-            ),
-        'background':
-            () => controller.addBackgroundLayer(
-              'background',
-              const {},
-              minzoom: double.nan,
-            ),
+        'circles': () => controller.addCircleLayer(
+          'points',
+          'circles',
+          const {},
+          minzoom: 25,
+          enableInteraction: true,
+        ),
+        'lines': () => controller.addLineLayer(
+          'points',
+          'lines',
+          const {},
+          maxzoom: -1,
+          enableInteraction: false,
+        ),
+        'background': () => controller.addBackgroundLayer(
+          'background',
+          const {},
+          minzoom: double.nan,
+        ),
       };
       for (final MapEntry(key: layerId, value: call) in calls.entries) {
         await expectLater(
@@ -644,10 +642,10 @@ void main() {
         const VectorSourceProperties(tiles: ['https://example.com/{z}']),
       );
       final calls = <String, Future<void> Function(String)>{
-        'setGeoJsonSource':
-            (id) => controller.setGeoJsonSource(id, _collection([])),
-        'setGeoJsonFeature':
-            (id) => controller.setFeatureForGeoJsonSource(id, _point(1, 1)),
+        'setGeoJsonSource': (id) =>
+            controller.setGeoJsonSource(id, _collection([])),
+        'setGeoJsonFeature': (id) =>
+            controller.setFeatureForGeoJsonSource(id, _point(1, 1)),
       };
       for (final MapEntry(key: method, value: call) in calls.entries) {
         await expectLater(

@@ -1,0 +1,68 @@
+name: Scheduled CI
+
+# Weekly safety net for what PR runs do not see. The Flutter SDK and the
+# runner images move on their own, and a PR only runs the platforms it
+# touches. Beta shows what the next stable release will break, while there is
+# still time to fix it. Runs the Dart checks and the three builds on main and
+# on the open release branch, with Flutter stable and beta.
+#
+# Scheduled runs use this file as it is on main, also for the release branch.
+
+on:
+  schedule: [ cron: '0 3 * * 1' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  branches:
+    name: "Pick branches"
+    runs-on: ubuntu-latest
+    outputs:
+      refs: ${{ steps.pick.outputs.refs }}
+    steps:
+      # The release branch with the highest version, while it has commits main
+      # lacks. Released branches stay around, and checking them again would
+      # only repeat main.
+      - name: Pick main and the open release branch
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          release=$(gh api "repos/$REPO/branches" --paginate --jq '.[].name | select(startswith("release-"))' | sort -V | tail -n 1)
+          refs='["main"]'
+          if [ -n "$release" ] && [ "$(gh api "repos/$REPO/compare/main...$release" --jq .ahead_by)" -gt 0 ]; then
+            refs="[\"main\",\"$release\"]"
+          fi
+          echo "refs=$refs" >> "$GITHUB_OUTPUT"
+
+  dart-checks:
+    name: "Dart checks (${{ matrix.ref }}, ${{ matrix.channel }})"
+    needs: branches
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(needs.branches.outputs.refs) }}
+        channel: [stable, beta]
+    uses: ./.github/workflows/_dart_checks.yml
+    with:
+      ref: ${{ matrix.ref }}
+      flutter-channel: ${{ matrix.channel }}
+
+  build:
+    name: "Build ${{ matrix.platform }} (${{ matrix.ref }}, ${{ matrix.channel }})"
+    needs: branches
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: ${{ fromJSON(needs.branches.outputs.refs) }}
+        channel: [stable, beta]
+        platform: [android, ios, web]
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      ref: ${{ matrix.ref }}
+      flutter-channel: ${{ matrix.channel }}
+      upload-artifacts: false

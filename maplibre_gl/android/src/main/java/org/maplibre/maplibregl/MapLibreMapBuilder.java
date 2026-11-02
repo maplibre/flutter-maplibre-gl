@@ -31,7 +31,7 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   private LocationEngineRequest locationEngineRequest = null;
   private String locationSourceToken = "platform";
   private boolean translucentRequested = false;
-  private boolean hybridCompositionActive = false;
+  private boolean textureViewRequested = false;
   private Integer attributionButtonColor = null;
   private Integer panInertia = null;
 
@@ -323,17 +323,17 @@ class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public void setTranslucentTextureSurface(boolean translucentTextureSurface) {
     this.translucentRequested = translucentTextureSurface;
     options.translucentTextureSurface(translucentTextureSurface);
-    // textureMode must be on if EITHER a translucent surface is required OR Flutter is
-    // using Hybrid Composition (TLHC). Both are correctness requirements, not knobs.
-    options.textureMode(translucentRequested || hybridCompositionActive);
+    // textureMode must be on if EITHER a translucent surface is required OR the app asked for
+    // a TextureView. Both are correctness requirements, not knobs.
+    options.textureMode(translucentRequested || textureViewRequested);
   }
 
   /**
-   * Whether Flutter composes the map view with hybrid composition, which needs the map to draw
-   * into a TextureView. Set from the creation params, not the map options.
+   * Whether the map draws into a TextureView rather than a SurfaceView. Set from the creation
+   * params, not the map options.
    */
-  public void setUseHybridComposition(boolean useHybridComposition) {
-    this.hybridCompositionActive = useHybridComposition;
-    options.textureMode(translucentRequested || hybridCompositionActive);
+  public void setTextureView(boolean textureView) {
+    this.textureViewRequested = textureView;
+    options.textureMode(translucentRequested || textureViewRequested);
   }
 }

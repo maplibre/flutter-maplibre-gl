@@ -41,10 +41,9 @@ Object? withFeatureIds(Object? value) {
       case 'match':
         return _mapList(
           value,
-          (item, index) =>
-              index > 1 && index < value.length - 1 && index.isEven
-                  ? item
-                  : withFeatureIds(item),
+          (item, index) => index > 1 && index < value.length - 1 && index.isEven
+              ? item
+              : withFeatureIds(item),
         );
     }
     return _mapList(value, (item, _) => withFeatureIds(item));
@@ -146,10 +145,9 @@ Map<dynamic, dynamic> _mapValues(
   for (final entry in map.entries) {
     final converted = convert(entry.value);
     if (!identical(converted, entry.value)) {
-      (copy ??=
-              map is Map<String, dynamic>
-                  ? Map<String, dynamic>.of(map)
-                  : Map<dynamic, dynamic>.of(map))[entry.key] =
+      (copy ??= map is Map<String, dynamic>
+              ? Map<String, dynamic>.of(map)
+              : Map<dynamic, dynamic>.of(map))[entry.key] =
           converted;
     }
   }

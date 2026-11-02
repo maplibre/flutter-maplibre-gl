@@ -178,3 +178,15 @@ class CameraUpdate {
 
   dynamic toJson() => _json;
 }
+
+/// What started a movement of the camera.
+enum CameraMoveReason {
+  /// A gesture of the user on the map, such as a pan, pinch, rotation, tilt
+  /// or double tap, with the fling after it. On web also the mouse wheel and
+  /// the keyboard.
+  gesture,
+
+  /// Anything else: a camera call of the app, a tap on the compass, location
+  /// tracking.
+  programmatic,
+}

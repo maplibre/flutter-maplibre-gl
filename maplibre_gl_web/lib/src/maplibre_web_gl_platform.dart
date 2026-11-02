@@ -82,6 +82,16 @@ class MapLibreMapController extends MapLibrePlatform
   /// Numbers each [_runCameraAnimation] call, to tell its events apart.
   int _cameraAnimationCount = 0;
 
+  /// Set while [_stopCamera] runs: a moveend then sends no onCameraIdle.
+  bool _holdingCameraIdle = false;
+
+  /// Whether a moveend came while [_holdingCameraIdle] was set.
+  bool _cameraIdleHeld = false;
+
+  /// Set while [_startCameraMove] runs: the first movestart then sends no
+  /// onCameraMoveStarted.
+  bool _skipCameraMoveStarted = false;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -121,13 +131,12 @@ class MapLibreMapController extends MapLibrePlatform
     ui_web.platformViewRegistry.registerViewFactory(
       'plugins.flutter.io/maplibre_gl_$identifier',
       (int viewId) {
-        _mapElement =
-            (web.document.createElement('div') as web.HTMLDivElement)
-              ..style.position = 'absolute'
-              ..style.top = '0'
-              ..style.bottom = '0'
-              ..style.height = '100%'
-              ..style.width = '100%';
+        _mapElement = (web.document.createElement('div') as web.HTMLDivElement)
+          ..style.position = 'absolute'
+          ..style.top = '0'
+          ..style.bottom = '0'
+          ..style.height = '100%'
+          ..style.width = '100%';
         callback(viewId);
         return _mapElement;
       },
@@ -157,10 +166,9 @@ class MapLibreMapController extends MapLibrePlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          center:
-              (camera != null)
-                  ? LngLat(camera['target'][1], camera['target'][0])
-                  : null,
+          center: (camera != null)
+              ? LngLat(camera['target'][1], camera['target'][0])
+              : null,
           zoom: camera?['zoom'],
           bearing: camera?['bearing'],
           pitch: camera?['tilt'],
@@ -214,7 +222,13 @@ class MapLibreMapController extends MapLibrePlatform
       // on a draggable feature starts after the leftovers are cleared.
       _mapSubscriptions.add(_map.on('mousedown', (_) => _endPress()));
       _mapSubscriptions.add(_map.on('mouseup', _onMouseUp));
-      _mapSubscriptions.add(_map.on('mousemove', _onMouseMove));
+      _mapSubscriptions.add(_map.on('mousemove', _onPointerMove));
+      // The same for a finger. A second finger ends the drag at the last
+      // position and the map takes over the pinch, as on Android and iOS.
+      _mapSubscriptions.add(_map.on('touchstart', (_) => _endPress()));
+      _mapSubscriptions.add(_map.on('touchmove', _onTouchMove));
+      _mapSubscriptions.add(_map.on('touchend', _onTouchEnd));
+      _mapSubscriptions.add(_map.on('touchcancel', (_) => _endPress()));
     }
     // Always listen to mousemove for general map mouse move events
     _mapSubscriptions.add(_map.on('mousemove', _onMapMouseMove));
@@ -340,21 +354,27 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onMouseDown(Event e, String? layerId) {
-    // Check if there are features under the mouse cursor
-    if (e.features.isEmpty) return;
+    if (_pressDraggableFeature(e)) _listenForReleaseOutside();
+  }
 
+  void _onTouchStart(Event e, String? layerId) {
+    // With a second finger the touch is the map's pinch, not a new drag.
+    if (_touchEvent(e).touches.length == 1) _pressDraggableFeature(e);
+  }
+
+  /// Starts a press on the draggable feature under [e], if there is one, and
+  /// keeps the map from panning under it. Nothing is reported yet: the press
+  /// is a click until the pointer moves past the drag threshold, as on Android
+  /// and iOS.
+  bool _pressDraggableFeature(Event e) {
+    if (e.features.isEmpty) return false;
     final isDraggable = e.features.first.getProperty('draggable');
-    if (isDraggable != null && isDraggable) {
-      // Prevent the default map drag behavior.
-      e.preventDefault();
-      final id = plainFeatureId(e.features.first.id);
-      // Nothing is reported yet: the press is a click until the pointer moves
-      // past the drag threshold, as on Android and iOS.
-      if (id != null) {
-        _featureDrag.down(id, _eventPoint(e));
-        _listenForReleaseOutside();
-      }
-    }
+    if (isDraggable == null || !isDraggable) return false;
+    e.preventDefault();
+    final id = plainFeatureId(e.features.first.id);
+    if (id == null) return false;
+    _featureDrag.down(id, _eventPoint(e));
+    return true;
   }
 
   void _onMouseUp(Event e) {
@@ -391,7 +411,7 @@ class MapLibreMapController extends MapLibrePlatform
     web.window.removeEventListener('mouseup', listener);
   }
 
-  void _onMouseMove(Event e) {
+  void _onPointerMove(Event e) {
     final payload = _featureDrag.move(_eventPoint(e), _eventLatLng(e));
     if (payload == null) return;
     if (payload['eventType'] == 'start') {
@@ -399,6 +419,33 @@ class MapLibreMapController extends MapLibrePlatform
     }
     onFeatureDraggedPlatform(payload);
   }
+
+  void _onTouchMove(Event e) {
+    if (!_featureDrag.isPressed) return;
+    final touch = _touchEvent(e);
+    // A second finger that landed off the map ends the drag too.
+    if (touch.touches.length > 1) {
+      _endPress();
+      return;
+    }
+    _onPointerMove(e);
+    // Keeps the browser from scrolling the page under the dragged feature.
+    if (_featureDrag.isDragging) touch.preventDefault();
+  }
+
+  void _onTouchEnd(Event e) {
+    final payload = _featureDrag.up(_eventPoint(e), _eventLatLng(e));
+    if (payload == null) return;
+    // The browser sends no mouse events and no click after the drag, so no
+    // tap follows it, as on Android and iOS.
+    _touchEvent(e).preventDefault();
+    _map.getCanvas().style.cursor = '';
+    onFeatureDraggedPlatform(payload);
+  }
+
+  /// The browser's touch event behind the map's touch event [e].
+  static web.TouchEvent _touchEvent(Event e) => (e.jsObject as JSObject)
+      .getProperty<web.TouchEvent>('originalEvent'.toJS);
 
   static Point<double> _eventPoint(Event e) =>
       Point<double>(e.point.x.toDouble(), e.point.y.toDouble());
@@ -442,10 +489,10 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.flyTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
       }, eventData),
     );
@@ -456,8 +503,49 @@ class MapLibreMapController extends MapLibrePlatform
     _checkCameraUpdate(cameraUpdate);
     final cameraOptions = Convert.toCameraOptions(cameraUpdate, _map);
     _cancelCameraAnimation();
-    _map.jumpTo(cameraOptions);
+    final idleHeld = _stopCamera();
+    _startCameraMove(idleHeld, () => _map.jumpTo(cameraOptions));
     return true;
+  }
+
+  /// Stops the camera motion in progress, such as the inertia after a fling
+  /// or an animation, for a camera call that takes over from it. Android
+  /// carries on into the new move and sends onCameraIdle once, when the
+  /// camera settles, but maplibre-gl-js ends the stopped motion with a
+  /// moveend. So that moveend sends no onCameraIdle here: this returns
+  /// whether one was held back, to pass to [_startCameraMove].
+  ///
+  /// A gesture stopped mid-way ends with no moveend, so nothing is held.
+  bool _stopCamera() {
+    _cameraIdleHeld = false;
+    _holdingCameraIdle = true;
+    try {
+      _map.stop();
+    } finally {
+      _holdingCameraIdle = false;
+    }
+    return _cameraIdleHeld;
+  }
+
+  /// Runs [move], a camera change that starts with a movestart. If
+  /// [_stopCamera] held back an onCameraIdle, the app already heard
+  /// onCameraMoveStarted for the motion [move] continues, so its movestart
+  /// sends none. If [move] throws or starts no motion, the held onCameraIdle
+  /// goes out instead, as no moveend of its own will.
+  void _startCameraMove(bool idleHeld, void Function() move) {
+    if (!idleHeld) {
+      move();
+      return;
+    }
+    var started = false;
+    _skipCameraMoveStarted = true;
+    try {
+      move();
+      started = !_skipCameraMoveStarted;
+    } finally {
+      _skipCameraMoveStarted = false;
+      if (!started) _onCameraIdle(null);
+    }
   }
 
   /// Throws `INVALID_ARGUMENT`, as Android and iOS do, for an update with a
@@ -480,7 +568,7 @@ class MapLibreMapController extends MapLibrePlatform
     // before the listeners below exist, so that moveend cannot complete this
     // call.
     _cancelCameraAnimation();
-    _map.stop();
+    final idleHeld = _stopCamera();
 
     final id = ++_cameraAnimationCount;
     // maplibre-gl-js copies the event data onto every move and moveend this
@@ -531,7 +619,7 @@ class MapLibreMapController extends MapLibrePlatform
     });
 
     try {
-      start({_cameraAnimationKey: id});
+      _startCameraMove(idleHeld, () => start({_cameraAnimationKey: id}));
     } catch (_) {
       // No moveend is coming: drop the listeners and the pending call, so
       // the next camera call does not answer this one.
@@ -752,12 +840,12 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.easeTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
-        if (easing != null) 'easing': easing,
+        'easing': ?easing,
       }, eventData),
     );
   }
@@ -1029,15 +1117,13 @@ class MapLibreMapController extends MapLibrePlatform
   /// that way instead of throwing.
   List<String> _mapErrorsDuring(void Function() action) {
     final errors = <String>[];
-    final listener =
-        ((JSObject event) {
-          final message =
-              event
-                  .getProperty<JSObject?>('error'.toJS)
-                  ?.getProperty<JSString?>('message'.toJS)
-                  ?.toDart;
-          if (message != null) errors.add(message);
-        }).toJS;
+    final listener = ((JSObject event) {
+      final message = event
+          .getProperty<JSObject?>('error'.toJS)
+          ?.getProperty<JSString?>('message'.toJS)
+          ?.toDart;
+      if (message != null) errors.add(message);
+    }).toJS;
     final map = _map.jsObject as JSObject;
     map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
     try {
@@ -1359,8 +1445,17 @@ class MapLibreMapController extends MapLibrePlatform
     });
   }
 
-  void _onCameraMoveStarted(_) {
-    onCameraMoveStartedPlatform(null);
+  void _onCameraMoveStarted(Event e) {
+    if (_skipCameraMoveStarted) {
+      _skipCameraMoveStarted = false;
+      return;
+    }
+    onCameraMoveStartedPlatform(
+      cameraMoveReason(
+        e.jsObject as JSObject,
+        scrollZooming: _map.scrollZoom.isActive(),
+      ),
+    );
   }
 
   // Positions go out only while [_trackCameraPosition] is on, as on Android
@@ -1371,6 +1466,10 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   void _onCameraIdle(_) {
+    if (_holdingCameraIdle) {
+      _cameraIdleHeld = true;
+      return;
+    }
     onCameraIdlePlatform(_getCameraPosition());
   }
 
@@ -1963,8 +2062,8 @@ class MapLibreMapController extends MapLibrePlatform
   /// it at all.
   String? _existingLayerId(String? belowLayerId) =>
       belowLayerId != null && _map.getLayer(belowLayerId) != null
-          ? belowLayerId
-          : null;
+      ? belowLayerId
+      : null;
 
   /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
   /// layer. maplibre-gl-js only fires an error event, which callers never see.
@@ -2046,7 +2145,7 @@ class MapLibreMapController extends MapLibrePlatform
       sourceId,
       jsifyMap({
         'type': 'geojson',
-        if (promoteId != null) 'promoteId': promoteId,
+        'promoteId': ?promoteId,
       }),
       data,
       features,
@@ -2100,8 +2199,9 @@ class MapLibreMapController extends MapLibrePlatform
     final List<_SourceFeature> features;
     switch (jsonValueOf(geojson['type'])) {
       case 'FeatureCollection':
-        final jsFeatures =
-            data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
+        final jsFeatures = data
+            .getProperty<JSArray<JSAny?>>('features'.toJS)
+            .toDart;
         final dartFeatures = jsonValueOf(geojson['features'])! as List;
         features = [
           for (var i = 0; i < dartFeatures.length; i++)
@@ -2384,13 +2484,23 @@ class MapLibreMapController extends MapLibrePlatform
       final value = properties[name];
       final layout = isLayoutProperty(name);
       final setter = layout ? 'setLayoutProperty' : 'setPaintProperty';
-      final previous = map.callMethod<JSAny?>(
-        (layout ? 'getLayoutProperty' : 'getPaintProperty').toJS,
-        layerId.toJS,
-        name.toJS,
-      );
-      var reason = checks.hexColorError(name, value);
-      // A hex color fails with the reason Android and iOS give.
+      JSAny? previous;
+      String? reason;
+      try {
+        previous = map.callMethod<JSAny?>(
+          (layout ? 'getLayoutProperty' : 'getPaintProperty').toJS,
+          layerId.toJS,
+          name.toJS,
+        );
+      } catch (e) {
+        // maplibre-gl-js throws on a property it does not know, which a newer
+        // style spec can list. Leaving such a property unset changes nothing.
+        if (value == null) continue;
+        reason = e.toString();
+      }
+      reason ??= checks.layerPropertyError(name, value);
+      // A hex color, or a visibility on feature data, fails as on Android
+      // and iOS.
       if (reason == null) {
         try {
           final errors = _mapErrorsDuring(
@@ -2626,7 +2736,17 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setGlobalStateProperty(String name, Object? value) async {
+    // maplibre-gl-js throws a plain error before the style has loaded, and
+    // takes a NaN that Android and iOS cannot send.
+    _ensureStyleReady();
+    if (!checks.isJsonValue(value)) throw checks.globalStateNotJson(name);
     _map.setGlobalStateProperty(name, value);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    _ensureStyleReady();
+    return dartifyMap(_map.getGlobalState());
   }
 
   Future<void> _addLayer(
@@ -2662,7 +2782,7 @@ class MapLibreMapController extends MapLibrePlatform
       belowLayerId: belowLayerId,
       source: <String, dynamic>{
         'source': sourceId,
-        if (sourceLayer != null) 'source-layer': sourceLayer,
+        'source-layer': ?sourceLayer,
       },
       minzoom: minzoom,
       maxzoom: maxzoom,
@@ -2674,7 +2794,10 @@ class MapLibreMapController extends MapLibrePlatform
       _map.on('mouseenter', layerId, _handleLayerMouseMove);
       _map.on('mousemove', layerId, _handleLayerMouseMove);
       _map.on('mouseleave', layerId, _handleLayerMouseMove);
-      if (_dragEnabled) _map.on('mousedown', layerId, _onMouseDown);
+      if (_dragEnabled) {
+        _map.on('mousedown', layerId, _onMouseDown);
+        _map.on('touchstart', layerId, _onTouchStart);
+      }
     }
   }
 
@@ -2700,9 +2823,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (!checks.isZoomInRange(minzoom, maxzoom)) {
       throw checks.zoomOutOfRange(layerId);
     }
-    final colorErrors = <String, String>{
+    final checkedErrors = <String, String>{
       for (final MapEntry(:key, :value) in properties.entries)
-        if (checks.hexColorError(key, value) case final reason?) key: reason,
+        key: ?checks.layerPropertyError(key, value),
     };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
@@ -2721,9 +2844,9 @@ class MapLibreMapController extends MapLibrePlatform
           for (final entry in kept.entries)
             if (!isLayoutProperty(entry.key)) entry.key: entry.value,
         },
-        if (minzoom != null) 'minzoom': minzoom,
-        if (maxzoom != null) 'maxzoom': maxzoom,
-        if (filter != null) 'filter': filter,
+        'minzoom': ?minzoom,
+        'maxzoom': ?maxzoom,
+        'filter': ?filter,
       };
       final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
       String? filterReason;
@@ -2750,7 +2873,7 @@ class MapLibreMapController extends MapLibrePlatform
       if (filterReason != null) throw _invalidFilter(filterReason);
       var rejected = propertyError;
       for (final MapEntry(key: property, value: reason)
-          in colorErrors.entries) {
+          in checkedErrors.entries) {
         if (rejected == null || property.compareTo(rejected.property) <= 0) {
           rejected = (property: property, reason: reason);
         }
@@ -2789,7 +2912,10 @@ class MapLibreMapController extends MapLibrePlatform
     _map.off('mouseenter', layerId, _handleLayerMouseMove);
     _map.off('mousemove', layerId, _handleLayerMouseMove);
     _map.off('mouseleave', layerId, _handleLayerMouseMove);
-    if (_dragEnabled) _map.off('mousedown', layerId, _onMouseDown);
+    if (_dragEnabled) {
+      _map.off('mousedown', layerId, _onMouseDown);
+      _map.off('touchstart', layerId, _onTouchStart);
+    }
   }
 
   /// Forgets the features of [layerId] under the pointer. A removed layer
@@ -2819,11 +2945,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _handleLayerMouseMove(Event e, String layerId) {
     // As text, the id the tap and drag callbacks get.
-    final currentHoveredFeatures =
-        e.features
-            .map((f) => plainFeatureId(f.id)?.toString())
-            .whereType<String>()
-            .toList();
+    final currentHoveredFeatures = e.features
+        .map((f) => plainFeatureId(f.id)?.toString())
+        .whereType<String>()
+        .toList();
     final lastHoveredFeatures = _hoveredFeatureIdsByLayer[layerId] ?? [];
     final features = <String>{
       ...currentHoveredFeatures,
@@ -3361,8 +3486,9 @@ class MapLibreMapController extends MapLibrePlatform
         details: 'Layer with id $layerId not found.',
       );
     }
-    final type =
-        (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+    final type = (layer as JSObject)
+        .getProperty<JSString?>('type'.toJS)
+        ?.toDart;
     if (!_filterableLayerTypes.contains(type)) {
       throw PlatformException(
         code: 'INVALID_LAYER_TYPE',
@@ -3448,7 +3574,10 @@ class MapLibreMapController extends MapLibrePlatform
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
     if (property is String) return property != 'none';
-    return true;
+    // An expression: what it evaluates to now, as on Android and iOS. At its
+    // own minzoom, isHidden only tells whether that value is `none`.
+    final layer = _map.getLayer(layerId) as JSObject;
+    return !layer.callMethod<JSBoolean>('isHidden'.toJS).toDart;
   }
 
   @override

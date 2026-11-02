@@ -1,6 +1,6 @@
 name: Build example app
 
-# Reusable build job shared by Flutter CI (stable) and Flutter Beta CI.
+# Reusable build job shared by Flutter CI and Scheduled CI.
 # Builds the example app for a single platform so callers can fan out across
 # android / ios / web without duplicating the setup boilerplate.
 
@@ -10,6 +10,11 @@ on:
       platform:
         description: 'Target platform: android | ios | web'
         required: true
+        type: string
+      ref:
+        description: 'Branch to check out (empty: the commit that triggered the run)'
+        required: false
+        default: ''
         type: string
       flutter-channel:
         description: 'Flutter channel (stable, beta, ...)'
@@ -21,6 +26,11 @@ on:
         required: false
         default: false
         type: boolean
+      upload-artifacts:
+        description: 'Upload the built APK and Runner.app (one build per platform per run, or the names clash)'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build:
@@ -31,6 +41,8 @@ jobs:
         working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
 
       # Android toolchain
       - if: inputs.platform == 'android'
@@ -56,7 +68,7 @@ jobs:
       - if: inputs.platform == 'android'
         name: Build example APK
         run: flutter build apk
-      - if: inputs.platform == 'android'
+      - if: inputs.platform == 'android' && inputs.upload-artifacts
         name: Upload APK artifact
         uses: actions/upload-artifact@v7
         with:
@@ -76,7 +88,7 @@ jobs:
       - if: inputs.platform == 'ios'
         name: Build iOS package
         run: flutter build ios --simulator
-      - if: inputs.platform == 'ios'
+      - if: inputs.platform == 'ios' && inputs.upload-artifacts
         name: Upload Runner.app artifact
         uses: actions/upload-artifact@v7
         with:

@@ -157,14 +157,14 @@ void main() {
       }
 
       final calls = <String, Future<Object?> Function()>{
-        'pauseOfflineRegionDownload':
-            () => pauseOfflineRegionDownload(unknownId),
-        'resumeOfflineRegionDownload':
-            () => resumeOfflineRegionDownload(unknownId),
+        'pauseOfflineRegionDownload': () =>
+            pauseOfflineRegionDownload(unknownId),
+        'resumeOfflineRegionDownload': () =>
+            resumeOfflineRegionDownload(unknownId),
         'getOfflineRegionStatus': () => getOfflineRegionStatus(unknownId),
         'deleteOfflineRegion': () => deleteOfflineRegion(unknownId),
-        'updateOfflineRegionMetadata':
-            () => updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
+        'updateOfflineRegionMetadata': () =>
+            updateOfflineRegionMetadata(unknownId, {'name': 'nobody'}),
       };
       for (final MapEntry(key: method, value: call) in calls.entries) {
         final error = await expectPlatformError(
@@ -215,16 +215,15 @@ void main() {
       // iOS crashed on it. The public functions encode the metadata first.
       if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
 
-      final definition =
-          OfflineRegionDefinition(
-            bounds: LatLngBounds(
-              southwest: const LatLng(-1, -1),
-              northeast: const LatLng(1, 1),
-            ),
-            mapStyleUrl: 'https://example.invalid/style.json',
-            minZoom: 0,
-            maxZoom: 1,
-          ).toMap();
+      final definition = OfflineRegionDefinition(
+        bounds: LatLngBounds(
+          southwest: const LatLng(-1, -1),
+          northeast: const LatLng(1, 1),
+        ),
+        mapStyleUrl: 'https://example.invalid/style.json',
+        minZoom: 0,
+        maxZoom: 1,
+      ).toMap();
       final error = await expectPlatformError(
         tester,
         MapLibreGlobalHostApi().downloadOfflineRegion(-1, definition, {

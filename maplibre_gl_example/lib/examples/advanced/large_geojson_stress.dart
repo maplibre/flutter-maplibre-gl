@@ -143,53 +143,52 @@ class _LargeGeojsonStressBodyState extends State<_LargeGeojsonStressBody>
           zoom: 10,
         ),
       ),
-      controls:
-          _controller == null
-              ? const []
-              : [
-                ControlGroup(
-                  title: 'Smoothness indicator',
-                  children: [
-                    ListTile(
-                      leading: RotationTransition(
-                        turns: _spinner,
-                        child: const Icon(Icons.sync, size: 32),
-                      ),
-                      title: const Text('This should never stutter'),
-                      subtitle: Text(
-                        _busy
-                            ? 'Loading…'
-                            : _lastPointCount == null
-                            ? 'Idle'
-                            : 'Last: $_lastPointCount points'
+      controls: _controller == null
+          ? const []
+          : [
+              ControlGroup(
+                title: 'Smoothness indicator',
+                children: [
+                  ListTile(
+                    leading: RotationTransition(
+                      turns: _spinner,
+                      child: const Icon(Icons.sync, size: 32),
+                    ),
+                    title: const Text('This should never stutter'),
+                    subtitle: Text(
+                      _busy
+                          ? 'Loading…'
+                          : _lastPointCount == null
+                          ? 'Idle'
+                          : 'Last: $_lastPointCount points'
                                 '${_lastDuration != null ? ' in '
-                                        '${_lastDuration!.inMilliseconds} ms' : ''}',
-                      ),
+                                          '${_lastDuration!.inMilliseconds} ms' : ''}',
                     ),
-                  ],
-                ),
-                ControlGroup(
-                  title: 'Load a LineString',
-                  children: [
-                    ExampleButton(
-                      label: '1k points',
-                      onPressed: _busy ? null : () => _loadLine(1000),
-                    ),
-                    ExampleButton(
-                      label: '10k points',
-                      onPressed: _busy ? null : () => _loadLine(10000),
-                    ),
-                    ExampleButton(
-                      label: '40k points',
-                      onPressed: _busy ? null : () => _loadLine(40000),
-                    ),
-                    ExampleButton(
-                      label: '100k points',
-                      onPressed: _busy ? null : () => _loadLine(100000),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
+              ControlGroup(
+                title: 'Load a LineString',
+                children: [
+                  ExampleButton(
+                    label: '1k points',
+                    onPressed: _busy ? null : () => _loadLine(1000),
+                  ),
+                  ExampleButton(
+                    label: '10k points',
+                    onPressed: _busy ? null : () => _loadLine(10000),
+                  ),
+                  ExampleButton(
+                    label: '40k points',
+                    onPressed: _busy ? null : () => _loadLine(40000),
+                  ),
+                  ExampleButton(
+                    label: '100k points',
+                    onPressed: _busy ? null : () => _loadLine(100000),
+                  ),
+                ],
+              ),
+            ],
     );
   }
 }

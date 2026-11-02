@@ -659,6 +659,21 @@ final class MapHostApi: MapLibreMapHostApi {
         run(voidResult(completion)) { $0.styleSetLight(light: plainMap(light), result: $1) }
     }
 
+    func styleSetGlobalStateProperty(
+        name: String,
+        value: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.styleSetGlobalStateProperty(name: name, value: value, result: $1)
+        }
+    }
+
+    // Answered with the global state as the JSON text of an object.
+    func styleGetGlobalState(completion: @escaping (Result<String, Error>) -> Void) {
+        run(nonNullResult(completion) { $0 as? String }) { $0.styleGetGlobalState(result: $1) }
+    }
+
     func styleGetLayerIds(completion: @escaping (Result<[String], Error>) -> Void) {
         run(nonNullResult(completion) { $0 as? [String] }) { $0.styleGetLayerIds(result: $1) }
     }

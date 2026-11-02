@@ -220,10 +220,9 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color:
-                                Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],
