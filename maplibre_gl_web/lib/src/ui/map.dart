@@ -1056,6 +1056,10 @@ class MapLibreMap extends Camera {
         jsObject.setGlobalStateProperty(name, utils.jsify(value)),
       );
 
+  ///  Returns the style's global state, read by the `global-state`
+  ///  expression.
+  dynamic getGlobalState() => jsObject.getGlobalState();
+
   ///  Returns the value of the light object.
   ///
   ///  @returns {Object} light Light properties of the style.

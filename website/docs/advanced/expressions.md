@@ -205,7 +205,7 @@ await controller.addCircleLayer(
 );
 ```
 
-## Global state (web only)
+## Global state
 
 `Expressions.globalState` reads a value shared by the whole style instead of a
 feature property, so one switch can restyle any number of layers at once.
@@ -229,8 +229,26 @@ await controller.addFillLayer(
 await controller.setGlobalStateProperty("theme", "dark");
 ```
 
-On Android and iOS `setGlobalStateProperty` throws an `UnsupportedError`;
-MapLibre Native does not implement global state yet.
+A layer's `visibility` can read the global state too, to show or hide groups
+of layers from one switch. It can read nothing else, such as feature data:
+
+```dart
+await controller.setLayerProperties(
+  "trails",
+  const LineLayerProperties(
+    visibility: [
+      Expressions.caseExpression,
+      [Expressions.boolean, [Expressions.globalState, "hiking"], false],
+      "visible",
+      "none",
+    ],
+  ),
+);
+```
+
+`null` resets a property to the default of the style's `state`, and
+`getGlobalState()` reads every property back. Setting a style starts again
+from its defaults.
 
 ## Key `Expressions` constants
 

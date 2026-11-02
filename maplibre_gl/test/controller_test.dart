@@ -406,6 +406,11 @@ void main() {
       expect(calls.first.positionalArgs, ['theme', 'dark']);
     });
 
+    test('getGlobalState delegates to platform', () async {
+      expect(await controller.getGlobalState(), isEmpty);
+      expect(platform.callsFor('getGlobalState'), hasLength(1));
+    });
+
     test('addLayer with CircleLayerProperties', () async {
       await controller.addLayer(
         'src-1',

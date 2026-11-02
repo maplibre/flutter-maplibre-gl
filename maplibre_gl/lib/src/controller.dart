@@ -2707,16 +2707,30 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Sets property [name] of the style's global state, which the
   /// [Expressions.globalState] expression reads, so any number of layers can
-  /// be restyled from a single switch.
+  /// be restyled, or shown and hidden through their `visibility`, from a
+  /// single switch.
   ///
-  /// **Platform support**: web only. Android and iOS throw an
-  /// [UnsupportedError], since MapLibre Native does not implement global
-  /// state yet.
+  /// [value] is anything JSON can carry. `null` resets the property to the
+  /// default of the style's `state`. Setting a style starts again from its
+  /// defaults.
+  ///
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
+  /// style has loaded, and `INVALID_ARGUMENT` for a value JSON cannot carry,
+  /// such as `NaN`.
   ///
   /// The returned [Future] completes after the change has been made on the
   /// platform side.
   Future<void> setGlobalStateProperty(String name, Object? value) async {
     await _maplibrePlatform.setGlobalStateProperty(name, value);
+  }
+
+  /// The style's global state: the defaults of the style's `state` with the
+  /// values set through [setGlobalStateProperty].
+  ///
+  /// Throws a [PlatformException] with code `STYLE_NOT_READY` before the
+  /// style has loaded.
+  Future<Map<String, dynamic>> getGlobalState() async {
+    return _maplibrePlatform.getGlobalState();
   }
 
   /// Shows or hides the layer with [layerId].

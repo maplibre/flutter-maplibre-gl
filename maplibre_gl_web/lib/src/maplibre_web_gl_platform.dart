@@ -2489,8 +2489,9 @@ class MapLibreMapController extends MapLibrePlatform
         layerId.toJS,
         name.toJS,
       );
-      var reason = checks.hexColorError(name, value);
-      // A hex color fails with the reason Android and iOS give.
+      var reason = checks.layerPropertyError(name, value);
+      // A hex color, or a visibility on feature data, fails as on Android
+      // and iOS.
       if (reason == null) {
         try {
           final errors = _mapErrorsDuring(
@@ -2726,7 +2727,17 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setGlobalStateProperty(String name, Object? value) async {
+    // maplibre-gl-js throws a plain error before the style has loaded, and
+    // takes a NaN that Android and iOS cannot send.
+    _ensureStyleReady();
+    if (!checks.isJsonValue(value)) throw checks.globalStateNotJson(name);
     _map.setGlobalStateProperty(name, value);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    _ensureStyleReady();
+    return dartifyMap(_map.getGlobalState());
   }
 
   Future<void> _addLayer(
@@ -2803,9 +2814,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (!checks.isZoomInRange(minzoom, maxzoom)) {
       throw checks.zoomOutOfRange(layerId);
     }
-    final colorErrors = <String, String>{
+    final checkedErrors = <String, String>{
       for (final MapEntry(:key, :value) in properties.entries)
-        key: ?checks.hexColorError(key, value),
+        key: ?checks.layerPropertyError(key, value),
     };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
@@ -2853,7 +2864,7 @@ class MapLibreMapController extends MapLibrePlatform
       if (filterReason != null) throw _invalidFilter(filterReason);
       var rejected = propertyError;
       for (final MapEntry(key: property, value: reason)
-          in colorErrors.entries) {
+          in checkedErrors.entries) {
         if (rejected == null || property.compareTo(rejected.property) <= 0) {
           rejected = (property: property, reason: reason);
         }
@@ -3554,7 +3565,10 @@ class MapLibreMapController extends MapLibrePlatform
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
     if (property is String) return property != 'none';
-    return true;
+    // An expression: what it evaluates to now, as on Android and iOS. At its
+    // own minzoom, isHidden only tells whether that value is `none`.
+    final layer = _map.getLayer(layerId) as JSObject;
+    return !layer.callMethod<JSBoolean>('isHidden'.toJS).toDart;
   }
 
   @override

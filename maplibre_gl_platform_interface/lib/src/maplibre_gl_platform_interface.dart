@@ -500,6 +500,9 @@ abstract class MapLibrePlatform {
   /// Sets one property of the style's global state.
   Future<void> setGlobalStateProperty(String name, Object? value);
 
+  /// The style's global state: each property with its current value.
+  Future<Map<String, dynamic>> getGlobalState();
+
   Future<void> setLayerVisibility(String layerId, bool visible);
 
   /// Shows or hides every layer in [layerIds] with one platform call, all in

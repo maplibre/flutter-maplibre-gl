@@ -265,6 +265,13 @@ PlatformException featureStateNotJson(String sourceId, String featureId) =>
       'carry.',
     );
 
+/// The error of a global state value that JSON cannot carry, the one Android
+/// and iOS give.
+PlatformException globalStateNotJson(String name) => invalidArgument(
+  "The value of global state property '$name' is not valid JSON: it holds a "
+  'non-finite number, or a value of a type JSON cannot carry.',
+);
+
 /// Whether [value] is made of what JSON can carry: null, booleans, finite
 /// numbers, strings, lists, and maps with string keys.
 bool isJsonValue(Object? value) {
@@ -289,6 +296,59 @@ String? hexColorError(String property, Object? value) {
       ? null
       : "Could not parse color from value '$value'.";
 }
+
+/// Why [value] of [property], a layer property, is not one Android and iOS
+/// take, or null: a hex color they read otherwise, or a `visibility` that
+/// reads more than the global state.
+String? layerPropertyError(String property, Object? value) =>
+    hexColorError(property, value) ?? visibilityError(property, value);
+
+/// Why [value] cannot be a layer `visibility`, or null. A visibility
+/// expression may only read the global state: MapLibre Native rejects one
+/// that reads feature data or the zoom, where maplibre-gl-js evaluates that
+/// input as missing and shows the layer.
+String? visibilityError(String property, Object? value) {
+  if (property != 'visibility' || value is! List) return null;
+  final input = _inputOtherThanGlobalState(value);
+  return input == null
+      ? null
+      : 'A "visibility" expression can only read the global state, '
+            'not "$input".';
+}
+
+/// The first operator of [expression] that reads feature data or the camera,
+/// or null. `get` and `has` with an object of their own read that object.
+String? _inputOtherThanGlobalState(List<Object?> expression) {
+  if (expression.firstOrNull case final String operator) {
+    if (operator == 'literal') return null;
+    final readsObject =
+        (operator == 'get' || operator == 'has') && expression.length > 2;
+    if (_dataInputs.contains(operator) && !readsObject) return operator;
+  }
+  for (final argument in expression) {
+    if (argument is List<Object?>) {
+      if (_inputOtherThanGlobalState(argument) case final input?) return input;
+    }
+  }
+  return null;
+}
+
+/// The expression operators that read feature data or the camera.
+const _dataInputs = {
+  'get',
+  'has',
+  'id',
+  'geometry-type',
+  'properties',
+  'feature-state',
+  'zoom',
+  'heatmap-density',
+  'line-progress',
+  'accumulated',
+  'elevation',
+  'distance',
+  'within',
+};
 
 /// A hex color as CSS writes it: #rgb, #rgba, #rrggbb or #rrggbbaa.
 final _hexColor = RegExp(

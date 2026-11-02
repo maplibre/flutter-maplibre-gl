@@ -365,6 +365,10 @@ public interface MapCalls {
 
   void styleSetLight(Map<String, Object> light, MethodChannel.Result result);
 
+  void styleSetGlobalStateProperty(String name, String value, MethodChannel.Result result);
+
+  void styleGetGlobalState(MethodChannel.Result result);
+
   void styleSetStyle(String style, MethodChannel.Result result);
 
   void mapGetStyle(MethodChannel.Result result);

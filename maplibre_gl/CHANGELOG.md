@@ -63,6 +63,7 @@
 * **Web**: `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS, with the same errors (#1119).
 * `addImage` takes an optional `pixelRatio`, the number of image pixels per logical pixel. By default web draws one image pixel per logical pixel and Android and iOS one per device pixel; pass `MediaQuery.devicePixelRatioOf(context)` for the same size on every platform (#1129).
 * `MapLibreMap.onCameraMoveStarted` tells whether a gesture of the user or something else, such as a camera call, moved the camera, and the controller's `cameraMoveReason` keeps it until the camera stops (#1159).
+* **Android, iOS**: `setGlobalStateProperty` works as on web, instead of throwing an `UnsupportedError`, and a layer `visibility` can be an expression on the global state, which Android and iOS dropped. MapLibre Android 13.7 and iOS 7 implement both. `getGlobalState()` reads the global state back on every platform (#1179).
 
 ### Changed
 * `setLayerFilter` and `getLayerFilter` are the methods for layer filters, like `setLayerProperties`. `setFilter` and `getFilter` are deprecated aliases (#1055).

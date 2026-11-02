@@ -3026,6 +3026,14 @@ interface MapLibreMapHostApi {
    * in Dart: native checks that each one is a constant of the right type.
    */
   fun styleSetLight(light: Map<String, Any?>, callback: (Result<Unit>) -> Unit)
+  /**
+   * Sets the property [name] of the style's global state to [value], JSON
+   * text, so nested values and number types arrive intact. JSON `null`
+   * resets the property to the default of the style's `state`.
+   */
+  fun styleSetGlobalStateProperty(name: String, value: String, callback: (Result<Unit>) -> Unit)
+  /** Answers with the style's global state as the JSON text of an object. */
+  fun styleGetGlobalState(callback: (Result<String>) -> Unit)
   /** Shows or hides the layer [layerId]. */
   fun layerSetVisibility(layerId: String, visible: Boolean, callback: (Result<Unit>) -> Unit)
   /**
@@ -4490,6 +4498,44 @@ interface MapLibreMapHostApi {
                 reply.reply(MessagesPigeonUtils.wrapError(error))
               } else {
                 reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetGlobalStateProperty$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val nameArg = args[0] as String
+            val valueArg = args[1] as String
+            api.styleSetGlobalStateProperty(nameArg, valueArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetGlobalState$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.styleGetGlobalState{ result: Result<String> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(MessagesPigeonUtils.wrapResult(data))
               }
             }
           }

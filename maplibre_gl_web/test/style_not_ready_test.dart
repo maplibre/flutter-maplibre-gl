@@ -88,6 +88,8 @@ void main() {
     'removeSource': (c) => c.removeSource('source'),
     'getLayerProperties': (c) => c.getLayerProperties('layer'),
     'getSourceProperties': (c) => c.getSourceProperties('source'),
+    'setGlobalStateProperty': (c) => c.setGlobalStateProperty('theme', 'dark'),
+    'getGlobalState': (c) => c.getGlobalState(),
   };
 
   for (final call in calls.entries) {
