@@ -36,54 +36,61 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
 * **Web**: `symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
 
 ### Changed
+
+#### Native engines and platform
+* **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)): fewer crashes on dispose, and `line-pattern` images drawn about 1.7x smaller, as on web (#1080).
+* **Android**: `useHybridComposition` and `translucentTextureSurface` are deprecated in favor of `androidView`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-platform-view-mode) (#1161, #1163).
+* **Android**: Play Services Base upgraded from 18.10.1 to 18.11.1 (#1181).
+* **Android, iOS**: the plugin talks to native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of method channels. `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` (#1114, #1115, #1117, #1119).
+* **iOS**: MapLibre Native upgraded from 6.28.0 to [7.0.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v7.0.0): symbols repaint with feature state, `split` and `join` work, and `line-pattern` images are drawn about 1.7x smaller (#1082, #1170).
+* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web (#1142).
+* **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.16.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)), with fewer main thread stalls. Without WebGL2 the map fails to create instead of staying blank (#1081, #1171).
+
+#### Camera
 * Awaited camera animations complete when the camera arrives, on every platform (#1069, #1089, #1106, #1107, #1108):
   * **Android, iOS**: if the map is disposed first, they complete with `false` instead of never: check `mounted` before using the controller.
   * **iOS**: `animateCamera` and `easeCamera` complete with `true`, or `false` when interrupted, and `moveCamera` with `true`, instead of `null`.
   * **Web**: they completed when the camera started, and `animateCamera` completes with `false` when interrupted.
-* An `iconImage` naming an asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform. iOS drew it up to 3 times smaller (#1131).
-* Calls a platform cannot run throw an error that says why, instead of a `MissingPluginException` (#937, #1111, #1114, #1115, #1143):
-  * **Android, iOS**: a call on a disposed map throws `MAP_DISPOSED`.
-  * **iOS, Web**: `setOffline` throws an `UnsupportedError`: it never had an effect there.
-  * **Web**: the offline calls, `setHttpHeaders`, `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError`.
-* The cluster calls throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list (#1065).
-* `setFilter` and `getFilter` are deprecated: use `setLayerFilter` and `getLayerFilter` (#1055).
+* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them (#793).
+* **Web**: `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS (#1126).
+
+#### Gestures and annotations
 * **Android, iOS, Web**: feature drags and taps work the same on every platform (#1044, #1051, #1077, #1079, #1149):
   * A drag starts only after the finger moves a little, so a tap stays a tap. On Android it no longer fires `onMapLongClick`.
   * A second finger ends the drag and lets the map pinch.
   * **Android, iOS**: taps and drags pick the nearest feature within 8 logical pixels of the finger.
   * **Web**: draggable features can be dragged with a finger on touch screens.
-* **Android, iOS, Web**: `updateManualLocation` works on any map created with `ManualLocationSource()`, also while `myLocationEnabled` is off (#1142, #1143).
-* **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)): fewer crashes on dispose, and `line-pattern` images drawn about 1.7x smaller, as on web (#1080).
-* **Android**: `useHybridComposition` and `translucentTextureSurface` are deprecated in favor of `androidView`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-platform-view-mode) (#1161, #1163).
-* **Android**: the `setCustomHeaders` filter matches anywhere in the URL, as on iOS: anchor it with `^` and `$` to match the whole URL (#1143).
-* **Android**: without Google Play Services, high accuracy uses Android's fused provider on Android 12 and later instead of GPS only (#1102).
-* **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as on iOS (#1119).
-* **Android**: Play Services Base upgraded from 18.10.1 to 18.11.1 (#1181).
-* **Android, iOS**: the plugin talks to native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of method channels. `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` (#1114, #1115, #1117, #1119).
 * **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color; set `fillOutlineColor` to keep the old look (#1074).
-* **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web plays video (#1119).
-* **Android, iOS**: offline region metadata is stored as `jsonEncode` writes it, so a `Uint8List` becomes a list of numbers (#1119).
-* **iOS**: MapLibre Native upgraded from 6.28.0 to [7.0.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v7.0.0): symbols repaint with feature state, `split` and `join` work, and `line-pattern` images are drawn about 1.7x smaller (#1082, #1170).
+
+#### Layers and sources
+* An `iconImage` naming an asset with `2.0x` or `3.0x` variants is sized like `Image.asset` on every platform. iOS drew it up to 3 times smaller (#1131).
+* `setFilter` and `getFilter` are deprecated: use `setLayerFilter` and `getLayerFilter` (#1055).
 * **iOS**: a hex color with alpha reads the alpha last, as in CSS: an app that wrote `#aarrggbb` for iOS should move the alpha to the end (#1123).
 * **iOS**: `addBackgroundLayer` with a `belowLayerId` the style does not have puts the layer on top, as on Android and web (#1123).
-* **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web (#1142).
-* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them (#793).
-* **Web**: maplibre-gl-js upgraded from 6.4.1 to 6.16.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)), with fewer main thread stalls. Without WebGL2 the map fails to create instead of staying blank (#1081, #1171).
-* **Web**: `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS (#1126).
 * **Web**: `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS (#1123).
+
+#### Errors
+* Calls a platform cannot run throw an error that says why, instead of a `MissingPluginException` (#937, #1111, #1114, #1115, #1143):
+  * **Android, iOS**: a call on a disposed map throws `MAP_DISPOSED`.
+  * **iOS, Web**: `setOffline` throws an `UnsupportedError`: it never had an effect there.
+  * **Web**: the offline calls, `setHttpHeaders`, `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError`.
+* The cluster calls throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list (#1065).
+* **Android, iOS**: `addSource` with a video source throws `UNSUPPORTED_SOURCE_TYPE`: only web plays video (#1119).
 * **Web**: a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer (#1123).
 
+#### Location
+* **Android, iOS, Web**: `updateManualLocation` works on any map created with `ManualLocationSource()`, also while `myLocationEnabled` is off (#1142, #1143).
+* **Android**: without Google Play Services, high accuracy uses Android's fused provider on Android 12 and later instead of GPS only (#1102).
+
+#### Offline and network
+* **Android**: the `setCustomHeaders` filter matches anywhere in the URL, as on iOS: anchor it with `^` and `$` to match the whole URL (#1143).
+* **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as on iOS (#1119).
+* **Android, iOS**: offline region metadata is stored as `jsonEncode` writes it, so a `Uint8List` becomes a list of numbers (#1119).
+
 ### Fixed
-* Updating or dragging one annotation sends only that feature: about 5x faster with 1,000 circles on Android (#1113).
-* Disposing the map while its style loads no longer throws an unhandled `MissingPluginException` (#1103, #1110).
-* Removing a `MapLibreMap` before its platform view is created no longer throws `LateInitializationError` (#1088).
-* The annotation setup no longer throws when the style is not ready or is replaced while it runs (#1088).
-* Feature ids come back as they are in the data on every platform, and `["id"]` filters and feature state find them. Web turned `"2"` into `2` and lost string ids (#1124).
-* Layer filters behave the same on every platform (#1055):
-  * `setLayerFilter` works on every filterable layer, web included, and `null` removes the filter.
-  * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
-  * A missing layer throws `LAYER_NOT_FOUND_ERROR` and an invalid filter `INVALID_EXPRESSION`. iOS crashed.
-  * **Android**: large numbers in a filter, such as feature ids, are no longer rounded.
+
+#### Camera
+* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
 * Camera updates and projections give the same result on every platform (#1090):
   * **Android**: `newLatLngBounds` padding applies to that move only, and no longer replaces the content insets.
   * **Android, iOS**: camera and projection calls throw `INVALID_ARGUMENT` for arguments they cannot read, instead of hanging or failing.
@@ -92,92 +99,95 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
 * `onCameraMove` and moves without animation work the same on every platform (#1126):
   * **Android**: `animateCamera` with a zero duration moves the camera at once instead of failing.
   * **iOS**: `onCameraMove` fires for moves without animation, and its last call has the position where the camera stopped.
-* When two style loads overlap, `onStyleLoadedCallback` fires once, for the newer style (#1088).
-* `CameraUpdate.zoomBy` with a `focus` keeps that point fixed on screen instead of recentering on it (#1069).
-* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
-* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `addHeatmapLayer` takes a `filter` (#1088).
-* Android, iOS and web give the same answer in more cases (#1119):
-  * A query filter or property expression MapLibre rejects throws `INVALID_EXPRESSION`. Android and iOS crashed.
-  * `setLayerProperties` applies all the values or none.
-  * A layer added below a layer the style does not have goes on top.
-  * `setGeoJsonFeature` works after `editGeoJsonSource` and on a source that holds a single Feature.
-  * **Android**: query filters and camera values keep their exact numbers.
-  * **iOS**: style and image source calls made too early, or with bytes that are not an image, answer instead of hanging.
-  * **Web**: `editGeoJsonSource` and `editGeoJsonUrl` work, and `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids.
-* Sources, GeoJSON and coordinates are read the same way on every platform (#1123):
-  * NaN or infinite coordinates and camera values throw `INVALID_ARGUMENT`. iOS crashed.
-  * GeoJSON holding objects with `toJson()` goes in again on every platform.
+* NaN or infinite coordinates and camera values throw `INVALID_ARGUMENT` on every platform. iOS crashed (#1123).
+* A negative duration in `animateCamera` or `easeCamera` throws an `ArgumentError` on every platform (#1184).
+* **Android**: `setCameraBounds` completes instead of never returning, and its `padding` is in logical pixels and adds to the content insets instead of replacing them (#1067, #1186).
+* **Android**: `CameraUpdate.scrollBy` animates and completes with `true`, and a positive `x` moves the view east as on iOS and web: remove any sign flip (#1069).
+* **iOS**: `initialCameraPosition` no longer opens at zoom 0, and `newLatLngZoom` and `newLatLng` keep the requested zoom (#1072).
+* **iOS**: camera animations ease as on Android and web, without speeding up into an abrupt stop (#1183).
+* **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
+* **iOS**: `CameraPosition.zoom` no longer drifts by floating point noise while the map pans (#1155).
+* **iOS**: camera calls and options set before the map has a size wait for the first layout (#1123).
+* **iOS**: `updateContentInsets` and `setTrackingCameraOptions` complete when the map goes away before the camera arrives (#1142).
+* **iOS**: `toScreenLocationBatch` with no points no longer crashes the app (#1140).
+* **iOS, Web**: a camera call during a fling or an animation fires `onCameraIdle` once, when the camera settles, as on Android (#1156, #1158).
+
+#### Layers and sources
+* Layer filters behave the same on every platform (#1055):
+  * `setLayerFilter` works on every filterable layer, web included, and `null` removes the filter.
+  * `getLayerFilter` returns `null` for a layer without a filter instead of failing.
+  * A missing layer throws `LAYER_NOT_FOUND_ERROR` and an invalid filter `INVALID_EXPRESSION`. iOS crashed.
+* `setLayerProperties` applies all the values or none, a layer added below a missing layer goes on top, and a query filter or property expression MapLibre rejects throws `INVALID_EXPRESSION` (#1119).
+* Sources and GeoJSON are read the same way on every platform (#1123):
+  * GeoJSON holding objects with `toJson()` goes in again.
   * Writes to a GeoJSON source keep their order, so a layer added without `await` after `addGeoJsonSource` no longer fails.
-  * A source url with a space, such as an iOS path under `Library/Application Support`, loads on every platform.
+  * A source url with a space, such as an iOS path under `Library/Application Support`, loads.
   * Tile source `bounds` that cross the antimeridian load the tiles on both sides. Android crashed.
   * `removeSource` keeps a source that a layer still uses.
-  * `takeSnapshot` answers `SNAPSHOT_ERROR` or `MAP_DISPOSED` when it is cancelled or the map goes away, instead of hanging.
-  * **Android**: pausing an offline region right after resuming it keeps it paused.
   * **Android, iOS**: GeoJSON with a NaN or infinite number throws `INVALID_GEOJSON` instead of a `JsonUnsupportedObjectError`.
-  * **iOS**: camera calls and options set before the map has a size wait for the first layout.
   * **Web**: `editGeoJsonUrl` works in JavaScript builds, not only in wasm.
-* Invalid filters and camera durations fail the same way on every platform (#1184):
-  * A filter with a NaN or infinite number throws `INVALID_EXPRESSION`.
-  * A negative duration in `animateCamera` or `easeCamera` throws an `ArgumentError`.
-* **Android**: with `myLocationEnabled`, the GPS turns off when the app goes to the background, as on iOS, and `pauseMap()` stops location updates (#1105).
-* **Android**: `setCameraBounds` completes instead of never returning, and its `padding` is in logical pixels (#1067).
-* **Android**: `CameraUpdate.scrollBy` animates and completes with `true`, and a positive `x` moves the view east as on iOS and web: remove any sign flip (#1069).
-* **Android**: `takeSnapshot` shows the area the map shows, at the screen's pixel density, as on iOS and web (#1128).
-* **Android**: with `doubleClickZoomEnabled: false`, a tap is reported at once instead of about 300 ms later, and two quick taps are two taps (#1162).
+* A filter with a NaN or infinite number throws `INVALID_EXPRESSION` on every platform (#1184).
+* `getLayerVisibility` works on Android and iOS instead of throwing `MissingPluginException`, and answers `null` for a missing layer on web (#1068).
+* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top (#1071).
+* `addLayer` applies `filter` to fill extrusion and heatmap layers, and `addHeatmapLayer` takes a `filter` (#1088).
+* `addSource` throws `INVALID_ARGUMENT` for a `tileSize` outside 1 to 65535 on every platform. iOS crashed (#1187).
+* **Android**: large numbers in filters, layer properties and `clusterProperties`, such as feature ids, are no longer rounded (#1055, #1119, #1186).
 * **Android**: `getLayerProperties` and `getSourceProperties` find layers and sources added at runtime (#1070).
-* **Android**: HTTP headers and offline calls are sturdier (#1143):
+* **Android, iOS**: `addHeatmapLayer` applies `sourceLayer` instead of ignoring it (#1088).
+* **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` (#1070).
+* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
+* **iOS**: `getLayerProperties` and `getSourceProperties` read layers and sources added at runtime, with their current values (#985, #1127).
+* **iOS**: `getStyle` returns the style JSON instead of `null` (#1070).
+* **iOS**: style and image source calls made too early, or with bytes that are not an image, answer instead of hanging (#1119).
+* **Web**: `editGeoJsonSource` and `editGeoJsonUrl` work, `setGeoJsonSource` keeps GeometryCollections, null geometries and feature ids, and `setGeoJsonFeature` works after an edit (#1119).
+
+#### Gestures and annotations
+* Updating or dragging one annotation sends only that feature: about 5x faster with 1,000 circles on Android (#1113).
+* **Android**: with `doubleClickZoomEnabled: false`, a tap is reported at once instead of about 300 ms later, and two quick taps are two taps (#1162).
+* **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
+* **iOS**: a feature drag ends when the system interrupts it, picks the feature under the finger, and leaves scroll gestures as the app set them (#1054).
+* **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
+* **Web**: removing an interactive layer removes its listeners, so a layer added again fires each callback once, and a hovered one reports `leave` (#1089).
+
+#### Features and queries
+* Feature ids come back as they are in the data on every platform, and `["id"]` filters and feature state find them. Web turned `"2"` into `2` and lost string ids (#1124).
+* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
+* **Web**: the feature queries return features while tiles or a source update are loading (#1076).
+* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+* **Web**: `waitUntilMapIsIdleAfterMovement` completes at once when the map is idle or disposed, and feature state calls ignore `sourceLayer` on a GeoJSON source (#1185).
+
+#### Offline and network
+* **Android**: HTTP headers and offline calls no longer crash the app or undo each other (#1143):
   * `setHttpHeaders`, `setCustomHeaders` and `setOfflineMaxConcurrentRequests` no longer undo each other.
   * Changing the headers while tiles load, or a `setCustomHeaders` filter that is not a valid pattern, no longer crashes the app.
   * Offline region metadata that is not a JSON object reads as an empty map instead of crashing the offline calls.
   * `setOfflineMaxConcurrentRequests` and `setMaximumFps` reject a value too large for a 32-bit int with `INVALID_ARGUMENT`.
-* **Android**: these now behave as on iOS and web (#1186):
-  * `setCameraBounds` adds its `padding` to the content insets instead of replacing them.
-  * Whole numbers in offline region metadata read back as `int` instead of `double`.
-  * Large numbers in layer properties and `clusterProperties` are no longer rounded.
-  * `logoViewMargins` move the logo away from the corner of its `logoViewPosition`, like the compass margins.
+* **Android**: whole numbers in offline region metadata read back as `int` instead of `double`, as on iOS (#1186).
+* **Android**: pausing an offline region right after resuming it keeps it paused (#1123).
 * **Android, iOS**: two offline downloads started together both run and each reports its own progress (#1114).
-* **Android, iOS**: tapping or dragging inside a polygon hole no longer selects the polygon (#1093).
-* **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
-* **Android, iOS**: `getLayerVisibility` works instead of throwing `MissingPluginException` (#1068).
-* **Android, iOS**: `addHeatmapLayer` applies `sourceLayer` instead of ignoring it (#1088).
-* **Android, iOS**: `setLight` rejects a value it cannot apply with `INVALID_ARGUMENT` (#1070).
-* **Android, Web**: GeoJSON source data can be a FeatureCollection, a Feature or a bare geometry, as on iOS (#1073).
-* **iOS**: `initialCameraPosition` no longer opens at zoom 0, and `newLatLngZoom` and `newLatLng` keep the requested zoom (#1072).
-* **iOS**: camera animations ease as on Android and web, without speeding up into an abrupt stop (#1183).
-* **iOS**: `getListOfRegions` returns the stored regions right after launch instead of an empty list (#1087).
-* **iOS**: `toScreenLocationBatch` with no points no longer crashes the app (#1140).
-* **iOS**: a feature drag ends when the system interrupts it, picks the feature under the finger, and leaves scroll gestures as the app set them (#1054).
-* **iOS**: `CameraUpdate.scrollBy` no longer changes the zoom when panning north or south (#1069).
-* **iOS**: `CameraPosition.zoom` no longer drifts by floating point noise while the map pans (#1155).
-* **iOS**: `getLayerProperties` and `getSourceProperties` read layers and sources added at runtime, with their current values (#985, #1127).
-* **iOS**: `getStyle` returns the style JSON instead of `null` (#1070).
-* **iOS**: `addImageLayer` completes, and `addImage` throws `INVALID_IMAGE` for bytes that are not an image or `STYLE_NOT_READY` before the style loads (#1067).
-* **iOS**: `updateOfflineRegionMetadata` works, and fails with `REGION_NOT_FOUND` for an unknown id (#1087).
+* **Android, iOS**: `downloadOfflineRegion` throws `INVALID_REGION_DEFINITION` for a style url without a scheme, NaN bounds or an invalid zoom range. iOS crashed (#1187).
+* **iOS**: `getListOfRegions` returns the stored regions right after launch, and `updateOfflineRegionMetadata` works, failing with `REGION_NOT_FOUND` for an unknown id (#1087).
 * **iOS**: `downloadOfflineRegion` with a definition iOS cannot read fails with `INVALID_REGION_DEFINITION` instead of a `TypeError` (#1114).
+* **iOS**: `downloadOfflineRegion` fails with `DATABASE_RESET` when the database is reset first, regions with unreadable metadata are listed, and progress events come at most every 100 ms (#1142).
+* **iOS**: `mergeOfflineRegions` of a missing file throws `OFFLINE_DATABASE_ERROR` instead of crashing, a read-only file is merged from a copy, and `includeIdeographs` is honoured (#1187).
 * **iOS**: `invalidateAmbientCache` and `clearAmbientCache` report a failure as `AMBIENT_CACHE_ERROR`, like Android (#1111).
-* **iOS**: offline calls and map events are sturdier (#1142):
-  * `downloadOfflineRegion` fails with `DATABASE_RESET` when the database is reset first, instead of never completing.
-  * `updateContentInsets` and `setTrackingCameraOptions` complete when the map goes away before the camera arrives.
-  * A region whose metadata cannot be read is listed with empty metadata, as on Android.
-  * Offline download progress events come at most every 100 ms, as on Android.
-  * After a hot restart, a map from before the restart no longer sends its events to the new map.
-* **iOS**: offline, rendering and snapshot calls behave as on Android (#1187):
-  * `mergeOfflineRegions` of a missing file throws `OFFLINE_DATABASE_ERROR` instead of crashing, and a read-only file is merged from a copy.
-  * `downloadOfflineRegion` throws `INVALID_REGION_DEFINITION`, on Android too, for a style url without a scheme, NaN bounds or an invalid zoom range.
-  * `downloadOfflineRegion` honours `includeIdeographs`.
-  * `pauseMap()` stops rendering until `resumeMap()`.
-  * `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, on web too.
-  * `addSource` throws `INVALID_ARGUMENT` for a `tileSize` outside 1 to 65535, on every platform.
-* **iOS, Web**: a camera call during a fling or an animation fires `onCameraIdle` once, when the camera settles, as on Android (#1156, #1158).
-* **Web**: fill annotations without a `fillOutlineColor` are drawn again (#1074).
-* **Web**: `querySourceFeatures` applies its `filter` and returns Dart maps and lists instead of JS objects (#1064).
-* **Web**: the feature queries return features while tiles or a source update are loading (#1076).
-* **Web**: removing an interactive layer removes its listeners, so a layer added again fires each callback once, and a hovered one reports `leave` (#1089).
-* **Web**: `removeFeatureState` with a `stateKey` removes only that key instead of the whole feature state (#1066).
+
+#### Images and snapshots
+* `takeSnapshot` answers `SNAPSHOT_ERROR` or `MAP_DISPOSED` when it is cancelled or the map goes away, instead of hanging (#1123).
+* **Android**: `takeSnapshot` shows the area the map shows, at the screen's pixel density, as on iOS and web (#1128).
+* **Android, iOS**: `takeSnapshot` works for a style set as JSON (#1067).
+* **iOS**: `addImageLayer` completes, and `addImage` throws `INVALID_IMAGE` for bytes that are not an image or `STYLE_NOT_READY` before the style loads (#1067).
+* **iOS, Web**: `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, as on Android (#1187).
 * **Web**: `addImage` throws `INVALID_IMAGE` for bytes that are not an image, and replaces an image with the same name (#1070).
+
+#### Map lifecycle
+* Disposing the map while its style loads no longer throws an unhandled `MissingPluginException` (#1103, #1110).
+* Removing a `MapLibreMap` before its platform view is created, or replacing the style during the annotation setup, no longer throws, and `onStyleLoadedCallback` fires once when two style loads overlap (#1088).
+* **Android**: with `myLocationEnabled`, the GPS turns off when the app goes to the background, as on iOS, and `pauseMap()` stops location updates (#1105).
+* **Android**: `logoViewMargins` move the logo away from the corner of its `logoViewPosition`, like the compass margins (#1186).
+* **iOS**: `pauseMap()` stops rendering until `resumeMap()` instead of lifting the frame rate cap (#1187).
+* **iOS**: after a hot restart, a map from before the restart no longer sends its events to the new map (#1142).
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
-* **Web**: `getLayerVisibility` answers `null` for a missing layer instead of `true` (#1068).
-* **Web**: `waitUntilMapIsIdleAfterMovement` completes at once when the map is idle or disposed, and feature state calls ignore `sourceLayer` on a GeoJSON source (#1185).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
