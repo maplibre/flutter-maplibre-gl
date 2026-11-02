@@ -1372,9 +1372,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// [onUserLocationUpdated] does not fire until [resumeMap].
   ///
   /// Platform behavior:
-  /// - **Android**: stops the MapView render loop.
-  /// - **iOS**: drops the preferred frame rate to 0 while paused and restores
-  ///   it on [resumeMap].
+  /// - **Android** and **iOS**: stops the render loop, so the map keeps its
+  ///   last frame. The frame rate set with [setMaximumFps] stays.
   /// - **Web**: no-op.
   Future<void> pauseMap() async {
     return _maplibrePlatform.pauseMap();
