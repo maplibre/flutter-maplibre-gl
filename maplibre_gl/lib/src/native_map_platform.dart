@@ -907,18 +907,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> removeSource(String sourceId) async {
-    // Cleared now, in call order with an addSource of the same id made
-    // right after. A source that stays keeps its numbered ids.
-    final generated = _generatedIdSources.remove(sourceId);
-    try {
-      await _inOrder(
-        [_sourceKey(sourceId)],
-        () => _api.styleRemoveSource(sourceId),
-      );
-    } catch (_) {
-      if (generated) _generatedIdSources.add(sourceId);
-      rethrow;
-    }
+    // MapLibre keeps a source a layer still uses, and a source that stays
+    // keeps its numbered ids. The note goes once the source is gone, unless
+    // an addSource of the same id made after this call noted it again.
+    final note = _idNotes[sourceId];
+    await _inOrder([_sourceKey(sourceId)], () async {
+      await _api.styleRemoveSource(sourceId);
+      if (!_generatedIdSources.contains(sourceId)) return;
+      if (_idNotes[sourceId] != note) return;
+      final sourceIds = await _api.styleGetSourceIds();
+      if (_idNotes[sourceId] == note && !sourceIds.contains(sourceId)) {
+        _generatedIdSources.remove(sourceId);
+      }
+    });
   }
 
   @override
@@ -1053,6 +1054,10 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// as maplibre-gl-js does.
   final Set<String> _generatedIdSources = {};
 
+  /// How many times the plugin noted whether it numbers the features of each
+  /// source, which tells [removeSource] whether an add came after it.
+  final Map<String, int> _idNotes = {};
+
   /// What the data the plugin sets to the source [sourceId] gets for its ids.
   _FeatureIds _featureIdsOf(String sourceId) =>
       _generatedIdSources.contains(sourceId)
@@ -1081,6 +1086,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   void _noteGeneratedIds(String sourceId, bool generateIds) {
+    _idNotes.update(sourceId, (count) => count + 1, ifAbsent: () => 1);
     if (generateIds) {
       _generatedIdSources.add(sourceId);
     } else {

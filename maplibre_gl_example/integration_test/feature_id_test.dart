@@ -467,6 +467,41 @@ void main() {
       });
     });
 
+    // MapLibre keeps a source a layer still uses.
+    testWidgets('after a removeSource the layer keeps it from', (
+      tester,
+    ) async {
+      final controller = await _pumpMapWithFeatures(tester, generateId: true);
+      await _waitForAll(tester, controller);
+      await pumpUntil(
+        tester,
+        controller.removeSource(_sourceId),
+        'removeSource',
+      );
+      expect(await controller.getSourceIds(), contains(_sourceId));
+
+      final reversed = {
+        'type': 'FeatureCollection',
+        'features': (_featureCollection()['features'] as List).reversed
+            .toList(),
+      };
+      await pumpUntil(
+        tester,
+        controller.setGeoJsonSource(_sourceId, reversed),
+        'setGeoJsonSource',
+      );
+      final renumbered = await pumpUntilValue(
+        tester,
+        () => controller.querySourceFeatures(_sourceId, null, null),
+        (features) => _idsByName(features)['name'] == 0,
+        'querySourceFeatures after setGeoJsonSource',
+      );
+      expect(_idsByName(renumbered), {
+        for (final MapEntry(:key, :value) in _generatedIds.entries)
+          key: _features.length - 1 - (value as int),
+      });
+    });
+
     testWidgets('in feature state', (tester) async {
       final controller = await _pumpMapWithFeatures(
         tester,
