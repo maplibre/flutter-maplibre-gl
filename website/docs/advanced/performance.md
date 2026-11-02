@@ -32,7 +32,7 @@ await controller.pauseMap();
 await controller.resumeMap();
 ```
 
-On Android this stops the `MapView` render loop; on iOS it drops the preferred frame rate to zero; on web both calls are no-ops, so the code is safe to run unconditionally. A map paused this way stays paused across backgrounding until you call `resumeMap()`, so pair the calls with the visibility change that caused them rather than with app lifecycle events.
+On Android and iOS this stops the render loop, and the map keeps showing its last frame; on web both calls are no-ops, so the code is safe to run unconditionally. A map paused this way stays paused across backgrounding until you call `resumeMap()`, so pair the calls with the visibility change that caused them rather than with app lifecycle events.
 
 ## Rendering backend (Android)
 

@@ -199,6 +199,13 @@
 * **iOS**: camera animations ease as on Android and web. `easeCamera` with `easeOut` moved at constant speed, and with `easeInOut` or no curve sped up until an abrupt stop, like `animateCamera` and `easeCamera` without a duration. `easeOut` now matches web; `easeInOut`, the default, calls without a duration and `setCameraBounds` ease out as on Android, since MapLibre iOS cannot ease both in and out, and `setTrackingCameraOptions` tilts at constant speed as on Android (#1183, [maplibre-native#4902](https://github.com/maplibre/maplibre-native/issues/4902)).
 * **Web**: `setFeatureState`, `getFeatureState` and `removeFeatureState` ignore `sourceLayer` on a GeoJSON source, as on Android and iOS. MapLibre GL JS left the state unchanged, or read none, when one was given (#1185).
 * **Web**: `waitUntilMapIsIdleAfterMovement` completes at once when the map is not moving or loading, as on Android and iOS, and when the map is disposed. It waited for an idle event that might never come (#1185).
+* **iOS**: offline, rendering and snapshot calls behave as on Android (#1187):
+  * `mergeOfflineRegions` of a missing file throws `OFFLINE_DATABASE_ERROR` instead of crashing the app, and a file the app can only read, such as one in the app bundle, is merged from a copy.
+  * `downloadOfflineRegion` throws `INVALID_REGION_DEFINITION`, on Android too, for a `mapStyleUrl` without a scheme such as `assets/style.json`, NaN bounds, or a zoom range that is not finite, starts below 0 or is inverted. iOS crashed.
+  * `downloadOfflineRegion` honours `includeIdeographs`, and the region reads it back, instead of always leaving out the CJK glyphs.
+  * `pauseMap()` stops rendering until `resumeMap()`. It lifted the frame rate cap instead, overriding `setMaximumFps`.
+  * `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, on web too, instead of taking a snapshot of the style still loading.
+  * `addSource` throws `INVALID_ARGUMENT`, on every platform, for a `tileSize` outside 1 to 65535. iOS crashed on a NaN or one it could not hold.
 * Invalid filters and camera durations fail the same way on every platform (#1184):
   * A filter with a NaN or infinite number, which JSON cannot hold, throws `INVALID_EXPRESSION` in `setLayerFilter`, the layer adds and the queries. Android and iOS threw a `JsonUnsupportedObjectError`, and web passed the number on to MapLibre GL JS.
   * `animateCamera` and `easeCamera` throw an `ArgumentError` for a negative duration, as `setTrackingCameraOptions` does. Android failed with a generic error, iOS used its default duration, and web passed it on to MapLibre GL JS.

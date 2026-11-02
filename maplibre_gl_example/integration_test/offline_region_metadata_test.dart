@@ -6,13 +6,14 @@
 // so it never needs the network, then replaces the region's metadata and
 // checks that both the returned region and getListOfRegions carry the new
 // metadata under the same id. A second case checks that two downloads started
-// together both finish.
+// together both finish, and a third that includeIdeographs comes back.
 //
 // The offline errors group checks that both platforms answer the same code and
 // message: REGION_NOT_FOUND for an unknown id in every call that takes one,
-// and INVALID_ARGUMENT for a negative tile count limit or ambient cache size
+// INVALID_ARGUMENT for a negative tile count limit or ambient cache size
 // and for a concurrent request limit below 1, and on iOS for metadata that
-// is not JSON.
+// is not JSON, OFFLINE_DATABASE_ERROR for merging a missing file, and
+// INVALID_REGION_DEFINITION for a definition MapLibre cannot download.
 //
 // The resume group pauses a download while the server holds its tiles back.
 // One case resumes it and waits for its Success event. The other comes as
@@ -137,6 +138,32 @@ void main() {
       expect(regions.map((r) => r.metadata['name']), ['west', 'east']);
       expect(regions.first.id, isNot(regions.last.id));
     });
+
+    testWidgets('keeps includeIdeographs', (tester) async {
+      // iOS ignored it and read it back as false.
+      if (kIsWeb) return;
+
+      final region = await pumpUntil(
+        tester,
+        _startTinyDownload(
+          server,
+          metadata: {'name': 'ideographs'},
+          center: const LatLng(0, 40),
+          includeIdeographs: true,
+        ),
+        'the offline download to finish',
+      );
+      downloaded.add(region.id);
+      expect(region.definition.includeIdeographs, isTrue);
+
+      final regions = await pumpUntil(
+        tester,
+        getListOfRegions(),
+        'getListOfRegions',
+      );
+      final listed = regions.singleWhere((r) => r.id == region.id);
+      expect(listed.definition.includeIdeographs, isTrue);
+    });
   });
 
   group('offline errors', () {
@@ -233,6 +260,74 @@ void main() {
         code: 'INVALID_ARGUMENT',
       );
       expect(error.message, 'Metadata is not JSON serializable');
+    });
+
+    testWidgets('mergeOfflineRegions of a missing file fails with '
+        'OFFLINE_DATABASE_ERROR', (tester) async {
+      // iOS crashed on it, and on a file it could not write to.
+      if (kIsWeb) return;
+
+      final directory = await getTemporaryDirectory();
+      final error = await expectPlatformError(
+        tester,
+        mergeOfflineRegions('${directory.path}/no_such_regions.db'),
+        'mergeOfflineRegions of a missing file',
+        code: 'OFFLINE_DATABASE_ERROR',
+      );
+      expect(
+        error.message,
+        'Secondary database needs to be located in a readable path.',
+      );
+    });
+
+    testWidgets('a region definition MapLibre cannot download fails with '
+        'INVALID_REGION_DEFINITION', (tester) async {
+      // iOS crashed on each of these.
+      if (kIsWeb) return;
+
+      OfflineRegionDefinition definitionWith({
+        String mapStyleUrl = 'https://example.invalid/style.json',
+        double minZoom = 0,
+        double maxZoom = 1,
+      }) => OfflineRegionDefinition(
+        bounds: LatLngBounds(
+          southwest: const LatLng(-1, -1),
+          northeast: const LatLng(1, 1),
+        ),
+        mapStyleUrl: mapStyleUrl,
+        minZoom: minZoom,
+        maxZoom: maxZoom,
+      );
+      final definitions = {
+        'a style url without a scheme': definitionWith(
+          mapStyleUrl: 'assets/style.json',
+        ),
+        'minZoom above maxZoom': definitionWith(minZoom: 5, maxZoom: 2),
+        'a negative minZoom': definitionWith(minZoom: -1),
+        'a NaN maxZoom': definitionWith(maxZoom: double.nan),
+      };
+      for (final MapEntry(key: reason, value: definition)
+          in definitions.entries) {
+        await expectPlatformError(
+          tester,
+          downloadOfflineRegion(definition),
+          'downloadOfflineRegion with $reason',
+          code: 'INVALID_REGION_DEFINITION',
+        );
+        // Dart rejects these first. iOS checks them too.
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          await expectPlatformError(
+            tester,
+            MapLibreGlobalHostApi().downloadOfflineRegion(
+              -1,
+              definition.toMap(),
+              {},
+            ),
+            'downloadOfflineRegion with $reason in native',
+            code: 'INVALID_REGION_DEFINITION',
+          );
+        }
+      }
     });
 
     testWidgets('a concurrent request limit below 1 fails with '
@@ -450,6 +545,7 @@ Future<OfflineRegion> _startTinyDownload(
   TileServer server, {
   required Map<String, dynamic> metadata,
   LatLng center = const LatLng(0, 0),
+  bool includeIdeographs = false,
 }) async {
   final finished = Completer<void>();
   final region = await downloadOfflineRegion(
@@ -461,6 +557,7 @@ Future<OfflineRegion> _startTinyDownload(
       mapStyleUrl: server.styleUrl,
       minZoom: 0,
       maxZoom: 1,
+      includeIdeographs: includeIdeographs,
     ),
     metadata: metadata,
     onEvent: (event) {

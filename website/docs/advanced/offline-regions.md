@@ -225,7 +225,8 @@ Future<void> importOfflineDatabase(String path) async {
 
 Databases produced by external tools (for example maplibre-native's `offline.cpp`)
 can also be merged; regions without Flutter-assigned metadata are imported with an
-empty metadata map and a stable, derived ID.
+empty metadata map and a stable, derived ID. A file the app can only read, such as
+one in the app bundle, is merged from a temporary copy.
 
 ## Storage considerations
 
@@ -263,7 +264,7 @@ Android and iOS:
 |---|---|
 | `REGION_NOT_FOUND` | `pauseOfflineRegionDownload`, `resumeOfflineRegionDownload`, `getOfflineRegionStatus`, `deleteOfflineRegion` or `updateOfflineRegionMetadata` got an id that no stored region has. |
 | `INVALID_ARGUMENT` | A negative `setOfflineTileCountLimit` limit, a `setOfflineMaxConcurrentRequests` value below 1, metadata that `jsonEncode` cannot encode, or an `installOfflineMapTiles` path or asset with no file. |
-| `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from. |
+| `INVALID_REGION_DEFINITION` | `downloadOfflineRegion` got a definition MapLibre cannot create a region from, such as a `mapStyleUrl` without a scheme (`assets/style.json`), NaN bounds, or a zoom range that is not finite, starts below 0 or is inverted. |
 | `OFFLINE_DATABASE_ERROR` | The offline database failed the call, for example on a file `mergeOfflineRegions` cannot import, or `installOfflineMapTiles` could not copy its file. The message carries the reason. |
 | `AMBIENT_CACHE_ERROR` | MapLibre failed to clear the ambient cache or to change its size. |
 

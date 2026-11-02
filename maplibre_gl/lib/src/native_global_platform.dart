@@ -177,6 +177,7 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
     Map<String, dynamic> metadata = const {},
     void Function(DownloadRegionStatus event)? onEvent,
   }) async {
+    _checkDefinition(definition);
     final jsonMetadata = _jsonMetadata(metadata);
     // Only an isolate that gets download events sets up their handler: a
     // background isolate cannot, and native sends those events to the root
@@ -239,6 +240,41 @@ class _MapLibreNativeGlobalPlatform extends MapLibreGlobalPlatform
       _downloadListeners.remove(downloadId);
     }
     listener(status);
+  }
+
+  /// Throws INVALID_REGION_DEFINITION for a [definition] MapLibre cannot
+  /// download. iOS crashed on these, and a zoom that is not finite cannot go
+  /// through the JSON the region comes back in.
+  static void _checkDefinition(OfflineRegionDefinition definition) {
+    final OfflineRegionDefinition(:bounds, :minZoom, :maxZoom) = definition;
+    final String? reason;
+    if (Uri.tryParse(definition.mapStyleUrl)?.hasScheme != true) {
+      reason =
+          'mapStyleUrl must be a URL with a scheme, such as https:, '
+          'got "${definition.mapStyleUrl}".';
+    } else if (![
+      bounds.southwest.latitude,
+      bounds.southwest.longitude,
+      bounds.northeast.latitude,
+      bounds.northeast.longitude,
+    ].every((value) => value.isFinite)) {
+      reason = 'The bounds must be finite, got $bounds.';
+    } else if (!minZoom.isFinite ||
+        !maxZoom.isFinite ||
+        minZoom < 0 ||
+        minZoom > maxZoom) {
+      reason =
+          'minZoom and maxZoom must be finite, 0 or more, and minZoom not '
+          'above maxZoom, got $minZoom and $maxZoom.';
+    } else {
+      reason = null;
+    }
+    if (reason != null) {
+      throw PlatformException(
+        code: 'INVALID_REGION_DEFINITION',
+        message: reason,
+      );
+    }
   }
 
   /// [metadata] as the JSON values native stores, so both platforms store the
