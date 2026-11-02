@@ -40,12 +40,21 @@ class OfflineRegionDefinition {
         )
     }
 
+    /// The definition in `jsonDict`, or nil for one MapLibre cannot download.
+    /// MapLibre raises an exception the call cannot catch for a style URL
+    /// without a scheme, a latitude beyond the poles, a coordinate or zoom
+    /// that is not finite, or a negative or inverted zoom range. Dart checks
+    /// these first; this keeps a call that skips Dart from crashing.
     static func fromDictionary(_ jsonDict: [String: Any]) -> OfflineRegionDefinition? {
         guard let bounds = jsonDict["bounds"] as? [[Double]],
+              bounds.count == 2, bounds.allSatisfy({ $0.count == 2 }),
+              bounds.allSatisfy({ abs($0[0]) <= 90 && $0[1].isFinite }),
               let mapStyleUrlString = jsonDict["mapStyleUrl"] as? String,
               let mapStyleUrl = URL(string: mapStyleUrlString),
+              mapStyleUrl.scheme?.isEmpty == false,
               let minZoom = jsonDict["minZoom"] as? Double,
-              let maxZoom = jsonDict["maxZoom"] as? Double
+              let maxZoom = jsonDict["maxZoom"] as? Double,
+              minZoom.isFinite, maxZoom.isFinite, minZoom >= 0, minZoom <= maxZoom
         else { return nil }
         return OfflineRegionDefinition(
             bounds: bounds,
