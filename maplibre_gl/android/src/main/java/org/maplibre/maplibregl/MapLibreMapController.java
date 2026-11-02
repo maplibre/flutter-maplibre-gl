@@ -2597,9 +2597,18 @@ final class MapLibreMapController
             .include(locationOne) // Northeast
             .include(locationTwo) // Southwest
             .build();
-    // Padding is in logical pixels, like every other camera input.
-    mapLibreMap.easeCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds,
-            (int) (logicalPadding * density)), 200);
+    // Padding is in logical pixels, like every other camera input. It is added
+    // to the map padding and does not replace it, as on iOS and web.
+    mapLibreMap.easeCamera(
+        Convert.toBoundsCameraUpdate(
+            mapLibreMap,
+            latLngBounds,
+            logicalPadding,
+            logicalPadding,
+            logicalPadding,
+            logicalPadding,
+            density),
+        200);
     // Replies once the move is started, as iOS and web do.
     result.success(null);
   }
