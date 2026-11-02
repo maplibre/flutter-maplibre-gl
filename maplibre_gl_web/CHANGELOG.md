@@ -8,7 +8,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
   * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id, where they answered 0 or an empty list.
-  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY`.
+  * Source, layer and image calls and `setLight` made before the style has loaded throw `STYLE_NOT_READY`.
   * `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre GL JS cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. These were dropped with a console log.
   * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`, a `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, and a layer MapLibre GL JS does not add throws `INVALID_LAYER`.

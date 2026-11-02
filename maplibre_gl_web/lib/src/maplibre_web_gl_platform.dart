@@ -1168,6 +1168,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
+    _ensureStyleReady();
     final jsSource = _jsSource(sourceId);
     if (jsSource == null) throw _sourceNotFound(sourceId);
     final source = GeoJsonSource.fromJsObject(
@@ -1304,6 +1305,7 @@ class MapLibreMapController extends MapLibrePlatform
     bool sdf = false,
     double? pixelRatio,
   ]) async {
+    _ensureStyleReady();
     // Same contract as Android: bytes that are not an image are a
     // PlatformException, not a null-check error. decodeImage answers null for
     // an unknown format and can throw on a truncated one.
@@ -2145,6 +2147,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    _ensureStyleReady();
     // maplibre-gl-js only fires an error event for a missing layer, so check
     // both first and throw the same error as Android and iOS.
     _ensureLayerExists(layerId);
@@ -2155,6 +2158,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
+    _ensureStyleReady();
     _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
     // throwing, so listen for it while the filter is set.
@@ -2773,6 +2777,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLight(LightProperties light) async {
+    _ensureStyleReady();
     _map.setLight(light.toJson());
   }
 
@@ -3503,6 +3508,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future getFilter(String layerId) async {
+    _ensureStyleReady();
     _checkFilterable(layerId);
     return withoutFeatureIds(_map.getFilter(layerId));
   }
@@ -3542,12 +3548,15 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
+    // An empty list would read as a style without layers.
+    _ensureStyleReady();
     final layers = _map.getLayers();
     return layers.map((layer) => layer.id).toList();
   }
 
   @override
   Future<List> getSourceIds() async {
+    _ensureStyleReady();
     final sourceIds = _map.getSourceIds();
     return sourceIds;
   }

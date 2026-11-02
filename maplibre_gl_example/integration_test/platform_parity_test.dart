@@ -2825,6 +2825,10 @@ void main() {
           'image',
           backgroundLayerId,
         ),
+        'moveLayer': () => controller.moveLayer(backgroundLayerId),
+        'getLayerIds': () => controller.getLayerIds(),
+        'getSourceIds': () => controller.getSourceIds(),
+        'addImage': () => controller.addImage('new-image', image),
       };
       for (final call in calls.entries) {
         final error = await expectPlatformError(
