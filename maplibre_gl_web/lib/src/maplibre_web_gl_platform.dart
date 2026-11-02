@@ -2487,12 +2487,21 @@ class MapLibreMapController extends MapLibrePlatform
       final value = properties[name];
       final layout = isLayoutProperty(name);
       final setter = layout ? 'setLayoutProperty' : 'setPaintProperty';
-      final previous = map.callMethod<JSAny?>(
-        (layout ? 'getLayoutProperty' : 'getPaintProperty').toJS,
-        layerId.toJS,
-        name.toJS,
-      );
-      var reason = checks.hexColorError(name, value);
+      JSAny? previous;
+      String? reason;
+      try {
+        previous = map.callMethod<JSAny?>(
+          (layout ? 'getLayoutProperty' : 'getPaintProperty').toJS,
+          layerId.toJS,
+          name.toJS,
+        );
+      } catch (e) {
+        // maplibre-gl-js throws on a property it does not know, which a newer
+        // style spec can list. Leaving such a property unset changes nothing.
+        if (value == null) continue;
+        reason = e.toString();
+      }
+      reason ??= checks.hexColorError(name, value);
       // A hex color fails with the reason Android and iOS give.
       if (reason == null) {
         try {
