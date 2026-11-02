@@ -38,8 +38,8 @@ flowchart TD
     SRC --> RANGE["MapLibre issues<br/>HTTP range requests"]
     RANGE --> HOST["yourhost.com/tiles.pmtiles<br/><small>or bundled as a Flutter asset</small>"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class APP root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class APP emphasis
 ```
 
 MapLibre handles the `pmtiles://` protocol internally. Beyond pointing the style at the right URL, the only extra step is the one-time protocol registration on web (see [Platform support](#platform-support)).
