@@ -2,8 +2,8 @@ import Foundation
 import MapLibre
 
 class SourcePropertyConverter {
-    /// The options of a source with tiles, or nil for bounds or zoom levels
-    /// MapLibre rejects. MapLibre raises an exception the call cannot catch
+    /// The options of a source with tiles, or nil for bounds, zoom levels or
+    /// a tile size MapLibre rejects. MapLibre raises an exception the call cannot catch
     /// for them, so they are checked here, as on Android.
     class func interpretTileOptions(properties: [String: Any]) -> [MLNTileSourceOption: Any]? {
         var options = [MLNTileSourceOption: Any]()
@@ -24,6 +24,9 @@ class SourcePropertyConverter {
             options[.maximumZoomLevel] = zoom
         }
         if let tileSize = properties["tileSize"] as? Double {
+            // Int() traps on NaN, and MapLibre holds the size in 16 bits.
+            // Dart checks it first.
+            guard tileSize >= 1, tileSize <= 65535 else { return nil }
             options[.tileSize] = Int(tileSize)
         }
         if let scheme = properties["scheme"] as? String {

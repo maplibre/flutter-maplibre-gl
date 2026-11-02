@@ -185,6 +185,29 @@ void main() {
       expect(calls.first.positionalArgs[0], 'vec-1');
     });
 
+    test('addSource rejects a tileSize outside 1 to 65535', () async {
+      for (final tileSize in [double.nan, double.infinity, 0.0, 65536.0]) {
+        await expectLater(
+          controller.addSource(
+            'raster',
+            RasterSourceProperties(tiles: const ['a'], tileSize: tileSize),
+          ),
+          throwsA(
+            isA<PlatformException>()
+                .having((e) => e.code, 'code', 'INVALID_ARGUMENT')
+                .having(
+                  (e) => e.message,
+                  'message',
+                  "Source 'raster' cannot be built from its properties as a "
+                      "'raster' source.",
+                ),
+          ),
+          reason: '$tileSize',
+        );
+      }
+      expect(platform.callsFor('addSource'), isEmpty);
+    });
+
     test('removeSource delegates to platform', () async {
       await controller.removeSource('src-1');
 
