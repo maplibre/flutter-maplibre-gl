@@ -26,9 +26,8 @@ void main() {
       testWidgets('the map is created with $inertia', (tester) async {
         final controller = await pumpMap(
           tester,
-          builder:
-              (onMapCreated, onStyleLoaded) =>
-                  _map(onMapCreated, onStyleLoaded, inertia),
+          builder: (onMapCreated, onStyleLoaded) =>
+              _map(onMapCreated, onStyleLoaded, inertia),
         );
 
         final region = await pumpUntil(
@@ -95,9 +94,8 @@ void main() {
         if (testPlatform != TestPlatform.android) return;
         final controller = await pumpMap(
           tester,
-          builder:
-              (onMapCreated, onStyleLoaded) =>
-                  _map(onMapCreated, onStyleLoaded, inertia),
+          builder: (onMapCreated, onStyleLoaded) =>
+              _map(onMapCreated, onStyleLoaded, inertia),
         );
         final before = await pumpUntil(
           tester,

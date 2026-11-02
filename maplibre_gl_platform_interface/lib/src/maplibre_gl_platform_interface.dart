@@ -590,8 +590,7 @@ class _UnregisteredMapLibrePlatform extends MapLibrePlatform {
   ) => Text('$defaultTargetPlatform is not yet supported by the maps plugin');
 
   @override
-  Never noSuchMethod(Invocation invocation) =>
-      throw UnsupportedError(
-        'No MapLibre implementation is registered for $defaultTargetPlatform.',
-      );
+  Never noSuchMethod(Invocation invocation) => throw UnsupportedError(
+    'No MapLibre implementation is registered for $defaultTargetPlatform.',
+  );
 }

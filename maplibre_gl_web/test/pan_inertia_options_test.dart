@@ -35,7 +35,7 @@ Map<String, dynamic> _gestures({int? panInertia}) => {
   'tiltGesturesEnabled': true,
   'zoomGesturesEnabled': true,
   'doubleClickZoomEnabled': true,
-  if (panInertia != null) 'panInertia': panInertia,
+  'panInertia': ?panInertia,
 };
 
 void main() {

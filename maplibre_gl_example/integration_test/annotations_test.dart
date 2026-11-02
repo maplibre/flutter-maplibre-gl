@@ -352,10 +352,9 @@ void main() {
   ) async {
     final controller = await _pumpAnnotationMap(tester);
     final layerId = controller.symbolManager!.layerIds.single;
-    final png =
-        (await rootBundle.load(
-          'assets/symbols/custom-marker.png',
-        )).buffer.asUint8List();
+    final png = (await rootBundle.load(
+      'assets/symbols/custom-marker.png',
+    )).buffer.asUint8List();
 
     await pumpUntil(tester, controller.addImage('marker', png), 'addImage');
     await pumpUntil(
@@ -569,15 +568,14 @@ Future<MapLibreMapController> _pumpAnnotationMap(
 }) {
   return pumpMap(
     tester,
-    builder:
-        (onMapCreated, onStyleLoaded) => MapLibreMap(
-          styleString: _annotationStyle,
-          initialCameraPosition: _initialCamera,
-          onMapCreated: onMapCreated,
-          onStyleLoadedCallback: onStyleLoaded,
-          annotationOrder: order,
-          annotationConsumeTapEvents: consumeTapEvents ?? _defaultOrder,
-        ),
+    builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+      styleString: _annotationStyle,
+      initialCameraPosition: _initialCamera,
+      onMapCreated: onMapCreated,
+      onStyleLoadedCallback: onStyleLoaded,
+      annotationOrder: order,
+      annotationConsumeTapEvents: consumeTapEvents ?? _defaultOrder,
+    ),
   );
 }
 

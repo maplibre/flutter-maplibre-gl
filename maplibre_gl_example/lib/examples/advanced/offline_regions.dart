@@ -80,10 +80,9 @@ class OfflineRegionListItem {
     offlineRegionDefinition: offlineRegionDefinition,
     name: name,
     estimatedTiles: estimatedTiles,
-    downloadedId:
-        identical(downloadedId, _sentinel)
-            ? this.downloadedId
-            : downloadedId as int?,
+    downloadedId: identical(downloadedId, _sentinel)
+        ? this.downloadedId
+        : downloadedId as int?,
     isDownloading: isDownloading ?? this.isDownloading,
     isPaused: isPaused ?? this.isPaused,
     downloadProgress: downloadProgress ?? this.downloadProgress,
@@ -386,18 +385,16 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color:
-                    item.isDownloaded
-                        ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.surfaceContainerHighest,
+                color: item.isDownloaded
+                    ? theme.colorScheme.primaryContainer
+                    : theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 item.isDownloaded ? Icons.cloud_done : Icons.cloud_download,
-                color:
-                    item.isDownloaded
-                        ? theme.colorScheme.onPrimaryContainer
-                        : theme.colorScheme.onSurfaceVariant,
+                color: item.isDownloaded
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
             title: Text(
@@ -414,26 +411,23 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                   : '~${item.estimatedTiles} tiles',
               style: theme.textTheme.bodyMedium,
             ),
-            trailing:
-                item.isDownloading
-                    ? IconButton(
-                      tooltip: item.isPaused ? 'Resume' : 'Pause',
-                      icon: Icon(
-                        item.isPaused ? Icons.play_arrow : Icons.pause,
-                      ),
-                      onPressed:
-                          item.downloadedId != null
-                              ? () => _togglePause(item, index)
-                              : null,
-                    )
-                    : null,
+            trailing: item.isDownloading
+                ? IconButton(
+                    tooltip: item.isPaused ? 'Resume' : 'Pause',
+                    icon: Icon(
+                      item.isPaused ? Icons.play_arrow : Icons.pause,
+                    ),
+                    onPressed: item.downloadedId != null
+                        ? () => _togglePause(item, index)
+                        : null,
+                  )
+                : null,
           ),
           if (item.isDownloading)
             LinearProgressIndicator(
-              value:
-                  item.downloadProgress > 0
-                      ? item.downloadProgress / 100.0
-                      : null,
+              value: item.downloadProgress > 0
+                  ? item.downloadProgress / 100.0
+                  : null,
             ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -449,26 +443,23 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child:
-                      item.isDownloaded
-                          ? ExampleButton(
-                            label: 'Delete',
-                            icon: Icons.delete_outline,
-                            onPressed:
-                                item.isDownloading
-                                    ? null
-                                    : () => _deleteRegion(item, index),
-                            style: ExampleButtonStyle.destructive,
-                          )
-                          : ExampleButton(
-                            label: 'Download',
-                            icon: Icons.download,
-                            onPressed:
-                                item.isDownloading
-                                    ? null
-                                    : () => _downloadRegion(item, index),
-                            style: ExampleButtonStyle.filled,
-                          ),
+                  child: item.isDownloaded
+                      ? ExampleButton(
+                          label: 'Delete',
+                          icon: Icons.delete_outline,
+                          onPressed: item.isDownloading
+                              ? null
+                              : () => _deleteRegion(item, index),
+                          style: ExampleButtonStyle.destructive,
+                        )
+                      : ExampleButton(
+                          label: 'Download',
+                          icon: Icons.download,
+                          onPressed: item.isDownloading
+                              ? null
+                              : () => _downloadRegion(item, index),
+                          style: ExampleButtonStyle.filled,
+                        ),
                 ),
               ],
             ),
@@ -481,27 +472,26 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
   Future<void> _handleClearAmbientCache() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Clear ambient cache?'),
-            content: const Text(
-              'Removes every cached tile that is not pinned to an offline '
-              'region, including tiles left behind by previously deleted '
-              'regions. Offline regions themselves are kept.\n\n'
-              'After this, re-downloading a region will fetch tiles from '
-              'the network instead of reusing the local cache.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Clear'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear ambient cache?'),
+        content: const Text(
+          'Removes every cached tile that is not pinned to an offline '
+          'region, including tiles left behind by previously deleted '
+          'regions. Offline regions themselves are kept.\n\n'
+          'After this, re-downloading a region will fetch tiles from '
+          'the network instead of reusing the local cache.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true) return;
 
@@ -523,42 +513,41 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
     final controller = TextEditingController(text: '50');
     final megabytes = await showDialog<int>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Limit ambient cache'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Caps the tiles the map keeps from ordinary browsing. '
-                  'Offline regions are not counted and are never evicted. '
-                  'The SDK default is 50 MB; 0 disables the cache.\n\n'
-                  'If the cache is already larger, it is trimmed now. The SDK '
-                  'recommends setting this before the first map is shown.',
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Limit',
-                    suffixText: 'MB',
-                  ),
-                ),
-              ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Limit ambient cache'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Caps the tiles the map keeps from ordinary browsing. '
+              'Offline regions are not counted and are never evicted. '
+              'The SDK default is 50 MB; 0 disables the cache.\n\n'
+              'If the cache is already larger, it is trimmed now. The SDK '
+              'recommends setting this before the first map is shown.',
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cancel'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Limit',
+                suffixText: 'MB',
               ),
-              FilledButton(
-                onPressed:
-                    () => Navigator.of(ctx).pop(int.tryParse(controller.text)),
-                child: const Text('Apply'),
-              ),
-            ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
           ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(ctx).pop(int.tryParse(controller.text)),
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
     );
     controller.dispose();
     if (megabytes == null || megabytes < 0) return;
@@ -580,24 +569,23 @@ class _OfflineRegionsBodyState extends State<_OfflineRegionBody> {
   Future<void> _handleResetDatabase() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Reset offline database?'),
-            content: const Text(
-              'This will delete all offline regions and clear the ambient '
-              'cache. This cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Reset'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reset offline database?'),
+        content: const Text(
+          'This will delete all offline regions and clear the ambient '
+          'cache. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
           ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
     );
     if (confirmed != true) return;
 

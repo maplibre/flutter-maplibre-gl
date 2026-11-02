@@ -237,12 +237,11 @@ class _EditAnnotationDraggableBodyState
         if (_draggedAnnotationId != null && _lastDragEvent != null)
           Card(
             margin: const EdgeInsets.all(ExampleConstants.paddingStandard),
-            color:
-                _lastDragEvent == DragEventType.start
-                    ? Colors.green.shade50
-                    : _lastDragEvent == DragEventType.drag
-                    ? Colors.blue.shade50
-                    : Colors.orange.shade50,
+            color: _lastDragEvent == DragEventType.start
+                ? Colors.green.shade50
+                : _lastDragEvent == DragEventType.drag
+                ? Colors.blue.shade50
+                : Colors.orange.shade50,
             child: Padding(
               padding: const EdgeInsets.all(ExampleConstants.paddingStandard),
               child: Column(
@@ -256,23 +255,23 @@ class _EditAnnotationDraggableBodyState
                             : _lastDragEvent == DragEventType.drag
                             ? Icons.pan_tool
                             : Icons.check_circle,
-                        color:
-                            _lastDragEvent == DragEventType.start
-                                ? Colors.green
-                                : _lastDragEvent == DragEventType.drag
-                                ? Colors.blue
-                                : Colors.orange,
+                        color: _lastDragEvent == DragEventType.start
+                            ? Colors.green
+                            : _lastDragEvent == DragEventType.drag
+                            ? Colors.blue
+                            : Colors.orange,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           'Drag Event: ${_lastDragEvent!.name.toUpperCase()}',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                          style:
+                              Theme.of(
+                                context,
+                              ).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                         ),
                       ),
                     ],

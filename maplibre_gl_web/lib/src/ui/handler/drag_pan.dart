@@ -25,9 +25,9 @@ class DragPanHandler extends JsObjectWrapper<DragPanHandlerJsImpl> {
   ///  map.dragPan.enable();
   void enable({num? linearity, num? deceleration, num? maxSpeed}) {
     final options = <String, Object>{
-      if (linearity != null) 'linearity': linearity,
-      if (deceleration != null) 'deceleration': deceleration,
-      if (maxSpeed != null) 'maxSpeed': maxSpeed,
+      'linearity': ?linearity,
+      'deceleration': ?deceleration,
+      'maxSpeed': ?maxSpeed,
     };
     jsObject.enable(options.jsify());
   }

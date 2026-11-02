@@ -31,8 +31,8 @@ void main() {
     'getListOfRegions': web.getListOfRegions,
     'updateOfflineRegionMetadata': () => web.updateOfflineRegionMetadata(1, {}),
     'setOfflineTileCountLimit': () => web.setOfflineTileCountLimit(10),
-    'setOfflineMaxConcurrentRequests':
-        () => web.setOfflineMaxConcurrentRequests(maxRequestsPerHost: 2),
+    'setOfflineMaxConcurrentRequests': () =>
+        web.setOfflineMaxConcurrentRequests(maxRequestsPerHost: 2),
     'pauseOfflineRegionDownload': () => web.pauseOfflineRegionDownload(1),
     'resumeOfflineRegionDownload': () => web.resumeOfflineRegionDownload(1),
     'getOfflineRegionStatus': () => web.getOfflineRegionStatus(1),

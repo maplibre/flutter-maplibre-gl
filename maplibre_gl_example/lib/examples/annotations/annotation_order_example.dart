@@ -180,16 +180,8 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _annotationOrder.length,
-                  // `onReorder` is deprecated after Flutter 3.41 in favour of
-                  // `onReorderItem`, but the latter is only available from
-                  // Flutter 3.44. Keep `onReorder` to stay compatible with the
-                  // minimum supported Flutter version.
-                  // ignore: deprecated_member_use
-                  onReorder: (oldIndex, newIndex) {
+                  onReorderItem: (oldIndex, newIndex) {
                     setState(() {
-                      if (newIndex > oldIndex) {
-                        newIndex -= 1;
-                      }
                       final item = _annotationOrder.removeAt(oldIndex);
                       _annotationOrder.insert(newIndex, item);
                       _recreateMap();
@@ -210,10 +202,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color:
-                                      Theme.of(
-                                        context,
-                                      ).colorScheme.primaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
@@ -221,10 +212,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                                     '${index + 1}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimaryContainer,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 ),
@@ -242,10 +232,9 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                           ),
                           trailing: Icon(
                             Icons.drag_handle,
-                            color:
-                                Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),

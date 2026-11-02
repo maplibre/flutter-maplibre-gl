@@ -52,20 +52,18 @@ void main() {
     'addImageSource': (c) => c.addImageSource('image', bytes, quad),
     'updateImageSource': (c) => c.updateImageSource('image', bytes, quad),
     'addLayer (image)': (c) => c.addLayer('image-layer', 'image', null, null),
-    'addLayerBelow (image)':
-        (c) => c.addLayerBelow('image-layer', 'image', 'below', null, null),
-    'addGeoJsonSource':
-        (c) => c.addGeoJsonSource('points', {
-          'type': 'FeatureCollection',
-          'features': <Object>[],
-        }),
-    'setGeoJsonSource':
-        (c) => c.setGeoJsonSource('points', {
-          'type': 'FeatureCollection',
-          'features': <Object>[],
-        }),
-    'setFeatureForGeoJsonSource':
-        (c) => c.setFeatureForGeoJsonSource('points', {
+    'addLayerBelow (image)': (c) =>
+        c.addLayerBelow('image-layer', 'image', 'below', null, null),
+    'addGeoJsonSource': (c) => c.addGeoJsonSource('points', {
+      'type': 'FeatureCollection',
+      'features': <Object>[],
+    }),
+    'setGeoJsonSource': (c) => c.setGeoJsonSource('points', {
+      'type': 'FeatureCollection',
+      'features': <Object>[],
+    }),
+    'setFeatureForGeoJsonSource': (c) =>
+        c.setFeatureForGeoJsonSource('points', {
           'type': 'Feature',
           'id': 1,
           'geometry': {
@@ -73,19 +71,18 @@ void main() {
             'coordinates': [0, 0],
           },
         }),
-    'addSource':
-        (c) => c.addSource('tiles', const VectorSourceProperties(url: 'x')),
-    'addCircleLayer':
-        (c) => c.addCircleLayer(
-          'points',
-          'circles',
-          const {},
-          enableInteraction: false,
-        ),
+    'addSource': (c) =>
+        c.addSource('tiles', const VectorSourceProperties(url: 'x')),
+    'addCircleLayer': (c) => c.addCircleLayer(
+      'points',
+      'circles',
+      const {},
+      enableInteraction: false,
+    ),
     'addBackgroundLayer': (c) => c.addBackgroundLayer('background', const {}),
     'removeLayer': (c) => c.removeLayer('layer'),
-    'setLayerProperties':
-        (c) => c.setLayerProperties('layer', const {'circle-radius': 4}),
+    'setLayerProperties': (c) =>
+        c.setLayerProperties('layer', const {'circle-radius': 4}),
     'setLayerVisibility': (c) => c.setLayerVisibility('layer', false),
     'setLayersVisibility': (c) => c.setLayersVisibility(['layer'], false),
     'removeSource': (c) => c.removeSource('source'),
@@ -96,12 +93,12 @@ void main() {
   for (final call in calls.entries) {
     test('${call.key} throws STYLE_NOT_READY before the style loads', () async {
       final recorded = <String>[];
-      final controller =
-          MapLibreMapController()..debugSetMap(
-            MapLibreMap.fromJsObject(
-              recordingMap(recorded) as MapLibreMapJsImpl,
-            ),
-          );
+      final controller = MapLibreMapController()
+        ..debugSetMap(
+          MapLibreMap.fromJsObject(
+            recordingMap(recorded) as MapLibreMapJsImpl,
+          ),
+        );
 
       await expectLater(
         call.value(controller),
@@ -124,10 +121,10 @@ void main() {
   // iOS.
   test('setLayersVisibility with no ids answers an empty list', () async {
     final recorded = <String>[];
-    final controller =
-        MapLibreMapController()..debugSetMap(
-          MapLibreMap.fromJsObject(recordingMap(recorded) as MapLibreMapJsImpl),
-        );
+    final controller = MapLibreMapController()
+      ..debugSetMap(
+        MapLibreMap.fromJsObject(recordingMap(recorded) as MapLibreMapJsImpl),
+      );
 
     expect(await controller.setLayersVisibility([], false), isEmpty);
     expect(recorded, isEmpty);

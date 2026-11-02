@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Actions needed
+* Flutter 3.44 and Dart 3.12 are the minimum (#1177).
 * `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
 * `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed, as Android and iOS no longer answer them. A platform package or a test fake extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView))` in `maplibre_gl`. Until a platform registers, the defaults are placeholders, and `isRegistered` on both classes tells whether one did. The unused `onInfoWindowTappedPlatform` callback is removed too (#1133).
 * `MapLibrePlatform.onCameraMoveStartedPlatform` passes what started the move and no longer takes `null`. A platform package or a test fake replaces `onCameraMoveStartedPlatform(null)` with `onCameraMoveStartedPlatform(CameraMoveReason.programmatic)`, or `gesture` for a move of the user (#1159).

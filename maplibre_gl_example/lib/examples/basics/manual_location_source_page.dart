@@ -330,10 +330,9 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
             ExampleButton(
               label: 'Push one update',
               icon: Icons.my_location,
-              onPressed:
-                  hasController && !_simulating
-                      ? () => unawaited(_stepOnce())
-                      : null,
+              onPressed: hasController && !_simulating
+                  ? () => unawaited(_stepOnce())
+                  : null,
               style: ExampleButtonStyle.tonal,
             ),
           ],
@@ -347,10 +346,9 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
               ChoiceChip(
                 label: Text(_trackingLabel(mode)),
                 selected: _trackingMode == mode,
-                onSelected:
-                    hasController
-                        ? (_) => unawaited(_setTrackingMode(mode))
-                        : null,
+                onSelected: hasController
+                    ? (_) => unawaited(_setTrackingMode(mode))
+                    : null,
               ),
           ],
         ),
@@ -369,8 +367,9 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
                     ChoiceChip(
                       label: Text(_renderLabel(mode)),
                       selected: _renderMode == mode,
-                      onSelected:
-                          hasController ? (_) => _setRenderMode(mode) : null,
+                      onSelected: hasController
+                          ? (_) => _setRenderMode(mode)
+                          : null,
                     ),
                 ],
               ),
@@ -386,10 +385,9 @@ class _ManualLocationSourceBodyState extends State<_ManualLocationSourceBody> {
               ChoiceChip(
                 label: Text(name),
                 selected: _puckStyle == name,
-                onSelected:
-                    hasController
-                        ? (_) => setState(() => _puckStyle = name)
-                        : null,
+                onSelected: hasController
+                    ? (_) => setState(() => _puckStyle = name)
+                    : null,
               ),
           ],
         ),

@@ -3,6 +3,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 ## Unreleased
 
 ### Actions needed
+* Flutter 3.44 and Dart 3.12 are the minimum (#1177).
 * Some calls that used to do nothing, or answer a wrong value, now throw. Add a `catch` where your app can hit them (#1065, #1068, #1119, #1123):
   * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.

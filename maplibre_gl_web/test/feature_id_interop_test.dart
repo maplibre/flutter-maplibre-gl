@@ -84,13 +84,11 @@ void main() {
               as JSObject;
       source.setProperty(
         'serialize'.toJS,
-        (() =>
-                {
-                  'type': 'geojson',
-                  if (promoteId != null) 'promoteId': promoteId,
-                  if (generateId != null) 'generateId': generateId,
-                }.jsify())
-            .toJS,
+        (() => {
+          'type': 'geojson',
+          'promoteId': ?promoteId,
+          'generateId': ?generateId,
+        }.jsify()).toJS,
       );
       return source;
     }
@@ -171,13 +169,12 @@ void main() {
 
       // A source with the promoteId but not the worker options.
       debugResetFeatureIdWarning();
-      final noWorker =
-          source(fields: false)
-            ..setProperty('promoteId'.toJS, null)
-            ..setProperty(
-              'workerOptions'.toJS,
-              {'geojsonVtOptions': <String, Object?>{}}.jsify(),
-            );
+      final noWorker = source(fields: false)
+        ..setProperty('promoteId'.toJS, null)
+        ..setProperty(
+          'workerOptions'.toJS,
+          {'geojsonVtOptions': <String, Object?>{}}.jsify(),
+        );
       expect(promoteFeatureIds(noWorker, promote: true), isFalse);
       expect(promoteFeatureIds(noWorker, promote: true), isFalse);
       expect(noWorker.getProperty<JSAny?>('promoteId'.toJS), isNull);

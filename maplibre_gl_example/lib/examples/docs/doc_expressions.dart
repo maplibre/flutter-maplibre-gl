@@ -129,23 +129,22 @@ class _DocExpressionsBodyState extends State<_DocExpressionsBody> {
 
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
-      'features':
-          _countries
-              .map(
-                (c) => {
-                  'type': 'Feature',
-                  'properties': {
-                    'name': c['name'],
-                    'continent': c['continent'],
-                    'gdp': c['gdp'],
-                  },
-                  'geometry': {
-                    'type': 'Polygon',
-                    'coordinates': [c['coords']],
-                  },
-                },
-              )
-              .toList(),
+      'features': _countries
+          .map(
+            (c) => {
+              'type': 'Feature',
+              'properties': {
+                'name': c['name'],
+                'continent': c['continent'],
+                'gdp': c['gdp'],
+              },
+              'geometry': {
+                'type': 'Polygon',
+                'coordinates': [c['coords']],
+              },
+            },
+          )
+          .toList(),
     });
 
     // Color by continent using match expression

@@ -16,6 +16,7 @@ import java.lang.reflect.Proxy
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Consumer
 import kotlin.concurrent.thread
 
 /**
@@ -29,7 +30,7 @@ class MapLibreHttpRequestUtilTest {
     @Before
     fun setUp() {
         MapLibreHttpRequestUtil.resetForTest()
-        MapLibreHttpRequestUtil.install = MapLibreHttpRequestUtil.ClientInstaller { installed.add(it) }
+        MapLibreHttpRequestUtil.install = Consumer<OkHttpClient> { installed.add(it) }
     }
 
     @After
@@ -186,7 +187,7 @@ class MapLibreHttpRequestUtilTest {
 
     @Test
     fun aClientThatCannotBeInstalledAnswersHttpClientError() {
-        MapLibreHttpRequestUtil.install = MapLibreHttpRequestUtil.ClientInstaller { throw IllegalStateException("no") }
+        MapLibreHttpRequestUtil.install = Consumer<OkHttpClient> { throw IllegalStateException("no") }
 
         assertEquals("HTTP_CLIENT_ERROR", failure { MapLibreHttpRequestUtil.setHttpHeaders(emptyMap(), it) }.code)
     }

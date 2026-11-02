@@ -28,9 +28,8 @@ class LocationPuckStyler {
       return;
     }
     _container.classList.add(_scopeClass);
-    final element =
-        _styleElement ??=
-            web.document.createElement('style') as web.HTMLStyleElement;
+    final element = _styleElement ??=
+        web.document.createElement('style') as web.HTMLStyleElement;
     element.textContent = css;
     if (element.parentNode == null) _container.appendChild(element);
   }

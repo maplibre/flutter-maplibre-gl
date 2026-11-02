@@ -86,14 +86,14 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     setState(() => _isLoading = true);
     try {
       final ids = (await _controller!.getLayerIds()).cast<String>();
-      final props =
-          ids.isEmpty ? null : await _controller!.getLayerProperties(ids.first);
+      final props = ids.isEmpty
+          ? null
+          : await _controller!.getLayerProperties(ids.first);
       setState(() {
-        _displayData =
-            props == null
-                ? 'No layers found.'
-                : 'Layer "${ids.first}":\n'
-                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _displayData = props == null
+            ? 'No layers found.'
+            : 'Layer "${ids.first}":\n'
+                  '${const JsonEncoder.withIndent('  ').convert(props)}';
         _isLoading = false;
       });
     } catch (e) {
@@ -111,16 +111,14 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
     setState(() => _isLoading = true);
     try {
       final ids = await _controller!.getSourceIds();
-      final props =
-          ids.isEmpty
-              ? null
-              : await _controller!.getSourceProperties(ids.first);
+      final props = ids.isEmpty
+          ? null
+          : await _controller!.getSourceProperties(ids.first);
       setState(() {
-        _displayData =
-            props == null
-                ? 'No sources found.'
-                : 'Source "${ids.first}":\n'
-                    '${const JsonEncoder.withIndent('  ').convert(props)}';
+        _displayData = props == null
+            ? 'No sources found.'
+            : 'Source "${ids.first}":\n'
+                  '${const JsonEncoder.withIndent('  ').convert(props)}';
         _isLoading = false;
       });
     } catch (e) {
@@ -223,10 +221,9 @@ class _GetMapInfoBodyState extends State<_GetMapInfoBody> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12.0),
                       decoration: BoxDecoration(
-                        color:
-                            Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: SelectableText(

@@ -1169,10 +1169,9 @@ void main() {
     /// The names of the features of [json] that carry the marker.
     Set<String> marked(Object? json) {
       final data = json is String ? jsonDecode(json) as Map : json! as Map;
-      final features =
-          data['type'] == 'FeatureCollection'
-              ? data['features'] as List
-              : [data];
+      final features = data['type'] == 'FeatureCollection'
+          ? data['features'] as List
+          : [data];
       return {
         for (final feature in features.cast<Map>())
           if ((feature['properties'] as Map).containsKey(marker))
@@ -1257,7 +1256,7 @@ void main() {
 
     Map<String, dynamic> point(Object? id) => {
       'type': 'Feature',
-      if (id != null) 'id': id,
+      'id': ?id,
       'properties': {'name': '$id'},
       'geometry': {
         'type': 'Point',
@@ -3257,10 +3256,9 @@ void main() {
     }) => {
       'options': <String, dynamic>{
         'compassEnabled': true,
-        if (translucentTextureSurface != null)
-          'translucentTextureSurface': translucentTextureSurface,
+        'translucentTextureSurface': ?translucentTextureSurface,
       },
-      if (androidView != null) 'androidView': androidView,
+      'androidView': ?androidView,
     };
 
     /// What [creationParams] becomes, with the Android view.

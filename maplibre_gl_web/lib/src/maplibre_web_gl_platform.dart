@@ -131,13 +131,12 @@ class MapLibreMapController extends MapLibrePlatform
     ui_web.platformViewRegistry.registerViewFactory(
       'plugins.flutter.io/maplibre_gl_$identifier',
       (int viewId) {
-        _mapElement =
-            (web.document.createElement('div') as web.HTMLDivElement)
-              ..style.position = 'absolute'
-              ..style.top = '0'
-              ..style.bottom = '0'
-              ..style.height = '100%'
-              ..style.width = '100%';
+        _mapElement = (web.document.createElement('div') as web.HTMLDivElement)
+          ..style.position = 'absolute'
+          ..style.top = '0'
+          ..style.bottom = '0'
+          ..style.height = '100%'
+          ..style.width = '100%';
         callback(viewId);
         return _mapElement;
       },
@@ -167,10 +166,9 @@ class MapLibreMapController extends MapLibrePlatform
       _map = MapLibreMap(
         MapOptions(
           container: _mapElement,
-          center:
-              (camera != null)
-                  ? LngLat(camera['target'][1], camera['target'][0])
-                  : null,
+          center: (camera != null)
+              ? LngLat(camera['target'][1], camera['target'][0])
+              : null,
           zoom: camera?['zoom'],
           bearing: camera?['bearing'],
           pitch: camera?['tilt'],
@@ -491,10 +489,10 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.flyTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
       }, eventData),
     );
@@ -842,12 +840,12 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.easeTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
-        if (easing != null) 'easing': easing,
+        'easing': ?easing,
       }, eventData),
     );
   }
@@ -1119,15 +1117,13 @@ class MapLibreMapController extends MapLibrePlatform
   /// that way instead of throwing.
   List<String> _mapErrorsDuring(void Function() action) {
     final errors = <String>[];
-    final listener =
-        ((JSObject event) {
-          final message =
-              event
-                  .getProperty<JSObject?>('error'.toJS)
-                  ?.getProperty<JSString?>('message'.toJS)
-                  ?.toDart;
-          if (message != null) errors.add(message);
-        }).toJS;
+    final listener = ((JSObject event) {
+      final message = event
+          .getProperty<JSObject?>('error'.toJS)
+          ?.getProperty<JSString?>('message'.toJS)
+          ?.toDart;
+      if (message != null) errors.add(message);
+    }).toJS;
     final map = _map.jsObject as JSObject;
     map.callMethod<JSAny?>('on'.toJS, 'error'.toJS, listener);
     try {
@@ -2066,8 +2062,8 @@ class MapLibreMapController extends MapLibrePlatform
   /// it at all.
   String? _existingLayerId(String? belowLayerId) =>
       belowLayerId != null && _map.getLayer(belowLayerId) != null
-          ? belowLayerId
-          : null;
+      ? belowLayerId
+      : null;
 
   /// Throws `LAYER_NOT_FOUND_ERROR`, as Android and iOS do, for a missing
   /// layer. maplibre-gl-js only fires an error event, which callers never see.
@@ -2149,7 +2145,7 @@ class MapLibreMapController extends MapLibrePlatform
       sourceId,
       jsifyMap({
         'type': 'geojson',
-        if (promoteId != null) 'promoteId': promoteId,
+        'promoteId': ?promoteId,
       }),
       data,
       features,
@@ -2203,8 +2199,9 @@ class MapLibreMapController extends MapLibrePlatform
     final List<_SourceFeature> features;
     switch (jsonValueOf(geojson['type'])) {
       case 'FeatureCollection':
-        final jsFeatures =
-            data.getProperty<JSArray<JSAny?>>('features'.toJS).toDart;
+        final jsFeatures = data
+            .getProperty<JSArray<JSAny?>>('features'.toJS)
+            .toDart;
         final dartFeatures = jsonValueOf(geojson['features'])! as List;
         features = [
           for (var i = 0; i < dartFeatures.length; i++)
@@ -2765,7 +2762,7 @@ class MapLibreMapController extends MapLibrePlatform
       belowLayerId: belowLayerId,
       source: <String, dynamic>{
         'source': sourceId,
-        if (sourceLayer != null) 'source-layer': sourceLayer,
+        'source-layer': ?sourceLayer,
       },
       minzoom: minzoom,
       maxzoom: maxzoom,
@@ -2808,7 +2805,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     final colorErrors = <String, String>{
       for (final MapEntry(:key, :value) in properties.entries)
-        if (checks.hexColorError(key, value) case final reason?) key: reason,
+        key: ?checks.hexColorError(key, value),
     };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
@@ -2827,9 +2824,9 @@ class MapLibreMapController extends MapLibrePlatform
           for (final entry in kept.entries)
             if (!isLayoutProperty(entry.key)) entry.key: entry.value,
         },
-        if (minzoom != null) 'minzoom': minzoom,
-        if (maxzoom != null) 'maxzoom': maxzoom,
-        if (filter != null) 'filter': filter,
+        'minzoom': ?minzoom,
+        'maxzoom': ?maxzoom,
+        'filter': ?filter,
       };
       final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
       String? filterReason;
@@ -2928,11 +2925,10 @@ class MapLibreMapController extends MapLibrePlatform
 
   void _handleLayerMouseMove(Event e, String layerId) {
     // As text, the id the tap and drag callbacks get.
-    final currentHoveredFeatures =
-        e.features
-            .map((f) => plainFeatureId(f.id)?.toString())
-            .whereType<String>()
-            .toList();
+    final currentHoveredFeatures = e.features
+        .map((f) => plainFeatureId(f.id)?.toString())
+        .whereType<String>()
+        .toList();
     final lastHoveredFeatures = _hoveredFeatureIdsByLayer[layerId] ?? [];
     final features = <String>{
       ...currentHoveredFeatures,
@@ -3470,8 +3466,9 @@ class MapLibreMapController extends MapLibrePlatform
         details: 'Layer with id $layerId not found.',
       );
     }
-    final type =
-        (layer as JSObject).getProperty<JSString?>('type'.toJS)?.toDart;
+    final type = (layer as JSObject)
+        .getProperty<JSString?>('type'.toJS)
+        ?.toDart;
     if (!_filterableLayerTypes.contains(type)) {
       throw PlatformException(
         code: 'INVALID_LAYER_TYPE',

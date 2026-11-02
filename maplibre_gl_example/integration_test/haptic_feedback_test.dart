@@ -22,9 +22,8 @@ void main() {
       testWidgets('the map is created with $enabled', (tester) async {
         final controller = await pumpMap(
           tester,
-          builder:
-              (onMapCreated, onStyleLoaded) =>
-                  _map(onMapCreated, onStyleLoaded, enabled: enabled),
+          builder: (onMapCreated, onStyleLoaded) =>
+              _map(onMapCreated, onStyleLoaded, enabled: enabled),
         );
 
         final region = await pumpUntil(

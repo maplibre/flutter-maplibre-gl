@@ -57,20 +57,20 @@ void main() {
       'mergeOfflineRegions': () => platform.mergeOfflineRegions('path'),
       'getOfflineDatabasePath': platform.getOfflineDatabasePath,
       'getListOfRegions': platform.getListOfRegions,
-      'updateOfflineRegionMetadata':
-          () => platform.updateOfflineRegionMetadata(1, {}),
+      'updateOfflineRegionMetadata': () =>
+          platform.updateOfflineRegionMetadata(1, {}),
       'setOfflineTileCountLimit': () => platform.setOfflineTileCountLimit(1),
-      'setOfflineMaxConcurrentRequests':
-          () => platform.setOfflineMaxConcurrentRequests(maxRequestsPerHost: 1),
-      'pauseOfflineRegionDownload':
-          () => platform.pauseOfflineRegionDownload(1),
-      'resumeOfflineRegionDownload':
-          () => platform.resumeOfflineRegionDownload(1),
+      'setOfflineMaxConcurrentRequests': () =>
+          platform.setOfflineMaxConcurrentRequests(maxRequestsPerHost: 1),
+      'pauseOfflineRegionDownload': () =>
+          platform.pauseOfflineRegionDownload(1),
+      'resumeOfflineRegionDownload': () =>
+          platform.resumeOfflineRegionDownload(1),
       'getOfflineRegionStatus': () => platform.getOfflineRegionStatus(1),
       'deleteOfflineRegion': () => platform.deleteOfflineRegion(1),
       'clearAmbientCache': platform.clearAmbientCache,
-      'setMaximumAmbientCacheSize':
-          () => platform.setMaximumAmbientCacheSize(0),
+      'setMaximumAmbientCacheSize': () =>
+          platform.setMaximumAmbientCacheSize(0),
       'resetOfflineDatabase': platform.resetOfflineDatabase,
       'downloadOfflineRegion': () => platform.downloadOfflineRegion(definition),
     };

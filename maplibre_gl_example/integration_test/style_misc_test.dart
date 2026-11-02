@@ -81,19 +81,18 @@ void main() {
     final loads = _StyleLoads();
     final controller = await pumpMap(
       tester,
-      builder:
-          (onMapCreated, onStyleLoaded) => MapLibreMap(
-            styleString: offlineStyle,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-              zoom: 3,
-            ),
-            onMapCreated: onMapCreated,
-            onStyleLoadedCallback: () {
-              onStyleLoaded();
-              loads.onLoaded();
-            },
-          ),
+      builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+        styleString: offlineStyle,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(0, 0),
+          zoom: 3,
+        ),
+        onMapCreated: onMapCreated,
+        onStyleLoadedCallback: () {
+          onStyleLoaded();
+          loads.onLoaded();
+        },
+      ),
     );
     expect(loads.count, 1);
 
@@ -141,19 +140,18 @@ void main() {
     final loads = _StyleLoads();
     final controller = await pumpMap(
       tester,
-      builder:
-          (onMapCreated, onStyleLoaded) => MapLibreMap(
-            styleString: offlineStyle,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-              zoom: 3,
-            ),
-            onMapCreated: onMapCreated,
-            onStyleLoadedCallback: () {
-              onStyleLoaded();
-              loads.onLoaded();
-            },
-          ),
+      builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+        styleString: offlineStyle,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(0, 0),
+          zoom: 3,
+        ),
+        onMapCreated: onMapCreated,
+        onStyleLoadedCallback: () {
+          onStyleLoaded();
+          loads.onLoaded();
+        },
+      ),
     );
 
     final initial = await _readStyle(tester, controller);

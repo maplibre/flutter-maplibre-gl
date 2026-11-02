@@ -87,16 +87,15 @@ void main() {
     test('points with long properties are encoded in the background', () {
       final names = points(
         1000,
-        properties:
-            (i) => {
-              'name': 'Point of interest number $i',
-              'address': '$i Some Street, Some City',
-              'opening_hours': 'Mo-Fr 09:00-18:00; Sa 10:00-14:00',
-              'website': 'https://example.com/poi/$i',
-              'kind': 'restaurant',
-              'rating': 4.5,
-              'tags': ['food', 'outdoor', 'family'],
-            },
+        properties: (i) => {
+          'name': 'Point of interest number $i',
+          'address': '$i Some Street, Some City',
+          'opening_hours': 'Mo-Fr 09:00-18:00; Sa 10:00-14:00',
+          'website': 'https://example.com/poi/$i',
+          'kind': 'restaurant',
+          'rating': 4.5,
+          'tags': ['food', 'outdoor', 'family'],
+        },
       );
       final descriptions = points(
         1000,

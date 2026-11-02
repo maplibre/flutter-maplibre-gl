@@ -53,19 +53,18 @@ class _DocCircleLayerBodyState extends State<_DocCircleLayerBody> {
 
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
-      'features':
-          _earthquakes
-              .map(
-                (e) => {
-                  'type': 'Feature',
-                  'properties': {'magnitude': e['mag'], 'place': e['place']},
-                  'geometry': {
-                    'type': 'Point',
-                    'coordinates': [e['lng'], e['lat']],
-                  },
-                },
-              )
-              .toList(),
+      'features': _earthquakes
+          .map(
+            (e) => {
+              'type': 'Feature',
+              'properties': {'magnitude': e['mag'], 'place': e['place']},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [e['lng'], e['lat']],
+              },
+            },
+          )
+          .toList(),
     });
 
     await ctrl.addCircleLayer(
