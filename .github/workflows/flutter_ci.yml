@@ -265,12 +265,12 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           gradle-version: '9.8.2'
-      - name: AGP 9.4.1, built-in Kotlin off
+      - name: AGP 9.5.0, built-in Kotlin off
         if: ${{ !cancelled() }}
         working-directory: .github/gradle-compat
         run: >
           gradle :maplibre_gl:help
-          -PagpVersion=9.4.1 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
+          -PagpVersion=9.5.0 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
           -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
       # Each maplibre_gl.renderer value resolves its MapLibre Android artifact, which the example
       # app, built with the default, never checks; and a typo fails instead of falling back (#915).
@@ -278,7 +278,7 @@ jobs:
         if: ${{ !cancelled() }}
         working-directory: .github/gradle-compat
         run: |
-          args="-PagpVersion=9.4.1 -PkgpVersion=2.4.21 -Pandroid.builtInKotlin=false -Pandroid.newDsl=false"
+          args="-PagpVersion=9.5.0 -PkgpVersion=2.4.21 -Pandroid.builtInKotlin=false -Pandroid.newDsl=false"
           for pair in opengl:android-sdk-opengl vulkan:android-sdk-vulkan auto:android-sdk-vulkan-opengl; do
             renderer=${pair%%:*} artifact=${pair#*:}
             out=$(gradle :maplibre_gl:dependencies --configuration releaseRuntimeClasspath $args -Pmaplibre_gl.renderer=$renderer)
