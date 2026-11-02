@@ -6,7 +6,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Highlights
-0.28.0 makes Android, iOS and web work alike: the same call gives the same result and the same error on every platform, and Android and iOS now reach native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages. It moves to MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 6.16, and adds layer calls such as `moveLayer` and `setLayerZoomRange`. Most apps upgrade without code changes: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
+**Android, iOS and web now work alike**: the same call gives the same result, and the same error, on every platform. Android and iOS also reach native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of hand-written method channels.
+
+The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 6.16**, brings feature state to iOS and global state to Android and iOS, adds layer calls such as `moveLayer` and `setLayerZoomRange`, and updates a single annotation about 5x faster. Android maps can now draw with Vulkan and build without Google Play Services. **Most apps upgrade without code changes**: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
 
 ### Actions needed
 * Flutter 3.44, Dart 3.12, Android API 24 and iOS 15.5 are the minimum, and iOS builds with Swift Package Manager: turn it back on if your app disabled it. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#minimum-versions) (#1170, #1177).
