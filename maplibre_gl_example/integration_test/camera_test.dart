@@ -894,8 +894,9 @@ void main() {
       );
     }
 
-    // The MapLibre Android location component tilts linearly. Web has no
-    // location component.
+    // The MapLibre Android location component tilts linearly, with a system
+    // ValueAnimator that the CI emulator, run with animations off, ends at
+    // once; so this runs on iOS only. Web has no location component.
     testWidgets('setTrackingCameraOptions tilts at constant speed', (
       tester,
     ) async {
@@ -956,7 +957,7 @@ void main() {
           reason: 'share of the tilt at $time of the duration ($samples)',
         );
       }
-    }, skip: kIsWeb);
+    }, skip: kIsWeb || defaultTargetPlatform != TargetPlatform.iOS);
   });
 
   group('tracked camera and callbacks', () {
