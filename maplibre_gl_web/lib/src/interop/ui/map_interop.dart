@@ -177,7 +177,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   /// Library versions 6 and later only. 5 has the `transformCameraUpdate`
   /// property instead, see [MapLibreMap.setTransformCameraUpdate].
-  external MapLibreMapJsImpl setTransformCameraUpdate(JSFunction? transform);
+  external void setTransformCameraUpdate(JSFunction? transform);
 
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
