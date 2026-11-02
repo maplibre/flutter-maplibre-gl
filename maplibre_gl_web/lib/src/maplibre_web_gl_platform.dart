@@ -20,6 +20,12 @@ class MapLibreMapController extends MapLibrePlatform
   /// now that it loads maplibre-gl-js first, and [dispose] still runs after
   /// that: reading a `late` field that was never written throws.
   bool _mapCreated = false;
+
+  /// Whether [dispose] has run.
+  bool _disposed = false;
+
+  /// The waits for the next idle event, which [dispose] completes.
+  final _idleWaits = <Completer<void>>{};
   final _featureDrag = FeatureDragTracker();
   bool _dragEnabled = true;
 
@@ -116,6 +122,12 @@ class MapLibreMapController extends MapLibrePlatform
       'MAP_DISPOSED',
       'The map was disposed before the snapshot was ready.',
     );
+    // A removed map fires no more idle events.
+    _disposed = true;
+    for (final wait in _idleWaits) {
+      wait.complete();
+    }
+    _idleWaits.clear();
     _removeManualPuck();
     _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
@@ -3638,9 +3650,20 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> waitUntilMapIsIdleAfterMovement() async {
-    final complete = Completer<void>();
-    _map.once('idle', (_) => complete.complete());
-    return complete.future;
+    // A map that is not moving or loading fires no more idle events. Android
+    // and iOS answer at once too.
+    if (_disposed || (!_map.isMoving() && _map.loaded())) return;
+    return _nextIdle();
+  }
+
+  /// Completes on the next idle event, or when the map is disposed.
+  Future<void> _nextIdle() {
+    final idle = Completer<void>();
+    _idleWaits.add(idle);
+    _map.once('idle', (_) {
+      if (_idleWaits.remove(idle)) idle.complete();
+    });
+    return idle.future;
   }
 
   @override
@@ -3675,7 +3698,8 @@ class MapLibreMapController extends MapLibrePlatform
     _map.getContainer().style.height = '${size.height}px';
     _map.resize();
 
-    await waitUntilMapIsIdleAfterMovement();
+    // The resize redraws the map, so an idle event follows.
+    await _nextIdle();
     return initialSize;
   }
 

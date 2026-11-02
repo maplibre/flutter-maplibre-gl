@@ -202,6 +202,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 * **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156, #1158).
 * **Web**: `setFeatureState`, `getFeatureState` and `removeFeatureState` ignore `sourceLayer` on a GeoJSON source, as on Android and iOS. MapLibre GL JS left the state unchanged, or read none, when one was given (#TBD).
+* **Web**: `waitUntilMapIsIdleAfterMovement` completes at once when the map is not moving or loading, as on Android and iOS, and when the map is disposed. It waited for an idle event that might never come (#TBD).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).

@@ -64,6 +64,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * Feature ids come back from the queries and the cluster calls as they are in the data: `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. `["id"]` filters, feature state and the tap, drag and hover callbacks use the same ids. A source the app gives a `promoteId` keeps it, and a source with `generateId` keeps the ids MapLibre GL JS generates (#1124).
 * `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1158).
 * `setFeatureState`, `getFeatureState` and `removeFeatureState` ignore `sourceLayer` on a GeoJSON source, as on Android and iOS. MapLibre GL JS left the state unchanged, or read none, when one was given (#TBD).
+* `waitUntilMapIsIdleAfterMovement` completes at once when the map is not moving or loading, as on Android and iOS, and when the map is disposed. It waited for an idle event that might never come (#TBD).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
