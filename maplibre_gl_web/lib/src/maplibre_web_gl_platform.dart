@@ -489,10 +489,10 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.flyTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
       }, eventData),
     );
@@ -840,12 +840,12 @@ class MapLibreMapController extends MapLibrePlatform
     return _runCameraAnimation(
       (eventData) => _map.easeTo({
         if (around != null) 'around': around.jsObject,
-        if (bearing != null) 'bearing': bearing,
+        'bearing': ?bearing,
         if (center != null) 'center': center.jsObject,
-        if (pitch != null) 'pitch': pitch,
-        if (zoom != null) 'zoom': zoom,
+        'pitch': ?pitch,
+        'zoom': ?zoom,
         if (duration != null) 'duration': duration.inMilliseconds,
-        if (easing != null) 'easing': easing,
+        'easing': ?easing,
       }, eventData),
     );
   }
@@ -2145,7 +2145,7 @@ class MapLibreMapController extends MapLibrePlatform
       sourceId,
       jsifyMap({
         'type': 'geojson',
-        if (promoteId != null) 'promoteId': promoteId,
+        'promoteId': ?promoteId,
       }),
       data,
       features,
@@ -2762,7 +2762,7 @@ class MapLibreMapController extends MapLibrePlatform
       belowLayerId: belowLayerId,
       source: <String, dynamic>{
         'source': sourceId,
-        if (sourceLayer != null) 'source-layer': sourceLayer,
+        'source-layer': ?sourceLayer,
       },
       minzoom: minzoom,
       maxzoom: maxzoom,
@@ -2805,7 +2805,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     final colorErrors = <String, String>{
       for (final MapEntry(:key, :value) in properties.entries)
-        if (checks.hexColorError(key, value) case final reason?) key: reason,
+        key: ?checks.hexColorError(key, value),
     };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
@@ -2824,9 +2824,9 @@ class MapLibreMapController extends MapLibrePlatform
           for (final entry in kept.entries)
             if (!isLayoutProperty(entry.key)) entry.key: entry.value,
         },
-        if (minzoom != null) 'minzoom': minzoom,
-        if (maxzoom != null) 'maxzoom': maxzoom,
-        if (filter != null) 'filter': filter,
+        'minzoom': ?minzoom,
+        'maxzoom': ?maxzoom,
+        'filter': ?filter,
       };
       final errors = _mapErrorsDuring(() => _map.addLayer(layer, before));
       String? filterReason;

@@ -896,8 +896,7 @@ int? _id(dynamic feature) => num.tryParse('${(feature as Map)['id']}')?.toInt();
 /// The distinct ids in [features]; a feature near a tile edge can be reported
 /// once per tile.
 Set<int> _ids(List features) => {
-  for (final feature in features)
-    if (_id(feature) case final id?) id,
+  for (final feature in features) ?_id(feature),
 };
 
 Map _byId(List features, int id) =>

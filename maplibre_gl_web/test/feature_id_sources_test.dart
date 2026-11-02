@@ -159,8 +159,8 @@ class _FakeMap {
             'id': id,
             'type': 'circle',
             'source': source,
-            if (filter != null) 'filter': filter,
-            if (paint != null) 'paint': paint,
+            'filter': ?filter,
+            'paint': ?paint,
           }.jsify()!
           as JSObject,
     );
@@ -196,7 +196,7 @@ Map<String, Object?> _collection(List<Object?> ids) => {
     for (final id in ids)
       {
         'type': 'Feature',
-        if (id != null) 'id': id,
+        'id': ?id,
         'geometry': {
           'type': 'Point',
           'coordinates': [0, 0],

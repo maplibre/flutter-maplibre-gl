@@ -349,15 +349,12 @@ class CircleManager extends AnnotationManager<Circle> {
 class SymbolManager extends AnnotationManager<Symbol> {
   SymbolManager(
     super.controller, {
-    bool iconAllowOverlap = false,
-    bool textAllowOverlap = false,
-    bool iconIgnorePlacement = false,
-    bool textIgnorePlacement = false,
+    this._iconAllowOverlap = false,
+    this._textAllowOverlap = false,
+    this._iconIgnorePlacement = false,
+    this._textIgnorePlacement = false,
     super.enableInteraction = true,
-  }) : _iconAllowOverlap = iconAllowOverlap,
-       _textAllowOverlap = textAllowOverlap,
-       _iconIgnorePlacement = iconIgnorePlacement,
-       _textIgnorePlacement = textIgnorePlacement;
+  });
 
   bool _iconAllowOverlap;
   bool _textAllowOverlap;

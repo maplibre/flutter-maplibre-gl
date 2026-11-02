@@ -1256,7 +1256,7 @@ void main() {
 
     Map<String, dynamic> point(Object? id) => {
       'type': 'Feature',
-      if (id != null) 'id': id,
+      'id': ?id,
       'properties': {'name': '$id'},
       'geometry': {
         'type': 'Point',
@@ -3256,10 +3256,9 @@ void main() {
     }) => {
       'options': <String, dynamic>{
         'compassEnabled': true,
-        if (translucentTextureSurface != null)
-          'translucentTextureSurface': translucentTextureSurface,
+        'translucentTextureSurface': ?translucentTextureSurface,
       },
-      if (androidView != null) 'androidView': androidView,
+      'androidView': ?androidView,
     };
 
     /// What [creationParams] becomes, with the Android view.

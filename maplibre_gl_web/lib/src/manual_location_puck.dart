@@ -23,8 +23,8 @@ import 'package:web/web.dart' as web;
 class ManualLocationPuck {
   ManualLocationPuck(
     this._map, {
-    required void Function(bool) onTrackingChanged,
-  }) : _onTrackingChanged = onTrackingChanged;
+    required this._onTrackingChanged,
+  });
 
   final MapLibreMap _map;
 

@@ -86,8 +86,8 @@ void main() {
         'serialize'.toJS,
         (() => {
           'type': 'geojson',
-          if (promoteId != null) 'promoteId': promoteId,
-          if (generateId != null) 'generateId': generateId,
+          'promoteId': ?promoteId,
+          'generateId': ?generateId,
         }.jsify()).toJS,
       );
       return source;

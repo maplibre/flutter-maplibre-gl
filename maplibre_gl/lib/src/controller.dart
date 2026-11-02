@@ -128,7 +128,7 @@ typedef OnMapIdleCallback = void Function();
 ///   takes such a number.
 class MapLibreMapController extends ChangeNotifier {
   MapLibreMapController({
-    required MapLibrePlatform maplibrePlatform,
+    required this._maplibrePlatform,
     CameraPosition? initialCameraPosition,
     required Iterable<AnnotationType> annotationOrder,
     required Iterable<AnnotationType> annotationConsumeTapEvents,
@@ -142,7 +142,7 @@ class MapLibreMapController extends ChangeNotifier {
     this.onCameraIdle,
     this.onCameraMoveStarted,
     this.onCameraMove,
-  }) : _maplibrePlatform = maplibrePlatform {
+  }) {
     _cameraPosition = initialCameraPosition;
 
     _maplibrePlatform.onFeatureTappedPlatform.add((payload) {

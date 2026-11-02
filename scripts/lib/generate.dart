@@ -458,7 +458,7 @@ List<Map<String, dynamic>> buildSourceProperties(
       .map(
         (e) => buildSourceProperty(e.key, {
           ...e.value as Map<String, dynamic>,
-          if (overrides[e.key] case final doc?) "doc": doc,
+          "doc": ?overrides[e.key],
         }),
       )
       .toList();

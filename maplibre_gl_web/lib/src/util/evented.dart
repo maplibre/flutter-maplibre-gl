@@ -21,9 +21,8 @@ class Subscription extends JsObjectWrapper<SubscriptionJsImpl> {
     _onUnsubscribe?.call();
   }
 
-  Subscription.fromJsObject(super.jsObject, {void Function()? onUnsubscribe})
-    : _onUnsubscribe = onUnsubscribe,
-      super.fromJsObject();
+  Subscription.fromJsObject(super.jsObject, {this._onUnsubscribe})
+    : super.fromJsObject();
 }
 
 class Event extends JsObjectWrapper<EventJsImpl> {

@@ -570,7 +570,7 @@ Map<String, dynamic> _feature(
     'type': 'Point',
     'coordinates': [at.longitude, at.latitude],
   },
-  'properties': {'name': name, 'draggable': true, if (ref != null) 'ref': ref},
+  'properties': {'name': name, 'draggable': true, 'ref': ?ref},
 };
 
 Map<String, dynamic> _featureCollection({LatLng Function(LatLng at)? place}) =>

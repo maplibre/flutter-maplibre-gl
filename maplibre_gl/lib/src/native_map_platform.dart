@@ -1112,8 +1112,7 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }) {
     final names = keys.toSet();
     final pending = {
-      for (final name in names)
-        if (_pendingCalls[name] case final future?) future,
+      for (final name in names) ?_pendingCalls[name],
     };
     if (pending.isEmpty && !always) return call();
     // A failed call must not block the calls queued behind it, so its error
