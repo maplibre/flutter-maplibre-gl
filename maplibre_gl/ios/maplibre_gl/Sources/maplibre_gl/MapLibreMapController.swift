@@ -720,18 +720,21 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if let duration = duration.flatMap({ Double(exactly: $0) }), duration > 0 {
             let interval: TimeInterval = duration / 1000.0
 
-            // Ease in and out when Dart names no curve.
+            // The curves web eases with where MLNMapView can ease along them. Ease in and out
+            // when Dart names no curve.
             let timingFunction: CAMediaTimingFunction
             switch interpolation ?? .easeInOut {
             case .linear:
-                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+                timingFunction = .cameraEasing(1, 1)
             case .easeInOut:
-                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                // No curve MLNMapView can have eases both in and out, so MapLibre Native's
+                // own easing, as on Android.
+                timingFunction = .nativeCameraEasing
             case .easeOut:
-                timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
+                timingFunction = .cameraEasing(0.58, 1)
             case .fastOutLinearIn:
-                // Material Design "fast out, linear in" cubic Bezier (0.4, 0.0, 1.0, 1.0).
-                timingFunction = CAMediaTimingFunction(controlPoints: 0.4, 0.0, 1.0, 1.0)
+                // Material Design "fast out, linear in", (0.4, 0, 1, 1), within 1% of the way.
+                timingFunction = .cameraEasing(0.4, 0)
             }
 
             cameraAnimations.track(result: result) { completion in
@@ -745,7 +748,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     mapView.setCamera(
                         camera,
                         withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                        animationTimingFunction: nil,
+                        animationTimingFunction: .nativeCameraEasing,
                         completionHandler: completion
                     )
                 }
@@ -802,7 +805,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                     mapView.setCamera(
                         camera,
                         withDuration: MapLibreMapController.defaultCameraAnimationDuration,
-                        animationTimingFunction: nil,
+                        animationTimingFunction: .nativeCameraEasing,
                         completionHandler: completion
                     )
                 }
@@ -835,9 +838,23 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
         let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
-        let bounds = MLNCoordinateBounds(sw: southwest, ne: northeast)
-        mapView.setVisibleCoordinateBounds(bounds, edgePadding: UIEdgeInsets(top: padding,
-            left: padding, bottom: padding, right: padding) , animated: true)
+        // The corners setVisibleCoordinateBounds(_:edgePadding:animated:) fits, eased along
+        // MapLibre Native's own curve as on Android, which that call cannot take.
+        let corners = [
+            CLLocationCoordinate2D(latitude: north, longitude: west),
+            southwest,
+            CLLocationCoordinate2D(latitude: south, longitude: east),
+            northeast,
+        ]
+        mapView.setVisibleCoordinates(
+            corners,
+            count: UInt(corners.count),
+            edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding),
+            direction: mapView.direction,
+            duration: MapLibreMapController.defaultCameraAnimationDuration,
+            animationTimingFunction: .nativeCameraEasing,
+            completionHandler: nil
+        )
         result(nil)
     }
 
@@ -2301,7 +2318,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.setCamera(
             camera,
             withDuration: (durationMs ?? Double(MapLibreMapController.defaultTrackingTiltDurationMs)) / 1000.0,
-            animationTimingFunction: nil,
+            // At constant speed, as the MapLibre Android location component tilts.
+            animationTimingFunction: .cameraEasing(1, 1),
             completionHandler: completion(
                 done: { [weak self] in
                     // The completion runs both when the animation finishes and when it is

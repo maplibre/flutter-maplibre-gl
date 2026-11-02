@@ -3,7 +3,8 @@
 // Covered: moveCamera with every CameraUpdate kind, the values moveCamera,
 // animateCamera and easeCamera complete with, including false when another
 // camera call, new padding or disposing the map cuts an animation short,
-// animated moves landing on their target, getVisibleRegion, toScreenLocation /
+// animated moves landing on their target, the curves they ease along,
+// getVisibleRegion, toScreenLocation /
 // toScreenLocationBatch / toLatLng, getMetersPerPixelAtLatitude,
 // setCameraBounds, the
 // minMaxZoomPreference and cameraTargetBounds widget options, the
@@ -23,6 +24,8 @@
 //     --target=integration_test/camera_test.dart -d chrome
 import 'dart:math';
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/widgets.dart'
     show EdgeInsets, Size, SizedBox, ValueNotifier;
 import 'package:flutter_test/flutter_test.dart';
@@ -831,6 +834,131 @@ void main() {
     });
   });
 
+  group('easing', () {
+    for (final interpolation in [
+      null,
+      ...CameraAnimationInterpolation.values,
+    ]) {
+      testWidgets(
+        'easeCamera eases along ${interpolation?.name ?? 'the default curve'}',
+        (tester) async {
+          const duration = Duration(seconds: 2);
+          final samples = await _recordWay(
+            tester,
+            duration,
+            (controller, update) => controller.easeCamera(
+              update,
+              duration: duration,
+              interpolation: interpolation,
+            ),
+          );
+
+          final curve = _easeCameraCurve(interpolation);
+          for (final time in [0.2, 0.35, 0.5, 0.65, 0.8]) {
+            expect(
+              _progressAt(samples, time),
+              closeTo(_cubicBezier(time, curve), 0.08),
+              reason: 'share of the way at $time of the duration ($samples)',
+            );
+          }
+        },
+      );
+    }
+
+    // Without a duration both SDKs ease along MapLibre Native's own curve,
+    // (0, 0, 0.25, 1), for 300 ms: more than 80% of the way at half time.
+    // maplibre-gl-js has its own duration and curves.
+    final calls =
+        <String, Future<bool?> Function(MapLibreMapController, CameraUpdate)>{
+          'easeCamera': (controller, update) => controller.easeCamera(update),
+          'animateCamera': (controller, update) =>
+              controller.animateCamera(update),
+        };
+    for (final MapEntry(key: name, value: move) in calls.entries) {
+      testWidgets(
+        '$name without a duration eases out',
+        (tester) async {
+          final samples = await _recordWay(
+            tester,
+            const Duration(milliseconds: 300),
+            move,
+          );
+
+          expect(
+            _progressAt(samples, 0.5),
+            greaterThan(0.65),
+            reason: 'share of the way at half time ($samples)',
+          );
+        },
+        skip: kIsWeb,
+      );
+    }
+
+    // The MapLibre Android location component tilts linearly. Web has no
+    // location component.
+    testWidgets('setTrackingCameraOptions tilts at constant speed', (
+      tester,
+    ) async {
+      const duration = Duration(seconds: 2);
+      const tilt = 40.0;
+      // (share of the duration, share of the tilt) for each onCameraMove.
+      final samples = <(double, double)>[];
+      final clock = Stopwatch();
+      final controller = await pumpMap(
+        tester,
+        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+          styleString: offlineStyle,
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(0, 0),
+            zoom: 3,
+          ),
+          myLocationEnabled: true,
+          locationSource: const ManualLocationSource(),
+          myLocationTrackingMode: MyLocationTrackingMode.tracking,
+          trackCameraPosition: true,
+          onCameraMove: (position) {
+            if (!clock.isRunning) return;
+            samples.add((
+              clock.elapsedMicroseconds / duration.inMicroseconds,
+              position.tilt / tilt,
+            ));
+          },
+          onMapCreated: onMapCreated,
+          onStyleLoadedCallback: onStyleLoaded,
+        ),
+      );
+      await pumpUntil(
+        tester,
+        controller.updateManualLocation(
+          ManualLocationUpdate(
+            target: const LatLng(0, 0),
+            horizontalAccuracy: 5,
+            timestamp: DateTime.now(),
+          ),
+        ),
+        'updateManualLocation',
+      );
+      await pumpFor(tester, const Duration(seconds: 1));
+
+      clock.start();
+      await pumpUntil(
+        tester,
+        controller.setTrackingCameraOptions(tilt: tilt, duration: duration),
+        'setTrackingCameraOptions',
+      );
+      clock.stop();
+
+      for (final time in [0.2, 0.35, 0.5, 0.65, 0.8]) {
+        expect(
+          _progressAt(samples, time),
+          // Tight: MLNMapView's default curve is never more than 0.07 off.
+          closeTo(time, 0.04),
+          reason: 'share of the tilt at $time of the duration ($samples)',
+        );
+      }
+    }, skip: kIsWeb);
+  });
+
   group('tracked camera and callbacks', () {
     testWidgets('cameraPosition follows moves with trackCameraPosition', (
       tester,
@@ -1611,6 +1739,111 @@ Future<CameraPosition> _queryCamera(
   );
   expect(camera, isNotNull, reason: 'queryCameraPosition');
   return camera!;
+}
+
+/// Moves the camera 40 degrees east with [move] and records, for each
+/// onCameraMove, the share of [duration] gone by and the share of the way
+/// covered.
+Future<List<(double, double)>> _recordWay(
+  WidgetTester tester,
+  Duration duration,
+  Future<bool?> Function(MapLibreMapController, CameraUpdate) move,
+) async {
+  const end = 40.0;
+  final samples = <(double, double)>[];
+  final clock = Stopwatch();
+  final controller = await pumpMap(
+    tester,
+    builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+      styleString: offlineStyle,
+      initialCameraPosition: const CameraPosition(
+        target: LatLng(0, 0),
+        zoom: 3,
+      ),
+      trackCameraPosition: true,
+      onCameraMove: (position) {
+        if (!clock.isRunning) return;
+        samples.add((
+          clock.elapsedMicroseconds / duration.inMicroseconds,
+          position.target.longitude / end,
+        ));
+      },
+      onMapCreated: onMapCreated,
+      onStyleLoadedCallback: onStyleLoaded,
+    ),
+  );
+  await pumpFor(tester, const Duration(milliseconds: 500));
+
+  clock.start();
+  await pumpUntil(
+    tester,
+    move(controller, CameraUpdate.newLatLng(const LatLng(0, end))),
+    'camera call',
+  );
+  clock.stop();
+  return samples;
+}
+
+/// The control points of the cubic Bezier easeCamera eases along with
+/// [interpolation] for a set duration.
+(double, double, double, double) _easeCameraCurve(
+  CameraAnimationInterpolation? interpolation,
+) {
+  if (interpolation == CameraAnimationInterpolation.linear) return (0, 0, 1, 1);
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    // MapLibre Android offers linear or MapLibre Native's own easing only.
+    return (0, 0, 0.25, 1);
+  }
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    // MapLibre iOS only eases along curves starting with (0, 0): none eases
+    // both in and out, so that one falls back to the Android curve.
+    return switch (interpolation) {
+      CameraAnimationInterpolation.easeOut => (0, 0, 0.58, 1),
+      CameraAnimationInterpolation.fastOutLinearIn => (0, 0, 0.4, 0),
+      _ => (0, 0, 0.25, 1),
+    };
+  }
+  return switch (interpolation) {
+    // maplibre-gl-js eases with its own default curve when given none.
+    null => (0.25, 0.1, 0.25, 1),
+    CameraAnimationInterpolation.easeInOut => (0.42, 0, 0.58, 1),
+    CameraAnimationInterpolation.easeOut => (0, 0, 0.58, 1),
+    CameraAnimationInterpolation.fastOutLinearIn => (0.4, 0, 1, 1),
+    CameraAnimationInterpolation.linear => (0, 0, 1, 1),
+  };
+}
+
+/// The share of the way [curve] covers at [time], a share of the duration.
+double _cubicBezier(double time, (double, double, double, double) curve) {
+  final (x1, y1, x2, y2) = curve;
+  double at(double t, double a, double b) =>
+      3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+  var low = 0.0;
+  var high = 1.0;
+  for (var i = 0; i < 40; i++) {
+    final t = (low + high) / 2;
+    if (at(t, x1, x2) < time) {
+      low = t;
+    } else {
+      high = t;
+    }
+  }
+  return at((low + high) / 2, y1, y2);
+}
+
+/// The share of the way at [time] in [samples] of (time, way), read on the
+/// line between the samples around it.
+double _progressAt(List<(double, double)> samples, double time) {
+  var before = (0.0, 0.0);
+  for (final sample in samples) {
+    if (sample.$1 >= time) {
+      final span = sample.$1 - before.$1;
+      if (span <= 0) return sample.$2;
+      return before.$2 + (sample.$2 - before.$2) * (time - before.$1) / span;
+    }
+    before = sample;
+  }
+  return before.$2;
 }
 
 bool _isNear(CameraPosition camera, CameraPosition target) =>

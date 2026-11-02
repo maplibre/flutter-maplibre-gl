@@ -195,6 +195,7 @@
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 * **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156, #1158).
+* **iOS**: camera animations ease as on Android and web. `easeCamera` with `easeOut` moved at constant speed, and with `easeInOut` or no curve sped up until an abrupt stop, like `animateCamera` and `easeCamera` without a duration. `easeOut` now matches web; `easeInOut`, the default, calls without a duration and `setCameraBounds` ease out as on Android, since MapLibre iOS cannot ease both in and out, and `setTrackingCameraOptions` tilts at constant speed as on Android ([maplibre-native#4902](https://github.com/maplibre/maplibre-native/issues/4902)).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
