@@ -53,7 +53,37 @@ class OfflineManagerUtils {
     }
 
     private static func addContents(result: @escaping FlutterResult, path: String) {
-        let url = URL(fileURLWithPath: path)
+        // addContentsOfURL raises an exception the call cannot catch for a file
+        // it cannot write to. As on Android, a file that can only be read, such
+        // as one in the app bundle, is merged from a copy, and a missing one
+        // fails the call.
+        let fileManager = FileManager.default
+        let url: URL
+        var copyDirectory: URL?
+        if fileManager.isWritableFile(atPath: path) {
+            url = URL(fileURLWithPath: path)
+        } else if fileManager.isReadableFile(atPath: path) {
+            let directory = fileManager.temporaryDirectory
+                .appendingPathComponent("maplibre_gl_merge_\(UUID().uuidString)")
+            let copy = directory.appendingPathComponent(
+                URL(fileURLWithPath: path).lastPathComponent
+            )
+            do {
+                try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+                try fileManager.copyItem(atPath: path, toPath: copy.path)
+                // The copy keeps the permissions of the original.
+                try fileManager.setAttributes([.posixPermissions: 0o644], ofItemAtPath: copy.path)
+            } catch {
+                try? fileManager.removeItem(at: directory)
+                result(databaseError(error.localizedDescription))
+                return
+            }
+            url = copy
+            copyDirectory = directory
+        } else {
+            result(databaseError("Secondary database needs to be located in a readable path."))
+            return
+        }
         // addContentsOfURL's completion hands back *all known* packs, not just the
         // ones imported from `url` (see MLNOfflineStorage.h). Snapshot the packs
         // that already exist so we can return only the newly imported ones.
@@ -66,6 +96,9 @@ class OfflineManagerUtils {
             (MLNOfflineStorage.shared.packs ?? []).map(packIdentityKey(for:))
         )
         MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
+            if let copyDirectory = copyDirectory {
+                try? FileManager.default.removeItem(at: copyDirectory)
+            }
             if let error = error {
                 result(databaseError(error.localizedDescription))
                 return
