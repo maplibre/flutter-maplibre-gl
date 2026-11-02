@@ -263,12 +263,12 @@ body, .md-typeset {
   transition: opacity 120ms;
 }
 .md-tabs__link:hover { opacity: 1; }
-.md-tabs__link--active {
+.md-tabs__item--active .md-tabs__link {
   opacity: 1;
   font-weight: 600;
   position: relative;
 }
-.md-tabs__link--active::after {
+.md-tabs__item--active .md-tabs__link::after {
   content: "";
   position: absolute;
   left: 0; right: 0; bottom: 0.45rem;

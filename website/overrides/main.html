@@ -1,0 +1,10 @@
+{#- Zensical leaves page.is_homepage unset, so base.html would title the
+    home page "Home - MapLibre Flutter". Keep the site name alone there. -#}
+{% extends "base.html" %}
+{% block htmltitle %}
+  {% if page and page.url == "" %}
+    <title>{{ config.site_name }}</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
