@@ -1477,46 +1477,7 @@ final class MapLibreMapController
     } else if (!json.isJsonPrimitive() || !json.getAsJsonPrimitive().isBoolean()) {
       throw new IllegalArgumentException("A filter is an expression array or a boolean.");
     }
-    // Hand the engine the JSON as plain values. Expression.Converter would
-    // turn every number into a float, so an id like 123456789 became 123456792.
-    Object value = jsonToValue(json);
-    final Object[] array = value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
-    return new Expression("literal") {
-      @NonNull
-      @Override
-      public Object[] toArray() {
-        return array;
-      }
-    };
-  }
-
-  private static Object jsonToValue(JsonElement json) {
-    if (json.isJsonArray()) {
-      JsonArray array = json.getAsJsonArray();
-      Object[] values = new Object[array.size()];
-      for (int i = 0; i < values.length; i++) {
-        values[i] = jsonToValue(array.get(i));
-      }
-      return values;
-    }
-    if (json.isJsonObject()) {
-      Map<String, Object> values = new HashMap<>();
-      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
-        values.put(entry.getKey(), jsonToValue(entry.getValue()));
-      }
-      return values;
-    }
-    if (json.isJsonNull()) {
-      return null;
-    }
-    JsonPrimitive primitive = json.getAsJsonPrimitive();
-    if (primitive.isBoolean()) {
-      return primitive.getAsBoolean();
-    }
-    if (primitive.isNumber()) {
-      return primitive.getAsDouble();
-    }
-    return primitive.getAsString();
+    return Convert.toExactExpression(json);
   }
 
   private static boolean isFilterable(Layer layer) {

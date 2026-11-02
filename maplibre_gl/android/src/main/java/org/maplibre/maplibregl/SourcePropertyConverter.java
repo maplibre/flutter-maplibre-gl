@@ -196,8 +196,9 @@ class SourcePropertyConverter {
           operatorJson = JsonParser.parseString(gson.toJson(opRaw));
         }
         final JsonElement mapExprJson = JsonParser.parseString(gson.toJson(value.get(1)));
-        final Expression operatorExpr = Expression.Converter.convert(operatorJson);
-        final Expression mapExpr = Expression.Converter.convert(mapExprJson);
+        // Exact numbers, so a threshold like 123456789 is not rounded to a float.
+        final Expression operatorExpr = Convert.toExactExpression(operatorJson);
+        final Expression mapExpr = Convert.toExactExpression(mapExprJson);
         options = options.withClusterProperty(propertyName, operatorExpr, mapExpr);
       }
     }

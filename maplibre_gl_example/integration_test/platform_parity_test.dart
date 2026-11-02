@@ -923,6 +923,53 @@ void main() {
         ],
       );
     });
+
+    testWidgets('a layer property keeps its numbers exact', (tester) async {
+      final controller = await pumpMap(tester);
+      // 123456789 as a float is 123456792: a match rounded that way picks
+      // the other feature.
+      await pumpUntil(
+        tester,
+        controller.addGeoJsonSource(_sourceId, {
+          'type': 'FeatureCollection',
+          'features': [
+            _point(1, _p1, {'n': 123456789}),
+            _point(2, _p2, {'n': 123456792}),
+          ],
+        }),
+        'addGeoJsonSource',
+      );
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          _layerId,
+          const CircleLayerProperties(
+            circleRadius: [
+              'match',
+              ['get', 'n'],
+              123456789,
+              15,
+              2,
+            ],
+          ),
+        ),
+        'addCircleLayer',
+      );
+
+      // Only the circle of feature 1 is big enough to reach 9 pixels out.
+      final p1 = await _screen(tester, controller, _p1);
+      final p2 = await _screen(tester, controller, _p2);
+      await _waitForRendered(tester, controller, Point(p1.x + 9, p1.y));
+      final aside = await pumpUntil(
+        tester,
+        controller.queryRenderedFeatures(Point(p2.x + 9, p2.y), [
+          _layerId,
+        ], null),
+        'queryRenderedFeatures beside feature 2',
+      );
+      expect(_ids(aside), isEmpty);
+    });
   });
 
   group('feature state', () {

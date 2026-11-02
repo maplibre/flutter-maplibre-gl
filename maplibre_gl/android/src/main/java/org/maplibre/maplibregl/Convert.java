@@ -5,6 +5,11 @@
 package org.maplibre.maplibregl;
 
 import android.graphics.PointF;
+import androidx.annotation.NonNull;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
@@ -12,7 +17,9 @@ import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMap;
 import org.maplibre.android.maps.Projection;
+import org.maplibre.android.style.expressions.Expression;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -202,6 +209,76 @@ class Convert {
   /** Converts {@code value} from logical to whole physical pixels, rounded towards zero. */
   static int toPixels(double value, float density) {
     return (int) toFractionalPixels(value, density);
+  }
+
+  /**
+   * {@code json} as an expression with exact numbers: an array is handed to the engine as it is,
+   * any other value as a literal. Expression.Converter would turn every number into a float, so an
+   * id like 123456789 became 123456792.
+   */
+  static Expression toExactExpression(JsonElement json) {
+    final Object value = jsonToValue(json);
+    final Object[] array =
+        value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
+    return new Expression("literal") {
+      @NonNull
+      @Override
+      public Object[] toArray() {
+        return array;
+      }
+    };
+  }
+
+  private static Object jsonToValue(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      Object[] values = new Object[array.size()];
+      for (int i = 0; i < values.length; i++) {
+        values[i] = jsonToValue(array.get(i));
+      }
+      if (values.length == 2 && isGeometryOperator(array.get(0)) && array.get(1).isJsonObject()) {
+        values[1] = geoJsonArgument(array.get(0).getAsString(), array.get(1).getAsJsonObject());
+      }
+      return values;
+    }
+    if (json.isJsonObject()) {
+      Map<String, Object> values = new HashMap<>();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        values.put(entry.getKey(), jsonToValue(entry.getValue()));
+      }
+      return values;
+    }
+    if (json.isJsonNull()) {
+      return null;
+    }
+    JsonPrimitive primitive = json.getAsJsonPrimitive();
+    if (primitive.isBoolean()) {
+      return primitive.getAsBoolean();
+    }
+    if (primitive.isNumber()) {
+      return primitive.getAsDouble();
+    }
+    return primitive.getAsString();
+  }
+
+  // The engine reads the GeoJSON of within and distance only as text under
+  // "json", in the form Expression.within and Expression.distance build.
+  private static Map<String, Object> geoJsonArgument(String operator, JsonObject geoJson) {
+    Map<String, Object> argument = new HashMap<>();
+    if (operator.equals("within")) {
+      JsonElement type = geoJson.get("type");
+      argument.put("type", type != null ? jsonToValue(type) : null);
+    }
+    argument.put("json", geoJson.toString());
+    return argument;
+  }
+
+  private static boolean isGeometryOperator(JsonElement element) {
+    if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString()) {
+      return false;
+    }
+    final String operator = element.getAsString();
+    return operator.equals("within") || operator.equals("distance");
   }
 
   static String toString(Object o) {
