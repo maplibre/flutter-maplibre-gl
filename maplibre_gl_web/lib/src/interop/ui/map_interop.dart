@@ -171,6 +171,14 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  map.setMaxBounds(bounds);
   external MapLibreMapJsImpl setMaxBounds(LngLatBoundsJsImpl? bounds);
 
+  /// Sets the callback that runs before every camera change, from a gesture
+  /// or from `jumpTo`, `easeTo` and `flyTo`. It gets the camera state about
+  /// to apply and returns the values to overwrite. `null` removes it.
+  ///
+  /// Library versions 6 and later only. 5 has the `transformCameraUpdate`
+  /// property instead, see [MapLibreMap.setTransformCameraUpdate].
+  external void setTransformCameraUpdate(JSFunction? transform);
+
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
   ///  the map will zoom to the new minimum.

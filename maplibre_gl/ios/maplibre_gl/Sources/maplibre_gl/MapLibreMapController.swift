@@ -76,6 +76,15 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     private var lastManualLocation: CLLocation?
     private var scrollingEnabled = true
     private var isAdjustingCameraProgrammatically = false
+    /// Where the camera target may go, from `cameraTargetBounds`, ordered. Nil
+    /// for anywhere.
+    private var cameraTargetBounds: MLNCoordinateBounds?
+    /// MLNMapView's own gesture recognizers, taken before this controller adds
+    /// its own.
+    private var mapGestureRecognizers: [UIGestureRecognizer] = []
+    /// Whether a gesture in progress asked `shouldChangeFrom` for the change
+    /// `mapViewRegionIsChanging` reports next, see `keepGestureTargetInBounds`.
+    private var isGestureStepChanging = false
 
     private var interactiveFeatureLayerIds = Set<String>()
     private var addedShapesByLayer = [String: MLNShape]()
@@ -260,6 +269,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             }
         }
 
+        mapGestureRecognizers = mapView.gestureRecognizers ?? []
         let singleTap = UITapGestureRecognizer(
             target: self,
             action: #selector(handleMapTap(sender:))
@@ -279,7 +289,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         // Flutter PlatformView hands us a zero-sized frame on cold launch.
         // Any setter that touches the C++ map's camera/bounds (setCenter,
-        // maximumScreenBounds, min/max zoom, showsUserLocation → flyTo on
+        // setCamera, min/max zoom, showsUserLocation → flyTo on
         // cached CL fix) cascades into `constrainCameraAndZoomToBounds` →
         // `Projection::unproject` on a 0×0 viewport → NaN → the `mbgl::LatLng`
         // ctor throws `std::domain_error`, which libc++abi cannot unwind
@@ -838,6 +848,29 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         let southwest = CLLocationCoordinate2D(latitude: south, longitude: west)
         let northeast = CLLocationCoordinate2D(latitude: north, longitude: east)
+        let bounds = MLNCoordinateBounds(sw: southwest, ne: northeast)
+        let edgePadding = UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding)
+        if cameraTargetBounds != nil {
+            // A fit whose target falls outside cameraTargetBounds goes to the
+            // nearest target inside instead, at the same zoom.
+            let fit = Convert.cameraFitting(
+                mapView.cameraThatFitsCoordinateBounds(bounds, edgePadding: edgePadding),
+                padding: edgePadding,
+                mapView: mapView
+            )
+            let camera = cameraInsideTargetBounds(fit)
+            if camera !== fit {
+                // As setVisibleCoordinateBounds does.
+                mapView.userTrackingMode = .none
+                mapView.setCamera(
+                    camera,
+                    withDuration: MapLibreMapController.defaultCameraAnimationDuration,
+                    animationTimingFunction: .nativeCameraEasing
+                )
+                result(nil)
+                return
+            }
+        }
         // The corners setVisibleCoordinateBounds(_:edgePadding:animated:) fits, eased along
         // MapLibre Native's own curve as on Android, which that call cannot take.
         let corners = [
@@ -849,7 +882,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         mapView.setVisibleCoordinates(
             corners,
             count: UInt(corners.count),
-            edgePadding: UIEdgeInsets(top: padding, left: padding, bottom: padding, right: padding),
+            edgePadding: edgePadding,
             direction: mapView.direction,
             duration: MapLibreMapController.defaultCameraAnimationDuration,
             animationTimingFunction: .nativeCameraEasing,
@@ -2422,7 +2455,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
               !mapView.frame.size.equalTo(.zero) else { return }
         pendingInitialCamera = nil
         mapView.setCamera(
-            MLNMapCamera.fromPigeon(initialCameraPosition, mapView: mapView),
+            cameraInsideTargetBounds(MLNMapCamera.fromPigeon(initialCameraPosition, mapView: mapView)),
             animated: false
         )
     }
@@ -3505,6 +3538,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapViewRegionIsChanging(_ mapView: MLNMapView) {
+        keepGestureTargetInBounds()
         // Never nil when the position is tracked: getCameraPosition() answers whenever it is.
         guard let position = getCameraPosition() else { return }
         sendCameraMove(position)
@@ -3515,10 +3549,224 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         flutterApi?.cameraOnMove(position: position) { _ in }
     }
 
-    func mapView(_: MLNMapView, shouldChangeFrom _: MLNMapCamera, to _: MLNMapCamera) -> Bool {
+    func mapView(
+        _: MLNMapView,
+        shouldChangeFrom oldCamera: MLNMapCamera,
+        to newCamera: MLNMapCamera,
+        reason: MLNCameraChangeReason
+    ) -> Bool {
         // Only gestures ask this, each right after cancelling the running animation.
         cameraAnimations.interruptRunning()
-        return true
+        guard cameraTargetBounds != nil else { return true }
+        // A gesture in progress moves the camera at once, and
+        // keepGestureTargetInBounds clamps the target right after.
+        if isMapGestureChanging {
+            isGestureStepChanging = true
+            return true
+        }
+        // The rest start an animation: the inertia a gesture ends with, or the
+        // zoom of a double or two-finger tap.
+        return allowsGestureAnimation(from: oldCamera, to: newCamera, reason: reason)
+    }
+
+    /// Whether one of MLNMapView's own gestures is in progress, moving the
+    /// camera step by step.
+    private var isMapGestureChanging: Bool {
+        return mapGestureRecognizers.contains { $0.state == .began || $0.state == .changed }
+    }
+
+    /// Whether MLNMapView's pinch is ending.
+    private var isMapPinchEnding: Bool {
+        return mapGestureRecognizers.contains {
+            $0 is UIPinchGestureRecognizer && ($0.state == .ended || $0.state == .cancelled)
+        }
+    }
+
+    /// Moves the target back inside `cameraTargetBounds` when a step of a
+    /// gesture took it out, as Android clamps every change. The gesture goes on
+    /// from there, so a pan slides along the edge and a pinch keeps zooming.
+    /// Only steps a gesture applies itself are clamped: setting the camera
+    /// inside a frame of an animation would tangle with it.
+    private func keepGestureTargetInBounds() {
+        guard isGestureStepChanging else { return }
+        isGestureStepChanging = false
+        guard isMapGestureChanging else { return }
+        let camera = mapView.camera
+        let inside = cameraInsideTargetBounds(camera, zoom: mapView.zoomLevel)
+        if inside !== camera {
+            mapView.setCamera(inside, animated: false)
+        }
+    }
+
+    /// Whether the animation a gesture starts may run. One that takes the target
+    /// out of `cameraTargetBounds` is replaced by one to the nearest target
+    /// inside. Refusing it alone would break the camera events: MLNMapView ends
+    /// a pan with inertia, and a tap zoom, only once the camera moves, so no
+    /// `onCameraIdle` would follow and the next change would still read as a
+    /// gesture. A rotation would never end at all.
+    private func allowsGestureAnimation(
+        from oldCamera: MLNMapCamera,
+        to newCamera: MLNMapCamera,
+        reason: MLNCameraChangeReason
+    ) -> Bool {
+        // The inertia of a rotation keeps the target where it is.
+        if newCamera.heading != oldCamera.heading { return true }
+        var camera: MLNMapCamera
+        let duration: TimeInterval
+        var timing = CAMediaTimingFunction.nativeCameraEasing
+        if reason.contains(.gestureZoomIn) || reason.contains(.gestureZoomOut) {
+            // A tap zooms to the next whole level. MLNMapView's camera fits the
+            // visible bounds, which a rotation widens, so the zoom is set here.
+            let step: Double = reason.contains(.gestureZoomIn) ? 1 : -1
+            let zoom = min(
+                max(mapView.zoomLevel.rounded() + step, mapView.minimumZoomLevel),
+                mapView.maximumZoomLevel
+            )
+            // MLNMapView eases to that level around the tap, but the camera it
+            // reports moves the target the other way, so the target is worked
+            // out here from the tap, as the ease moves it.
+            guard mapView.userTrackingMode == .none,
+                  let tap = mapGestureRecognizers.first(where: {
+                      $0 is UITapGestureRecognizer && $0.state == .ended
+                  })
+            else { return true }
+            let anchor = tap.location(in: mapView)
+            let center = mapView.convert(mapView.centerCoordinate, toPointTo: mapView)
+            let scale = pow(2, zoom - mapView.zoomLevel)
+            let target = mapView.convert(
+                CGPoint(
+                    x: anchor.x + (center.x - anchor.x) / scale,
+                    y: anchor.y + (center.y - anchor.y) / scale
+                ),
+                toCoordinateFrom: mapView
+            )
+            let tapZoom = MLNMapCamera(
+                lookingAtCenter: target,
+                altitude: newCamera.altitude,
+                pitch: oldCamera.pitch,
+                heading: oldCamera.heading
+            )
+            camera = cameraInsideTargetBounds(tapZoom, zoom: zoom)
+            if camera === tapZoom { return true }
+            duration = MapLibreMapController.defaultCameraAnimationDuration
+        } else if isMapPinchEnding {
+            // Refused, the pinch ends without its inertia.
+            return cameraInsideTargetBounds(newCamera) === newCamera
+        } else {
+            // The inertia of a pan. MLNMapView aims it from the middle of the
+            // view, while the target is the middle of the content insets.
+            let middle = CGPoint(x: mapView.bounds.midX, y: mapView.bounds.midY)
+            let from = mapView.convert(oldCamera.centerCoordinate, toPointTo: mapView)
+            let to = mapView.convert(newCamera.centerCoordinate, toPointTo: mapView)
+            let target = mapView.convert(
+                CGPoint(x: to.x + from.x - middle.x, y: to.y + from.y - middle.y),
+                toCoordinateFrom: mapView
+            )
+            let pan = MLNMapCamera(
+                lookingAtCenter: target,
+                altitude: oldCamera.altitude,
+                pitch: oldCamera.pitch,
+                heading: oldCamera.heading
+            )
+            if cameraInsideTargetBounds(pan, zoom: mapView.zoomLevel) === pan { return true }
+            // The inertia runs as MLNMapView runs it, and stops where it
+            // leaves the bounds, still moving, as on Android.
+            let end = CGPoint(x: to.x + from.x - middle.x, y: to.y + from.y - middle.y)
+            let exit = exitFraction(from: from, to: end)
+            let edge = MLNMapCamera(
+                lookingAtCenter: mapView.convert(
+                    CGPoint(x: from.x + (end.x - from.x) * exit, y: from.y + (end.y - from.y) * exit),
+                    toCoordinateFrom: mapView
+                ),
+                altitude: oldCamera.altitude,
+                pitch: oldCamera.pitch,
+                heading: oldCamera.heading
+            )
+            camera = cameraInsideTargetBounds(edge, zoom: mapView.zoomLevel)
+            let ease = MapLibreMapController.easeUntil(exit)
+            duration = TimeInterval(mapView.decelerationRate) * ease.time
+            timing = ease.timing
+        }
+        // MLNMapView skips a camera equal to the current one, so a pan thrown
+        // at the edge it rests on steps back inside by about a centimeter.
+        if camera.isEqual(to: mapView.camera) {
+            guard let nudged = cameraNudgedInside(camera) else { return true }
+            camera = nudged
+        }
+        mapView.setCamera(
+            camera,
+            withDuration: duration,
+            animationTimingFunction: timing
+        )
+        return false
+    }
+
+    /// How far along the straight line from `start` to `end`, in view points,
+    /// the target leaves `cameraTargetBounds`, from 0 to 1.
+    private func exitFraction(from start: CGPoint, to end: CGPoint) -> Double {
+        guard let bounds = cameraTargetBounds else { return 1 }
+        var inside = 0.0
+        var outside = 1.0
+        for _ in 0..<24 {
+            let middle = (inside + outside) / 2
+            let point = CGPoint(
+                x: start.x + (end.x - start.x) * middle,
+                y: start.y + (end.y - start.y) * middle
+            )
+            if bounds.clamping(mapView.convert(point, toCoordinateFrom: mapView)) == nil {
+                inside = middle
+            } else {
+                outside = middle
+            }
+        }
+        return outside
+    }
+
+    /// The part of the gesture easing (0, 0, 0.25, 1) that covers the first
+    /// `distance` of the way, from 0 to 1: the share of the duration it takes,
+    /// and its own easing, so an animation cut short there moves as the whole
+    /// one would.
+    private static func easeUntil(_ distance: Double) -> (time: Double, timing: CAMediaTimingFunction) {
+        // The curve at s is x = 0.75 s^2 + 0.25 s^3 in time, y = 3 s^2 - 2 s^3
+        // in distance; its part up to s has control points (0, 0) and
+        // s^2 (0.25, 1), scaled to end at (1, 1).
+        guard distance > 1e-6 else { return (0, CAMediaTimingFunction.nativeCameraEasing) }
+        guard distance < 1 else { return (1, CAMediaTimingFunction.nativeCameraEasing) }
+        var low = 0.0
+        var high = 1.0
+        for _ in 0..<40 {
+            let s = (low + high) / 2
+            if 3 * s * s - 2 * s * s * s < distance { low = s } else { high = s }
+        }
+        let s = (low + high) / 2
+        let time = 0.75 * s * s + 0.25 * s * s * s
+        let covered = 3 * s * s - 2 * s * s * s
+        return (time, CAMediaTimingFunction.cameraEasing(Float(0.25 * s * s / time), Float(s * s / covered)))
+    }
+
+    /// `camera` moved 1e-7 degrees further inside `cameraTargetBounds`, or nil
+    /// for bounds too small to hold it.
+    private func cameraNudgedInside(_ camera: MLNMapCamera) -> MLNMapCamera? {
+        guard let bounds = cameraTargetBounds else { return nil }
+        let step = 1e-7
+        var center = camera.centerCoordinate
+        if center.latitude - step >= bounds.sw.latitude {
+            center.latitude -= step
+        } else if center.latitude + step <= bounds.ne.latitude {
+            center.latitude += step
+        } else if center.longitude - step >= bounds.sw.longitude {
+            center.longitude -= step
+        } else if center.longitude + step <= bounds.ne.longitude {
+            center.longitude += step
+        } else {
+            return nil
+        }
+        return MLNMapCamera(
+            lookingAtCenter: center,
+            altitude: camera.altitude,
+            pitch: camera.pitch,
+            heading: camera.heading
+        )
     }
 
     // MLNMapView calls this instead of regionDidChangeAnimated, which takes no reason.
@@ -3783,7 +4031,32 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             result(invalidArgumentError("Cannot interpret \(cameraUpdate) as CameraUpdate."))
             return nil
         }
-        return camera
+        // Every camera call lands with its target inside cameraTargetBounds, as on Android.
+        return cameraInsideTargetBounds(camera)
+    }
+
+    /// `camera` with its target moved to the nearest point inside
+    /// `cameraTargetBounds`, or `camera` itself when it is inside already or
+    /// there are no bounds. Zoom, bearing and tilt stay; the zoom is read from
+    /// the altitude when `zoom` is nil.
+    private func cameraInsideTargetBounds(_ camera: MLNMapCamera, zoom: Double? = nil) -> MLNMapCamera {
+        guard let center = cameraTargetBounds?.clamping(camera.centerCoordinate) else {
+            return camera
+        }
+        let size = mapView.frame.size
+        let zoom = zoom ?? MLNZoomLevelForAltitude(
+            camera.altitude,
+            camera.pitch,
+            camera.centerCoordinate.latitude,
+            size
+        )
+        // The same altitude at another latitude is another zoom level.
+        return MLNMapCamera(
+            lookingAtCenter: center,
+            altitude: MLNAltitudeForZoomLevel(zoom, camera.pitch, center.latitude, size),
+            pitch: camera.pitch,
+            heading: camera.heading
+        )
     }
 
     /// Serializes features as JSON strings, so nested properties survive
@@ -3887,12 +4160,22 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     /*
      *  MapLibreMapOptionsSink
      */
+    /// Keeps the camera target inside `bounds`, as Android does, for gestures
+    /// and camera calls alike, with no minimum zoom: the map can still zoom out
+    /// past them. MLNMapView's own `maximumScreenBounds` keeps the whole visible
+    /// area inside instead, zooming in until it fits (#793).
     func setCameraTargetBounds(bounds: MLNCoordinateBounds?) {
-        let bounds = bounds ?? MLNCoordinateBounds(
-            sw: CLLocationCoordinate2D(latitude: -90, longitude: -180),
-            ne: CLLocationCoordinate2D(latitude: 90, longitude: 180)
-        )
-        mapView.maximumScreenBounds = bounds;
+        cameraTargetBounds = bounds?.ordered
+        // A target outside moves inside at once, without animation, as on
+        // Android. The initial camera is clamped when it is applied.
+        guard pendingInitialCamera == nil, !mapView.frame.size.equalTo(.zero) else { return }
+        let camera = mapView.camera
+        let inside = cameraInsideTargetBounds(camera, zoom: mapView.zoomLevel)
+        guard inside !== camera else { return }
+        cameraAnimations.interruptRunning()
+        replacingCameraMotion {
+            mapView.setCamera(inside, animated: false)
+        }
     }
 
     func setCompassEnabled(compassEnabled: Bool) {

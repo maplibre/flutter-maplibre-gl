@@ -17,7 +17,7 @@ extension CAMediaTimingFunction {
         return CAMediaTimingFunction(controlPoints: x, y, 1, 1)
     }
 
-    /// MapLibre Native's own easing, (0, 0, 0.25, 1): the one Android eases camera calls with,
-    /// unless they are linear.
+    /// MapLibre Native's own easing, (0, 0, 0.25, 1): the one of its gesture animations, and
+    /// the one Android eases camera calls with, unless they are linear.
     static let nativeCameraEasing = cameraEasing(0.25, 1)
 }

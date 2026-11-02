@@ -1614,8 +1614,8 @@ void main() {
         'moveCamera outside the bounds',
       );
 
-      // Android bounds the target, iOS and web bound the visible area (which
-      // is stricter); either way the target ends up inside.
+      // The bounds bound the target on every platform, so it ends up inside.
+      // camera_target_bounds_test.dart checks where exactly.
       final camera = await pumpUntilValue(
         tester,
         () => _queryCamera(tester, controller),

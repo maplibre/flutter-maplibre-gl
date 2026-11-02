@@ -40,6 +40,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * The offline region calls, `getOfflineDatabasePath`, `setHttpHeaders`, `installOfflineMapTiles` and `clearAmbientCache` fail with an `UnsupportedError` that names the call, instead of a `MissingPluginException`: `MapLibreGlobalWeb` implements them (#1114, #937).
 * `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError` instead of an `UnimplementedError`. MapLibre GL JS has no per-URL headers (#1143).
 * An `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants uses the file nearest the screen at its own ratio, like `Image.asset`: same size, sharp on high density screens (#1131).
+* `cameraTargetBounds` keeps the camera target inside the bounds, as on Android and iOS, instead of keeping the whole visible area inside them. The map no longer zooms in to fit the bounds and can show the area around them; a camera call to a target outside the bounds stops at the nearest point inside (#793).
 
 ### Fixed
 * Layer filters work like on Android and iOS: `setLayerFilter` no longer throws `UnimplementedError`, `null` removes a filter, `getFilter` returns `null` without one, and errors use `LAYER_NOT_FOUND_ERROR`, `INVALID_LAYER_TYPE` and `INVALID_EXPRESSION` (#1055).
