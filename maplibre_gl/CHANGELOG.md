@@ -190,6 +190,7 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 
 ### Docs
+* The migration guide covers [upgrading to 0.28.0](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280): renamed error codes, the calls that now throw, and each platform change (#1085, #1118).
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
