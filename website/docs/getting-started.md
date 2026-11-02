@@ -73,7 +73,7 @@ Add a location usage description to your `Info.plist`:
 <string>Show your location on the map</string>
 ```
 
-The plugin ships both a Swift package and a CocoaPods podspec, so it works with Flutter's [Swift Package Manager integration](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers) and with CocoaPods. Nothing to configure either way: apps already on CocoaPods need no migration, and apps with SPM enabled need no `Podfile` on account of this plugin.
+The plugin is a Swift package, which Flutter builds through its [Swift Package Manager integration](https://docs.flutter.dev/packages-and-plugins/swift-package-manager/for-app-developers), on by default since Flutter 3.44. Nothing to configure. The CocoaPods podspec is deprecated, since MapLibre iOS no longer publishes to CocoaPods, and a later release removes it: if your app turned Swift Package Manager off, turn it back on.
 
 ## Web
 
@@ -210,9 +210,9 @@ Future<void> main() async {
 
 | Platform | Minimum version |
 |----------|----------------|
-| Flutter  | 3.29.0 |
-| Dart     | 3.7.0 |
-| Android  | API 23 (Android 6.0) |
+| Flutter  | 3.44.0 |
+| Dart     | 3.12.0 |
+| Android  | API 24 (Android 7.0) |
 | iOS      | iOS 13 |
 | Web      | WebGL2, see [Requirements](#requirements) |
 | JDK      | 21 |

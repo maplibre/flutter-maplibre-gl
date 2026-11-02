@@ -180,16 +180,8 @@ class _AnnotationOrderBodyState extends State<_AnnotationOrderBody> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _annotationOrder.length,
-                  // `onReorder` is deprecated after Flutter 3.41 in favour of
-                  // `onReorderItem`, but the latter is only available from
-                  // Flutter 3.44. Keep `onReorder` to stay compatible with the
-                  // minimum supported Flutter version.
-                  // ignore: deprecated_member_use
-                  onReorder: (oldIndex, newIndex) {
+                  onReorderItem: (oldIndex, newIndex) {
                     setState(() {
-                      if (newIndex > oldIndex) {
-                        newIndex -= 1;
-                      }
                       final item = _annotationOrder.removeAt(oldIndex);
                       _annotationOrder.insert(newIndex, item);
                       _recreateMap();

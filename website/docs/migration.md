@@ -15,7 +15,19 @@ Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.c
 
 ### Minimum versions
 
-The declared Android `minSdkVersion` is now 23 (Android 6.0). MapLibre Android already required it, so an app that built with 0.27 builds with 0.28 too. Flutter, Dart and iOS minimums are unchanged; see [Minimum versions](getting-started.md#minimum-versions).
+0.28.0 needs Flutter 3.44 and Dart 3.12. From 3.44 Flutter builds iOS plugins with Swift Package Manager by default, and MapLibre iOS no longer publishes new versions to CocoaPods. Apps on an older Flutter stay on 0.27.x.
+
+If your app turned Swift Package Manager off, turn it back on with `flutter config --enable-swift-package-manager`, or in `pubspec.yaml`:
+
+```yaml
+flutter:
+  config:
+    enable-swift-package-manager: true
+```
+
+The podspec still works in 0.28.0, but a later release removes it.
+
+The Android `minSdkVersion` is now 24 (Android 7.0), the default of Flutter 3.44 apps. If your app sets a lower `minSdk` in `android/app/build.gradle`, raise it to 24. See [Minimum versions](getting-started.md#minimum-versions).
 
 ### Layer filters
 

@@ -123,7 +123,6 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
     final previousOrder = List<String>.of(_layerOrder);
     late final String movedId;
     setState(() {
-      if (newIndex > oldIndex) newIndex -= 1;
       movedId = _layerOrder.removeAt(oldIndex);
       _layerOrder.insert(newIndex, movedId);
     });
@@ -191,12 +190,7 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
               itemCount: _layerOrder.length,
-              // `onReorder` is deprecated after Flutter 3.41 in favour of
-              // `onReorderItem`, but the latter is only available from
-              // Flutter 3.44. Keep `onReorder` to stay compatible with the
-              // minimum supported Flutter version.
-              // ignore: deprecated_member_use
-              onReorder:
+              onReorderItem:
                   (oldIndex, newIndex) =>
                       unawaited(_onReorder(oldIndex, newIndex)),
               itemBuilder: (context, index) {
