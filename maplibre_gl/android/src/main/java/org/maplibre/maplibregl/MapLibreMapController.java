@@ -2222,6 +2222,24 @@ final class MapLibreMapController
           result.success(null);
           break;
         }
+      case "meshLayer#add":
+        {
+          if (style == null || !style.isFullyLoaded()) {
+            result.error("STYLE_NOT_READY", "Style is null or not fully loaded. Has onStyleLoaded() already been invoked?", null);
+            break;
+          }
+          final String layerId = call.argument("layerId");
+          final String belowLayerId = call.argument("belowLayerId");
+          final Map<String, Object> arguments = (Map<String, Object>) call.arguments;
+          final Layer layer = MeshLayerHost.create(layerId, arguments);
+          if (belowLayerId != null) {
+            style.addLayerBelow(layer, belowLayerId);
+          } else {
+            style.addLayer(layer);
+          }
+          result.success(null);
+          break;
+        }
       case "fillExtrusionLayer#add":
       {
         final String sourceId = call.argument("sourceId");

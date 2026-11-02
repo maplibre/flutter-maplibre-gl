@@ -808,6 +808,26 @@ class MapLibreMapController extends ChangeNotifier {
     );
   }
 
+  /// Add a layer of lit 3D meshes (trees, furniture, any model) drawn natively in the map's 3D
+  /// scene at real coordinates, depth-tested against fill extrusions.
+  ///
+  /// Each of [layer]'s meshes is uploaded to the GPU once and drawn for all its instances in one
+  /// instanced draw call. Remove the layer with [removeLayer]; to change it, remove it and add it
+  /// again.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id. Supported on Android and iOS.
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) async {
+    await _maplibrePlatform.addMeshLayer(
+      layerId,
+      layer,
+      belowLayerId: belowLayerId,
+    );
+  }
+
   /// Add a circle layer to the map with the given properties
   ///
   /// Consider using [addLayer] for an unified layer api.

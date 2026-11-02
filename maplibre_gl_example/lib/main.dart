@@ -20,6 +20,7 @@ import 'shared/tile_client_identity.dart';
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
 import 'examples/layers/background_layer_example.dart';
+import 'examples/layers/mesh_layer_example.dart';
 import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
@@ -224,6 +225,8 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const FillLayerExample(),
   const LineLayerExample(),
   const BackgroundLayerExample(),
+  // Mesh layers are drawn natively on Android and iOS; MapLibre GL JS has custom layers of its own
+  if (!kIsWeb) const MeshLayerExample(),
   // Feature state is available on web and Android, not on iOS yet.
   if (FeatureStateExample.isSupported) const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),

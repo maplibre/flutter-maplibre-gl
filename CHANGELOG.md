@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Added
+* **Android, iOS**: `addMeshLayer` draws lit 3D meshes (trees, furniture, any model) natively in the map's 3D scene, at real coordinates and depth-tested against fill extrusions, which can only shape prisms. A `MeshLayer` holds meshes in metres (positions, normals, sRGB colours, indices) and their placements (position, altitude, bearing, scale), lit by a hemisphere light and a sun as three.js lights a rough `MeshStandardMaterial`. Each mesh is uploaded to the GPU once and drawn for all its placements in one instanced draw call; per frame only one matrix is computed, in double precision around the layer's first placement, so the meshes stay steady at high zoom. Android renders with OpenGL ES 3 through MapLibre's `CustomLayer`, iOS with Metal through `MLNCustomStyleLayer`. New example: *Mesh Layer*.
+
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
 ### Fixed
