@@ -326,6 +326,51 @@ void main() {
       );
     });
 
+    test(
+      'rejects a definition MapLibre cannot download before native',
+      () async {
+        OfflineRegionDefinition definitionWith({
+          String mapStyleUrl = 'https://example.com/style.json',
+          double longitude = 20,
+          double minZoom = 5,
+          double maxZoom = 15,
+        }) => OfflineRegionDefinition(
+          bounds: LatLngBounds(
+            southwest: LatLng(10, longitude),
+            northeast: const LatLng(30, 40),
+          ),
+          mapStyleUrl: mapStyleUrl,
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+        );
+        final invalid = {
+          'a style url without a scheme': definitionWith(
+            mapStyleUrl: 'assets/style.json',
+          ),
+          'a NaN longitude': definitionWith(longitude: double.nan),
+          'minZoom above maxZoom': definitionWith(minZoom: 10, maxZoom: 5),
+          'a negative minZoom': definitionWith(minZoom: -1),
+          'a NaN minZoom': definitionWith(minZoom: double.nan),
+          'an infinite maxZoom': definitionWith(maxZoom: double.infinity),
+        };
+        for (final MapEntry(key: reason, value: definition)
+            in invalid.entries) {
+          await expectLater(
+            downloadOfflineRegion(definition),
+            throwsA(
+              isA<PlatformException>().having(
+                (e) => e.code,
+                'code',
+                'INVALID_REGION_DEFINITION',
+              ),
+            ),
+            reason: reason,
+          );
+        }
+        expect(api.calls, isEmpty);
+      },
+    );
+
     test('drops the listener when native fails the call', () async {
       // As iOS does on a definition it cannot read: no event follows.
       api.downloadError = PlatformException(code: 'INVALID_REGION_DEFINITION');
