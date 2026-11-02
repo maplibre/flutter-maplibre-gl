@@ -1372,9 +1372,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// [onUserLocationUpdated] does not fire until [resumeMap].
   ///
   /// Platform behavior:
-  /// - **Android**: stops the MapView render loop.
-  /// - **iOS**: drops the preferred frame rate to 0 while paused and restores
-  ///   it on [resumeMap].
+  /// - **Android** and **iOS**: stops the render loop, so the map keeps its
+  ///   last frame. The frame rate set with [setMaximumFps] stays.
   /// - **Web**: no-op.
   Future<void> pauseMap() async {
     return _maplibrePlatform.pauseMap();
@@ -2452,6 +2451,7 @@ class MapLibreMapController extends ChangeNotifier {
   ///   none), or tiles with `bounds` that are not four finite numbers with
   ///   south not above north once clamped to the poles, or a `minzoom` or
   ///   `maxzoom` outside 0 to 255 or in the wrong order;
+  /// * a tiled source with a `tileSize` outside 1 to 65535;
   /// * a GeoJSON source without data, or with a url that is empty or cannot
   ///   be a url at all, such as one with a port that is not a number;
   /// * an image source without a url or four corners.
@@ -2464,6 +2464,18 @@ class MapLibreMapController extends ChangeNotifier {
   /// **Platform support**: [VideoSourceProperties] is web only. Android and
   /// iOS throw `UNSUPPORTED_SOURCE_TYPE`.
   Future<void> addSource(String sourceid, SourceProperties properties) async {
+    // MapLibre Native holds the tile size in 16 bits, and iOS crashed on one
+    // that is not finite.
+    final json = properties.toJson();
+    final tileSize = json['tileSize'];
+    if (tileSize is num && !(tileSize >= 1 && tileSize <= 65535)) {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            "Source '$sourceid' cannot be built from its properties as a "
+            "'${json['type']}' source.",
+      );
+    }
     return _maplibrePlatform.addSource(sourceid, properties);
   }
 

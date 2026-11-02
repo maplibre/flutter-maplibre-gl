@@ -79,10 +79,29 @@ struct LocationPuckStyle: Equatable {
 /// view whenever its tint changes, for example when a sheet dims the window,
 /// which undoes the accuracy circle color. This reports those changes so the
 /// controller can apply the puck tint again. It also reports each layout, so
-/// the calls waiting for the view to have a size can run once it has one.
+/// the calls waiting for the view to have a size can run once it has one, and
+/// keeps rendering paused for `pauseMap`.
 final class LocationPuckMapView: MLNMapView {
     var onTintColorDidChange: (() -> Void)?
     var onLayout: (() -> Void)?
+
+    /// Whether `pauseMap` paused rendering. MLNMapView has no public switch
+    /// for it, so this pauses its display link and the view keeps its last
+    /// frame. MLNMapView starts the link again when the view moves or the app
+    /// comes back to the foreground, so each of those pauses it again.
+    var renderingPaused = false {
+        didSet {
+            guard renderingPaused != oldValue else { return }
+            if renderingPaused {
+                observeAppActivation()
+                pauseDisplayLink()
+            } else {
+                resumeDisplayLink()
+            }
+        }
+    }
+
+    private var observingAppActivation = false
 
     override func tintColorDidChange() {
         super.tintColorDidChange()
@@ -92,5 +111,67 @@ final class LocationPuckMapView: MLNMapView {
     override func layoutSubviews() {
         super.layoutSubviews()
         onLayout?()
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if renderingPaused { pauseDisplayLink() }
+    }
+
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        if renderingPaused { pauseDisplayLink() }
+    }
+
+    override var isHidden: Bool {
+        didSet {
+            if renderingPaused { pauseDisplayLink() }
+        }
+    }
+
+    private func observeAppActivation() {
+        guard !observingAppActivation else { return }
+        observingAppActivation = true
+        for name in [
+            UIApplication.willEnterForegroundNotification,
+            UIApplication.didBecomeActiveNotification,
+        ] {
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(appDidResume),
+                name: name,
+                object: nil
+            )
+        }
+    }
+
+    @objc private func appDidResume() {
+        guard renderingPaused else { return }
+        pauseDisplayLink()
+        // Again once MLNMapView's own observers have run, in whatever order.
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.renderingPaused else { return }
+            self.pauseDisplayLink()
+        }
+    }
+
+    /// MLNMapView's display link. It is not public API, so this reads it only
+    /// where it exists.
+    private var mapDisplayLink: CADisplayLink? {
+        guard responds(to: NSSelectorFromString("displayLink")) else { return nil }
+        return value(forKey: "displayLink") as? CADisplayLink
+    }
+
+    private func pauseDisplayLink() {
+        mapDisplayLink?.isPaused = true
+    }
+
+    private func resumeDisplayLink() {
+        // MLNMapView runs the link only on screen, and has no link in the
+        // background. It starts the link itself when either changes.
+        guard let link = mapDisplayLink, link.isPaused, window != nil, !isHidden
+        else { return }
+        link.isPaused = false
+        triggerRepaint()
     }
 }

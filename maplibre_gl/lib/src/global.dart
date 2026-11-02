@@ -272,7 +272,9 @@ Future<void> resetOfflineDatabase() => _global.resetOfflineDatabase();
 /// follow the download with [getOfflineRegionStatus].
 ///
 /// Throws a [PlatformException] with code `INVALID_REGION_DEFINITION` when
-/// MapLibre cannot create a region from [definition].
+/// MapLibre cannot create a region from [definition], such as one with a
+/// `mapStyleUrl` without a scheme (`assets/style.json`), NaN bounds, or a
+/// zoom range that is not finite, starts below 0 or is inverted.
 Future<OfflineRegion> downloadOfflineRegion(
   OfflineRegionDefinition definition, {
   Map<String, dynamic> metadata = const {},

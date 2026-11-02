@@ -131,7 +131,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     private var doubleTapRecognizers: [UITapGestureRecognizer] = []
 
-    private var userFps: MLNMapViewPreferredFramesPerSecond = .default
     private var pausedByDart = false
     private var isBackgroundPaused = false
 
@@ -349,14 +348,11 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         )
     }
 
-    // Pausing the render loop before the OS suspends the process prevents a
-    // SIGSEGV in PMTilesFileSource, which runs file I/O on a background thread
-    // that can be torn down mid-read during app backgrounding (#833).
+    // MLNMapView stops rendering in the background by itself (#833).
     // didEnterBackground (not willResignActive) is used so transient interruptions
-    // like incoming call banners or Control Center do not freeze the map.
+    // like incoming call banners or Control Center do not stop location updates.
     @objc private func appDidEnterBackground() {
         isBackgroundPaused = true
-        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
         // Location updates stop in the background as on Android (#1094), whether
         // or not the app has a location background mode for other reasons. The
         // user-location annotation stays at its last position.
@@ -372,8 +368,6 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if myLocationEnabled && !manualLocationSource {
             restartLocationPulseIfNeeded()
         }
-        guard !pausedByDart else { return }
-        mapView.preferredFramesPerSecond = userFps
     }
 
     func gestureRecognizer(
@@ -572,10 +566,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapSetMaximumFps(fps: Int64, result: @escaping FlutterResult) {
-        userFps = MLNMapViewPreferredFramesPerSecond(rawValue: Int(fps))
-        if !pausedByDart && !isBackgroundPaused {
-            mapView.preferredFramesPerSecond = userFps
-        }
+        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: Int(fps))
         result(nil)
     }
 
@@ -587,7 +578,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapPause(result: @escaping FlutterResult) {
         pausedByDart = true
-        mapView.preferredFramesPerSecond = MLNMapViewPreferredFramesPerSecond(rawValue: 0)
+        // Not preferredFramesPerSecond: its 0 is MLNMapViewPreferredFramesPerSecondMaximum.
+        (mapView as? LocationPuckMapView)?.renderingPaused = true
         // As on Android, a paused map stops location updates too.
         if myLocationEnabled && !manualLocationSource {
             stopLocationUpdates()
@@ -597,8 +589,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
     func mapResume(result: @escaping FlutterResult) {
         pausedByDart = false
+        (mapView as? LocationPuckMapView)?.renderingPaused = false
         if !isBackgroundPaused {
-            mapView.preferredFramesPerSecond = userFps
             if myLocationEnabled && !manualLocationSource {
                 restartLocationPulseIfNeeded()
             }
@@ -626,7 +618,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapTakeSnapshot(width: Int64?, height: Int64?, result: @escaping FlutterResult) {
-        guard let styleURL = snapshotStyleURL() else {
+        // styleURL is set before the style loads, so check the style, as
+        // Android does.
+        guard mapView.style != nil, let styleURL = snapshotStyleURL() else {
             result(FlutterError(
                 code: "STYLE_NOT_READY",
                 message: "Map style is not loaded",
@@ -4203,7 +4197,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if !styleIsJSON {
             return mapView.styleURL
         }
-        guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
+        guard let data = mapView.styleJSON.data(using: .utf8) else {
             return nil
         }
         let file = FileManager.default.temporaryDirectory

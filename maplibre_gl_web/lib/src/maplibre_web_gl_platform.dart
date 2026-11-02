@@ -3705,6 +3705,15 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<Uint8List> takeSnapshot({int? width, int? height}) {
+    // As on Android and iOS, this leaves a snapshot already running alone.
+    if (!_styleReady) {
+      return Future.error(
+        PlatformException(
+          code: 'STYLE_NOT_READY',
+          message: 'Map style is not loaded',
+        ),
+      );
+    }
     // A snapshot waits for map events that a newer call or a dispose can keep
     // from coming. Android and iOS answer it then, so web does too.
     _cancelSnapshot(

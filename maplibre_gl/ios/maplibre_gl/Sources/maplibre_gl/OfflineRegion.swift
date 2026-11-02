@@ -53,12 +53,7 @@ class OfflineRegion {
             // Unreadable metadata reads as empty, as on Android, rather than
             // hiding the region.
             metadata: dict["metadata"] as? [String: Any] ?? [:],
-            definition: OfflineRegionDefinition(
-                bounds: [region.bounds.sw, region.bounds.ne].map { [$0.latitude, $0.longitude] },
-                mapStyleUrl: region.styleURL,
-                minZoom: region.minimumZoomLevel,
-                maxZoom: region.maximumZoomLevel
-            )
+            definition: OfflineRegionDefinition(region: region)
         )
     }
 }
