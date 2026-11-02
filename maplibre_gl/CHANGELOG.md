@@ -196,6 +196,13 @@
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 * **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156, #1158).
+* **iOS**: no more crashes in these offline and source calls (#TBD):
+  * `mergeOfflineRegions` of a missing file throws `OFFLINE_DATABASE_ERROR`, as on Android. A file the app can only read, such as one in the app bundle, is merged from a copy, as on Android.
+  * `downloadOfflineRegion` throws `INVALID_REGION_DEFINITION`, on Android too, for a `mapStyleUrl` without a scheme such as `assets/style.json`, NaN bounds, or a zoom range that is not finite, starts below 0 or is inverted.
+  * `addSource` throws `INVALID_ARGUMENT`, on every platform, for a `tileSize` outside 1 to 65535.
+* **iOS**: `downloadOfflineRegion` honours `includeIdeographs`, and the region reads it back, instead of always leaving out the CJK glyphs (#TBD).
+* **iOS**: `pauseMap()` stops rendering until `resumeMap()`, as on Android. It lifted the frame rate cap instead, overriding `setMaximumFps` (#TBD).
+* **iOS, Web**: `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, as on Android, instead of taking a snapshot of the style still loading (#TBD).
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
