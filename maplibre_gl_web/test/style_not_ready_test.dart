@@ -90,6 +90,16 @@ void main() {
     'getSourceProperties': (c) => c.getSourceProperties('source'),
     'setGlobalStateProperty': (c) => c.setGlobalStateProperty('theme', 'dark'),
     'getGlobalState': (c) => c.getGlobalState(),
+    'moveLayer': (c) => c.moveLayer('layer'),
+    'setFilter': (c) => c.setFilter('layer', null),
+    'getFilter': (c) => c.getFilter('layer'),
+    'getLayerIds': (c) => c.getLayerIds(),
+    'getSourceIds': (c) => c.getSourceIds(),
+    'addImage': (c) => c.addImage('image', bytes),
+    'setLight': (c) => c.setLight(const LightProperties(intensity: 0.5)),
+    'getClusterExpansionZoom': (c) => c.getClusterExpansionZoom('points', 1),
+    'getClusterChildren': (c) => c.getClusterChildren('points', 1),
+    'getClusterLeaves': (c) => c.getClusterLeaves('points', 1),
   };
 
   for (final call in calls.entries) {

@@ -20,6 +20,12 @@ class MapLibreMapController extends MapLibrePlatform
   /// now that it loads maplibre-gl-js first, and [dispose] still runs after
   /// that: reading a `late` field that was never written throws.
   bool _mapCreated = false;
+
+  /// Whether [dispose] has run.
+  bool _disposed = false;
+
+  /// The waits for the next idle event, which [dispose] completes.
+  final _idleWaits = <Completer<void>>{};
   final _featureDrag = FeatureDragTracker();
   bool _dragEnabled = true;
 
@@ -116,6 +122,12 @@ class MapLibreMapController extends MapLibrePlatform
       'MAP_DISPOSED',
       'The map was disposed before the snapshot was ready.',
     );
+    // A removed map fires no more idle events.
+    _disposed = true;
+    for (final wait in _idleWaits) {
+      wait.complete();
+    }
+    _idleWaits.clear();
     _removeManualPuck();
     _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
@@ -1153,7 +1165,11 @@ class MapLibreMapController extends MapLibrePlatform
   /// `SOURCE_LAYER_REQUIRED` for a vector source without [sourceLayer].
   /// maplibre-gl-js only fires an error event for each of them, which the
   /// caller never sees.
-  void _ensureFeatureStateSource(String sourceId, String? sourceLayer) {
+  ///
+  /// Returns the source layer to hand to maplibre-gl-js: null for a GeoJSON
+  /// source, which ignores [sourceLayer] as on Android and iOS. maplibre-gl-js
+  /// rejects one there.
+  String? _featureStateSourceLayer(String sourceId, String? sourceLayer) {
     _ensureStyleReady();
     final type = _sourceType(sourceId);
     if (type == null) throw _sourceNotFound(sourceId);
@@ -1161,13 +1177,15 @@ class MapLibreMapController extends MapLibrePlatform
       if (sourceLayer == null) {
         throw checks.featureStateSourceLayerRequired(sourceId);
       }
-    } else if (type != 'geojson') {
-      throw checks.notFeatureStateSource(sourceId, type);
+      return sourceLayer;
     }
+    if (type != 'geojson') throw checks.notFeatureStateSource(sourceId, type);
+    return null;
   }
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
   GeoJsonSource _clusterSource(String sourceId, String methodName) {
+    _ensureStyleReady();
     final jsSource = _jsSource(sourceId);
     if (jsSource == null) throw _sourceNotFound(sourceId);
     final source = GeoJsonSource.fromJsObject(
@@ -1304,6 +1322,7 @@ class MapLibreMapController extends MapLibrePlatform
     bool sdf = false,
     double? pixelRatio,
   ]) async {
+    _ensureStyleReady();
     // Same contract as Android: bytes that are not an image are a
     // PlatformException, not a null-check error. decodeImage answers null for
     // an unknown format and can throw on a truncated one.
@@ -2145,6 +2164,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    _ensureStyleReady();
     // maplibre-gl-js only fires an error event for a missing layer, so check
     // both first and throw the same error as Android and iOS.
     _ensureLayerExists(layerId);
@@ -2155,6 +2175,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setFilter(String layerId, dynamic filter) async {
+    _ensureStyleReady();
     _checkFilterable(layerId);
     // GL JS reports an invalid filter through an error event instead of
     // throwing, so listen for it while the filter is set.
@@ -2773,6 +2794,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setLight(LightProperties light) async {
+    _ensureStyleReady();
     _map.setLight(light.toJson());
   }
 
@@ -3374,14 +3396,14 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     if (!checks.isJsonValue(state)) {
       throw checks.featureStateNotJson(sourceId, featureId);
     }
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     _map.setFeatureState(feature, state.jsify());
@@ -3407,11 +3429,11 @@ class MapLibreMapController extends MapLibrePlatform
       );
     }
 
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     _map.removeFeatureState(feature, stateKey);
@@ -3423,11 +3445,11 @@ class MapLibreMapController extends MapLibrePlatform
     String featureId, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     // Not `dartify()`: for a JS object that returns a Map<Object?, Object?>,
@@ -3503,6 +3525,7 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future getFilter(String layerId) async {
+    _ensureStyleReady();
     _checkFilterable(layerId);
     return withoutFeatureIds(_map.getFilter(layerId));
   }
@@ -3542,12 +3565,15 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<List> getLayerIds() async {
+    // An empty list would read as a style without layers.
+    _ensureStyleReady();
     final layers = _map.getLayers();
     return layers.map((layer) => layer.id).toList();
   }
 
   @override
   Future<List> getSourceIds() async {
+    _ensureStyleReady();
     final sourceIds = _map.getSourceIds();
     return sourceIds;
   }
@@ -3624,9 +3650,20 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> waitUntilMapIsIdleAfterMovement() async {
-    final complete = Completer<void>();
-    _map.once('idle', (_) => complete.complete());
-    return complete.future;
+    // A map that is not moving or loading fires no more idle events. Android
+    // and iOS answer at once too.
+    if (_disposed || (!_map.isMoving() && _map.loaded())) return;
+    return _nextIdle();
+  }
+
+  /// Completes on the next idle event, or when the map is disposed.
+  Future<void> _nextIdle() {
+    final idle = Completer<void>();
+    _idleWaits.add(idle);
+    _map.once('idle', (_) {
+      if (_idleWaits.remove(idle)) idle.complete();
+    });
+    return idle.future;
   }
 
   @override
@@ -3661,7 +3698,8 @@ class MapLibreMapController extends MapLibrePlatform
     _map.getContainer().style.height = '${size.height}px';
     _map.resize();
 
-    await waitUntilMapIsIdleAfterMovement();
+    // The resize redraws the map, so an idle event follows.
+    await _nextIdle();
     return initialSize;
   }
 
