@@ -575,11 +575,70 @@ void main() {
       expect(calls.first.positionalArgs[1], isNull);
     });
 
-    test('setLayerFilter fails its future on malformed JSON', () async {
-      final future = controller.setLayerFilter('layer-1', '["==", ');
+    test(
+      'setLayerFilter throws INVALID_EXPRESSION on malformed JSON',
+      () async {
+        final future = controller.setLayerFilter('layer-1', '["==", ');
 
-      await expectLater(future, throwsFormatException);
-      expect(platform.callsFor('setFilter'), isEmpty);
+        await expectLater(
+          future,
+          throwsA(
+            isA<PlatformException>()
+                .having((e) => e.code, 'code', 'INVALID_EXPRESSION')
+                .having((e) => e.details, 'details', 'Not valid JSON.'),
+          ),
+        );
+        expect(platform.callsFor('setFilter'), isEmpty);
+      },
+    );
+
+    // Android and iOS send a filter as JSON, which has no NaN or infinity.
+    test('a filter JSON cannot carry throws INVALID_EXPRESSION', () async {
+      final filter = [
+        '>',
+        ['get', 'h'],
+        double.nan,
+      ];
+      final calls = <String, Future<void> Function()>{
+        'setLayerFilter': () => controller.setLayerFilter('layer-1', filter),
+        'addCircleLayer': () => controller.addCircleLayer(
+          'source',
+          'layer',
+          const CircleLayerProperties(),
+          filter: filter,
+        ),
+        'addLayer': () => controller.addLayer(
+          'source',
+          'layer',
+          const LineLayerProperties(),
+          filter: [
+            '<',
+            ['get', 'h'],
+            double.infinity,
+          ],
+        ),
+        'queryRenderedFeatures': () => controller.queryRenderedFeatures(
+          const Point(1, 2),
+          ['layer'],
+          filter,
+        ),
+        'querySourceFeatures': () =>
+            controller.querySourceFeatures('source', null, filter),
+      };
+      for (final MapEntry(:key, :value) in calls.entries) {
+        await expectLater(
+          value(),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'INVALID_EXPRESSION',
+            ),
+          ),
+          reason: key,
+        );
+      }
+      expect(platform.calls, isEmpty);
     });
 
     test('removeLayerFilter sends a null filter', () async {

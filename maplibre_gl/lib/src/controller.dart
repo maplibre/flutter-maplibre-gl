@@ -120,7 +120,8 @@ typedef OnMapIdleCallback = void Function();
 ///   the call takes a GeoJSON source and gets another type.
 /// * `SOURCE_LAYER_REQUIRED`: a layer on a vector source names no source
 ///   layer.
-/// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression.
+/// * `INVALID_EXPRESSION`: MapLibre rejects a filter or property expression,
+///   or a filter holds a value JSON cannot carry, such as NaN.
 /// * `INVALID_ARGUMENT`: a property value has the wrong kind, a layer zoom is
 ///   outside 0 to 24 on web, or a source cannot be built from its properties.
 /// * `INVALID_GEOJSON`: the data is not valid GeoJSON, or on Android and iOS
@@ -763,6 +764,7 @@ class MapLibreMapController extends ChangeNotifier {
     dynamic filter,
     bool enableInteraction = true,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addSymbolLayer(
       sourceId,
       layerId,
@@ -814,6 +816,7 @@ class MapLibreMapController extends ChangeNotifier {
     dynamic filter,
     bool enableInteraction = true,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addLineLayer(
       sourceId,
       layerId,
@@ -889,6 +892,7 @@ class MapLibreMapController extends ChangeNotifier {
     dynamic filter,
     bool enableInteraction = true,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addFillLayer(
       sourceId,
       layerId,
@@ -940,6 +944,7 @@ class MapLibreMapController extends ChangeNotifier {
     dynamic filter,
     bool enableInteraction = true,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addFillExtrusionLayer(
       sourceId,
       layerId,
@@ -991,6 +996,7 @@ class MapLibreMapController extends ChangeNotifier {
     dynamic filter,
     bool enableInteraction = true,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addCircleLayer(
       sourceId,
       layerId,
@@ -1199,6 +1205,7 @@ class MapLibreMapController extends ChangeNotifier {
     double? maxzoom,
     dynamic filter,
   }) async {
+    _checkFilter(filter);
     await _maplibrePlatform.addHeatmapLayer(
       sourceId,
       layerId,
@@ -1998,6 +2005,7 @@ class MapLibreMapController extends ChangeNotifier {
     List<String> layerIds,
     List<Object>? filter,
   ) async {
+    _checkFilter(filter);
     return _maplibrePlatform.queryRenderedFeatures(point, layerIds, filter);
   }
 
@@ -2053,6 +2061,7 @@ class MapLibreMapController extends ChangeNotifier {
     String? sourceLayerId,
     List<Object>? filter,
   ) async {
+    _checkFilter(filter);
     return _maplibrePlatform.querySourceFeatures(
       sourceId,
       sourceLayerId,
@@ -2370,10 +2379,16 @@ class MapLibreMapController extends ChangeNotifier {
   /// Throws a [PlatformException] if the layer is missing or cannot be
   /// filtered, or if [filter] is invalid. The message says why.
   Future<void> setLayerFilter(String layerId, dynamic filter) async {
-    await _maplibrePlatform.setFilter(
-      layerId,
-      filter is String ? jsonDecode(filter) : filter,
-    );
+    if (filter is String) {
+      try {
+        filter = jsonDecode(filter);
+      } on FormatException {
+        throw _invalidFilter('Not valid JSON.');
+      }
+    } else {
+      _checkFilter(filter);
+    }
+    await _maplibrePlatform.setFilter(layerId, filter);
   }
 
   /// Returns the filter of the layer [layerId], or null if it has none.
@@ -2931,5 +2946,29 @@ class MapLibreMapController extends ChangeNotifier {
         "widget (note that an empty annotationOrder disables all annotations).",
       );
     }
+  }
+}
+
+/// The error every platform answers for a filter MapLibre cannot read.
+PlatformException _invalidFilter(String reason) => PlatformException(
+  code: 'INVALID_EXPRESSION',
+  message: 'Invalid filter: $reason',
+  details: reason,
+);
+
+/// Throws `INVALID_EXPRESSION` for a [filter] JSON cannot carry, such as one
+/// with a NaN or infinite number. Android and iOS send filters as JSON, and
+/// web answers the same.
+void _checkFilter(Object? filter) {
+  if (filter == null) return;
+  try {
+    jsonEncode(filter);
+    // The error of jsonEncode, for a value it cannot write.
+    // ignore: avoid_catching_errors
+  } on JsonUnsupportedObjectError {
+    throw _invalidFilter(
+      'Not valid JSON: it holds a non-finite number, or a value of a type '
+      'JSON cannot carry.',
+    );
   }
 }
