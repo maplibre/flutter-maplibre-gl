@@ -8,7 +8,8 @@
 // is off, and telemetry.
 //
 // The calls without a style run on Android and iOS only: web cannot drop a
-// loaded style, so a web unit test covers them there. Video sources are web
+// loaded style, so a web unit test covers them there. takeSnapshot runs on
+// every platform, against a style that never loads. Video sources are web
 // only.
 //
 // Run on Android or iOS:
@@ -2209,6 +2210,15 @@ void main() {
             minzoom: 0,
             maxzoom: -1,
           ),
+          // iOS crashed on a tileSize that is not finite.
+          'a NaN tileSize': const RasterSourceProperties(
+            tiles: [_tileUrl],
+            tileSize: double.nan,
+          ),
+          'a tileSize above 16 bits': const RasterDemSourceProperties(
+            tiles: [_tileUrl],
+            tileSize: 65536,
+          ),
           'an empty data url': const GeojsonSourceProperties(data: ''),
           'a data url with a port that is not a number':
               const GeojsonSourceProperties(
@@ -2749,6 +2759,24 @@ void main() {
   });
 
   group('without a style', () {
+    testWidgets('takeSnapshot answers STYLE_NOT_READY', (tester) async {
+      // iOS and web took a snapshot of a style still loading.
+      final controller = await pumpMap(tester);
+      await pumpUntil(
+        tester,
+        controller.setStyle('https://style.invalid/style.json'),
+        'setStyle with a style that never loads',
+      );
+
+      final error = await expectPlatformError(
+        tester,
+        controller.takeSnapshot(),
+        'takeSnapshot',
+        code: 'STYLE_NOT_READY',
+      );
+      expect(error.message, 'Map style is not loaded');
+    });
+
     testWidgets('calls that need a style answer STYLE_NOT_READY', (
       tester,
     ) async {
