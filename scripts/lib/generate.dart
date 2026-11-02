@@ -455,6 +455,7 @@ List<Map<String, dynamic>> buildSourceProperties(
 
   return items.entries
       .where((e) => e.key != "*" && e.key != "type")
+      .where((e) => isImplementedSomewhere(e.value as Map<String, dynamic>))
       .map(
         (e) => buildSourceProperty(e.key, {
           ...e.value as Map<String, dynamic>,
@@ -462,6 +463,18 @@ List<Map<String, dynamic>> buildSourceProperties(
         }),
       )
       .toList();
+}
+
+/// Whether any platform implements the property [spec] describes, or the spec
+/// says nothing about it. A source property no platform implements is left
+/// out: its spec default would go out with every source, and MapLibre GL JS
+/// rejects a source with a key its own copy of the spec does not know.
+bool isImplementedSomewhere(Map<String, dynamic> spec) {
+  final Map<String, dynamic>? sdkSupport = spec["sdk-support"];
+  if (sdkSupport == null) return true;
+  return sdkSupport.values.any(
+    (kind) => (kind as Map<String, dynamic>).values.any(isImplemented),
+  );
 }
 
 /// Source properties that are only valid under another property's setting
@@ -529,7 +542,7 @@ List<String> buildDocSplit(Map<String, dynamic> item, {String? name}) {
   final Map<dynamic, dynamic>? sdkSupport = item["sdk-support"];
 
   final Map<String, dynamic>? values = item["values"];
-  final result = splitIntoChunks(item["doc"]!, 70);
+  final result = splitIntoChunks(specDoc(item["doc"]!), 70);
   if (type != null) {
     result.add("");
     result.add("Type: $type");
@@ -541,7 +554,11 @@ List<String> buildDocSplit(Map<String, dynamic> item, {String? name}) {
       for (final value in values.entries) {
         result.add('  "${value.key}"');
         result.addAll(
-          splitIntoChunks("${value.value["doc"]}", 70, prefix: "     "),
+          splitIntoChunks(
+            specDoc("${value.value["doc"]}"),
+            70,
+            prefix: "     ",
+          ),
         );
       }
     }
@@ -584,28 +601,47 @@ List<String> buildSupportLines(
   return ["  $kind with ${implemented.join(", ")}$not"];
 }
 
-/// Simple greedy word-wrapping utility used for docs.
+/// Where the links the spec writes relative to its own site point.
+const styleSpecUrl = "https://maplibre.org/maplibre-style-spec/";
+
+/// A doc from the spec, ready for a dartdoc: images are dropped, since their
+/// assets live on the spec site, and links relative to that site are made
+/// absolute. Links to an anchor (`#image`) are kept as they are.
+String specDoc(String doc) => doc
+    .replaceAll(RegExp(r"\s*!\[[^\]]*\]\([^)]*\)"), "")
+    .replaceAllMapped(
+      RegExp(r"\]\((?!https?:|#)([^)]*)\)"),
+      (m) => "]($styleSpecUrl${m[1]})",
+    );
+
+/// Simple greedy word-wrapping utility used for docs. Each line of [input] is
+/// wrapped on its own, and blank lines, which separate paragraphs and lists in
+/// the spec, are kept as one empty line.
 List<String> splitIntoChunks(
   String input,
   int lineLength, {
   String prefix = "",
 }) {
-  final words = input.split(" ");
   final chunks = <String>[];
-
-  var chunk = "";
-  for (final word in words) {
-    final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
-    if (nextChunk.length > lineLength || chunk.endsWith("\n")) {
-      chunks.add(chunk.replaceAll("\n", ""));
-      chunk = prefix + word;
-    } else {
-      chunk = nextChunk;
+  for (final line in input.split("\n").map((l) => l.trim())) {
+    if (line.isEmpty) {
+      if (chunks.isNotEmpty && chunks.last.isNotEmpty) chunks.add("");
+      continue;
     }
+    var chunk = "";
+    for (final word in line.split(" ").where((w) => w.isNotEmpty)) {
+      final nextChunk = chunk.isEmpty ? prefix + word : "$chunk $word";
+      if (nextChunk.length > lineLength && chunk.isNotEmpty) {
+        chunks.add(chunk);
+        chunk = prefix + word;
+      } else {
+        chunk = nextChunk;
+      }
+    }
+    chunks.add(chunk);
   }
-  chunks.add(chunk);
-
-  return chunks;
+  if (chunks.isNotEmpty && chunks.last.isEmpty) chunks.removeLast();
+  return chunks.isEmpty ? [prefix] : chunks;
 }
 
 /// Build expression metadata (renaming reserved or symbolic operators to
