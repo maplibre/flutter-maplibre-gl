@@ -87,11 +87,15 @@ void main() {
         updateOfflineRegionMetadata(region.id, {
           'name': 'after',
           'pinned': true,
+          'version': 2,
         }),
         'updateOfflineRegionMetadata',
       );
+      const after = {'name': 'after', 'pinned': true, 'version': 2};
       expect(updated.id, region.id);
-      expect(updated.metadata, {'name': 'after', 'pinned': true});
+      expect(updated.metadata, after);
+      // A whole number comes back as an int on every platform, not 2.0.
+      expect(updated.metadata['version'], isA<int>());
       _expectSameDefinition(updated.definition, region.definition);
 
       final regions = await pumpUntil(
@@ -105,7 +109,8 @@ void main() {
         hasLength(1),
         reason: 'the region should still be listed under its id',
       );
-      expect(listed.single.metadata, {'name': 'after', 'pinned': true});
+      expect(listed.single.metadata, after);
+      expect(listed.single.metadata['version'], isA<int>());
       _expectSameDefinition(listed.single.definition, region.definition);
     });
 
