@@ -24,7 +24,7 @@
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
-  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error.
+  * Source, layer and image calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error, and on web `addImage` added the image.
   * **Android, Web**: `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. Android and web ignored these, iOS crashed on some.
   * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`. Android and iOS added a layer that drew nothing, web dropped it.
@@ -197,6 +197,8 @@
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 * **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156, #1158).
 * **iOS**: camera animations ease as on Android and web. `easeCamera` with `easeOut` moved at constant speed, and with `easeInOut` or no curve sped up until an abrupt stop, like `animateCamera` and `easeCamera` without a duration. `easeOut` now matches web; `easeInOut`, the default, calls without a duration and `setCameraBounds` ease out as on Android, since MapLibre iOS cannot ease both in and out, and `setTrackingCameraOptions` tilts at constant speed as on Android (#1183, [maplibre-native#4902](https://github.com/maplibre/maplibre-native/issues/4902)).
+* **Web**: `setFeatureState`, `getFeatureState` and `removeFeatureState` ignore `sourceLayer` on a GeoJSON source, as on Android and iOS. MapLibre GL JS left the state unchanged, or read none, when one was given (#1185).
+* **Web**: `waitUntilMapIsIdleAfterMovement` completes at once when the map is not moving or loading, as on Android and iOS, and when the map is disposed. It waited for an idle event that might never come (#1185).
 * **Android**: these now behave as on iOS and web (#1186):
   * `setCameraBounds` adds its `padding` to the content insets, as on iOS and web. It dropped the insets set with `updateContentInsets` and left its padding on the map, so later bounds fits kept that margin.
   * Whole numbers in offline region metadata read back as `int`, as on iOS, instead of `double`, so `metadata['version'] as int` no longer throws.

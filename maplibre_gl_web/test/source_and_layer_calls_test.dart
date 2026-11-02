@@ -141,7 +141,31 @@ class _FakeMap {
     );
     method('triggerRepaint', (() {}).toJS);
     method('getCanvas', (() => canvas).toJS);
+    method('isMoving', (() => moving).toJS);
+    method('loaded', (() => loaded).toJS);
+    for (final name in [
+      'setFeatureState',
+      'removeFeatureState',
+      'getFeatureState',
+    ]) {
+      method(
+        name,
+        ((JSObject target, [JSAny? stateOrKey]) {
+          featureStateTargets.add(dartify(target)! as Map);
+          return JSObject();
+        }).toJS,
+      );
+    }
   }
+
+  /// Whether the camera is moving, for isMoving().
+  bool moving = false;
+
+  /// Whether the style, sources and tiles have loaded, for loaded().
+  bool loaded = true;
+
+  /// The targets the feature state calls were handed, back in Dart.
+  final featureStateTargets = <Map>[];
 
   /// The paint or layout properties set on the layer [layerId], by [kind].
   Map<String, JSAny?> _properties(String layerId, String kind) =>
@@ -924,6 +948,77 @@ void main() {
         throwsA(nonFinite),
       );
       expect(map.url('image'), url);
+    });
+  });
+
+  group('feature state', () {
+    test('drops sourceLayer for a GeoJSON source, as Android and iOS '
+        'ignore it there', () async {
+      await controller.addGeoJsonSource('points', _collection([_point(1, 1)]));
+
+      await controller.setFeatureState('points', '1', {
+        'a': 1,
+      }, sourceLayer: 'roads');
+      await controller.getFeatureState('points', '1', sourceLayer: 'roads');
+      await controller.removeFeatureState(
+        'points',
+        featureId: '1',
+        sourceLayer: 'roads',
+      );
+
+      expect(map.featureStateTargets, [
+        for (var i = 0; i < 3; i++) {'source': 'points', 'id': '1'},
+      ]);
+    });
+
+    test('keeps sourceLayer for a vector source', () async {
+      await controller.addSource(
+        'tiles',
+        const VectorSourceProperties(
+          tiles: ['https://example.com/{z}/{x}/{y}'],
+        ),
+      );
+
+      await controller.setFeatureState('tiles', '1', {
+        'a': 1,
+      }, sourceLayer: 'roads');
+
+      expect(map.featureStateTargets, [
+        {'source': 'tiles', 'id': '1', 'sourceLayer': 'roads'},
+      ]);
+    });
+  });
+
+  group('waitUntilMapIsIdleAfterMovement', () {
+    test('completes at once on a map that is not moving or loading', () async {
+      await controller.waitUntilMapIsIdleAfterMovement();
+
+      expect(map.once, isEmpty, reason: 'no idle event will come');
+    });
+
+    test('waits for the idle event while the map moves or loads', () async {
+      for (final (moving, loaded) in [(true, true), (false, false)]) {
+        map
+          ..moving = moving
+          ..loaded = loaded;
+        var done = false;
+        final idle = controller.waitUntilMapIsIdleAfterMovement().then(
+          (_) => done = true,
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(done, isFalse);
+
+        map.fireOnce('idle');
+        await idle;
+      }
+    });
+
+    test('dispose completes a wait still running', () async {
+      map.moving = true;
+      final idle = controller.waitUntilMapIsIdleAfterMovement();
+      controller.dispose();
+
+      await idle;
     });
   });
 

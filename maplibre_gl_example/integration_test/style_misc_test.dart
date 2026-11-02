@@ -573,10 +573,6 @@ void main() {
   ) async {
     final controller = await pumpMap(tester);
 
-    // Start waiting before the move: on web the helper listens for the next
-    // idle event, which the move itself may already have produced by the time
-    // a later call registers.
-    final idle = controller.waitUntilMapIsIdleAfterMovement();
     await pumpUntil(
       tester,
       controller.moveCamera(
@@ -586,7 +582,18 @@ void main() {
       ),
       'moveCamera',
     );
-    await pumpUntil(tester, idle, 'waitUntilMapIsIdleAfterMovement');
+    await pumpUntil(
+      tester,
+      controller.waitUntilMapIsIdleAfterMovement(),
+      'waitUntilMapIsIdleAfterMovement after the move',
+    );
+    // A map already idle fires no more idle events on web: the wait must not
+    // hang on one.
+    await pumpUntil(
+      tester,
+      controller.waitUntilMapIsIdleAfterMovement(),
+      'waitUntilMapIsIdleAfterMovement on an idle map',
+    );
 
     // The offline style has no tiled sources, so there is nothing to wait for.
     await pumpUntil(
