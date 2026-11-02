@@ -2726,7 +2726,17 @@ class MapLibreMapController extends MapLibrePlatform
 
   @override
   Future<void> setGlobalStateProperty(String name, Object? value) async {
+    // maplibre-gl-js throws a plain error before the style has loaded, and
+    // takes a NaN that Android and iOS cannot send.
+    _ensureStyleReady();
+    if (!checks.isJsonValue(value)) throw checks.globalStateNotJson(name);
     _map.setGlobalStateProperty(name, value);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    _ensureStyleReady();
+    return dartifyMap(_map.getGlobalState());
   }
 
   Future<void> _addLayer(
@@ -3554,7 +3564,10 @@ class MapLibreMapController extends MapLibrePlatform
     final property = _map.getLayoutProperty(layerId, 'visibility');
     if (property == null) return true;
     if (property is String) return property != 'none';
-    return true;
+    // An expression: what it evaluates to now, as on Android and iOS. At its
+    // own minzoom, isHidden only tells whether that value is `none`.
+    final layer = _map.getLayer(layerId) as JSObject;
+    return !layer.callMethod<JSBoolean>('isHidden'.toJS).toDart;
   }
 
   @override

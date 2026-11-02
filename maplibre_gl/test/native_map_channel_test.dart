@@ -739,6 +739,8 @@ void main() {
       'sourceRemoveFeatureState',
       'sourceGetFeatureState',
       'styleSetLight',
+      'styleSetGlobalStateProperty',
+      'styleGetGlobalState',
       'layerSetVisibility',
       'layerSetVisibilityBatch',
       'layerSetZoomRange',

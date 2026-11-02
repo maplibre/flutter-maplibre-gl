@@ -878,6 +878,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setGlobalStateProperty(String name, JSAny? value);
 
+  ///  Returns the style's global state.
+  ///
+  ///  @returns {Object} Each global state property with its current value.
+  external JSAny getGlobalState();
+
   ///  Returns the value of the light object.
   ///
   ///  @returns {Object} light Light properties of the style.

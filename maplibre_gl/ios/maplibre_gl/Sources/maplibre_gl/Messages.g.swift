@@ -2713,6 +2713,12 @@ protocol MapLibreMapHostApi {
   /// style-spec form. It stays a map because each property can be any value
   /// in Dart: native checks that each one is a constant of the right type.
   func styleSetLight(light: [String: Any?], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Sets the property [name] of the style's global state to [value], JSON
+  /// text, so nested values and number types arrive intact. JSON `null`
+  /// resets the property to the default of the style's `state`.
+  func styleSetGlobalStateProperty(name: String, value: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Answers with the style's global state as the JSON text of an object.
+  func styleGetGlobalState(completion: @escaping (Result<String, Error>) -> Void)
   /// Shows or hides the layer [layerId].
   func layerSetVisibility(layerId: String, visible: Bool, completion: @escaping (Result<Void, Error>) -> Void)
   /// Shows or hides the layers [layerIds]. Answers with the ids that matched
@@ -4137,6 +4143,43 @@ class MapLibreMapHostApiSetup {
       }
     } else {
       styleSetLightChannel.setMessageHandler(nil)
+    }
+    /// Sets the property [name] of the style's global state to [value], JSON
+    /// text, so nested values and number types arrive intact. JSON `null`
+    /// resets the property to the default of the style's `state`.
+    let styleSetGlobalStatePropertyChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetGlobalStateProperty\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleSetGlobalStatePropertyChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let nameArg = args[0] as! String
+        let valueArg = args[1] as! String
+        api.styleSetGlobalStateProperty(name: nameArg, value: valueArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleSetGlobalStatePropertyChannel.setMessageHandler(nil)
+    }
+    /// Answers with the style's global state as the JSON text of an object.
+    let styleGetGlobalStateChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetGlobalState\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleGetGlobalStateChannel.setMessageHandler { _, reply in
+        api.styleGetGlobalState { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleGetGlobalStateChannel.setMessageHandler(nil)
     }
     /// Shows or hides the layer [layerId].
     let layerSetVisibilityChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.layerSetVisibility\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)

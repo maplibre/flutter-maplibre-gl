@@ -4568,6 +4568,49 @@ class MapLibreMapHostApi {
     );
   }
 
+  /// Sets the property [name] of the style's global state to [value], JSON
+  /// text, so nested values and number types arrive intact. JSON `null`
+  /// resets the property to the default of the style's `state`.
+  Future<void> styleSetGlobalStateProperty(String name, String value) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleSetGlobalStateProperty$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[name, value],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// Answers with the style's global state as the JSON text of an object.
+  Future<String> styleGetGlobalState() async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleGetGlobalState$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return pigeonVar_replyValue! as String;
+  }
+
   /// Shows or hides the layer [layerId].
   Future<void> layerSetVisibility(String layerId, bool visible) async {
     final pigeonVar_channelName =

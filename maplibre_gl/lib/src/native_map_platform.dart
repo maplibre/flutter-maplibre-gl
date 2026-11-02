@@ -1823,11 +1823,32 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   @override
   Future<void> setGlobalStateProperty(String name, Object? value) async {
-    throw UnsupportedError(
-      'setGlobalStateProperty is not available on Android and iOS because '
-      'MapLibre Native does not implement global state yet. '
-      'Global state is supported on web.',
-    );
+    // Sent as JSON text, so nested values and number types arrive intact.
+    // Only what JSON carries goes, as on web: no toJson() objects.
+    final String json;
+    try {
+      json = jsonEncode(
+        value,
+        toEncodable: (object) => throw JsonUnsupportedObjectError(object),
+      );
+      // The error of jsonEncode, for a value it cannot write.
+      // ignore: avoid_catching_errors
+    } on JsonUnsupportedObjectError {
+      throw PlatformException(
+        code: 'INVALID_ARGUMENT',
+        message:
+            "The value of global state property '$name' is not valid JSON: it "
+            'holds a non-finite number, or a value of a type JSON cannot '
+            'carry.',
+      );
+    }
+    await _api.styleSetGlobalStateProperty(name, json);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    final state = await _api.styleGetGlobalState();
+    return (jsonDecode(state) as Map).cast<String, dynamic>();
   }
 
   @override

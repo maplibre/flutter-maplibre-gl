@@ -265,6 +265,13 @@ PlatformException featureStateNotJson(String sourceId, String featureId) =>
       'carry.',
     );
 
+/// The error of a global state value that JSON cannot carry, the one Android
+/// and iOS give.
+PlatformException globalStateNotJson(String name) => invalidArgument(
+  "The value of global state property '$name' is not valid JSON: it holds a "
+  'non-finite number, or a value of a type JSON cannot carry.',
+);
+
 /// Whether [value] is made of what JSON can carry: null, booleans, finite
 /// numbers, strings, lists, and maps with string keys.
 bool isJsonValue(Object? value) {

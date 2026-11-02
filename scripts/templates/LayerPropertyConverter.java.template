@@ -124,8 +124,11 @@ class LayerPropertyConverter {
         {{/isFontProperty}}
         {{#isVisibilityProperty}}
         case "{{value}}":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.{{valueAsCamelCase}}(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.{{valueAsCamelCase}}(expression));
           }
         {{/isVisibilityProperty}}
         {{#isFloatArrayProperty}}
@@ -176,9 +179,17 @@ class LayerPropertyConverter {
 {{#layout_properties_android}}
       putPropertyValue(layout, typed.get{{valueAsPascalCase}}());
 {{/layout_properties_android}}
+      putVisibilityExpression(layer, layout);
       return;
     }
 {{/layerTypes}}
+  }
+
+  // A visibility set as an expression reads back as that expression, as on iOS
+  // and web, instead of the value it evaluates to now.
+  private static void putVisibilityExpression(Layer layer, JsonObject layout) {
+    final Expression expression = layer.getVisibilityExpression();
+    if (expression != null) layout.add("visibility", toStyleJson(expression));
   }
 
   private static void putPropertyValue(JsonObject target, PropertyValue<?> property) {
