@@ -8,7 +8,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
   * `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * Adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id, where they answered 0 or an empty list.
-  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY`.
+  * Source, layer and image calls and `setLight` made before the style has loaded throw `STYLE_NOT_READY`.
   * `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre GL JS cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. These were dropped with a console log.
   * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`, a `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, and a layer MapLibre GL JS does not add throws `INVALID_LAYER`.
@@ -63,6 +63,8 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * A GeoJSON, image or raster-dem source url and the url of `editGeoJsonUrl` are percent-encoded as on Android and iOS, so a url with a space loads, and `editGeoJsonUrl` answers `false` for an empty url. Tile source `bounds` that cross the antimeridian take every longitude, so their tiles load (#1123).
 * Feature ids come back from the queries and the cluster calls as they are in the data: `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. `["id"]` filters, feature state and the tap, drag and hover callbacks use the same ids. A source the app gives a `promoteId` keeps it, and a source with `generateId` keeps the ids MapLibre GL JS generates (#1124).
 * `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1158).
+* `setFeatureState`, `getFeatureState` and `removeFeatureState` ignore `sourceLayer` on a GeoJSON source, as on Android and iOS. MapLibre GL JS left the state unchanged, or read none, when one was given (#1185).
+* `waitUntilMapIsIdleAfterMovement` completes at once when the map is not moving or loading, as on Android and iOS, and when the map is disposed. It waited for an idle event that might never come (#1185).
 * `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, as on Android and iOS, instead of taking a snapshot of the style still loading (#1187).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
