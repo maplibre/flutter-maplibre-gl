@@ -272,4 +272,82 @@ void main() {
     expect(buildClassDocSplit(null), isEmpty);
     expect(buildClassDocSplit(['One.', 'Two.']), ['One.', '', 'Two.']);
   });
+
+  group('specDoc', () {
+    test('drops images, whose assets live on the spec site', () {
+      expect(
+        specDoc('Blends the layer.\n\n![Examples](assets/blend.svg)'),
+        'Blends the layer.',
+      );
+    });
+
+    test('makes links relative to the spec site absolute', () {
+      expect(
+        specDoc('Like [`let`](expressions/#let).'),
+        'Like [`let`]($styleSpecUrl'
+        'expressions/#let).',
+      );
+    });
+
+    test('keeps absolute links and anchors', () {
+      const doc = 'See [W3C](https://www.w3.org/) and [`image`](#image).';
+      expect(specDoc(doc), doc);
+    });
+  });
+
+  group('splitIntoChunks', () {
+    test('wraps a line at the length', () {
+      expect(splitIntoChunks('one two three', 7), ['one two', 'three']);
+    });
+
+    test('wraps each line apart and keeps one blank line between them', () {
+      expect(splitIntoChunks('Tokens:\n\n\n - `{z}` zoom\n - `{x}`', 70), [
+        'Tokens:',
+        '',
+        '- `{z}` zoom',
+        '- `{x}`',
+      ]);
+    });
+
+    test('puts the prefix on every line but the blank ones', () {
+      expect(splitIntoChunks('One.\n\nTwo.', 70, prefix: '  '), [
+        '  One.',
+        '',
+        '  Two.',
+      ]);
+    });
+  });
+
+  group('isImplementedSomewhere', () {
+    test('true when one platform implements it', () {
+      expect(
+        isImplementedSomewhere({
+          'sdk-support': {
+            'basic functionality': {
+              'js': '6.0.0',
+              'android': 'https://github.com/maplibre/maplibre-native/issues/1',
+            },
+          },
+        }),
+        isTrue,
+      );
+    });
+
+    test('false when every platform carries an issue', () {
+      expect(
+        isImplementedSomewhere({
+          'sdk-support': {
+            'basic functionality': {
+              'js': 'https://github.com/maplibre/maplibre-gl-js/issues/1',
+            },
+          },
+        }),
+        isFalse,
+      );
+    });
+
+    test('true when the spec says nothing about it', () {
+      expect(isImplementedSomewhere({'type': 'number'}), isTrue);
+    });
+  });
 }
