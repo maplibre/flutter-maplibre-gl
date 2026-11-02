@@ -18,8 +18,8 @@ flowchart TD
     BG --> EV["onEvent(status)<br/>called periodically<br/><small>completed / required count<br/>InProgress · Success · Error</small>"]
     BG --> CACHE["Tiles stored in MapLibre's<br/>SQLite cache on device"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class APP root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class APP emphasis
 ```
 
 Once downloaded, the map works offline automatically; no code change needed. When a region is in the cache and the device is offline, MapLibre serves tiles from the local store.
@@ -172,8 +172,8 @@ flowchart LR
     FILE --> MRG["Device B<br/>mergeOfflineRegions(path)"]
     MRG --> B["Device B<br/>regions available offline"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class A,B root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class A,B emphasis
 ```
 
 ### Export the database

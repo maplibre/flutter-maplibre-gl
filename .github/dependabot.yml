@@ -131,3 +131,9 @@ updates:
         applies-to: version-updates
         patterns:
           - com.google.android.gms:play-services-*
+
+  # Docs site toolchain
+  - package-ecosystem: pip
+    directory: /website
+    schedule:
+      interval: weekly

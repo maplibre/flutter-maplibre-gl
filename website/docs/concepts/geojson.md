@@ -15,8 +15,8 @@ flowchart LR
     G --> GC["coordinates<br/><small>[lng, lat] nested by type</small>"]
     P --> PV["{ name: 'Paris',<br/>population: 2161000, ... }"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class FC root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class FC emphasis
 ```
 
 !!! note "Longitude before latitude"

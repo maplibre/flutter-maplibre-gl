@@ -340,7 +340,30 @@ jobs:
       platform: web
       web-release: ${{ github.ref == 'refs/heads/main' }}
 
-  # Build the MkDocs site and assemble the Pages bundle (web demo + docs).
+  # Build the docs site on every change to it, so a broken build fails the PR
+  # instead of the Pages deploy after the merge to main.
+  check-docs:
+    name: "Check docs build"
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: website/requirements.txt
+
+      - name: Install Zensical
+        run: pip install -r website/requirements.txt
+
+      - name: Build docs site
+        working-directory: website
+        run: zensical build
+
+  # Build the docs site with Zensical and assemble the Pages bundle (web demo + docs).
   # Runs only on main after the relevant jobs succeed, and reuses the web
   # artifact from build-web instead of rebuilding the Flutter web app.
   build-docs:
@@ -370,12 +393,12 @@ jobs:
           cache: pip
           cache-dependency-path: website/requirements.txt
 
-      - name: Install MkDocs Material
+      - name: Install Zensical
         run: pip install -r website/requirements.txt
 
-      - name: Build MkDocs site
+      - name: Build docs site
         working-directory: website
-        run: mkdocs build
+        run: zensical build
 
       # Pages bundle layout: the docs site is the root homepage, and the
       # Flutter web demo is served under /demo/ (built with that base-href).
@@ -424,7 +447,7 @@ jobs:
   ci-result:
     name: "CI result"
     if: always()
-    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, integration-ios, build-web]
+    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, integration-ios, build-web, check-docs]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if a job failed or was cancelled
