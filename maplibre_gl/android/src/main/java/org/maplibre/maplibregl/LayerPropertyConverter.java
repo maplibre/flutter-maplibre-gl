@@ -273,8 +273,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.textOptional(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -340,8 +343,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.circleSortKey(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -432,8 +438,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.lineSortKey(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -491,8 +500,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillSortKey(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -550,8 +562,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.fillExtrusionVerticalGradient(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         case "fill-extrusion-rounded-corner-distance":
@@ -599,8 +614,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.rasterFadeDuration(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -669,8 +687,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.hillshadeMethod(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -706,8 +727,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.heatmapOpacity(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -734,8 +758,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.colorReliefColor(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -769,8 +796,11 @@ class LayerPropertyConverter {
           properties.add(PropertyFactory.backgroundOpacity(expression));
           break;
         case "visibility":
+          // An expression, which may only read the global state, or null, which resets it.
           if (jsonElement != null && jsonElement.isJsonPrimitive() && jsonElement.getAsJsonPrimitive().isString()) {
             properties.add(PropertyFactory.visibility(jsonElement.getAsString()));
+          } else {
+            properties.add(PropertyFactory.visibility(expression));
           }
           break;
         default:
@@ -862,6 +892,7 @@ class LayerPropertyConverter {
       putPropertyValue(layout, typed.getTextIgnorePlacement());
       putPropertyValue(layout, typed.getTextOptional());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof CircleLayer) {
@@ -879,6 +910,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getCircleStrokeOpacity());
       putPropertyValue(layout, typed.getCircleSortKey());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof LineLayer) {
@@ -900,6 +932,7 @@ class LayerPropertyConverter {
       putPropertyValue(layout, typed.getLineRoundLimit());
       putPropertyValue(layout, typed.getLineSortKey());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof FillLayer) {
@@ -913,6 +946,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getFillPattern());
       putPropertyValue(layout, typed.getFillSortKey());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof FillExtrusionLayer) {
@@ -927,6 +961,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getFillExtrusionVerticalGradient());
       putPropertyValue(layout, typed.getVisibility());
       putPropertyValue(layout, typed.getFillExtrusionRoundedCornerDistance());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof RasterLayer) {
@@ -940,6 +975,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getRasterResampling());
       putPropertyValue(paint, typed.getRasterFadeDuration());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof HillshadeLayer) {
@@ -953,6 +989,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getHillshadeAccentColor());
       putPropertyValue(paint, typed.getHillshadeMethod());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof HeatmapLayer) {
@@ -963,6 +1000,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getHeatmapColor());
       putPropertyValue(paint, typed.getHeatmapOpacity());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof ColorReliefLayer) {
@@ -970,6 +1008,7 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getColorReliefOpacity());
       putPropertyValue(paint, typed.getColorReliefColor());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
     if (layer instanceof BackgroundLayer) {
@@ -978,8 +1017,16 @@ class LayerPropertyConverter {
       putPropertyValue(paint, typed.getBackgroundPattern());
       putPropertyValue(paint, typed.getBackgroundOpacity());
       putPropertyValue(layout, typed.getVisibility());
+      putVisibilityExpression(layer, layout);
       return;
     }
+  }
+
+  // A visibility set as an expression reads back as that expression, as on iOS
+  // and web, instead of the value it evaluates to now.
+  private static void putVisibilityExpression(Layer layer, JsonObject layout) {
+    final Expression expression = layer.getVisibilityExpression();
+    if (expression != null) layout.add("visibility", toStyleJson(expression));
   }
 
   private static void putPropertyValue(JsonObject target, PropertyValue<?> property) {

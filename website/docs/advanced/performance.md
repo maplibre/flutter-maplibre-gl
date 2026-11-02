@@ -46,7 +46,7 @@ maplibre_gl.renderer=auto
 | Value | Backend | Cost |
 |---|---|---|
 | `opengl` (default) | OpenGL ES | None: runs on every device and has the longest track record. |
-| `vulkan` | Vulkan | Google Play offers the app only to devices with Vulkan 1.0, which leaves out Android 6 (API 23) and older GPUs. |
+| `vulkan` | Vulkan | Google Play offers the app only to devices with Vulkan 1.0, which leaves out older GPUs. |
 | `auto` | Vulkan where the device has it, OpenGL ES elsewhere | No device left out, but the app ships both native libraries: about 10 MB more. |
 
 Vulkan is usually faster on modern devices. The choice is made at build time and holds for every

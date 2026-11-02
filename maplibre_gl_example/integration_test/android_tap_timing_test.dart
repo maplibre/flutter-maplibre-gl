@@ -133,22 +133,20 @@ Future<_MapProbe> _pumpMapWithCircle(
 }) async {
   final probe = _MapProbe();
 
-  final controller =
-      probe.controller = await pumpMap(
-        tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: const CameraPosition(
-                target: _center,
-                zoom: 10,
-              ),
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: onStyleLoaded,
-              doubleClickZoomEnabled: doubleClickZoomEnabled,
-              onMapClick: (_, latLng) => probe.clicks.add(latLng),
-            ),
-      );
+  final controller = probe.controller = await pumpMap(
+    tester,
+    builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+      styleString: offlineStyle,
+      initialCameraPosition: const CameraPosition(
+        target: _center,
+        zoom: 10,
+      ),
+      onMapCreated: onMapCreated,
+      onStyleLoadedCallback: onStyleLoaded,
+      doubleClickZoomEnabled: doubleClickZoomEnabled,
+      onMapClick: (_, latLng) => probe.clicks.add(latLng),
+    ),
+  );
   controller.onFeatureTapped.add(
     (point, latLng, id, layerId, annotation) => probe.featureTaps.add(id),
   );

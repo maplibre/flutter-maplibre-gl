@@ -124,12 +124,11 @@ void main() {
       expect(json.containsKey('blueFactor'), isFalse);
       expect(json.containsKey('baseShift'), isFalse);
 
-      final custom =
-          const RasterDemSourceProperties(
-            encoding: 'custom',
-            redFactor: 256.0,
-            baseShift: 32.0,
-          ).toJson();
+      final custom = const RasterDemSourceProperties(
+        encoding: 'custom',
+        redFactor: 256.0,
+        baseShift: 32.0,
+      ).toJson();
       expect(custom['redFactor'], 256.0);
       expect(custom['baseShift'], 32.0);
     });

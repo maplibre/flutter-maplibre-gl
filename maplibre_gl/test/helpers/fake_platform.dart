@@ -377,6 +377,12 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<Map<String, dynamic>> getGlobalState() async {
+    calls.add(PlatformCall('getGlobalState', []));
+    return {};
+  }
+
+  @override
   Future<void> removeLayer(String layerId) async {
     calls.add(PlatformCall('removeLayer', [layerId]));
     layerStack.remove(layerId);

@@ -18,6 +18,8 @@ plugins:
 
 theme:
   name: material
+  variant: classic
+  custom_dir: overrides
   favicon: assets/icon.png
   logo: assets/icon.png
   icon:
@@ -40,8 +42,6 @@ theme:
     - content.code.copy
     - content.code.annotate
     - search.highlight
-    - search.suggest
-    - search.share
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -60,9 +60,6 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
-
-extra_javascript:
-  - javascripts/shortcuts.js
 
 extra:
   social:

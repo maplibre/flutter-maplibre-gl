@@ -74,10 +74,9 @@ class FeatureDragTracker {
   Map<String, dynamic>? upOutside() {
     final point = _previousPoint;
     final latLng = _previous;
-    final payload =
-        isDragging && point != null && latLng != null
-            ? _payload(point, latLng, 'end')
-            : null;
+    final payload = isDragging && point != null && latLng != null
+        ? _payload(point, latLng, 'end')
+        : null;
     _reset();
     return payload;
   }

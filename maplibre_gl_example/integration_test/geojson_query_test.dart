@@ -401,10 +401,9 @@ void main() {
       var total = 0;
       for (final child in children) {
         final properties = child['properties'] as Map;
-        total +=
-            properties.containsKey('point_count')
-                ? (properties['point_count'] as num).toInt()
-                : 1;
+        total += properties.containsKey('point_count')
+            ? (properties['point_count'] as num).toInt()
+            : 1;
       }
       expect(total, 6);
     });
@@ -866,12 +865,11 @@ Future<void> _waitForState(
   await pumpUntilValue(
     tester,
     () => controller.getFeatureState(_sourceId, featureId),
-    (state) =>
-        expected == null
-            ? state == null
-            : state != null &&
-                state.length == expected.length &&
-                expected.entries.every((e) => state[e.key] == e.value),
+    (state) => expected == null
+        ? state == null
+        : state != null &&
+              state.length == expected.length &&
+              expected.entries.every((e) => state[e.key] == e.value),
     'getFeatureState $featureId == $expected',
   );
 }
@@ -898,8 +896,7 @@ int? _id(dynamic feature) => num.tryParse('${(feature as Map)['id']}')?.toInt();
 /// The distinct ids in [features]; a feature near a tile edge can be reported
 /// once per tile.
 Set<int> _ids(List features) => {
-  for (final feature in features)
-    if (_id(feature) case final id?) id,
+  for (final feature in features) ?_id(feature),
 };
 
 Map _byId(List features, int id) =>

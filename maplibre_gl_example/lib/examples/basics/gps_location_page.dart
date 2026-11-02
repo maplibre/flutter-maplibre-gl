@@ -115,14 +115,13 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
     }
   }
 
-  static const _highAccuracyProperties =
-      kIsWeb
-          ? LocationEnginePlatforms.web(enableHighAccuracy: true)
-          : LocationEnginePlatforms.android(
-            enableHighAccuracy: true,
-            interval: 1000,
-            displacement: 1,
-          );
+  static const _highAccuracyProperties = kIsWeb
+      ? LocationEnginePlatforms.web(enableHighAccuracy: true)
+      : LocationEnginePlatforms.android(
+          enableHighAccuracy: true,
+          interval: 1000,
+          displacement: 1,
+        );
 
   Future<void> _toggleAccuracy() async {
     setState(() => _useHighAccuracy = !_useHighAccuracy);
@@ -165,11 +164,9 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
       );
       if (mounted) {
         setState(
-          () =>
-              _tiltStatus =
-                  applied
-                      ? 'Applied, still tracking'
-                      : 'Cancelled by the platform',
+          () => _tiltStatus = applied
+              ? 'Applied, still tracking'
+              : 'Cancelled by the platform',
         );
       }
     } on PlatformException catch (e) {
@@ -230,18 +227,16 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
         trackCameraPosition: true,
         myLocationEnabled: hasPermission,
         myLocationTrackingMode: _trackingMode,
-        locationEnginePlatforms:
-            _useHighAccuracy
-                ? _highAccuracyProperties
-                : LocationEnginePlatforms.defaultPlatform,
+        locationEnginePlatforms: _useHighAccuracy
+            ? _highAccuracyProperties
+            : LocationEnginePlatforms.defaultPlatform,
       ),
       controls: [
         InfoCard(
           title: 'GPS Location Tracking',
-          subtitle:
-              hasPermission
-                  ? 'Track your device location on the map'
-                  : 'Location permission required',
+          subtitle: hasPermission
+              ? 'Track your device location on the map'
+              : 'Location permission required',
           icon: hasPermission ? Icons.gps_fixed : Icons.gps_off,
           color: hasPermission ? null : Theme.of(context).colorScheme.error,
         ),
@@ -286,9 +281,9 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
                   _tiltStatus ??
                       (_supportsTrackingCamera
                           ? 'Pitch the camera and keep following the user. '
-                              'Needs a tracking mode other than None.'
+                                'Needs a tracking mode other than None.'
                           : 'Not available on web: maplibre-gl-js has no '
-                              'location component to pitch a tracking camera.'),
+                                'location component to pitch a tracking camera.'),
                 ),
                 contentPadding: EdgeInsets.zero,
               ),
@@ -297,14 +292,12 @@ class _GpsLocationBodyState extends State<_GpsLocationBody> {
                 max: 60,
                 divisions: 12,
                 label: '${_trackingTilt.round()}°',
-                onChanged:
-                    hasController && _supportsTrackingCamera
-                        ? (value) => setState(() => _trackingTilt = value)
-                        : null,
-                onChangeEnd:
-                    hasController && _supportsTrackingCamera
-                        ? _setTrackingTilt
-                        : null,
+                onChanged: hasController && _supportsTrackingCamera
+                    ? (value) => setState(() => _trackingTilt = value)
+                    : null,
+                onChangeEnd: hasController && _supportsTrackingCamera
+                    ? _setTrackingTilt
+                    : null,
               ),
             ],
           ),

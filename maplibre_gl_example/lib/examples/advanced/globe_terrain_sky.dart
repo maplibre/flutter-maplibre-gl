@@ -84,24 +84,24 @@ class _GlobeTerrainSkyBodyState extends State<_GlobeTerrainSkyBody> {
     await _controller?.setSky(
       _sky
           ? const SkyProperties(
-            skyColor: '#199EF3',
-            horizonColor: '#ffffff',
-            fogColor: '#ffffff',
-            fogGroundBlend: 0.5,
-            horizonFogBlend: 0.5,
-            skyHorizonBlend: 0.6,
-            atmosphereBlend: [
-              Expressions.interpolate,
-              ['linear'],
-              [Expressions.zoom],
-              0,
-              1,
-              10,
-              1,
-              12,
-              0,
-            ],
-          )
+              skyColor: '#199EF3',
+              horizonColor: '#ffffff',
+              fogColor: '#ffffff',
+              fogGroundBlend: 0.5,
+              horizonFogBlend: 0.5,
+              skyHorizonBlend: 0.6,
+              atmosphereBlend: [
+                Expressions.interpolate,
+                ['linear'],
+                [Expressions.zoom],
+                0,
+                1,
+                10,
+                1,
+                12,
+                0,
+              ],
+            )
           : const SkyProperties(atmosphereBlend: 0),
     );
   }

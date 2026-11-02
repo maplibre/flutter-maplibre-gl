@@ -1594,6 +1594,44 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         answer(addSource(sourceId: sourceId, properties: properties), result)
     }
 
+    func styleSetGlobalStateProperty(name: String, value: String, result: @escaping FlutterResult) {
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        // Dart sends the value as JSON text, so nested values arrive intact.
+        // JSON null resets the property to the default of the style's state.
+        guard let data = value.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
+        else {
+            result(MethodCallError.invalidArgument(
+                message: "The value of global state property '\(name)' is not valid JSON."
+            ).flutterError)
+            return
+        }
+        // MapLibre raises an Objective-C exception while the style is still loading.
+        let exception = MapLibreGLCatchException {
+            style.setGlobalStateValue(json, forProperty: name)
+        }
+        result(exception == nil ? nil : styleNotReadyError())
+    }
+
+    func styleGetGlobalState(result: @escaping FlutterResult) {
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        var state: [String: Any] = [:]
+        let exception = MapLibreGLCatchException {
+            state = style.globalState
+        }
+        guard exception == nil else {
+            result(styleNotReadyError())
+            return
+        }
+        result(jsonString(from: state) ?? "{}")
+    }
+
     func styleSetLight(light lightProperties: [String: Any], result: @escaping FlutterResult) {
         guard let style = mapView.style else {
             result(MethodCallError.styleNotReady.flutterError)
@@ -1759,7 +1797,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             return json
         }
         var layout = section("layout", readable.layout)
-        layout["visibility"] = layer.isVisible ? "visible" : "none"
+        // A visibility set as an expression reads back as that expression, as on
+        // Android and web, instead of the value it evaluates to now.
+        layout["visibility"] = layer.visibilityExpression.flatMap(LayerPropertyConverter.styleJSON)
+            ?? (layer.isVisible ? "visible" : "none")
         properties["paint"] = section("paint", readable.paint)
         properties["layout"] = layout
         return properties

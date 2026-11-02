@@ -132,11 +132,10 @@ class MapLibreExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initialPage =
-        [
-          ..._allPages,
-          ..._docPages,
-        ].where((p) => p.slug == _initialExampleSlug()).firstOrNull;
+    final initialPage = [
+      ..._allPages,
+      ..._docPages,
+    ].where((p) => p.slug == _initialExampleSlug()).firstOrNull;
 
     return MaterialApp(
       title: 'MapLibre Examples',
@@ -156,10 +155,9 @@ class MapLibreExampleApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home:
-          initialPage == null
-              ? const MapsDemo()
-              : _DemoStyleGate(page: initialPage),
+      home: initialPage == null
+          ? const MapsDemo()
+          : _DemoStyleGate(page: initialPage),
     );
   }
 }
@@ -284,11 +282,10 @@ class _MapsDemoState extends State<MapsDemo> {
     if (context.mounted) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder:
-              (_) => Scaffold(
-                appBar: AppBar(title: Text(page.title)),
-                body: page,
-              ),
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text(page.title)),
+            body: page,
+          ),
         ),
       );
     }
@@ -408,17 +405,16 @@ class _MapsDemoState extends State<MapsDemo> {
                       ),
                     ),
                     subtitle: Text('${pages.length} examples'),
-                    children:
-                        pages
-                            .map(
-                              (page) => ListTile(
-                                leading: page.leading,
-                                title: Text(page.title),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => _pushPage(context, page),
-                              ),
-                            )
-                            .toList(),
+                    children: pages
+                        .map(
+                          (page) => ListTile(
+                            leading: page.leading,
+                            title: Text(page.title),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _pushPage(context, page),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
               );

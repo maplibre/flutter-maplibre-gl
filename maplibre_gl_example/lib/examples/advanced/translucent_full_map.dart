@@ -89,12 +89,11 @@ class _TranslucentMapBodyState extends State<_TranslucentMapBody> {
       floatingActionButton: ExampleButton(
         label: _canReset ? 'Reset camera' : 'Go to Tokyo',
         icon: _canReset ? Icons.refresh : Icons.location_searching,
-        onPressed:
-            _canInteractWithMap
-                ? _canReset
-                    ? _resetCamera
-                    : _moveCameraToTokyo
-                : null,
+        onPressed: _canInteractWithMap
+            ? _canReset
+                  ? _resetCamera
+                  : _moveCameraToTokyo
+            : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

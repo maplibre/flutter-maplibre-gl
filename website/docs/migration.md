@@ -15,7 +15,13 @@ Then run `flutter pub upgrade maplibre_gl`. See the [CHANGELOG](https://github.c
 
 ### Minimum versions
 
-The declared Android `minSdkVersion` is now 23 (Android 6.0). MapLibre Android already required it, so an app that built with 0.27 builds with 0.28 too. Flutter, Dart and iOS minimums are unchanged; see [Minimum versions](getting-started.md#minimum-versions).
+0.28.0 needs Flutter 3.44 and Dart 3.12. Apps on an older Flutter stay on 0.27.x.
+
+iOS 15.5 is now the minimum, which MapLibre iOS 7 requires. Raise the deployment target of your app to 15.5 or later: `IPHONEOS_DEPLOYMENT_TARGET` in the Runner target of Xcode and, if your app uses CocoaPods, `platform :ios, '15.5'` in `ios/Podfile`.
+
+On iOS, Flutter 3.44 builds the plugin with Swift Package Manager by default, and MapLibre iOS no longer publishes new versions to CocoaPods. If your app turned Swift Package Manager off, turn it back on: see [Swift Package Manager](getting-started.md#swift-package-manager). Add-to-app modules, which Flutter does not build with Swift Package Manager yet, keep using CocoaPods.
+
+The Android `minSdkVersion` is now 24 (Android 7.0), the default of Flutter 3.44 apps. If your app sets a lower `minSdk` in `android/app/build.gradle`, raise it to 24. See [Minimum versions](getting-started.md#minimum-versions).
 
 ### Layer filters
 
@@ -252,7 +258,7 @@ None of these need a code change, but they are the places where code that worked
 * A GeoJSON, image or raster-dem source url with a space or another character a url cannot hold is percent-encoded on every platform, as browsers and iOS 17 do, so an iOS file path under `Library/Application Support` loads. `editGeoJsonUrl` answers `false` for an empty url, where Android and web answered `true`.
 * Tile source `bounds` with west greater than east, which cross the antimeridian, take every longitude, so the tiles on both sides load.
 * **iOS**: an `iconImage` that names a Flutter asset with `2.0x` or `3.0x` variants is sized like `Image.asset`, as on Android and web: on a 3x screen about 3 times larger than before. Drop any iOS-only `iconSize` that made up for it.
-* **Android**: MapLibre Android 13.7 draws `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before. iOS keeps the old size until MapLibre iOS ships the same fix.
+* **Android, iOS**: MapLibre Android 13.7 and iOS 7 draw `line-pattern` images at the size MapLibre GL JS uses, about 1.7 times smaller than before.
 
 ### New options
 

@@ -80,17 +80,16 @@ class ExampleConstants {
   /// Noto Sans variants; neither resolves multi-font stacks. When a symbol
   /// layer's fonts 404, MapLibre Native never completes symbol layout for
   /// the tile and the symbols disappear entirely, icons included.
-  static List<String> get demoFontStack =>
-      demoMapStyle == preferredDemoMapStyle
-          ? const ['Open Sans Semibold']
-          : const ['Noto Sans Regular'];
+  static List<String> get demoFontStack => demoMapStyle == preferredDemoMapStyle
+      ? const ['Open Sans Semibold']
+      : const ['Noto Sans Regular'];
 
   /// Bold variant of [demoFontStack] (e.g. cluster counts). demotiles only
   /// serves a single font, so both getters collapse there.
   static List<String> get demoBoldFontStack =>
       demoMapStyle == preferredDemoMapStyle
-          ? const ['Open Sans Semibold']
-          : const ['Noto Sans Bold'];
+      ? const ['Open Sans Semibold']
+      : const ['Noto Sans Bold'];
 
   /// The one style probe of this session, created by the first call to
   /// [resolveDemoMapStyle]. Every later call awaits this same future.

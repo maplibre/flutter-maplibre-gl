@@ -1181,6 +1181,16 @@ abstract class MapLibreMapHostApi {
   @asyncCallback
   void styleSetLight(Map<String, Object?> light);
 
+  /// Sets the property [name] of the style's global state to [value], JSON
+  /// text, so nested values and number types arrive intact. JSON `null`
+  /// resets the property to the default of the style's `state`.
+  @asyncCallback
+  void styleSetGlobalStateProperty(String name, String value);
+
+  /// Answers with the style's global state as the JSON text of an object.
+  @asyncCallback
+  String styleGetGlobalState();
+
   /// Shows or hides the layer [layerId].
   @asyncCallback
   void layerSetVisibility(String layerId, bool visible);

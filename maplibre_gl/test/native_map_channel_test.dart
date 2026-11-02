@@ -364,12 +364,11 @@ void main() {
     test('an error reply reaches Dart as a PlatformException', () async {
       onHost(
         'styleRemoveLayer',
-        (_) =>
-            throw PlatformException(
-              code: 'LAYER_NOT_FOUND',
-              message: 'No layer with id missing',
-              details: {'layerId': 'missing'},
-            ),
+        (_) => throw PlatformException(
+          code: 'LAYER_NOT_FOUND',
+          message: 'No layer with id missing',
+          details: {'layerId': 'missing'},
+        ),
       );
 
       await expectLater(
@@ -740,6 +739,8 @@ void main() {
       'sourceRemoveFeatureState',
       'sourceGetFeatureState',
       'styleSetLight',
+      'styleSetGlobalStateProperty',
+      'styleGetGlobalState',
       'layerSetVisibility',
       'layerSetVisibilityBatch',
       'layerSetZoomRange',

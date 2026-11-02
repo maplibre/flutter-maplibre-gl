@@ -81,19 +81,18 @@ void main() {
     final loads = _StyleLoads();
     final controller = await pumpMap(
       tester,
-      builder:
-          (onMapCreated, onStyleLoaded) => MapLibreMap(
-            styleString: offlineStyle,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-              zoom: 3,
-            ),
-            onMapCreated: onMapCreated,
-            onStyleLoadedCallback: () {
-              onStyleLoaded();
-              loads.onLoaded();
-            },
-          ),
+      builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+        styleString: offlineStyle,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(0, 0),
+          zoom: 3,
+        ),
+        onMapCreated: onMapCreated,
+        onStyleLoadedCallback: () {
+          onStyleLoaded();
+          loads.onLoaded();
+        },
+      ),
     );
     expect(loads.count, 1);
 
@@ -141,19 +140,18 @@ void main() {
     final loads = _StyleLoads();
     final controller = await pumpMap(
       tester,
-      builder:
-          (onMapCreated, onStyleLoaded) => MapLibreMap(
-            styleString: offlineStyle,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-              zoom: 3,
-            ),
-            onMapCreated: onMapCreated,
-            onStyleLoadedCallback: () {
-              onStyleLoaded();
-              loads.onLoaded();
-            },
-          ),
+      builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+        styleString: offlineStyle,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(0, 0),
+          zoom: 3,
+        ),
+        onMapCreated: onMapCreated,
+        onStyleLoadedCallback: () {
+          onStyleLoaded();
+          loads.onLoaded();
+        },
+      ),
     );
 
     final initial = await _readStyle(tester, controller);
@@ -297,7 +295,7 @@ void main() {
     }
   });
 
-  testWidgets('sky, terrain, projection and global state: web applies them, '
+  testWidgets('sky, terrain and projection: web applies them, '
       'native rejects them as unsupported', (tester) async {
     final controller = await pumpMap(tester);
 
@@ -321,22 +319,12 @@ void main() {
         controller.setProjection('globe'),
         'setProjection',
       );
-      await _expectThrows<UnsupportedError>(
-        tester,
-        controller.setGlobalStateProperty('highlight', true),
-        'setGlobalStateProperty',
-      );
       return;
     }
 
     await pumpUntil(tester, controller.setSky(sky), 'setSky');
     // Null removes the terrain; with none set it must still be accepted.
     await pumpUntil(tester, controller.setTerrain(null), 'setTerrain(null)');
-    await pumpUntil(
-      tester,
-      controller.setGlobalStateProperty('highlight', true),
-      'setGlobalStateProperty',
-    );
 
     await pumpUntil(
       tester,
@@ -353,6 +341,123 @@ void main() {
     );
     style = await _readStyle(tester, controller);
     expect((style['projection'] as Map?)?['type'], 'mercator');
+  });
+
+  testWidgets('global state: set, read back, reset, and drive visibility', (
+    tester,
+  ) async {
+    final controller = await pumpMap(tester);
+
+    await pumpUntil(
+      tester,
+      controller.setGlobalStateProperty('filter', {
+        'kinds': ['park', 'forest'],
+        'min': 2,
+      }),
+      'setGlobalStateProperty(filter)',
+    );
+    var state = await pumpUntil(
+      tester,
+      controller.getGlobalState(),
+      'getGlobalState',
+    );
+    expect(state['filter'], {
+      'kinds': ['park', 'forest'],
+      'min': 2,
+    });
+
+    // Null resets to the default of the style's state; this style has none.
+    await pumpUntil(
+      tester,
+      controller.setGlobalStateProperty('filter', null),
+      'setGlobalStateProperty(filter, null)',
+    );
+    state = await pumpUntil(tester, controller.getGlobalState(), 'reset');
+    expect(state['filter'], isNull);
+
+    await expectPlatformError(
+      tester,
+      controller.setGlobalStateProperty('size', double.nan),
+      'setGlobalStateProperty(NaN)',
+      code: 'INVALID_ARGUMENT',
+    );
+
+    // A layer shown or hidden by a switch in the global state.
+    await pumpUntil(
+      tester,
+      controller.addGeoJsonSource('probe', pointCollection()),
+      'addGeoJsonSource',
+    );
+    const hiddenWhenNight = [
+      'case',
+      [
+        'boolean',
+        ['global-state', 'night'],
+        false,
+      ],
+      'none',
+      'visible',
+    ];
+    await pumpUntil(
+      tester,
+      controller.addCircleLayer(
+        'probe',
+        'probe-circles',
+        const CircleLayerProperties(visibility: hiddenWhenNight),
+      ),
+      'addCircleLayer',
+    );
+    expect(
+      await pumpUntil(
+        tester,
+        controller.getLayerVisibility('probe-circles'),
+        'visible by day',
+      ),
+      isTrue,
+    );
+
+    await pumpUntil(
+      tester,
+      controller.setGlobalStateProperty('night', true),
+      'setGlobalStateProperty(night)',
+    );
+    await pumpUntilValue(
+      tester,
+      () => controller.getLayerVisibility('probe-circles'),
+      (visible) => visible == false,
+      'hidden by night',
+    );
+
+    // The expression reads back as an expression, not as what it evaluates
+    // to. MapLibre may write it back in its own form, so only its gist is
+    // checked.
+    final properties = await pumpUntil(
+      tester,
+      controller.getLayerProperties('probe-circles'),
+      'getLayerProperties',
+    );
+    final visibility = (properties!['layout'] as Map)['visibility'];
+    expect(visibility, isA<List<Object?>>());
+    expect(jsonEncode(visibility), contains('["global-state","night"]'));
+
+    // Visibility can only read the global state, not feature data.
+    await expectPlatformError(
+      tester,
+      controller.setLayerProperties(
+        'probe-circles',
+        const CircleLayerProperties(
+          visibility: [
+            'match',
+            ['get', 'kind'],
+            'park',
+            'none',
+            'visible',
+          ],
+        ),
+      ),
+      'visibility reading feature data',
+      code: 'INVALID_EXPRESSION',
+    );
   });
 
   testWidgets('takeSnapshot returns PNG bytes', (tester) async {

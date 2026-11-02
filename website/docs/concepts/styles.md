@@ -14,8 +14,8 @@ flowchart LR
     S --> GL["glyphs<br/><small>font glyph URL template</small>"]
     S --> M["metadata<br/><small>optional, ignored by renderer</small>"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class S root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class S emphasis
 ```
 
 MapLibre fetches tiles, images, and fonts as needed and renders them using the GPU, all described by this one JSON file.

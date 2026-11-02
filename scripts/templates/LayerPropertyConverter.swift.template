@@ -47,6 +47,9 @@ class LayerPropertyConverter {
             {{#isVisibilityProperty}}
                 if let visibilityValue = propertyValue as? String {
                     {{typeCamel}}Layer.{{iosAsCamelCase}} = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    {{typeCamel}}Layer.visibilityExpression = expression
                 }
             {{/isVisibilityProperty}}
             {{/layout_properties_ios}}

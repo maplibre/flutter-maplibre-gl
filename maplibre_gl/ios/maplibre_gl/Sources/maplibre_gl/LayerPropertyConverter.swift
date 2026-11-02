@@ -139,6 +139,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     symbolLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    symbolLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -316,6 +319,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     circleLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    circleLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -413,6 +419,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     lineLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    lineLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -502,6 +511,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     fillLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    fillLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -575,6 +587,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     fillExtrusionLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    fillExtrusionLayer.visibilityExpression = expression
                 }
             case "fill-extrusion-rounded-corner-distance":
                 fillExtrusionLayer.fillExtrusionRoundedCornerDistance = expression
@@ -652,6 +667,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     rasterLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    rasterLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -725,6 +743,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     hillshadeLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    hillshadeLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -792,6 +813,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     heatmapLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    heatmapLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -847,6 +871,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     colorReliefLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    colorReliefLayer.visibilityExpression = expression
                 }
             default:
                 break
@@ -898,6 +925,9 @@ class LayerPropertyConverter {
             case "visibility":
                 if let visibilityValue = propertyValue as? String {
                     backgroundLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    backgroundLayer.visibilityExpression = expression
                 }
             default:
                 break

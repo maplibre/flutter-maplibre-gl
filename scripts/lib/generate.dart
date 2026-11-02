@@ -131,11 +131,10 @@ Future<void> main() async {
   // required for deduplication
   // Collect a set of all layout property names across layer types to enable
   // template logic for shared helpers / deduplication.
-  renderContext["all_layout_properties"] =
-      <dynamic>{
-        for (final type in renderContext["layerTypes"]!)
-          ...type["layout_properties"].map((p) => p["value"]),
-      }.map((p) => {"property": p}).toList();
+  renderContext["all_layout_properties"] = <dynamic>{
+    for (final type in renderContext["layerTypes"]!)
+      ...type["layout_properties"].map((p) => p["value"]),
+  }.map((p) => {"property": p}).toList();
 
   // Ordered list of templates we render. If you add a new feature, append
   // here to keep existing diff noise minimal.
@@ -185,10 +184,9 @@ Future<String> render(
   final outputPath = '$currentParentPath/${pathItems.join("/")}';
 
   print("Rendering $filename");
-  final templateFile =
-      await File(
-        '$currentParentPath/scripts/templates/$filename.template',
-      ).readAsString();
+  final templateFile = await File(
+    '$currentParentPath/scripts/templates/$filename.template',
+  ).readAsString();
 
   final template = Template(templateFile);
   final outputFile = File('$outputPath/$filename');
@@ -200,10 +198,9 @@ Future<String> render(
 
 /// Read the MapLibre Android SDK version pinned in the plugin build.gradle.
 String readAndroidSdkVersion() {
-  final gradle =
-      File(
-        '${Directory.current.parent.path}/maplibre_gl/android/build.gradle',
-      ).readAsStringSync();
+  final gradle = File(
+    '${Directory.current.parent.path}/maplibre_gl/android/build.gradle',
+  ).readAsStringSync();
   final match = RegExp(
     r"org\.maplibre\.gl:android-sdk[\w-]*:(\d+(?:\.\d+)*)",
   ).firstMatch(gradle);
@@ -217,10 +214,9 @@ String readAndroidSdkVersion() {
 
 /// Read the MapLibre iOS SDK version pinned in the plugin podspec.
 String readIosSdkVersion() {
-  final podspec =
-      File(
-        '${Directory.current.parent.path}/maplibre_gl/ios/maplibre_gl.podspec',
-      ).readAsStringSync();
+  final podspec = File(
+    '${Directory.current.parent.path}/maplibre_gl/ios/maplibre_gl.podspec',
+  ).readAsStringSync();
   final match = RegExp(
     r"s\.dependency\s+'MapLibre',\s+'(\d+(?:\.\d+)*)'",
   ).firstMatch(podspec);
@@ -292,15 +288,14 @@ List<Map<String, dynamic>> buildStyleProperties(
 }) {
   final Map<String, dynamic> items = styleJson[key] ?? <String, dynamic>{};
 
-  final properties =
-      items.entries
-          .where(
-            (e) =>
-                platform == null ||
-                isSupportedOnPlatform(e.value, platform, platformVersion!),
-          )
-          .map((e) => buildStyleProperty(e.key, e.value))
-          .toList();
+  final properties = items.entries
+      .where(
+        (e) =>
+            platform == null ||
+            isSupportedOnPlatform(e.value, platform, platformVersion!),
+      )
+      .map((e) => buildStyleProperty(e.key, e.value))
+      .toList();
 
   // Only the paint branch of the native templates wraps a single value into the
   // array the SDK expects. No layout property is array-typed in the spec today,
@@ -362,8 +357,10 @@ Map<String, dynamic> buildStyleProperty(
     'iosName': renamedIosProperties[camelCase] ?? camelCase,
     'iosExpression': iosExpression,
     'doc': value["doc"],
-    'docSplit':
-        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
+    'docSplit': buildDocSplit(
+      value,
+      name: key,
+    ).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
     'valueAsPascalCase': ReCase(key).pascalCase,
   };
@@ -462,7 +459,7 @@ List<Map<String, dynamic>> buildSourceProperties(
       .map(
         (e) => buildSourceProperty(e.key, {
           ...e.value as Map<String, dynamic>,
-          if (overrides[e.key] case final doc?) "doc": doc,
+          "doc": ?overrides[e.key],
         }),
       )
       .toList();
@@ -508,8 +505,9 @@ Map<String, dynamic> buildSourceProperty(
       swiftTypeMappingTable[value["value"]] ??
       swiftTypeMappingTable[value["value"]?["type"]];
 
-  var defaultValue =
-      conditionalSourceProperties.contains(key) ? null : value["default"];
+  var defaultValue = conditionalSourceProperties.contains(key)
+      ? null
+      : value["default"];
   if (defaultValue is List) {
     defaultValue = "const$defaultValue";
   } else if (defaultValue is String) {
@@ -522,10 +520,13 @@ Map<String, dynamic> buildSourceProperty(
     'default': defaultValue,
     'hasDefault': defaultValue != null,
     'type': nestedTypeDart == null ? typeDart : "$typeDart<$nestedTypeDart>",
-    'typeSwift':
-        nestedTypeSwift == null ? typeSwift : "$typeSwift<$nestedTypeSwift>",
-    'docSplit':
-        buildDocSplit(value, name: key).map((s) => {"part": s}).toList(),
+    'typeSwift': nestedTypeSwift == null
+        ? typeSwift
+        : "$typeSwift<$nestedTypeSwift>",
+    'docSplit': buildDocSplit(
+      value,
+      name: key,
+    ).map((s) => {"part": s}).toList(),
     'valueAsCamelCase': camelCase,
   };
 }
@@ -683,8 +684,10 @@ List<Map<String, dynamic>> buildExpressionProperties(
     return <String, dynamic>{
       'value': e.key,
       'doc': e.value["doc"],
-      'docSplit':
-          buildDocSplit(e.value, name: e.key).map((s) => {"part": s}).toList(),
+      'docSplit': buildDocSplit(
+        e.value,
+        name: e.key,
+      ).map((s) => {"part": s}).toList(),
       'valueAsCamelCase': name,
       'deprecatedName': alias?.$1,
       'deprecationReason': alias?.$2,

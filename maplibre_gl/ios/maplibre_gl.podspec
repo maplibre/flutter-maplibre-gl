@@ -17,8 +17,8 @@ MapLibre GL Flutter plugin.
   s.dependency 'Flutter'
   # When updating the dependency version,
   # make sure to also update the version in Package.swift.
-  s.dependency 'MapLibre', '6.31.0'
+  s.dependency 'MapLibre', '7.0.0'
   s.swift_version = '5.0'
-  s.ios.deployment_target = '13.0'
+  s.ios.deployment_target = '15.5'
 end
 

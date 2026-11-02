@@ -1169,10 +1169,9 @@ void main() {
     /// The names of the features of [json] that carry the marker.
     Set<String> marked(Object? json) {
       final data = json is String ? jsonDecode(json) as Map : json! as Map;
-      final features =
-          data['type'] == 'FeatureCollection'
-              ? data['features'] as List
-              : [data];
+      final features = data['type'] == 'FeatureCollection'
+          ? data['features'] as List
+          : [data];
       return {
         for (final feature in features.cast<Map>())
           if ((feature['properties'] as Map).containsKey(marker))
@@ -1257,7 +1256,7 @@ void main() {
 
     Map<String, dynamic> point(Object? id) => {
       'type': 'Feature',
-      if (id != null) 'id': id,
+      'id': ?id,
       'properties': {'name': '$id'},
       'geometry': {
         'type': 'Point',
@@ -2402,6 +2401,53 @@ void main() {
       ]);
     });
 
+    test('setGlobalStateProperty sends the value as JSON text', () async {
+      await platform.setGlobalStateProperty('filter', {
+        'kinds': ['park', 'forest'],
+        'min': 2,
+      });
+      await platform.setGlobalStateProperty('theme', null);
+
+      expect(api.calls, [
+        [
+          'styleSetGlobalStateProperty',
+          'filter',
+          '{"kinds":["park","forest"],"min":2}',
+        ],
+        ['styleSetGlobalStateProperty', 'theme', 'null'],
+      ]);
+    });
+
+    test('setGlobalStateProperty refuses what JSON cannot carry', () async {
+      final invalid = throwsA(
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'INVALID_ARGUMENT',
+        ),
+      );
+
+      await expectLater(
+        platform.setGlobalStateProperty('size', double.nan),
+        invalid,
+      );
+      await expectLater(
+        platform.setGlobalStateProperty('size', {1: 'one'}),
+        invalid,
+      );
+      await expectLater(
+        platform.setGlobalStateProperty('size', DateTime(2026)),
+        invalid,
+      );
+      expect(api.calls, isEmpty);
+    });
+
+    test('getGlobalState reads the state', () async {
+      api.replies['styleGetGlobalState'] = '{"theme":"dark","min":2}';
+
+      expect(await platform.getGlobalState(), {'theme': 'dark', 'min': 2});
+    });
+
     test('getSourceIds reads the sources', () async {
       api.replies['styleGetSourceIds'] = <String>['water', 'roads'];
 
@@ -3221,10 +3267,6 @@ void main() {
       );
       expect(platform.setTerrain(null), unsupported('setTerrain'));
       expect(platform.setProjection('globe'), unsupported('setProjection'));
-      expect(
-        platform.setGlobalStateProperty('mode', 'dark'),
-        unsupported('setGlobalStateProperty'),
-      );
       expect(api.calls, isEmpty);
     });
 
@@ -3257,10 +3299,9 @@ void main() {
     }) => {
       'options': <String, dynamic>{
         'compassEnabled': true,
-        if (translucentTextureSurface != null)
-          'translucentTextureSurface': translucentTextureSurface,
+        'translucentTextureSurface': ?translucentTextureSurface,
       },
-      if (androidView != null) 'androidView': androidView,
+      'androidView': ?androidView,
     };
 
     /// What [creationParams] becomes, with the Android view.
@@ -4332,6 +4373,13 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   @override
   Future<void> styleSetLight(Map<String, Object?> light) =>
       _call('styleSetLight', [light]);
+
+  @override
+  Future<void> styleSetGlobalStateProperty(String name, String value) =>
+      _call('styleSetGlobalStateProperty', [name, value]);
+
+  @override
+  Future<String> styleGetGlobalState() => _call('styleGetGlobalState');
 
   @override
   Future<void> layerSetVisibility(String layerId, bool visible) =>

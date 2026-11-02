@@ -4089,6 +4089,37 @@ final class MapLibreMapController
   }
 
   @Override
+  public void styleSetGlobalStateProperty(String name, String value, MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return;
+    }
+    // Dart sends the value as JSON text, so nested values arrive intact. JSON null resets the
+    // property to the default of the style's state.
+    final JsonElement json;
+    try {
+      json = JsonParser.parseString(value);
+    } catch (JsonParseException e) {
+      result.error(
+          StyleChecks.INVALID_ARGUMENT,
+          "The value of global state property '" + name + "' is not valid JSON.",
+          null);
+      return;
+    }
+    style.setGlobalStateProperty(name, json);
+    result.success(null);
+  }
+
+  @Override
+  public void styleGetGlobalState(MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return;
+    }
+    result.success(style.getGlobalState().toString());
+  }
+
+  @Override
   public void styleSetLight(Map<String, Object> lightProperties, MethodChannel.Result result) {
     if (style == null || !style.isFullyLoaded()) {
       replyStyleNotReady(result);

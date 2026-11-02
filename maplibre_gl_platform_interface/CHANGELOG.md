@@ -1,14 +1,18 @@
 ## Unreleased
 
 ### Actions needed
+* Flutter 3.44 and Dart 3.12 are the minimum (#1177).
 * `MapLibrePlatform.addHeatmapLayer` takes a `filter` parameter, so an external platform package, or a mock in tests, has to add it to its override (#1088).
 * `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed, as Android and iOS no longer answer them. A platform package or a test fake extends `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, and `MapLibreMethodChannel.useHybridComposition = true` is now `MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.textureView))` in `maplibre_gl`. Until a platform registers, the defaults are placeholders, and `isRegistered` on both classes tells whether one did. The unused `onInfoWindowTappedPlatform` callback is removed too (#1133).
+* `MapLibrePlatform.onCameraMoveStartedPlatform` passes what started the move and no longer takes `null`. A platform package or a test fake replaces `onCameraMoveStartedPlatform(null)` with `onCameraMoveStartedPlatform(CameraMoveReason.programmatic)`, or `gesture` for a move of the user (#1159).
 
 ### Added
 * `PanInertia` enum for the new `MapLibreMap.panInertia` option (#1032).
 * `geoJsonError`, `geoJsonTextError`, `geoJsonFeatureError`, `invalidGeoJson` and `invalidGeoJsonFeature` check GeoJSON the way MapLibre reads it, so a platform answers `INVALID_GEOJSON` for the same data as the others (#1119).
 * `jsonValueOf` and `decodeGeoJson` read GeoJSON the way `jsonEncode` writes it, including objects with `toJson()` (#1123).
 * `encodeUrl` and `normalizeSource` give a source the url and bounds every platform hands to MapLibre, so the same properties load the same data everywhere (#1123).
+* `CameraMoveReason` tells a camera move started by a gesture of the user from one started by anything else (#1159).
+* `MapLibrePlatform.getGlobalState` reads the style's global state (#1179).
 
 ### Changed
 * `MapLibreGlobalPlatform` declares every plugin-wide operation: offline regions, the offline database, the ambient cache, HTTP headers and `setOffline`, which `maplibre_gl` now calls through it. The new members return a future that fails with `UnimplementedError` unless a platform overrides them, so an existing implementation keeps compiling (#1114, #937).
