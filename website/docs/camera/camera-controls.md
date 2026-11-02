@@ -98,9 +98,10 @@ await controller.easeCamera(
 );
 ```
 
-The default is `easeInOut`. Android only distinguishes linear from eased, so the other
-curves render as its native ease-in/ease-out; see the
-[Feature Matrix](../compare/feature-matrix.md).
+Web eases along every curve exactly. Android only tells linear from eased, so the other
+curves become MapLibre Native's own ease out. iOS matches `easeOut`, comes within 1% of
+`fastOutLinearIn`, and cannot ease both in and out, so `easeInOut`, the default, eases out
+as on Android; see the [Feature Matrix](../compare/feature-matrix.md).
 
 ## Padding: keep content centered behind an overlay
 
