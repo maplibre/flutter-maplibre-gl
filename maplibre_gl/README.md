@@ -55,7 +55,7 @@ MapLibreMap(
 );
 ```
 
-**Requires** Flutter 3.44+ · Dart 3.12+ · JDK 21 for Android builds · Android 7.0 (API 24)+ · iOS 13+ · a browser with WebGL2 (Safari 15+).
+**Requires** Flutter 3.44+ · Dart 3.12+ · JDK 21 for Android builds · Android 7.0 (API 24)+ · iOS 15.5+ · a browser with WebGL2 (Safari 15+).
 
 Then head to the [getting started guide](https://maplibre.org/flutter-maplibre-gl/getting-started/) for platform setup (location permissions on iOS/Android; web needs no `index.html` changes) and to learn how to add markers, layers, offline tiles and more.
 

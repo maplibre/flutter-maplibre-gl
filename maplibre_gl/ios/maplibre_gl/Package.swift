@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "maplibre_gl",
     platforms: [
-        .iOS("13.0"),
+        .iOS("15.5"),
     ],
     products: [
         .library(name: "maplibre-gl", targets: ["maplibre_gl"])
@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         // When updating the dependency version,
         // make sure to also update the version in maplibre_gl.podspec.
-        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "6.31.0"),
+        .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution.git", exact: "7.0.0"),
     ],
     targets: [
         .target(
