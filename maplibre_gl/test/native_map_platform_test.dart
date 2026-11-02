@@ -1372,6 +1372,7 @@ void main() {
 
       await addGenerated('generated', collection([]));
       expect(await idsSet(), [0]);
+      api.replies['styleGetSourceIds'] = <String>[];
       await platform.removeSource('generated');
       expect(await idsSet(), [5]);
 
@@ -1402,6 +1403,18 @@ void main() {
         throwsA(isA<PlatformException>()),
       );
       api.errors.remove('styleAddSource');
+      api.calls.clear();
+
+      await platform.setGeoJsonSource('generated', collection([5]));
+
+      expectIds(api.calls.single[2], [0]);
+    });
+
+    // MapLibre keeps a source a layer still uses.
+    test('a source the remove leaves keeps its numbered ids', () async {
+      await addGenerated('generated', collection([]));
+      api.replies['styleGetSourceIds'] = <String>['generated'];
+      await platform.removeSource('generated');
       api.calls.clear();
 
       await platform.setGeoJsonSource('generated', collection([5]));

@@ -211,6 +211,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * `pauseMap()` stops rendering until `resumeMap()`. It lifted the frame rate cap instead, overriding `setMaximumFps`.
   * `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, on web too, instead of taking a snapshot of the style still loading.
   * `addSource` throws `INVALID_ARGUMENT`, on every platform, for a `tileSize` outside 1 to 65535. iOS crashed on a NaN or one it could not hold.
+* Invalid filters and camera durations fail the same way on every platform (#1184):
+  * A filter with a NaN or infinite number, which JSON cannot hold, throws `INVALID_EXPRESSION` in `setLayerFilter`, the layer adds and the queries. Android and iOS threw a `JsonUnsupportedObjectError`, and web passed the number on to MapLibre GL JS.
+  * `animateCamera` and `easeCamera` throw an `ArgumentError` for a negative duration, as `setTrackingCameraOptions` does. Android failed with a generic error, iOS used its default duration, and web passed it on to MapLibre GL JS.
 
 ### Docs
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
