@@ -527,7 +527,8 @@ class MapLibreMapController extends ChangeNotifier {
 
   /// Starts an animated change of the map camera position.
   ///
-  /// [duration] is the amount of time, that the transition animation should take.
+  /// [duration] is the amount of time, that the transition animation should
+  /// take. A negative [duration] throws an [ArgumentError].
   ///
   /// The returned [Future] completes when the animation ends, with true if the
   /// camera arrived and false if the movement was canceled, for example by
@@ -538,6 +539,9 @@ class MapLibreMapController extends ChangeNotifier {
     CameraUpdate cameraUpdate, {
     Duration? duration,
   }) async {
+    if (duration != null && duration.isNegative) {
+      throw ArgumentError.value(duration, 'duration', 'must not be negative');
+    }
     return _maplibrePlatform.animateCamera(cameraUpdate, duration: duration);
   }
 
@@ -1398,7 +1402,8 @@ class MapLibreMapController extends ChangeNotifier {
   /// Eases the camera to a new position with an optional duration.
   ///
   /// The [cameraUpdate] specifies the target camera position, and [duration]
-  /// specifies the animation duration in milliseconds (optional).
+  /// specifies the animation duration (optional). A negative [duration] throws
+  /// an [ArgumentError].
   /// The [interpolation] parameter controls the easing curve (optional).
   ///
   /// Use [CameraAnimationInterpolation.linear] for smooth continuous tracking
@@ -1414,6 +1419,9 @@ class MapLibreMapController extends ChangeNotifier {
     Duration? duration,
     CameraAnimationInterpolation? interpolation,
   }) async {
+    if (duration != null && duration.isNegative) {
+      throw ArgumentError.value(duration, 'duration', 'must not be negative');
+    }
     return _maplibrePlatform.easeCamera(
       cameraUpdate,
       duration: duration,

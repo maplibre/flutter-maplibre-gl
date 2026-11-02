@@ -66,6 +66,21 @@ void main() {
       );
     });
 
+    test('animateCamera and easeCamera reject a negative duration', () async {
+      const duration = Duration(milliseconds: -1);
+      final update = CameraUpdate.zoomIn();
+
+      await expectLater(
+        controller.animateCamera(update, duration: duration),
+        throwsArgumentError,
+      );
+      await expectLater(
+        controller.easeCamera(update, duration: duration),
+        throwsArgumentError,
+      );
+      expect(platform.calls, isEmpty);
+    });
+
     test('moveCamera delegates to platform', () async {
       final update = CameraUpdate.newLatLng(const LatLng(10, 20));
       await controller.moveCamera(update);
