@@ -10,76 +10,77 @@ abstract class LayerProperties {
 class SymbolLayerProperties implements LayerProperties {
   // Paint Properties
   /// The opacity at which the icon will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconOpacity;
-
+  
   /// The color of the icon. This can only be used with SDF icons.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconColor;
-
+  
   /// The color of the icon's halo. Icon halos can only be used with SDF
   /// icons.
-  ///
+  /// 
   /// Type: color
   ///   default: rgba(0, 0, 0, 0)
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconHaloColor;
-
+  
   /// Distance of halo to the icon outline. The unit is in pixels only for
   /// SDF sprites that were created with a blur radius of 8, multiplied by
   /// the display density. I.e., the radius needs to be 16 for `@2x`
   /// sprites, etc.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconHaloWidth;
-
+  
   /// Fade out the halo towards the outside.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconHaloBlur;
-
+  
   /// Distance that the icon's anchor is moved from its original placement.
   /// Positive values indicate right and down, while negative values
   /// indicate left and up.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconTranslate;
-
-  /// Controls the frame of reference for `icon-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`icon-translate`](layers/#icon-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -87,80 +88,81 @@ class SymbolLayerProperties implements LayerProperties {
   ///      Icons are translated relative to the map.
   ///   "viewport"
   ///      Icons are translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconTranslateAnchor;
-
+  
   /// The opacity at which the text will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textOpacity;
-
+  
   /// The color with which the text will be drawn.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textColor;
-
+  
   /// The color of the text's halo, which helps it stand out from
   /// backgrounds.
-  ///
+  /// 
   /// Type: color
   ///   default: rgba(0, 0, 0, 0)
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textHaloColor;
-
+  
   /// Distance of halo to the font outline. Max text halo width is 1/4 of
   /// the font-size.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textHaloWidth;
-
+  
   /// The halo's fadeout distance towards the outside.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textHaloBlur;
-
+  
   /// Distance that the text's anchor is moved from its original placement.
   /// Positive values indicate right and down, while negative values
   /// indicate left and up.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textTranslate;
-
-  /// Controls the frame of reference for `text-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`text-translate`](layers/#text-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -168,14 +170,14 @@ class SymbolLayerProperties implements LayerProperties {
   ///      The text is translated relative to the map.
   ///   "viewport"
   ///      The text is translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textTranslateAnchor;
-
+  
   // Layout Properties
   /// Label placement relative to its geometry.
-  ///
+  /// 
   /// Type: enum
   ///   default: point
   /// Options:
@@ -189,17 +191,17 @@ class SymbolLayerProperties implements LayerProperties {
   ///      Can only be used on `LineString` and `Polygon` geometries. Note
   ///      that a single feature in a vector tile may contain multiple line
   ///      geometries.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic symbolPlacement;
 
   /// Distance between two symbol anchors.
-  ///
+  /// 
   /// Type: number
   ///   default: 250
   ///   minimum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic symbolSpacing;
@@ -211,23 +213,25 @@ class SymbolLayerProperties implements LayerProperties {
   /// supports global collision detection, like MapLibre GL JS version
   /// 0.42.0 or greater, enabling this property is not needed to prevent
   /// clipped labels at tile boundaries.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic symbolAvoidEdges;
 
   /// Sorts features in ascending order based on this value. Features with
-  /// lower sort keys are drawn and placed first.  When `icon-allow-overlap`
-  /// or `text-allow-overlap` is `false`, features with a lower sort key
-  /// will have priority during placement. When `icon-allow-overlap` or
-  /// `text-allow-overlap` is set to `true`, features with a higher sort key
-  /// will overlap over features with a lower sort key.
-  ///
+  /// lower sort keys are drawn and placed first.  When
+  /// [`icon-allow-overlap`](layers/#icon-allow-overlap) or
+  /// [`text-allow-overlap`](layers/#text-allow-overlap) is `false`,
+  /// features with a lower sort key will have priority during placement.
+  /// When `icon-allow-overlap` or `text-allow-overlap` is set to `true`,
+  /// features with a higher sort key will overlap over features with a
+  /// lower sort key.
+  /// 
   /// Type: number
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -236,43 +240,52 @@ class SymbolLayerProperties implements LayerProperties {
   /// Determines whether overlapping symbols in the same layer are rendered
   /// in the order that they appear in the data source or by their
   /// y-position relative to the viewport. To control the order and
-  /// prioritization of symbols otherwise, use `symbol-sort-key`.
-  ///
+  /// prioritization of symbols otherwise, use
+  /// [`symbol-sort-key`](layers/#symbol-sort-key).
+  /// 
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "auto"
-  ///      Sorts symbols by `symbol-sort-key` if set. Otherwise, sorts
-  ///      symbols by their y-position relative to the viewport if
-  ///      `icon-allow-overlap` or `text-allow-overlap` is set to `true` or
-  ///      `icon-ignore-placement` or `text-ignore-placement` is `false`.
+  ///      Sorts symbols by [`symbol-sort-key`](layers/#symbol-sort-key) if
+  ///      set. Otherwise, sorts symbols by their y-position relative to the
+  ///      viewport if [`icon-allow-overlap`](layers/#icon-allow-overlap) or
+  ///      [`text-allow-overlap`](layers/#text-allow-overlap) is set to
+  ///      `true` or
+  ///      [`icon-ignore-placement`](layers/#icon-ignore-placement) or
+  ///      [`text-ignore-placement`](layers/#text-ignore-placement) is
+  ///      `false`.
   ///   "viewport-y"
   ///      Sorts symbols by their y-position relative to the viewport if
-  ///      `icon-allow-overlap` or `text-allow-overlap` is set to `true` or
-  ///      `icon-ignore-placement` or `text-ignore-placement` is `false`.
+  ///      [`icon-allow-overlap`](layers/#icon-allow-overlap) or
+  ///      [`text-allow-overlap`](layers/#text-allow-overlap) is set to
+  ///      `true` or
+  ///      [`icon-ignore-placement`](layers/#icon-ignore-placement) or
+  ///      [`text-ignore-placement`](layers/#text-ignore-placement) is
+  ///      `false`.
   ///   "source"
-  ///      Sorts symbols by `symbol-sort-key` if set. Otherwise, no sorting
-  ///      is applied; symbols are rendered in the same order as the source
-  ///      data.
-  ///
+  ///      Sorts symbols by [`symbol-sort-key`](layers/#symbol-sort-key) if
+  ///      set. Otherwise, no sorting is applied; symbols are rendered in
+  ///      the same order as the source data.
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic symbolZOrder;
 
   /// If true, the icon will be visible even if it collides with other
   /// previously drawn symbols.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconAllowOverlap;
 
   /// Allows for control over whether to show an icon when it overlaps other
-  /// symbols on the map. If `icon-overlap` is not set, `icon-allow-overlap`
-  /// is used instead.
-  ///
+  /// symbols on the map. If `icon-overlap` is not set,
+  /// [`icon-allow-overlap`](layers/#icon-allow-overlap) is used instead.
+  /// 
   /// Type: enum
   /// Options:
   ///   "never"
@@ -287,68 +300,71 @@ class SymbolLayerProperties implements LayerProperties {
   ///      was placed using `never` overlap mode, the new icon is hidden. If
   ///      the previous symbol was placed using `always` or `cooperative`
   ///      overlap mode, the new icon is visible.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic iconOverlap;
 
   /// If true, other symbols can be visible even if they collide with the
   /// icon.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconIgnorePlacement;
 
   /// If true, text will display without their corresponding icons when the
   /// icon collides with other symbols and the text does not.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconOptional;
 
-  /// In combination with `symbol-placement`, determines the rotation
-  /// behavior of icons.
-  ///
+  /// In combination with [`symbol-placement`](layers/#symbol-placement),
+  /// determines the rotation behavior of icons.
+  /// 
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "map"
-  ///      When `symbol-placement` is set to `point`, aligns icons
-  ///      east-west. When `symbol-placement` is set to `line` or
-  ///      `line-center`, aligns icon x-axes with the line.
+  ///      When [`symbol-placement`](layers/#symbol-placement) is set to
+  ///      `point`, aligns icons east-west. When `symbol-placement` is set
+  ///      to `line` or `line-center`, aligns icon x-axes with the line.
   ///   "viewport"
   ///      Produces icons whose x-axes are aligned with the x-axis of the
-  ///      viewport, regardless of the value of `symbol-placement`.
+  ///      viewport, regardless of the value of
+  ///      [`symbol-placement`](layers/#symbol-placement).
   ///   "auto"
-  ///      When `symbol-placement` is set to `point`, this is equivalent to
-  ///      `viewport`. When `symbol-placement` is set to `line` or
-  ///      `line-center`, this is equivalent to `map`.
-  ///
+  ///      When [`symbol-placement`](layers/#symbol-placement) is set to
+  ///      `point`, this is equivalent to `viewport`. When
+  ///      `symbol-placement` is set to `line` or `line-center`, this is
+  ///      equivalent to `map`.
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
+  ///   data-driven styling on no platform yet
   final dynamic iconRotationAlignment;
 
   /// Scales the original size of the icon by the provided factor. The new
   /// pixel size of the image will be the original pixel size multiplied by
   /// `icon-size`. 1 is the original size; 3 triples the size of the image.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconSize;
 
   /// Scales the icon to fit around the associated text.
-  ///
+  /// 
   /// Type: enum
   ///   default: none
   /// Options:
@@ -362,35 +378,36 @@ class SymbolLayerProperties implements LayerProperties {
   ///      text.
   ///   "both"
   ///      The icon is scaled in both x- and y-dimensions.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconTextFit;
 
   /// Size of the additional area added to dimensions determined by
-  /// `icon-text-fit`, in clockwise order: top, right, bottom, left.
-  ///
+  /// [`icon-text-fit`](layers/#icon-text-fit), in clockwise order: top,
+  /// right, bottom, left.
+  /// 
   /// Type: array
   ///   default: [0, 0, 0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconTextFitPadding;
 
   /// Name of image in sprite to use for drawing an image background.
-  ///
+  /// 
   /// Type: resolvedImage
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconImage;
 
   /// Rotates the icon clockwise.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -398,10 +415,10 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// Size of additional area round the icon bounding box used for detecting
   /// symbol collisions.
-  ///
+  /// 
   /// Type: padding
   ///   default: [2]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js (not on android, ios)
@@ -409,30 +426,31 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// If true, the icon may be flipped to prevent it from being rendered
   /// upside-down.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconKeepUpright;
 
   /// Offset distance of icon from its anchor. Positive values indicate
   /// right and down, while negative values indicate left and up. Each
-  /// component is multiplied by the value of `icon-size` to obtain the
-  /// final offset in pixels. When combined with `icon-rotate` the offset
+  /// component is multiplied by the value of
+  /// [`icon-size`](layers/#icon-size) to obtain the final offset in pixels.
+  /// When combined with [`icon-rotate`](layers/#icon-rotate) the offset
   /// will be as if the rotated direction was up.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconOffset;
 
   /// Part of the icon placed closest to the anchor.
-  ///
+  /// 
   /// Type: enum
   ///   default: center
   /// Options:
@@ -456,14 +474,14 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "bottom-right"
   ///      The bottom right corner of the icon is placed closest to the
   ///      anchor.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic iconAnchor;
 
   /// Orientation of icon when map is pitched.
-  ///
+  /// 
   /// Type: enum
   ///   default: auto
   /// Options:
@@ -472,14 +490,15 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "viewport"
   ///      The icon is aligned to the plane of the viewport.
   ///   "auto"
-  ///      Automatically matches the value of `icon-rotation-alignment`.
-  ///
+  ///      Automatically matches the value of
+  ///      [`icon-rotation-alignment`](layers/#icon-rotation-alignment).
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic iconPitchAlignment;
 
   /// Orientation of text when map is pitched.
-  ///
+  /// 
   /// Type: enum
   ///   default: auto
   /// Options:
@@ -488,35 +507,40 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "viewport"
   ///      The text is aligned to the plane of the viewport.
   ///   "auto"
-  ///      Automatically matches the value of `text-rotation-alignment`.
-  ///
+  ///      Automatically matches the value of
+  ///      [`text-rotation-alignment`](layers/#text-rotation-alignment).
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textPitchAlignment;
 
-  /// In combination with `symbol-placement`, determines the rotation
-  /// behavior of the individual glyphs forming the text.
-  ///
+  /// In combination with [`symbol-placement`](layers/#symbol-placement),
+  /// determines the rotation behavior of the individual glyphs forming the
+  /// text.
+  /// 
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "map"
-  ///      When `symbol-placement` is set to `point`, aligns text east-west.
-  ///      When `symbol-placement` is set to `line` or `line-center`, aligns
-  ///      text x-axes with the line.
+  ///      When [`symbol-placement`](layers/#symbol-placement) is set to
+  ///      `point`, aligns text east-west. When `symbol-placement` is set to
+  ///      `line` or `line-center`, aligns text x-axes with the line.
   ///   "viewport"
   ///      Produces glyphs whose x-axes are aligned with the x-axis of the
-  ///      viewport, regardless of the value of `symbol-placement`.
+  ///      viewport, regardless of the value of
+  ///      [`symbol-placement`](layers/#symbol-placement).
   ///   "viewport-glyph"
-  ///      When `symbol-placement` is set to `point`, aligns text to the
-  ///      x-axis of the viewport. When `symbol-placement` is set to `line`
-  ///      or `line-center`, aligns glyphs to the x-axis of the viewport and
-  ///      places them along the line.
+  ///      When [`symbol-placement`](layers/#symbol-placement) is set to
+  ///      `point`, aligns text to the x-axis of the viewport. When
+  ///      `symbol-placement` is set to `line` or `line-center`, aligns
+  ///      glyphs to the x-axis of the viewport and places them along the
+  ///      line.
   ///   "auto"
-  ///      When `symbol-placement` is set to `point`, this is equivalent to
-  ///      `viewport`. When `symbol-placement` is set to `line` or
-  ///      `line-center`, this is equivalent to `map`.
-  ///
+  ///      When [`symbol-placement`](layers/#symbol-placement) is set to
+  ///      `point`, this is equivalent to `viewport`. When
+  ///      `symbol-placement` is set to `line` or `line-center`, this is
+  ///      equivalent to `map`.
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textRotationAlignment;
@@ -524,10 +548,10 @@ class SymbolLayerProperties implements LayerProperties {
   /// Value to use for a text label. If a plain `string` is provided, it
   /// will be treated as a `formatted` with default/inherited formatting
   /// options.
-  ///
+  /// 
   /// Type: formatted
-  ///   default:
-  ///
+  ///   default: 
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -537,58 +561,58 @@ class SymbolLayerProperties implements LayerProperties {
   /// specified, this array is joined together and interpreted as a font
   /// stack name. Otherwise, it is interpreted as a cascading fallback list
   /// of local font names.
-  ///
+  /// 
   /// Type: array
   ///   default: [Open Sans Regular, Arial Unicode MS Regular]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textFont;
 
   /// Font size.
-  ///
+  /// 
   /// Type: number
   ///   default: 16
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textSize;
 
   /// The maximum line width for text wrapping.
-  ///
+  /// 
   /// Type: number
   ///   default: 10
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textMaxWidth;
 
   /// Text leading value for multi-line text.
-  ///
+  /// 
   /// Type: number
   ///   default: 1.2
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textLineHeight;
 
   /// Text tracking amount.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textLetterSpacing;
 
   /// Text justification options.
-  ///
+  /// 
   /// Type: enum
   ///   default: center
   /// Options:
@@ -600,31 +624,35 @@ class SymbolLayerProperties implements LayerProperties {
   ///      The text is centered.
   ///   "right"
   ///      The text is aligned to the right.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textJustify;
 
   /// Radial offset of text, in the direction of the symbol's anchor. Useful
-  /// in combination with `text-variable-anchor`, which defaults to using
-  /// the two-dimensional `text-offset` if present.
-  ///
+  /// in combination with
+  /// [`text-variable-anchor`](layers/#text-variable-anchor), which defaults
+  /// to using the two-dimensional [`text-offset`](layers/#text-offset) if
+  /// present.
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textRadialOffset;
 
   /// To increase the chance of placing high-priority labels on the map, you
-  /// can provide an array of `text-anchor` locations: the renderer will
-  /// attempt to place the label at each location, in order, before moving
-  /// onto the next label. Use `text-justify: auto` to choose justification
-  /// based on anchor position. To apply an offset, use the
-  /// `text-radial-offset` or the two-dimensional `text-offset`.
-  ///
+  /// can provide an array of [`text-anchor`](layers/#text-anchor)
+  /// locations: the renderer will attempt to place the label at each
+  /// location, in order, before moving onto the next label. Use
+  /// `text-justify: auto` to choose justification based on anchor position.
+  /// To apply an offset, use the
+  /// [`text-radial-offset`](layers/#text-radial-offset) or the
+  /// two-dimensional [`text-offset`](layers/#text-offset).
+  /// 
   /// Type: array
   /// Options:
   ///   "center"
@@ -647,44 +675,46 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "bottom-right"
   ///      The bottom right corner of the text is placed closest to the
   ///      anchor.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textVariableAnchor;
 
   /// To increase the chance of placing high-priority labels on the map, you
-  /// can provide an array of `text-anchor` locations, each paired with an
-  /// offset value. The renderer will attempt to place the label at each
-  /// location, in order, before moving on to the next location+offset. Use
-  /// `text-justify: auto` to choose justification based on anchor position.
-  ///
+  /// can provide an array of [`text-anchor`](layers/#text-anchor)
+  /// locations, each paired with an offset value. The renderer will attempt
+  /// to place the label at each location, in order, before moving on to the
+  /// next location+offset. Use `text-justify: auto` to choose justification
+  /// based on anchor position. 
   /// The length of the array must be even, and must alternate between enum
   /// and point entries. i.e., each anchor location must be accompanied by a
   /// point, and that point defines the offset when the corresponding anchor
   /// location is used. Positive offset values indicate right and down,
   /// while negative values indicate left and up. Anchor locations may
   /// repeat, allowing the renderer to try multiple offsets to try and place
-  /// a label using the same anchor.
+  /// a label using the same anchor. 
   /// When present, this property takes precedence over `text-anchor`,
-  /// `text-variable-anchor`, `text-offset`, and `text-radial-offset`.
-  /// ```json
+  /// [`text-variable-anchor`](layers/#text-variable-anchor),
+  /// [`text-offset`](layers/#text-offset), and
+  /// [`text-radial-offset`](layers/#text-radial-offset). 
+  /// ```json 
   /// { "text-variable-anchor-offset": ["top", [0, 4], "left", [3,0],
-  /// "bottom", [1, 1]] }
-  /// ```
+  /// "bottom", [1, 1]] } 
+  /// ``` 
   /// When the renderer chooses the `top` anchor, `[0, 4]` will be used for
-  /// `text-offset`; the text will be shifted down by 4 ems.
+  /// `text-offset`; the text will be shifted down by 4 ems. 
   /// When the renderer chooses the `left` anchor, `[3, 0]` will be used for
   /// `text-offset`; the text will be shifted right by 3 ems.
-  ///
+  /// 
   /// Type: variableAnchorOffsetCollection
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, ios, android
   ///   data-driven styling with js (not on ios, android)
   final dynamic textVariableAnchorOffset;
 
   /// Part of the text placed closest to the anchor.
-  ///
+  /// 
   /// Type: enum
   ///   default: center
   /// Options:
@@ -708,17 +738,17 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "bottom-right"
   ///      The bottom right corner of the text is placed closest to the
   ///      anchor.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic textAnchor;
 
   /// Maximum angle change between adjacent characters.
-  ///
+  /// 
   /// Type: number
   ///   default: 45
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textMaxAngle;
@@ -730,7 +760,7 @@ class SymbolLayerProperties implements LayerProperties {
   /// horizontally even if array value contains single 'vertical' enum
   /// value. The order of elements in an array define priority order for the
   /// placement of an orientation variant.
-  ///
+  /// 
   /// Type: array
   /// Options:
   ///   "horizontal"
@@ -739,16 +769,16 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "vertical"
   ///      If a text's language supports vertical writing mode, symbols with
   ///      point placement would be laid out vertically.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textWritingMode;
 
   /// Rotates the text clockwise.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -756,28 +786,28 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// Size of the additional area around the text bounding box used for
   /// detecting symbol collisions.
-  ///
+  /// 
   /// Type: number
   ///   default: 2
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textPadding;
 
   /// If true, the text may be flipped vertically to prevent it from being
   /// rendered upside-down.
-  ///
+  /// 
   /// Type: boolean
   ///   default: true
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textKeepUpright;
 
   /// Specifies how to capitalize text, similar to the CSS `text-transform`
   /// property.
-  ///
+  /// 
   /// Type: enum
   ///   default: none
   /// Options:
@@ -787,7 +817,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      Forces all letters to be displayed in uppercase.
   ///   "lowercase"
   ///      Forces all letters to be displayed in lowercase.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -798,10 +828,10 @@ class SymbolLayerProperties implements LayerProperties {
   /// with text-variable-anchor, input values will be taken as absolute
   /// values. Offsets along the x- and y-axis will be applied automatically
   /// based on the anchor position.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -809,18 +839,18 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// If true, the text will be visible even if it collides with other
   /// previously drawn symbols.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textAllowOverlap;
 
   /// Allows for control over whether to show symbol text when it overlaps
   /// other symbols on the map. If `text-overlap` is not set,
-  /// `text-allow-overlap` is used instead
-  ///
+  /// [`text-allow-overlap`](layers/#text-allow-overlap) is used instead
+  /// 
   /// Type: enum
   /// Options:
   ///   "never"
@@ -835,33 +865,65 @@ class SymbolLayerProperties implements LayerProperties {
   ///      was placed using `never` overlap mode, the new text is hidden. If
   ///      the previous symbol was placed using `always` or `cooperative`
   ///      overlap mode, the new text is visible.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic textOverlap;
 
   /// If true, other symbols can be visible even if they collide with the
   /// text.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textIgnorePlacement;
 
   /// If true, icons will display without their corresponding text when the
   /// text collides with other symbols and the icon does not.
-  ///
+  /// 
   /// Type: boolean
   ///   default: false
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textOptional;
 
+  /// The height above the anchor, in meters, at which the symbol is placed.
+  /// Use [`symbol-height-anchor`](layers/#symbol-height-anchor) to control
+  /// what this height is measured from.
+  /// 
+  /// Type: number
+  ///   default: 0
+  /// 
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  ///   data-driven styling with js (not on android, ios)
+  final dynamic symbolHeightOffset;
+
+  /// Defines what [`symbol-height-offset`](layers/#symbol-height-offset) is
+  /// measured from.
+  /// 
+  /// Type: enum
+  ///   default: ground
+  /// Options:
+  ///   "ground"
+  ///      [`symbol-height-offset`](layers/#symbol-height-offset) is
+  ///      measured from the ground below the symbol, i.e. the terrain
+  ///      elevation at the symbol's location, or zero when terrain is not
+  ///      enabled.
+  ///   "absolute"
+  ///      [`symbol-height-offset`](layers/#symbol-height-offset) is
+  ///      measured from sea level, ignoring the terrain elevation at the
+  ///      symbol's location.
+  /// 
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic symbolHeightAnchor;
+
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -869,7 +931,7 @@ class SymbolLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -933,6 +995,8 @@ class SymbolLayerProperties implements LayerProperties {
     this.textOverlap,
     this.textIgnorePlacement,
     this.textOptional,
+    this.symbolHeightOffset,
+    this.symbolHeightAnchor,
     this.visibility,
   });
 
@@ -961,8 +1025,7 @@ class SymbolLayerProperties implements LayerProperties {
       iconOverlap: changes.iconOverlap ?? iconOverlap,
       iconIgnorePlacement: changes.iconIgnorePlacement ?? iconIgnorePlacement,
       iconOptional: changes.iconOptional ?? iconOptional,
-      iconRotationAlignment:
-          changes.iconRotationAlignment ?? iconRotationAlignment,
+      iconRotationAlignment: changes.iconRotationAlignment ?? iconRotationAlignment,
       iconSize: changes.iconSize ?? iconSize,
       iconTextFit: changes.iconTextFit ?? iconTextFit,
       iconTextFitPadding: changes.iconTextFitPadding ?? iconTextFitPadding,
@@ -974,8 +1037,7 @@ class SymbolLayerProperties implements LayerProperties {
       iconAnchor: changes.iconAnchor ?? iconAnchor,
       iconPitchAlignment: changes.iconPitchAlignment ?? iconPitchAlignment,
       textPitchAlignment: changes.textPitchAlignment ?? textPitchAlignment,
-      textRotationAlignment:
-          changes.textRotationAlignment ?? textRotationAlignment,
+      textRotationAlignment: changes.textRotationAlignment ?? textRotationAlignment,
       textField: changes.textField ?? textField,
       textFont: changes.textFont ?? textFont,
       textSize: changes.textSize ?? textSize,
@@ -985,8 +1047,7 @@ class SymbolLayerProperties implements LayerProperties {
       textJustify: changes.textJustify ?? textJustify,
       textRadialOffset: changes.textRadialOffset ?? textRadialOffset,
       textVariableAnchor: changes.textVariableAnchor ?? textVariableAnchor,
-      textVariableAnchorOffset:
-          changes.textVariableAnchorOffset ?? textVariableAnchorOffset,
+      textVariableAnchorOffset: changes.textVariableAnchorOffset ?? textVariableAnchorOffset,
       textAnchor: changes.textAnchor ?? textAnchor,
       textMaxAngle: changes.textMaxAngle ?? textMaxAngle,
       textWritingMode: changes.textWritingMode ?? textWritingMode,
@@ -999,6 +1060,8 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: changes.textOverlap ?? textOverlap,
       textIgnorePlacement: changes.textIgnorePlacement ?? textIgnorePlacement,
       textOptional: changes.textOptional ?? textOptional,
+      symbolHeightOffset: changes.symbolHeightOffset ?? symbolHeightOffset,
+      symbolHeightAnchor: changes.symbolHeightAnchor ?? symbolHeightAnchor,
       visibility: changes.visibility ?? visibility,
     );
   }
@@ -1070,6 +1133,8 @@ class SymbolLayerProperties implements LayerProperties {
     addIfPresent('text-overlap', textOverlap);
     addIfPresent('text-ignore-placement', textIgnorePlacement);
     addIfPresent('text-optional', textOptional);
+    addIfPresent('symbol-height-offset', symbolHeightOffset);
+    addIfPresent('symbol-height-anchor', symbolHeightAnchor);
     addIfPresent('visibility', visibility);
     return json;
   }
@@ -1134,69 +1199,73 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: json['text-overlap'],
       textIgnorePlacement: json['text-ignore-placement'],
       textOptional: json['text-optional'],
+      symbolHeightOffset: json['symbol-height-offset'],
+      symbolHeightAnchor: json['symbol-height-anchor'],
       visibility: json['visibility'],
     );
   }
+
 }
 
 class CircleLayerProperties implements LayerProperties {
   // Paint Properties
   /// Circle radius.
-  ///
+  /// 
   /// Type: number
   ///   default: 5
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleRadius;
-
+  
   /// The fill color of the circle.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleColor;
-
+  
   /// Amount to blur the circle. 1 blurs the circle such that only the
   /// centerpoint is full opacity.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleBlur;
-
+  
   /// The opacity at which the circle will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleOpacity;
-
+  
   /// The geometry's offset. Values are `[x, y]` where negatives indicate
   /// left and up, respectively.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic circleTranslate;
-
-  /// Controls the frame of reference for `circle-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`circle-translate`](layers/#circle-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -1204,13 +1273,13 @@ class CircleLayerProperties implements LayerProperties {
   ///      The circle is translated relative to the map.
   ///   "viewport"
   ///      The circle is translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic circleTranslateAnchor;
-
+  
   /// Controls the scaling behavior of the circle when the map is pitched.
-  ///
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -1219,13 +1288,13 @@ class CircleLayerProperties implements LayerProperties {
   ///      camera.
   ///   "viewport"
   ///      Circles are not scaled.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic circlePitchScale;
-
+  
   /// Orientation of circle when map is pitched.
-  ///
+  /// 
   /// Type: enum
   ///   default: viewport
   /// Options:
@@ -1233,58 +1302,58 @@ class CircleLayerProperties implements LayerProperties {
   ///      The circle is aligned to the plane of the map.
   ///   "viewport"
   ///      The circle is aligned to the plane of the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic circlePitchAlignment;
-
+  
   /// The width of the circle's stroke. Strokes are placed outside of the
-  /// `circle-radius`.
-  ///
+  /// [`circle-radius`](layers/#circle-radius).
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleStrokeWidth;
-
+  
   /// The stroke color of the circle.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleStrokeColor;
-
+  
   /// The opacity of the circle's stroke.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleStrokeOpacity;
-
+  
   // Layout Properties
   /// Sorts features in ascending order based on this value. Features with a
   /// higher sort key will appear above features with a lower sort key.
-  ///
+  /// 
   /// Type: number
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic circleSortKey;
 
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -1292,7 +1361,7 @@ class CircleLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -1320,11 +1389,9 @@ class CircleLayerProperties implements LayerProperties {
       circleBlur: changes.circleBlur ?? circleBlur,
       circleOpacity: changes.circleOpacity ?? circleOpacity,
       circleTranslate: changes.circleTranslate ?? circleTranslate,
-      circleTranslateAnchor:
-          changes.circleTranslateAnchor ?? circleTranslateAnchor,
+      circleTranslateAnchor: changes.circleTranslateAnchor ?? circleTranslateAnchor,
       circlePitchScale: changes.circlePitchScale ?? circlePitchScale,
-      circlePitchAlignment:
-          changes.circlePitchAlignment ?? circlePitchAlignment,
+      circlePitchAlignment: changes.circlePitchAlignment ?? circlePitchAlignment,
       circleStrokeWidth: changes.circleStrokeWidth ?? circleStrokeWidth,
       circleStrokeColor: changes.circleStrokeColor ?? circleStrokeColor,
       circleStrokeOpacity: changes.circleStrokeOpacity ?? circleStrokeOpacity,
@@ -1375,24 +1442,26 @@ class CircleLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class LineLayerProperties implements LayerProperties {
   // Paint Properties
   /// The opacity at which the line will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineOpacity;
-
-  /// Opacity applied to the layer as a whole. Unlike `line-opacity` and
-  /// alpha values in `line-color`, which are applied per feature and
+  
+  /// Opacity applied to the layer as a whole. Unlike
+  /// [`line-opacity`](layers/#line-opacity) and alpha values in
+  /// [`line-color`](layers/#line-color), which are applied per feature and
   /// accumulate where lines overlap, `line-layer-opacity` is applied once
   /// so overlapping lines appear as a single surface at the given opacity.
   /// When both `line-opacity` and `line-layer-opacity` are set, the
@@ -1401,38 +1470,91 @@ class LineLayerProperties implements LayerProperties {
   /// on and cannot be used to composite multiple layers together or control
   /// how this layer blends with layers above or below it.![line-opacity
   /// vs. line-layer-opacity](assets/line-layer-opacity.svg)
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic lineLayerOpacity;
-
+  
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike per-feature opacity properties such as
+  /// [`line-opacity`](#line-opacity), this property affects the final
+  /// composited layer output and determines how it interacts with the
+  /// existing map contents.![line-layer-blend
+  /// examples](assets/line-layer-blend.svg)
+  /// 
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  /// 
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  /// 
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  /// 
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic lineLayerBlend;
+  
   /// The color with which the line will be drawn.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineColor;
-
+  
   /// The geometry's offset. Values are `[x, y]` where negatives indicate
   /// left and up, respectively.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic lineTranslate;
-
-  /// Controls the frame of reference for `line-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`line-translate`](layers/#line-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -1440,58 +1562,58 @@ class LineLayerProperties implements LayerProperties {
   ///      The line is translated relative to the map.
   ///   "viewport"
   ///      The line is translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic lineTranslateAnchor;
-
+  
   /// Stroke thickness.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineWidth;
-
+  
   /// Draws a line casing outside of a line's actual path. Value indicates
   /// the width of the inner gap.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineGapWidth;
-
+  
   /// The line's offset. For linear features, a positive value offsets the
   /// line to the right, relative to the direction of the line, and a
   /// negative value to the left. For polygon features, a positive value
   /// results in an inset, and a negative value results in an outset.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineOffset;
-
+  
   /// Blur applied to the line, in pixels.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineBlur;
-
+  
   /// Specifies the lengths of the alternating dashes and gaps that form the
   /// dash pattern. The lengths are later scaled by the line width. To
   /// convert a dash length to pixels, multiply the length by the current
@@ -1500,39 +1622,39 @@ class LineLayerProperties implements LayerProperties {
   /// will be evaluated only at integer zoom levels. The only way to create
   /// an array value is using `["literal", [...]]`; arrays cannot be read
   /// from or derived from feature properties.
-  ///
+  /// 
   /// Type: array
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js (not on ios, android)
   final dynamic lineDasharray;
-
+  
   /// Name of image in sprite to use for drawing image lines. For seamless
   /// patterns, image width must be a factor of two (2, 4, 8, ..., 512).
   /// Note that zoom-dependent expressions will be evaluated only at integer
   /// zoom levels.
-  ///
+  /// 
   /// Type: resolvedImage
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic linePattern;
-
+  
   /// Defines a gradient with which to color a line feature. Can only be
   /// used with GeoJSON sources that specify `"lineMetrics": true`.
-  ///
+  /// 
   /// Type: color
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic lineGradient;
-
+  
   // Layout Properties
   /// The display of line endings.
-  ///
+  /// 
   /// Type: enum
   ///   default: butt
   /// Options:
@@ -1546,14 +1668,14 @@ class LineLayerProperties implements LayerProperties {
   ///   "square"
   ///      A cap with a squared-off end which is drawn beyond the endpoint
   ///      of the line at a distance of one-half of the line's width.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js (not on android, ios)
   final dynamic lineCap;
 
   /// The display of lines when joining.
-  ///
+  /// 
   /// Type: enum
   ///   default: miter
   /// Options:
@@ -1567,7 +1689,7 @@ class LineLayerProperties implements LayerProperties {
   ///   "miter"
   ///      A join with a sharp, angled corner which is drawn with the outer
   ///      sides beyond the endpoint of the path until they meet.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
@@ -1575,10 +1697,10 @@ class LineLayerProperties implements LayerProperties {
 
   /// Used to automatically convert miter joins to bevel joins for sharp
   /// angles.
-  ///
+  /// 
   /// Type: number
   ///   default: 2
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js (not on android, ios)
@@ -1586,10 +1708,10 @@ class LineLayerProperties implements LayerProperties {
 
   /// Used to automatically convert round joins to miter joins for shallow
   /// angles.
-  ///
+  /// 
   /// Type: number
   ///   default: 1.05
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js (not on android, ios)
@@ -1597,16 +1719,16 @@ class LineLayerProperties implements LayerProperties {
 
   /// Sorts features in ascending order based on this value. Features with a
   /// higher sort key will appear above features with a lower sort key.
-  ///
+  /// 
   /// Type: number
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic lineSortKey;
 
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -1614,7 +1736,7 @@ class LineLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -1622,6 +1744,7 @@ class LineLayerProperties implements LayerProperties {
   const LineLayerProperties({
     this.lineOpacity,
     this.lineLayerOpacity,
+    this.lineLayerBlend,
     this.lineColor,
     this.lineTranslate,
     this.lineTranslateAnchor,
@@ -1644,6 +1767,7 @@ class LineLayerProperties implements LayerProperties {
     return LineLayerProperties(
       lineOpacity: changes.lineOpacity ?? lineOpacity,
       lineLayerOpacity: changes.lineLayerOpacity ?? lineLayerOpacity,
+      lineLayerBlend: changes.lineLayerBlend ?? lineLayerBlend,
       lineColor: changes.lineColor ?? lineColor,
       lineTranslate: changes.lineTranslate ?? lineTranslate,
       lineTranslateAnchor: changes.lineTranslateAnchor ?? lineTranslateAnchor,
@@ -1674,6 +1798,7 @@ class LineLayerProperties implements LayerProperties {
 
     addIfPresent('line-opacity', lineOpacity);
     addIfPresent('line-layer-opacity', lineLayerOpacity);
+    addIfPresent('line-layer-blend', lineLayerBlend);
     addIfPresent('line-color', lineColor);
     addIfPresent('line-translate', lineTranslate);
     addIfPresent('line-translate-anchor', lineTranslateAnchor);
@@ -1697,6 +1822,7 @@ class LineLayerProperties implements LayerProperties {
     return LineLayerProperties(
       lineOpacity: json['line-opacity'],
       lineLayerOpacity: json['line-layer-opacity'],
+      lineLayerBlend: json['line-layer-blend'],
       lineColor: json['line-color'],
       lineTranslate: json['line-translate'],
       lineTranslateAnchor: json['line-translate-anchor'],
@@ -1715,35 +1841,37 @@ class LineLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class FillLayerProperties implements LayerProperties {
   // Paint Properties
   /// Whether or not the fill should be antialiased.
-  ///
+  /// 
   /// Type: boolean
   ///   default: true
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillAntialias;
-
-  /// The opacity of the entire fill layer. In contrast to the `fill-color`,
-  /// this value will also affect the 1px stroke around the fill, if the
-  /// stroke is used.
-  ///
+  
+  /// The opacity of the entire fill layer. In contrast to the
+  /// [`fill-color`](layers/#fill-color), this value will also affect the
+  /// 1px stroke around the fill, if the stroke is used.
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillOpacity;
-
-  /// Opacity applied to the layer as a whole. Unlike `fill-opacity` and
-  /// alpha values in `fill-color`, which are applied per feature and
+  
+  /// Opacity applied to the layer as a whole. Unlike
+  /// [`fill-opacity`](layers/#fill-opacity) and alpha values in
+  /// [`fill-color`](layers/#fill-color), which are applied per feature and
   /// accumulate where fills overlap, `fill-layer-opacity` is applied once
   /// so overlapping fills appear as a single surface at the given opacity.
   /// When both `fill-opacity` and `fill-layer-opacity` are set, the
@@ -1753,52 +1881,106 @@ class FillLayerProperties implements LayerProperties {
   /// together or control how this layer blends with layers above or below
   /// it.![fill-opacity vs.
   /// fill-layer-opacity](assets/fill-layer-opacity.svg)
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic fillLayerOpacity;
+  
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike per-feature opacity properties such as
+  /// `fill-opacity`, this property affects the final composited layer
+  /// output and determines how it interacts with the existing map
+  /// contents.
 
+![fill-layer-blend examples](assets/fill-layer-blend.svg)
+  /// 
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  /// 
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  /// 
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  /// 
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic fillLayerBlend;
+  
   /// The color of the filled part of this layer. This color can be
   /// specified as `rgba` with an alpha component and the color's opacity
   /// will not affect the opacity of the 1px stroke, if it is used. When
   /// used with an SDF fill pattern, this serves as the foreground color of
   /// the pattern.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillColor;
-
-  /// The outline color of the fill. Matches the value of `fill-color` if
-  /// unspecified.
-  ///
+  
+  /// The outline color of the fill. Matches the value of
+  /// [`fill-color`](layers/#fill-color) if unspecified.
+  /// 
   /// Type: color
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillOutlineColor;
-
+  
   /// The geometry's offset. Values are `[x, y]` where negatives indicate
   /// left and up, respectively.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillTranslate;
-
-  /// Controls the frame of reference for `fill-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`fill-translate`](layers/#fill-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -1806,36 +1988,36 @@ class FillLayerProperties implements LayerProperties {
   ///      The fill is translated relative to the map.
   ///   "viewport"
   ///      The fill is translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillTranslateAnchor;
-
+  
   /// Name of image in sprite to use for drawing image fills. For seamless
   /// patterns, image width and height must be a factor of two (2, 4, 8,
   /// ..., 512). Note that zoom-dependent expressions will be evaluated only
   /// at integer zoom levels.
-  ///
+  /// 
   /// Type: resolvedImage
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillPattern;
-
+  
   // Layout Properties
   /// Sorts features in ascending order based on this value. Features with a
   /// higher sort key will appear above features with a lower sort key.
-  ///
+  /// 
   /// Type: number
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillSortKey;
 
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -1843,7 +2025,7 @@ class FillLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -1852,6 +2034,7 @@ class FillLayerProperties implements LayerProperties {
     this.fillAntialias,
     this.fillOpacity,
     this.fillLayerOpacity,
+    this.fillLayerBlend,
     this.fillColor,
     this.fillOutlineColor,
     this.fillTranslate,
@@ -1866,6 +2049,7 @@ class FillLayerProperties implements LayerProperties {
       fillAntialias: changes.fillAntialias ?? fillAntialias,
       fillOpacity: changes.fillOpacity ?? fillOpacity,
       fillLayerOpacity: changes.fillLayerOpacity ?? fillLayerOpacity,
+      fillLayerBlend: changes.fillLayerBlend ?? fillLayerBlend,
       fillColor: changes.fillColor ?? fillColor,
       fillOutlineColor: changes.fillOutlineColor ?? fillOutlineColor,
       fillTranslate: changes.fillTranslate ?? fillTranslate,
@@ -1888,6 +2072,7 @@ class FillLayerProperties implements LayerProperties {
     addIfPresent('fill-antialias', fillAntialias);
     addIfPresent('fill-opacity', fillOpacity);
     addIfPresent('fill-layer-opacity', fillLayerOpacity);
+    addIfPresent('fill-layer-blend', fillLayerBlend);
     addIfPresent('fill-color', fillColor);
     addIfPresent('fill-outline-color', fillOutlineColor);
     addIfPresent('fill-translate', fillTranslate);
@@ -1903,6 +2088,7 @@ class FillLayerProperties implements LayerProperties {
       fillAntialias: json['fill-antialias'],
       fillOpacity: json['fill-opacity'],
       fillLayerOpacity: json['fill-layer-opacity'],
+      fillLayerBlend: json['fill-layer-blend'],
       fillColor: json['fill-color'],
       fillOutlineColor: json['fill-outline-color'],
       fillTranslate: json['fill-translate'],
@@ -1912,6 +2098,7 @@ class FillLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class FillExtrusionLayerProperties implements LayerProperties {
@@ -1919,42 +2106,44 @@ class FillExtrusionLayerProperties implements LayerProperties {
   /// The opacity of the entire fill extrusion layer. This is rendered on a
   /// per-layer, not per-feature, basis, and data-driven styling is not
   /// available.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillExtrusionOpacity;
-
+  
   /// The base color of the extruded fill. The extrusion's surfaces will be
   /// shaded differently based on this color in combination with the root
   /// `light` settings. If this color is specified as `rgba` with an alpha
   /// component, the alpha component will be ignored; use
-  /// `fill-extrusion-opacity` to set layer opacity.
-  ///
+  /// [`fill-extrusion-opacity`](layers/#fill-extrusion-opacity) to set
+  /// layer opacity.
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillExtrusionColor;
-
+  
   /// The geometry's offset. Values are `[x, y]` where negatives indicate
   /// left and up (on the flat plane), respectively.
-  ///
+  /// 
   /// Type: array
   ///   default: [0, 0]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillExtrusionTranslate;
-
-  /// Controls the frame of reference for `fill-extrusion-translate`.
-  ///
+  
+  /// Controls the frame of reference for
+  /// [`fill-extrusion-translate`](layers/#fill-extrusion-translate).
+  /// 
   /// Type: enum
   ///   default: map
   /// Options:
@@ -1962,59 +2151,61 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///      The fill extrusion is translated relative to the map.
   ///   "viewport"
   ///      The fill extrusion is translated relative to the viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic fillExtrusionTranslateAnchor;
-
+  
   /// Name of image in sprite to use for drawing images on extruded fills.
   /// For seamless patterns, image width and height must be a factor of two
   /// (2, 4, 8, ..., 512). Note that zoom-dependent expressions will be
   /// evaluated only at integer zoom levels.
-  ///
+  /// 
   /// Type: resolvedImage
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillExtrusionPattern;
-
-  /// The height with which to extrude this layer.
-  ///
+  
+  /// The height with which to extrude this layer. Negative values extrude
+  /// below ground level, so a floor that is entirely underground can be
+  /// expressed.
+  /// 
   /// Type: number
   ///   default: 0
-  ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillExtrusionHeight;
-
+  
   /// The height with which to extrude the base of this layer. Must be less
-  /// than or equal to `fill-extrusion-height`.
-  ///
+  /// than or equal to
+  /// [`fill-extrusion-height`](layers/#fill-extrusion-height). Negative
+  /// values extrude below ground level, e.g. underground floors.
+  /// 
   /// Type: number
   ///   default: 0
-  ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic fillExtrusionBase;
-
+  
   /// Whether to apply a vertical gradient to the sides of a fill-extrusion
   /// layer. If true, sides will be shaded slightly darker farther down.
-  ///
+  /// 
   /// Type: boolean
   ///   default: true
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, ios, android
   final dynamic fillExtrusionVerticalGradient;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2022,7 +2213,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2030,13 +2221,13 @@ class FillExtrusionLayerProperties implements LayerProperties {
   /// The distance from each fill extrusion corner, measured along the
   /// adjacent edges, that is replaced by a rounded corner. A value of `0`
   /// disables rounded corners.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with js, android, ios
   final dynamic fillExtrusionRoundedCornerDistance;
 
   const FillExtrusionLayerProperties({
@@ -2054,24 +2245,16 @@ class FillExtrusionLayerProperties implements LayerProperties {
 
   FillExtrusionLayerProperties copyWith(FillExtrusionLayerProperties changes) {
     return FillExtrusionLayerProperties(
-      fillExtrusionOpacity:
-          changes.fillExtrusionOpacity ?? fillExtrusionOpacity,
+      fillExtrusionOpacity: changes.fillExtrusionOpacity ?? fillExtrusionOpacity,
       fillExtrusionColor: changes.fillExtrusionColor ?? fillExtrusionColor,
-      fillExtrusionTranslate:
-          changes.fillExtrusionTranslate ?? fillExtrusionTranslate,
-      fillExtrusionTranslateAnchor:
-          changes.fillExtrusionTranslateAnchor ?? fillExtrusionTranslateAnchor,
-      fillExtrusionPattern:
-          changes.fillExtrusionPattern ?? fillExtrusionPattern,
+      fillExtrusionTranslate: changes.fillExtrusionTranslate ?? fillExtrusionTranslate,
+      fillExtrusionTranslateAnchor: changes.fillExtrusionTranslateAnchor ?? fillExtrusionTranslateAnchor,
+      fillExtrusionPattern: changes.fillExtrusionPattern ?? fillExtrusionPattern,
       fillExtrusionHeight: changes.fillExtrusionHeight ?? fillExtrusionHeight,
       fillExtrusionBase: changes.fillExtrusionBase ?? fillExtrusionBase,
-      fillExtrusionVerticalGradient:
-          changes.fillExtrusionVerticalGradient ??
-          fillExtrusionVerticalGradient,
+      fillExtrusionVerticalGradient: changes.fillExtrusionVerticalGradient ?? fillExtrusionVerticalGradient,
       visibility: changes.visibility ?? visibility,
-      fillExtrusionRoundedCornerDistance:
-          changes.fillExtrusionRoundedCornerDistance ??
-          fillExtrusionRoundedCornerDistance,
+      fillExtrusionRoundedCornerDistance: changes.fillExtrusionRoundedCornerDistance ?? fillExtrusionRoundedCornerDistance,
     );
   }
 
@@ -2087,22 +2270,13 @@ class FillExtrusionLayerProperties implements LayerProperties {
     addIfPresent('fill-extrusion-opacity', fillExtrusionOpacity);
     addIfPresent('fill-extrusion-color', fillExtrusionColor);
     addIfPresent('fill-extrusion-translate', fillExtrusionTranslate);
-    addIfPresent(
-      'fill-extrusion-translate-anchor',
-      fillExtrusionTranslateAnchor,
-    );
+    addIfPresent('fill-extrusion-translate-anchor', fillExtrusionTranslateAnchor);
     addIfPresent('fill-extrusion-pattern', fillExtrusionPattern);
     addIfPresent('fill-extrusion-height', fillExtrusionHeight);
     addIfPresent('fill-extrusion-base', fillExtrusionBase);
-    addIfPresent(
-      'fill-extrusion-vertical-gradient',
-      fillExtrusionVerticalGradient,
-    );
+    addIfPresent('fill-extrusion-vertical-gradient', fillExtrusionVerticalGradient);
     addIfPresent('visibility', visibility);
-    addIfPresent(
-      'fill-extrusion-rounded-corner-distance',
-      fillExtrusionRoundedCornerDistance,
-    );
+    addIfPresent('fill-extrusion-rounded-corner-distance', fillExtrusionRoundedCornerDistance);
     return json;
   }
 
@@ -2117,84 +2291,84 @@ class FillExtrusionLayerProperties implements LayerProperties {
       fillExtrusionBase: json['fill-extrusion-base'],
       fillExtrusionVerticalGradient: json['fill-extrusion-vertical-gradient'],
       visibility: json['visibility'],
-      fillExtrusionRoundedCornerDistance:
-          json['fill-extrusion-rounded-corner-distance'],
+      fillExtrusionRoundedCornerDistance: json['fill-extrusion-rounded-corner-distance'],
     );
   }
+
 }
 
 class RasterLayerProperties implements LayerProperties {
   // Paint Properties
   /// The opacity at which the image will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterOpacity;
-
+  
   /// Rotates hues around the color wheel.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterHueRotate;
-
+  
   /// Increase or reduce the brightness of the image. The value is the
   /// minimum brightness.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterBrightnessMin;
-
+  
   /// Increase or reduce the brightness of the image. The value is the
   /// maximum brightness.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterBrightnessMax;
-
+  
   /// Increase or reduce the saturation of the image.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: -1
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterSaturation;
-
+  
   /// Increase or reduce the contrast of the image.
-  ///
+  /// 
   /// Type: number
   ///   default: 0
   ///   minimum: -1
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterContrast;
-
+  
   /// The resampling/interpolation method to use for overscaling, also known
   /// as texture magnification filter.![Visual comparison of linear
   /// resampling versus nearest resampling](assets/resampling.png)
-  ///
+  /// 
   /// Type: enum
   ///   default: linear
   /// Options:
@@ -2206,15 +2380,15 @@ class RasterLayerProperties implements LayerProperties {
   ///      Nearest neighbor filtering interpolates pixel values using the
   ///      nearest original source pixel creating a sharp but pixelated look
   ///      when overscaled
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic resampling;
-
+  
   /// The resampling/interpolation method to use for overscaling, also known
   /// as texture magnification filter. It is advised to use the generic
   /// `resampling` paint property instead.
-  ///
+  /// 
   /// Type: enum
   ///   default: linear
   /// Options:
@@ -2226,25 +2400,25 @@ class RasterLayerProperties implements LayerProperties {
   ///      Nearest neighbor filtering interpolates pixel values using the
   ///      nearest original source pixel creating a sharp but pixelated look
   ///      when overscaled
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterResampling;
-
+  
   /// Fade duration when a new tile is added, or when a video is started or
   /// its coordinates are updated.
-  ///
+  /// 
   /// Type: number
   ///   default: 300
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterFadeDuration;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2252,7 +2426,7 @@ class RasterLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2321,40 +2495,44 @@ class RasterLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class HillshadeLayerProperties implements LayerProperties {
   // Paint Properties
   /// The direction of the light source(s) used to generate the hillshading
-  /// with 0 as the top of the viewport if `hillshade-illumination-anchor`
+  /// with 0 as the top of the viewport if
+  /// [`hillshade-illumination-anchor`](layers/#hillshade-illumination-anchor)
   /// is set to `viewport` and due north if `hillshade-illumination-anchor`
-  /// is set to `map`. Only when `hillshade-method` is set to
+  /// is set to `map`. Only when
+  /// [`hillshade-method`](layers/#hillshade-method) is set to
   /// `multidirectional` can you specify multiple light sources.
-  ///
+  /// 
   /// Type: numberArray
   ///   default: 335
   ///   minimum: 0
   ///   maximum: 359
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeIlluminationDirection;
-
+  
   /// The altitude of the light source(s) used to generate the hillshading
-  /// with 0 as sunset and 90 as noon. Only when `hillshade-method` is set
-  /// to `multidirectional` can you specify multiple light sources.
-  ///
+  /// with 0 as sunset and 90 as noon. Only when
+  /// [`hillshade-method`](layers/#hillshade-method) is set to
+  /// `multidirectional` can you specify multiple light sources.
+  /// 
   /// Type: numberArray
   ///   default: 45
   ///   minimum: 0
   ///   maximum: 90
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeIlluminationAltitude;
-
+  
   /// Direction of light source when map is rotated.
-  ///
+  /// 
   /// Type: enum
   ///   default: viewport
   /// Options:
@@ -2363,59 +2541,59 @@ class HillshadeLayerProperties implements LayerProperties {
   ///   "viewport"
   ///      The hillshade illumination is relative to the top of the
   ///      viewport.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeIlluminationAnchor;
-
+  
   /// Intensity of the hillshade
-  ///
+  /// 
   /// Type: number
   ///   default: 0.5
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeExaggeration;
-
+  
   /// The shading color of areas that face away from the light source(s).
-  /// Only when `hillshade-method` is set to `multidirectional` can you
-  /// specify multiple light sources.
-  ///
+  /// Only when [`hillshade-method`](layers/#hillshade-method) is set to
+  /// `multidirectional` can you specify multiple light sources.
+  /// 
   /// Type: colorArray
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeShadowColor;
-
+  
   /// The shading color of areas that faces towards the light source(s).
-  /// Only when `hillshade-method` is set to `multidirectional` can you
-  /// specify multiple light sources.
-  ///
+  /// Only when [`hillshade-method`](layers/#hillshade-method) is set to
+  /// `multidirectional` can you specify multiple light sources.
+  /// 
   /// Type: colorArray
   ///   default: #FFFFFF
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeHighlightColor;
-
+  
   /// The shading color used to accentuate rugged terrain like sharp cliffs
   /// and gorges.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeAccentColor;
-
+  
   /// The hillshade algorithm to use, one of `standard`, `basic`,
   /// `combined`, `igor`, or `multidirectional`.![Visual comparison of
   /// standard, basic, igor, combined, and multidirectional
   /// hillshade-method](assets/hillshade_methods.png)
-  ///
+  /// 
   /// Type: enum
   ///   default: standard
   /// Options:
@@ -2436,15 +2614,15 @@ class HillshadeLayerProperties implements LayerProperties {
   ///   "multidirectional"
   ///      Hillshade with multiple illumination directions. Uses the basic
   ///      hillshade model with multiple independent light sources.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic hillshadeMethod;
-
+  
   /// The resampling/interpolation method to use for overscaling, also known
   /// as texture magnification filter.![Visual comparison of linear
   /// resampling versus nearest resampling](assets/resampling.png)
-  ///
+  /// 
   /// Type: enum
   ///   default: linear
   /// Options:
@@ -2456,14 +2634,14 @@ class HillshadeLayerProperties implements LayerProperties {
   ///      Nearest neighbor filtering interpolates pixel values using the
   ///      nearest original source pixel creating a sharp but pixelated look
   ///      when overscaled
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic resampling;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2471,7 +2649,7 @@ class HillshadeLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2491,22 +2669,13 @@ class HillshadeLayerProperties implements LayerProperties {
 
   HillshadeLayerProperties copyWith(HillshadeLayerProperties changes) {
     return HillshadeLayerProperties(
-      hillshadeIlluminationDirection:
-          changes.hillshadeIlluminationDirection ??
-          hillshadeIlluminationDirection,
-      hillshadeIlluminationAltitude:
-          changes.hillshadeIlluminationAltitude ??
-          hillshadeIlluminationAltitude,
-      hillshadeIlluminationAnchor:
-          changes.hillshadeIlluminationAnchor ?? hillshadeIlluminationAnchor,
-      hillshadeExaggeration:
-          changes.hillshadeExaggeration ?? hillshadeExaggeration,
-      hillshadeShadowColor:
-          changes.hillshadeShadowColor ?? hillshadeShadowColor,
-      hillshadeHighlightColor:
-          changes.hillshadeHighlightColor ?? hillshadeHighlightColor,
-      hillshadeAccentColor:
-          changes.hillshadeAccentColor ?? hillshadeAccentColor,
+      hillshadeIlluminationDirection: changes.hillshadeIlluminationDirection ?? hillshadeIlluminationDirection,
+      hillshadeIlluminationAltitude: changes.hillshadeIlluminationAltitude ?? hillshadeIlluminationAltitude,
+      hillshadeIlluminationAnchor: changes.hillshadeIlluminationAnchor ?? hillshadeIlluminationAnchor,
+      hillshadeExaggeration: changes.hillshadeExaggeration ?? hillshadeExaggeration,
+      hillshadeShadowColor: changes.hillshadeShadowColor ?? hillshadeShadowColor,
+      hillshadeHighlightColor: changes.hillshadeHighlightColor ?? hillshadeHighlightColor,
+      hillshadeAccentColor: changes.hillshadeAccentColor ?? hillshadeAccentColor,
       hillshadeMethod: changes.hillshadeMethod ?? hillshadeMethod,
       resampling: changes.resampling ?? resampling,
       visibility: changes.visibility ?? visibility,
@@ -2522,14 +2691,8 @@ class HillshadeLayerProperties implements LayerProperties {
       json[fieldName] = value;
     }
 
-    addIfPresent(
-      'hillshade-illumination-direction',
-      hillshadeIlluminationDirection,
-    );
-    addIfPresent(
-      'hillshade-illumination-altitude',
-      hillshadeIlluminationAltitude,
-    );
+    addIfPresent('hillshade-illumination-direction', hillshadeIlluminationDirection);
+    addIfPresent('hillshade-illumination-altitude', hillshadeIlluminationAltitude);
     addIfPresent('hillshade-illumination-anchor', hillshadeIlluminationAnchor);
     addIfPresent('hillshade-exaggeration', hillshadeExaggeration);
     addIfPresent('hillshade-shadow-color', hillshadeShadowColor);
@@ -2555,72 +2718,73 @@ class HillshadeLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class HeatmapLayerProperties implements LayerProperties {
   // Paint Properties
   /// Radius of influence of one heatmap point in pixels. Increasing the
   /// value makes the heatmap smoother, but less detailed.
-  ///
+  /// 
   /// Type: number
   ///   default: 30
   ///   minimum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic heatmapRadius;
-
+  
   /// A measure of how much an individual point contributes to the heatmap.
   /// A value of 10 would be equivalent to having 10 points of weight 1 in
   /// the same spot. Especially useful when combined with clustering.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   ///   data-driven styling with js, android, ios
   final dynamic heatmapWeight;
-
-  /// Similar to `heatmap-weight` but controls the intensity of the heatmap
-  /// globally. Primarily used for adjusting the heatmap based on zoom
-  /// level.
-  ///
+  
+  /// Similar to [`heatmap-weight`](layers/#heatmap-weight) but controls the
+  /// intensity of the heatmap globally. Primarily used for adjusting the
+  /// heatmap based on zoom level.
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic heatmapIntensity;
-
+  
   /// Defines the color of each pixel based on its density value in a
   /// heatmap.  Should be an expression that uses `["heatmap-density"]` as
   /// input.
-  ///
+  /// 
   /// Type: color
   ///   default: [interpolate, [linear], [heatmap-density], 0, rgba(0, 0, 255, 0), 0.1, royalblue, 0.3, cyan, 0.5, lime, 0.7, yellow, 1, red]
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic heatmapColor;
-
+  
   /// The global opacity at which the heatmap layer will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic heatmapOpacity;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2628,7 +2792,7 @@ class HeatmapLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2681,34 +2845,36 @@ class HeatmapLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class ColorReliefLayerProperties implements LayerProperties {
   // Paint Properties
   /// The opacity at which the color-relief will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic colorReliefOpacity;
-
+  
   /// Defines the color of each pixel based on its elevation. Should be an
-  /// expression that uses `["elevation"]` as input.
-  ///
+  /// expression that uses the [`elevation`](expressions/#elevation)
+  /// expression as input.
+  /// 
   /// Type: color
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic colorReliefColor;
-
+  
   /// The resampling/interpolation method to use for overscaling, also known
   /// as texture magnification filter.![Visual comparison of linear
   /// resampling versus nearest resampling](assets/resampling.png)
-  ///
+  /// 
   /// Type: enum
   ///   default: linear
   /// Options:
@@ -2720,14 +2886,14 @@ class ColorReliefLayerProperties implements LayerProperties {
   ///      Nearest neighbor filtering interpolates pixel values using the
   ///      nearest original source pixel creating a sharp but pixelated look
   ///      when overscaled
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic resampling;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2735,7 +2901,7 @@ class ColorReliefLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2780,44 +2946,45 @@ class ColorReliefLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
 
 class BackgroundLayerProperties implements LayerProperties {
   // Paint Properties
   /// The color with which the background will be drawn.
-  ///
+  /// 
   /// Type: color
   ///   default: #000000
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic backgroundColor;
-
+  
   /// Name of image in sprite to use for drawing an image background. For
   /// seamless patterns, image width and height must be a factor of two (2,
   /// 4, 8, ..., 512). Note that zoom-dependent expressions will be
   /// evaluated only at integer zoom levels.
-  ///
+  /// 
   /// Type: resolvedImage
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic backgroundPattern;
-
+  
   /// The opacity at which the background will be drawn.
-  ///
+  /// 
   /// Type: number
   ///   default: 1
   ///   minimum: 0
   ///   maximum: 1
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic backgroundOpacity;
-
+  
   // Layout Properties
   /// Whether this layer is displayed.
-  ///
+  /// 
   /// Type: enum
   ///   default: visible
   /// Options:
@@ -2825,7 +2992,7 @@ class BackgroundLayerProperties implements LayerProperties {
   ///      The layer is shown.
   ///   "none"
   ///      The layer is not shown.
-  ///
+  /// 
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic visibility;
@@ -2870,4 +3037,7 @@ class BackgroundLayerProperties implements LayerProperties {
       visibility: json['visibility'],
     );
   }
+
 }
+
+

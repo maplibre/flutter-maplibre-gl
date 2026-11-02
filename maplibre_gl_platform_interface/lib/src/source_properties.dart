@@ -15,8 +15,25 @@ class VectorSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row. With
+  /// `scheme` set to `tms`, the row counts from the bottom.
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -40,6 +57,22 @@ class VectorSourceProperties implements SourceProperties {
   ///   "tms"
   ///      OSGeo spec scheme.
   final String? scheme;
+
+  /// Experimental. What an empty tile response (HTTP 204, or no tile data
+  /// from an archive such as PMTiles) means in this tileset.
+  ///
+  /// Type: enum
+  ///   default: blank
+  /// Options:
+  ///   "blank"
+  ///      The tile is in the tileset and has nothing at that place.
+  ///   "missing"
+  ///      The tileset has no tile there at that zoom level, and a renderer
+  ///      may use a tile from another zoom level in its place.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final String? emptyResponse;
 
   /// Minimum zoom level for which tiles are available, as in the TileJSON
   /// spec.
@@ -98,6 +131,7 @@ class VectorSourceProperties implements SourceProperties {
     this.tiles,
     this.bounds = const [-180, -85.051129, 180, 85.051129],
     this.scheme = "xyz",
+    this.emptyResponse = "blank",
     this.minzoom = 0,
     this.maxzoom = 22,
     this.attribution,
@@ -111,6 +145,7 @@ class VectorSourceProperties implements SourceProperties {
     List<String>? tiles,
     List<double>? bounds,
     String? scheme,
+    String? emptyResponse,
     double? minzoom,
     double? maxzoom,
     String? attribution,
@@ -123,6 +158,7 @@ class VectorSourceProperties implements SourceProperties {
       tiles: tiles ?? this.tiles,
       bounds: bounds ?? this.bounds,
       scheme: scheme ?? this.scheme,
+      emptyResponse: emptyResponse ?? this.emptyResponse,
       minzoom: minzoom ?? this.minzoom,
       maxzoom: maxzoom ?? this.maxzoom,
       attribution: attribution ?? this.attribution,
@@ -147,6 +183,7 @@ class VectorSourceProperties implements SourceProperties {
     addIfPresent('tiles', tiles);
     addIfPresent('bounds', bounds);
     addIfPresent('scheme', scheme);
+    addIfPresent('emptyResponse', emptyResponse);
     addIfPresent('minzoom', minzoom);
     addIfPresent('maxzoom', maxzoom);
     addIfPresent('attribution', attribution);
@@ -162,6 +199,7 @@ class VectorSourceProperties implements SourceProperties {
       tiles: json['tiles'],
       bounds: json['bounds'],
       scheme: json['scheme'],
+      emptyResponse: json['emptyResponse'],
       minzoom: json['minzoom'],
       maxzoom: json['maxzoom'],
       attribution: json['attribution'],
@@ -180,8 +218,25 @@ class RasterSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row. With
+  /// `scheme` set to `tms`, the row counts from the bottom.
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -209,8 +264,7 @@ class RasterSourceProperties implements SourceProperties {
   ///   default: 22
   final double? maxzoom;
 
-  /// The minimum visual size to display tiles for this layer. Only
-  /// configurable for raster layers.
+  /// The minimum visual size to display tiles for this source.
   ///
   /// Type: number
   ///   default: 512
@@ -227,6 +281,22 @@ class RasterSourceProperties implements SourceProperties {
   ///   "tms"
   ///      OSGeo spec scheme.
   final String? scheme;
+
+  /// Experimental. What an empty tile response (HTTP 204, or no tile data
+  /// from an archive such as PMTiles) means in this tileset.
+  ///
+  /// Type: enum
+  ///   default: blank
+  /// Options:
+  ///   "blank"
+  ///      The tile is in the tileset and has nothing at that place.
+  ///   "missing"
+  ///      The tileset has no tile there at that zoom level, and a renderer
+  ///      may use a tile from another zoom level in its place.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final String? emptyResponse;
 
   /// Contains an attribution to be displayed when the map is shown to a
   /// user.
@@ -251,6 +321,7 @@ class RasterSourceProperties implements SourceProperties {
     this.maxzoom = 22,
     this.tileSize = 512,
     this.scheme = "xyz",
+    this.emptyResponse = "blank",
     this.attribution,
     this.volatile = false,
   });
@@ -263,6 +334,7 @@ class RasterSourceProperties implements SourceProperties {
     double? maxzoom,
     double? tileSize,
     String? scheme,
+    String? emptyResponse,
     String? attribution,
     bool? volatile,
   }) {
@@ -274,6 +346,7 @@ class RasterSourceProperties implements SourceProperties {
       maxzoom: maxzoom ?? this.maxzoom,
       tileSize: tileSize ?? this.tileSize,
       scheme: scheme ?? this.scheme,
+      emptyResponse: emptyResponse ?? this.emptyResponse,
       attribution: attribution ?? this.attribution,
       volatile: volatile ?? this.volatile,
     );
@@ -297,6 +370,7 @@ class RasterSourceProperties implements SourceProperties {
     addIfPresent('maxzoom', maxzoom);
     addIfPresent('tileSize', tileSize);
     addIfPresent('scheme', scheme);
+    addIfPresent('emptyResponse', emptyResponse);
     addIfPresent('attribution', attribution);
     addIfPresent('volatile', volatile);
     return json;
@@ -311,6 +385,7 @@ class RasterSourceProperties implements SourceProperties {
       maxzoom: json['maxzoom'],
       tileSize: json['tileSize'],
       scheme: json['scheme'],
+      emptyResponse: json['emptyResponse'],
       attribution: json['attribution'],
       volatile: json['volatile'],
     );
@@ -325,8 +400,24 @@ class RasterDemSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row.
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -354,12 +445,27 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 22
   final double? maxzoom;
 
-  /// The minimum visual size to display tiles for this layer. Only
-  /// configurable for raster layers.
+  /// The minimum visual size to display tiles for this source.
   ///
   /// Type: number
   ///   default: 512
   final double? tileSize;
+
+  /// Experimental. What an empty tile response (HTTP 204, or no tile data
+  /// from an archive such as PMTiles) means in this tileset.
+  ///
+  /// Type: enum
+  ///   default: blank
+  /// Options:
+  ///   "blank"
+  ///      The tile is in the tileset and has nothing at that place.
+  ///   "missing"
+  ///      The tileset has no tile there at that zoom level, and a renderer
+  ///      may use a tile from another zoom level in its place.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final String? emptyResponse;
 
   /// Contains an attribution to be displayed when the map is shown to a
   /// user.
@@ -441,6 +547,7 @@ class RasterDemSourceProperties implements SourceProperties {
     this.minzoom = 0,
     this.maxzoom = 22,
     this.tileSize = 512,
+    this.emptyResponse = "blank",
     this.attribution,
     this.encoding = "mapbox",
     this.redFactor,
@@ -457,6 +564,7 @@ class RasterDemSourceProperties implements SourceProperties {
     double? minzoom,
     double? maxzoom,
     double? tileSize,
+    String? emptyResponse,
     String? attribution,
     String? encoding,
     double? redFactor,
@@ -472,6 +580,7 @@ class RasterDemSourceProperties implements SourceProperties {
       minzoom: minzoom ?? this.minzoom,
       maxzoom: maxzoom ?? this.maxzoom,
       tileSize: tileSize ?? this.tileSize,
+      emptyResponse: emptyResponse ?? this.emptyResponse,
       attribution: attribution ?? this.attribution,
       encoding: encoding ?? this.encoding,
       redFactor: redFactor ?? this.redFactor,
@@ -499,6 +608,7 @@ class RasterDemSourceProperties implements SourceProperties {
     addIfPresent('minzoom', minzoom);
     addIfPresent('maxzoom', maxzoom);
     addIfPresent('tileSize', tileSize);
+    addIfPresent('emptyResponse', emptyResponse);
     addIfPresent('attribution', attribution);
     addIfPresent('encoding', encoding);
     addIfPresent('redFactor', redFactor);
@@ -517,6 +627,7 @@ class RasterDemSourceProperties implements SourceProperties {
       minzoom: json['minzoom'],
       maxzoom: json['maxzoom'],
       tileSize: json['tileSize'],
+      emptyResponse: json['emptyResponse'],
       attribution: json['attribution'],
       encoding: json['encoding'],
       redFactor: json['redFactor'],
@@ -624,7 +735,7 @@ class GeojsonSourceProperties implements SourceProperties {
   final Object? clusterProperties;
 
   /// Whether to calculate line distance metrics. This is required for line
-  /// layers that specify `line-gradient` values.
+  /// layers that specify [`line-gradient`](layers/#line-gradient) values.
   ///
   /// Type: boolean
   ///   default: false
@@ -795,7 +906,8 @@ class VideoSourceProperties implements SourceProperties {
 }
 
 class ImageSourceProperties implements SourceProperties {
-  /// URL that points to an image.
+  /// URL that points to an image. Optional: a source created without a url
+  /// starts empty and renders nothing until an image is set at runtime.
   ///
   /// Type: string
   final String? url;
