@@ -29,7 +29,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * **Android, Web**: `removeLayer`, `setLayerVisibility` and `setLayerProperties` on a missing layer throw `LAYER_NOT_FOUND_ERROR`.
   * **Android, Web**: adding a source or layer with an id already in use throws `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
   * `getClusterExpansionZoom`, `getClusterChildren` and `getClusterLeaves` throw `CLUSTER_NOT_FOUND` for an unknown cluster id. Android and iOS crashed, web answered 0 or an empty list.
-  * Source and layer calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error.
+  * Source, layer and image calls made before the style has loaded throw `STYLE_NOT_READY` on every platform. On Android the GeoJSON calls and `addSource` did nothing or failed with a generic error, and on web `addImage` added the image.
   * **Android, Web**: `setGeoJsonSource`, `setGeoJsonFeature` and the layer adds throw `SOURCE_NOT_FOUND` for a missing source.
   * Data MapLibre cannot use throws: `INVALID_GEOJSON` for data that is not GeoJSON, `INVALID_EXPRESSION` or `INVALID_ARGUMENT` for a filter or property value it rejects, `UNSUPPORTED_SOURCE_TYPE` for a layer that cannot draw its source, and `INVALID_ARGUMENT` for an `addSource` it cannot build. Android and web ignored these, iOS crashed on some.
   * A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`. Android and iOS added a layer that drew nothing, web dropped it.
