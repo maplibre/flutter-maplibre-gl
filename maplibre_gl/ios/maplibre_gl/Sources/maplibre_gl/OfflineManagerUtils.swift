@@ -153,19 +153,8 @@ class OfflineManagerUtils {
         return OfflineRegion(
             id: id,
             metadata: metadata,
-            definition: regionDefinition(for: tileRegion)
+            definition: OfflineRegionDefinition(region: tileRegion)
         ).toDictionary()
-    }
-
-    private static func regionDefinition(
-        for tileRegion: MLNTilePyramidOfflineRegion
-    ) -> OfflineRegionDefinition {
-        return OfflineRegionDefinition(
-            bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
-            mapStyleUrl: tileRegion.styleURL,
-            minZoom: tileRegion.minimumZoomLevel,
-            maxZoom: tileRegion.maximumZoomLevel
-        )
     }
 
     static func regionsList(result: @escaping FlutterResult) {
@@ -225,7 +214,7 @@ class OfflineManagerUtils {
         let region = OfflineRegion(
             id: id,
             metadata: metadata,
-            definition: regionDefinition(for: tileRegion)
+            definition: OfflineRegionDefinition(region: tileRegion)
         )
         pack.setContext(region.prepareContext()) { error in
             if let error = error {

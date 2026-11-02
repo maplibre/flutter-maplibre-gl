@@ -6,12 +6,31 @@ class OfflineRegionDefinition {
     let mapStyleUrl: URL
     let minZoom: Double
     let maxZoom: Double
+    let includeIdeographs: Bool
 
-    init(bounds: [[Double]], mapStyleUrl: URL, minZoom: Double, maxZoom: Double) {
+    init(
+        bounds: [[Double]],
+        mapStyleUrl: URL,
+        minZoom: Double,
+        maxZoom: Double,
+        includeIdeographs: Bool
+    ) {
         self.bounds = bounds
         self.mapStyleUrl = mapStyleUrl
         self.minZoom = minZoom
         self.maxZoom = maxZoom
+        self.includeIdeographs = includeIdeographs
+    }
+
+    /// The definition of a stored region.
+    convenience init(region: MLNTilePyramidOfflineRegion) {
+        self.init(
+            bounds: [region.bounds.sw, region.bounds.ne].map { [$0.latitude, $0.longitude] },
+            mapStyleUrl: region.styleURL,
+            minZoom: region.minimumZoomLevel,
+            maxZoom: region.maximumZoomLevel,
+            includeIdeographs: region.includesIdeographicGlyphs
+        )
     }
 
     func getBounds() -> MLNCoordinateBounds {
@@ -32,7 +51,8 @@ class OfflineRegionDefinition {
             bounds: bounds,
             mapStyleUrl: mapStyleUrl,
             minZoom: minZoom,
-            maxZoom: maxZoom
+            maxZoom: maxZoom,
+            includeIdeographs: jsonDict["includeIdeographs"] as? Bool ?? false
         )
     }
 
@@ -42,15 +62,18 @@ class OfflineRegionDefinition {
             "mapStyleUrl": mapStyleUrl.absoluteString,
             "minZoom": minZoom,
             "maxZoom": maxZoom,
+            "includeIdeographs": includeIdeographs,
         ]
     }
 
     func toMLNTilePyramidOfflineRegion() -> MLNTilePyramidOfflineRegion {
-        return MLNTilePyramidOfflineRegion(
+        let region = MLNTilePyramidOfflineRegion(
             styleURL: mapStyleUrl,
             bounds: getBounds(),
             fromZoomLevel: minZoom,
             toZoomLevel: maxZoom
         )
+        region.includesIdeographicGlyphs = includeIdeographs
+        return region
     }
 }
