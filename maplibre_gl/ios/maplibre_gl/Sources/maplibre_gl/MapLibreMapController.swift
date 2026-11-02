@@ -908,6 +908,25 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             case let .failure(error): result(error.flutterError)
             }
 
+        case "meshLayer#add":
+            guard let arguments = methodCall.arguments as? [String: Any],
+                  let layerId = arguments["layerId"] as? String
+            else { return }
+            guard let style = mapView.style else {
+                result(FlutterError(code: "STYLE_NOT_READY", message: "The style is not loaded yet", details: nil))
+                return
+            }
+            guard let layer = MeshStyleLayer(identifier: layerId, arguments: arguments) else {
+                result(FlutterError(code: "INVALID_ARGUMENTS", message: "meshLayer#add: malformed meshes or instances", details: nil))
+                return
+            }
+            if let id = arguments["belowLayerId"] as? String, let belowLayer = style.layer(withIdentifier: id) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            result(nil)
+
         case "fillExtrusionLayer#add":
             guard let arguments = methodCall.arguments as? [String: Any] else { return }
             guard let sourceId = arguments["sourceId"] as? String else { return }

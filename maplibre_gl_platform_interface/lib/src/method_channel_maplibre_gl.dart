@@ -1087,6 +1087,19 @@ class MapLibreMethodChannel extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) async {
+    await _channel.invokeMethod('meshLayer#add', <String, dynamic>{
+      'layerId': layerId,
+      'belowLayerId': belowLayerId,
+      ...layer.toMap(),
+    });
+  }
+
+  @override
   Future<void> addFillExtrusionLayer(
     String sourceId,
     String layerId,

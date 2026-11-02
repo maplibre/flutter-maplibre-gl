@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
@@ -305,5 +307,61 @@ void main() {
       expect(args['minzoom'], 5.0);
       expect(args['maxzoom'], 15.0);
     });
+    test(
+      'addMeshLayer sends typed meshes and six doubles per instance',
+      () async {
+        await platform.addMeshLayer(
+          'trees',
+          MeshLayer(
+            meshes: [
+              MeshLayerMesh(
+                positions: Float32List.fromList([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+                normals: Float32List.fromList([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+                colors: Float32List.fromList(List.filled(12, 1)),
+                indices: Int32List.fromList([0, 1, 2]),
+              ),
+            ],
+            instances: const [
+              MeshLayerInstance(
+                mesh: 0,
+                position: LatLng(52.5, 13.4),
+                altitude: 2,
+                bearing: 90,
+                scale: 1.5,
+              ),
+            ],
+            minzoom: 15,
+          ),
+          belowLayerId: 'labels',
+        );
+
+        final call = methodCalls.single;
+        expect(call.method, 'meshLayer#add');
+        final args = call.arguments as Map;
+        expect(args['layerId'], 'trees');
+        expect(args['belowLayerId'], 'labels');
+        expect(args['minzoom'], 15);
+        expect(args['maxzoom'], 24);
+        final mesh = (args['meshes'] as List).single as Map;
+        expect(mesh['positions'], isA<Float32List>());
+        expect(mesh['indices'], isA<Int32List>());
+        // mesh, latitude, longitude, altitude, bearing, scale
+        expect(args['instances'], isA<Float64List>());
+        expect(args['instances'], [
+          0,
+          52.5,
+          closeTo(13.4, 1e-9),
+          2,
+          90,
+          1.5,
+        ]);
+        // The light in linear colour, the sun direction normalised
+        final light = args['light'] as Float32List;
+        expect(light, hasLength(14));
+        expect(light[0], closeTo(1, 1e-6));
+        final (x, y, z) = (light[11], light[12], light[13]);
+        expect(x * x + y * y + z * z, closeTo(1, 1e-5));
+      },
+    );
   });
 }

@@ -14,6 +14,7 @@ part 'src/camera.dart';
 part 'src/circle.dart';
 part 'src/global_platform.dart';
 part 'src/line.dart';
+part 'src/mesh_layer.dart';
 part 'src/location.dart';
 part 'src/location_source.dart';
 part 'src/maplibre_js_source.dart';

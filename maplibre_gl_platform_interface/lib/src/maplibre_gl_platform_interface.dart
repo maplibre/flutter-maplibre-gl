@@ -414,6 +414,16 @@ abstract class MapLibrePlatform {
     required bool enableInteraction,
   });
 
+  /// Adds a layer of lit 3D [MeshLayer] meshes, below [belowLayerId] if given. Remove it with
+  /// [removeLayer]; to change it, remove it and add it again.
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) {
+    throw UnimplementedError('addMeshLayer() is not implemented on this platform');
+  }
+
   Future<void> addRasterLayer(
     String sourceId,
     String layerId,
