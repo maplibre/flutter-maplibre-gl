@@ -1064,6 +1064,57 @@ void main() {
       );
     });
 
+    testWidgets('a GeoJSON source ignores sourceLayer', (tester) async {
+      final controller = await pumpMap(tester);
+      await _addPoints(tester, controller);
+      // A removal is only applied once the source is drawn.
+      await pumpUntil(
+        tester,
+        controller.addCircleLayer(
+          _sourceId,
+          _layerId,
+          const CircleLayerProperties(),
+        ),
+        'addCircleLayer',
+      );
+
+      await pumpUntil(
+        tester,
+        controller.setFeatureState(_sourceId, '1', {
+          'a': 1,
+        }, sourceLayer: 'roads'),
+        'setFeatureState with a sourceLayer',
+      );
+      for (final sourceLayer in [null, 'roads', 'rivers']) {
+        await pumpUntilValue<Map<String, dynamic>?>(
+          tester,
+          () => controller.getFeatureState(
+            _sourceId,
+            '1',
+            sourceLayer: sourceLayer,
+          ),
+          (state) => const DeepCollectionEquality().equals(state, {'a': 1}),
+          'getFeatureState with sourceLayer $sourceLayer',
+        );
+      }
+
+      await pumpUntil(
+        tester,
+        controller.removeFeatureState(
+          _sourceId,
+          featureId: '1',
+          sourceLayer: 'roads',
+        ),
+        'removeFeatureState with a sourceLayer',
+      );
+      await pumpUntilValue<Map<String, dynamic>?>(
+        tester,
+        () => controller.getFeatureState(_sourceId, '1'),
+        (state) => state == null,
+        'getFeatureState after the removal',
+      );
+    });
+
     testWidgets('a vector source with a sourceLayer sets, reads and removes '
         'state', (tester) async {
       final controller = await pumpMap(tester);

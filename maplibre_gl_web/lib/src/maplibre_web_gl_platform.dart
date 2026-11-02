@@ -1153,7 +1153,11 @@ class MapLibreMapController extends MapLibrePlatform
   /// `SOURCE_LAYER_REQUIRED` for a vector source without [sourceLayer].
   /// maplibre-gl-js only fires an error event for each of them, which the
   /// caller never sees.
-  void _ensureFeatureStateSource(String sourceId, String? sourceLayer) {
+  ///
+  /// Returns the source layer to hand to maplibre-gl-js: null for a GeoJSON
+  /// source, which ignores [sourceLayer] as on Android and iOS. maplibre-gl-js
+  /// rejects one there.
+  String? _featureStateSourceLayer(String sourceId, String? sourceLayer) {
     _ensureStyleReady();
     final type = _sourceType(sourceId);
     if (type == null) throw _sourceNotFound(sourceId);
@@ -1161,9 +1165,10 @@ class MapLibreMapController extends MapLibrePlatform
       if (sourceLayer == null) {
         throw checks.featureStateSourceLayerRequired(sourceId);
       }
-    } else if (type != 'geojson') {
-      throw checks.notFeatureStateSource(sourceId, type);
+      return sourceLayer;
     }
+    if (type != 'geojson') throw checks.notFeatureStateSource(sourceId, type);
+    return null;
   }
 
   /// Resolves the GeoJSON source a cluster-inspection call addresses.
@@ -3379,14 +3384,14 @@ class MapLibreMapController extends MapLibrePlatform
     Map<String, dynamic> state, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     if (!checks.isJsonValue(state)) {
       throw checks.featureStateNotJson(sourceId, featureId);
     }
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     _map.setFeatureState(feature, state.jsify());
@@ -3412,11 +3417,11 @@ class MapLibreMapController extends MapLibrePlatform
       );
     }
 
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     _map.removeFeatureState(feature, stateKey);
@@ -3428,11 +3433,11 @@ class MapLibreMapController extends MapLibrePlatform
     String featureId, {
     String? sourceLayer,
   }) async {
-    _ensureFeatureStateSource(sourceId, sourceLayer);
+    final layer = _featureStateSourceLayer(sourceId, sourceLayer);
     final feature = FeatureIdentifierJsImpl.of(
       source: sourceId,
       id: featureId.jsify(),
-      sourceLayer: sourceLayer,
+      sourceLayer: layer,
     );
 
     // Not `dartify()`: for a JS object that returns a Map<Object?, Object?>,
