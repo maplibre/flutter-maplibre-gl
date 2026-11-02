@@ -436,6 +436,64 @@ void main() {
     });
   });
 
+  group('visibilityError', () {
+    test('rejects a visibility that reads feature data or the zoom', () {
+      expect(
+        visibilityError('visibility', [
+          'match',
+          ['get', 'kind'],
+          'park',
+          'none',
+          'visible',
+        ]),
+        'A "visibility" expression can only read the global state, not "get".',
+      );
+      expect(
+        visibilityError('visibility', [
+          'step',
+          ['zoom'],
+          'none',
+          10,
+          'visible',
+        ]),
+        contains('not "zoom"'),
+      );
+    });
+
+    test('takes the global state, constants, and objects of its own', () {
+      expect(
+        visibilityError('visibility', [
+          'case',
+          [
+            'boolean',
+            ['global-state', 'night'],
+            false,
+          ],
+          'none',
+          'visible',
+        ]),
+        isNull,
+      );
+      expect(
+        visibilityError('visibility', [
+          'get',
+          'shown',
+          ['global-state', 'layers'],
+        ]),
+        isNull,
+      );
+      expect(
+        visibilityError('visibility', [
+          'literal',
+          ['get', 'kind'],
+        ]),
+        isNull,
+      );
+      expect(visibilityError('visibility', 'none'), isNull);
+      expect(visibilityError('circle-color', ['get', 'color']), isNull);
+    });
+  });
+
   group('cameraUpdateError', () {
     const nan = double.nan;
     const coordinates = 'Latitude and longitude must be finite numbers.';

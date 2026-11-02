@@ -144,7 +144,7 @@ class MapHostApiTest {
     fun mapCallsHasAMethodForEveryPigeonMethodAndNoOther() {
         val notCalls = setOf("isMapReady", "rejectDuplicateLayerId", "rejectDuplicateSourceId")
 
-        assertEquals(78, pigeonMethods.size)
+        assertEquals(80, pigeonMethods.size)
         assertEquals(
             pigeonMethods.map { it.name }.toSet(),
             MapCalls::class.java.methods.map { it.name }.toSet() - notCalls,

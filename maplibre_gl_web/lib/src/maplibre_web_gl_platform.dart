@@ -2489,8 +2489,9 @@ class MapLibreMapController extends MapLibrePlatform
         layerId.toJS,
         name.toJS,
       );
-      var reason = checks.hexColorError(name, value);
-      // A hex color fails with the reason Android and iOS give.
+      var reason = checks.layerPropertyError(name, value);
+      // A hex color, or a visibility on feature data, fails as on Android
+      // and iOS.
       if (reason == null) {
         try {
           final errors = _mapErrorsDuring(
@@ -2813,9 +2814,9 @@ class MapLibreMapController extends MapLibrePlatform
     if (!checks.isZoomInRange(minzoom, maxzoom)) {
       throw checks.zoomOutOfRange(layerId);
     }
-    final colorErrors = <String, String>{
+    final checkedErrors = <String, String>{
       for (final MapEntry(:key, :value) in properties.entries)
-        key: ?checks.hexColorError(key, value),
+        key: ?checks.layerPropertyError(key, value),
     };
     final before = _existingLayerId(belowLayerId);
     filter = withFeatureIds(filter);
@@ -2863,7 +2864,7 @@ class MapLibreMapController extends MapLibrePlatform
       if (filterReason != null) throw _invalidFilter(filterReason);
       var rejected = propertyError;
       for (final MapEntry(key: property, value: reason)
-          in colorErrors.entries) {
+          in checkedErrors.entries) {
         if (rejected == null || property.compareTo(rejected.property) <= 0) {
           rejected = (property: property, reason: reason);
         }

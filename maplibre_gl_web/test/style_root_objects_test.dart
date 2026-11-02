@@ -7,6 +7,7 @@ library;
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
 import 'package:maplibre_gl_web/maplibre_gl_web.dart';
@@ -62,13 +63,24 @@ void main() {
         return map;
       }).toJS,
     );
+    map.setProperty(
+      'getGlobalState'.toJS,
+      (() => {
+        'theme': 'dark',
+        'filter': {
+          'kinds': ['park'],
+        },
+      }.jsify()).toJS,
+    );
     return map;
   }
 
   /// A controller driving [map] instead of a real one.
   MapLibreMapController controllerFor(JSObject map) =>
-      MapLibreMapController()
-        ..debugSetMap(MapLibreMap.fromJsObject(map as MapLibreMapJsImpl));
+      MapLibreMapController()..debugSetMap(
+        MapLibreMap.fromJsObject(map as MapLibreMapJsImpl),
+        styleReady: true,
+      );
 
   /// What [map] was handed as [name], back in Dart.
   dynamic recorded(JSObject map, String name) =>
@@ -143,6 +155,33 @@ void main() {
 
       expect(recorded(map, 'globalStateName'), 'showLabels');
       expect(recorded(map, 'globalStateValue'), isFalse);
+    });
+
+    test('setGlobalStateProperty refuses what JSON cannot carry', () async {
+      final map = recordingMap();
+
+      await expectLater(
+        controllerFor(map).setGlobalStateProperty('size', double.nan),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'INVALID_ARGUMENT',
+          ),
+        ),
+      );
+      expect(recorded(map, 'globalStateName'), isNull);
+    });
+
+    test('getGlobalState reads the state into Dart maps', () async {
+      final state = await controllerFor(recordingMap()).getGlobalState();
+
+      expect(state, {
+        'theme': 'dark',
+        'filter': {
+          'kinds': ['park'],
+        },
+      });
     });
   });
 }
