@@ -98,10 +98,9 @@ class LngLatBounds extends JsObjectWrapper<LngLatBoundsJsImpl> {
   ///  @example
   ///  var llb = new maplibregl.LngLatBounds([-73.9876, 40.7661], [-73.9397, 40.8002]);
   ///  llb.toArray(); // = [[-73.9876, 40.7661], [-73.9397, 40.8002]]
-  List<List<num>> toArray() =>
-      (jsObject.toArray() as JSArray).toDart.nonNulls
-          .map((e) => (e as JSArray).toDart.cast<num>())
-          .toList();
+  List<List<num>> toArray() => (jsObject.toArray() as JSArray).toDart.nonNulls
+      .map((e) => (e as JSArray).toDart.cast<num>())
+      .toList();
 
   ///  Return the bounding box represented as a string.
   ///

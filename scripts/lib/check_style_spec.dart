@@ -61,10 +61,9 @@ Future<void> run(List<String> args) async {
   final pinnedVersion = (await versionFile.readAsString()).trim();
 
   if (updateArg != null) {
-    final requested =
-        updateArg.contains('=')
-            ? updateArg.split('=').last
-            : await _fetchLatestVersion();
+    final requested = updateArg.contains('=')
+        ? updateArg.split('=').last
+        : await _fetchLatestVersion();
     final spec = await _fetchString(_specUrl(requested));
     // Validate before overwriting anything.
     jsonDecode(spec);

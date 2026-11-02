@@ -18,11 +18,10 @@ import 'package:maplibre_gl_web/src/utils.dart';
 void main() {
   group('converting a JS object to a Dart map', () {
     test('dartifyMap produces one, with the values intact', () {
-      final jsState =
-          JSObject()
-            ..setProperty('selected'.toJS, true.toJS)
-            ..setProperty('score'.toJS, 42.toJS)
-            ..setProperty('label'.toJS, 'north'.toJS);
+      final jsState = JSObject()
+        ..setProperty('selected'.toJS, true.toJS)
+        ..setProperty('score'.toJS, 42.toJS)
+        ..setProperty('label'.toJS, 'north'.toJS);
 
       final state = dartifyMap(jsState);
 

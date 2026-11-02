@@ -34,10 +34,9 @@ class _FakeMap {
     method('getLayer', ((JSString id) => _layer(id.toDart)).toJS);
     method(
       'getStyle',
-      (() =>
-              JSObject()
-                ..setProperty('sources'.toJS, JSObject())
-                ..setProperty('layers'.toJS, layers.toJS))
+      (() => JSObject()
+            ..setProperty('sources'.toJS, JSObject())
+            ..setProperty('layers'.toJS, layers.toJS))
           .toJS,
     );
     method(
@@ -50,8 +49,9 @@ class _FakeMap {
     );
     method(
       'getFilter',
-      ((JSString id) => _layer(id.toDart)!.getProperty<JSAny?>('filter'.toJS))
-          .toJS,
+      ((JSString id) => _layer(
+        id.toDart,
+      )!.getProperty<JSAny?>('filter'.toJS)).toJS,
     );
     for (final (setter, group) in [
       ('setPaintProperty', 'paint'),
@@ -212,11 +212,11 @@ void main() {
 
   void useMap(_FakeMap fake) {
     map = fake;
-    controller =
-        MapLibreMapController()..debugSetMap(
-          MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
-          styleReady: true,
-        );
+    controller = MapLibreMapController()
+      ..debugSetMap(
+        MapLibreMap.fromJsObject(map.jsObject as MapLibreMapJsImpl),
+        styleReady: true,
+      );
   }
 
   setUp(() {

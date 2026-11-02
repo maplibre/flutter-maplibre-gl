@@ -96,19 +96,18 @@ class _DocFillLayerBodyState extends State<_DocFillLayerBody> {
 
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
-      'features':
-          _features
-              .map(
-                (f) => {
-                  'type': 'Feature',
-                  'properties': {'name': f['name'], 'color': f['color']},
-                  'geometry': {
-                    'type': 'Polygon',
-                    'coordinates': f['coordinates'],
-                  },
-                },
-              )
-              .toList(),
+      'features': _features
+          .map(
+            (f) => {
+              'type': 'Feature',
+              'properties': {'name': f['name'], 'color': f['color']},
+              'geometry': {
+                'type': 'Polygon',
+                'coordinates': f['coordinates'],
+              },
+            },
+          )
+          .toList(),
     });
 
     await ctrl.addFillLayer(

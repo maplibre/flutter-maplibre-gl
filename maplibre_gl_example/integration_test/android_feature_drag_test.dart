@@ -247,22 +247,20 @@ class _MapProbe {
 Future<_MapProbe> _pumpMapWithDraggableCircle(WidgetTester tester) async {
   final probe = _MapProbe();
 
-  final controller =
-      probe.controller = await pumpMap(
-        tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: const CameraPosition(
-                target: _center,
-                zoom: 10,
-              ),
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: onStyleLoaded,
-              onMapClick: (_, latLng) => probe.clicks.add(latLng),
-              onMapLongClick: (_, latLng) => probe.longClicks.add(latLng),
-            ),
-      );
+  final controller = probe.controller = await pumpMap(
+    tester,
+    builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+      styleString: offlineStyle,
+      initialCameraPosition: const CameraPosition(
+        target: _center,
+        zoom: 10,
+      ),
+      onMapCreated: onMapCreated,
+      onStyleLoadedCallback: onStyleLoaded,
+      onMapClick: (_, latLng) => probe.clicks.add(latLng),
+      onMapLongClick: (_, latLng) => probe.longClicks.add(latLng),
+    ),
+  );
   controller.onFeatureDrag.add(
     (point, origin, current, delta, id, annotation, eventType) =>
         probe.drags.add(_Drag(eventType, origin, current, delta)),

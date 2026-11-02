@@ -65,12 +65,11 @@ class _FullMapBodyState extends State<_FullMapBody> {
       floatingActionButton: ExampleButton(
         label: canReset ? 'Reset camera' : 'Go to San Francisco',
         icon: canReset ? Icons.refresh : Icons.flight_takeoff,
-        onPressed:
-            _canInteractWithMap
-                ? canReset
-                    ? _resetCamera
-                    : _moveCameraToSanFrancisco
-                : null,
+        onPressed: _canInteractWithMap
+            ? canReset
+                  ? _resetCamera
+                  : _moveCameraToSanFrancisco
+            : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

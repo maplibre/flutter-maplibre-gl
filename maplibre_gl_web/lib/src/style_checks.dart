@@ -72,10 +72,9 @@ PlatformException zoomOutOfRange(String layerId) => PlatformException(
 PlatformException layerNotAdded(String layerId, String? reason) =>
     PlatformException(
       code: 'INVALID_LAYER',
-      message:
-          reason == null
-              ? "Layer '$layerId' was not added."
-              : "Layer '$layerId' was not added: $reason",
+      message: reason == null
+          ? "Layer '$layerId' was not added."
+          : "Layer '$layerId' was not added: $reason",
       details: reason,
     );
 

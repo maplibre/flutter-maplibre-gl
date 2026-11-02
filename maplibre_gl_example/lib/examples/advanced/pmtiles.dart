@@ -68,12 +68,11 @@ class _PMTilesBodyState extends State<_PMTilesBody> {
       floatingActionButton: ExampleButton(
         label: _canReset ? 'Reset camera' : 'Go to London',
         icon: _canReset ? Icons.refresh : Icons.flight_takeoff,
-        onPressed:
-            _canInteractWithMap
-                ? _canReset
-                    ? _resetCamera
-                    : _moveCameraToLondon
-                : null,
+        onPressed: _canInteractWithMap
+            ? _canReset
+                  ? _resetCamera
+                  : _moveCameraToLondon
+            : null,
         style: ExampleButtonStyle.tonal,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

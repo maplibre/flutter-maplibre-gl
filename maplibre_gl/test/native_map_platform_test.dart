@@ -1169,10 +1169,9 @@ void main() {
     /// The names of the features of [json] that carry the marker.
     Set<String> marked(Object? json) {
       final data = json is String ? jsonDecode(json) as Map : json! as Map;
-      final features =
-          data['type'] == 'FeatureCollection'
-              ? data['features'] as List
-              : [data];
+      final features = data['type'] == 'FeatureCollection'
+          ? data['features'] as List
+          : [data];
       return {
         for (final feature in features.cast<Map>())
           if ((feature['properties'] as Map).containsKey(marker))

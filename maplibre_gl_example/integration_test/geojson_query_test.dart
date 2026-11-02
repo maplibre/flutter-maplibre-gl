@@ -401,10 +401,9 @@ void main() {
       var total = 0;
       for (final child in children) {
         final properties = child['properties'] as Map;
-        total +=
-            properties.containsKey('point_count')
-                ? (properties['point_count'] as num).toInt()
-                : 1;
+        total += properties.containsKey('point_count')
+            ? (properties['point_count'] as num).toInt()
+            : 1;
       }
       expect(total, 6);
     });
@@ -866,12 +865,11 @@ Future<void> _waitForState(
   await pumpUntilValue(
     tester,
     () => controller.getFeatureState(_sourceId, featureId),
-    (state) =>
-        expected == null
-            ? state == null
-            : state != null &&
-                state.length == expected.length &&
-                expected.entries.every((e) => state[e.key] == e.value),
+    (state) => expected == null
+        ? state == null
+        : state != null &&
+              state.length == expected.length &&
+              expected.entries.every((e) => state[e.key] == e.value),
     'getFeatureState $featureId == $expected',
   );
 }

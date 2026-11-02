@@ -235,12 +235,11 @@ class _LiveSymbolsBodyState extends State<_LiveSymbolsBody> {
             ExampleButton(
               label: _timer == null ? 'Start updates' : 'Stop updates',
               icon: _timer == null ? Icons.play_arrow : Icons.stop,
-              onPressed:
-                  _layerReady
-                      ? (_timer == null
-                          ? () => setState(_startUpdates)
-                          : _stopUpdates)
-                      : null,
+              onPressed: _layerReady
+                  ? (_timer == null
+                        ? () => setState(_startUpdates)
+                        : _stopUpdates)
+                  : null,
             ),
           ],
         ),

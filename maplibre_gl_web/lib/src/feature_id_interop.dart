@@ -54,12 +54,11 @@ bool promoteFeatureIds(JSObject source, {required bool promote}) {
   final vtOptions = source
       .getProperty<JSAny?>('workerOptions'.toJS)
       ?.getPropertyOrNull('geojsonVtOptions');
-  final missing =
-      !source.has('promoteId')
-          ? 'promoteId'
-          : vtOptions == null || !vtOptions.has('promoteId')
-          ? 'workerOptions.geojsonVtOptions.promoteId'
-          : null;
+  final missing = !source.has('promoteId')
+      ? 'promoteId'
+      : vtOptions == null || !vtOptions.has('promoteId')
+      ? 'workerOptions.geojsonVtOptions.promoteId'
+      : null;
   if (missing != null) {
     _warnUnknownSource(missing);
     return false;

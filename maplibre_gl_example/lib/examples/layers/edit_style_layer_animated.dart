@@ -53,16 +53,17 @@ class _EditStyleLayerAnimatedBodyState
       vsync: this,
     );
 
-    _colorAnimation = ColorTween(
-      begin: Colors.blue,
-      end: Colors.purple,
-    ).animate(_colorAnimationController)..addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        unawaited(_colorAnimationController.reverse());
-      } else if (status == AnimationStatus.dismissed) {
-        unawaited(_colorAnimationController.forward());
-      }
-    });
+    _colorAnimation =
+        ColorTween(
+          begin: Colors.blue,
+          end: Colors.purple,
+        ).animate(_colorAnimationController)..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            unawaited(_colorAnimationController.reverse());
+          } else if (status == AnimationStatus.dismissed) {
+            unawaited(_colorAnimationController.forward());
+          }
+        });
 
     _colorAnimationController.addListener(() {
       unawaited(_updateLayerColors());
@@ -458,13 +459,12 @@ class _EditStyleLayerAnimatedBodyState
             ExampleButton(
               label: 'Reset Layers',
               icon: Icons.refresh,
-              onPressed:
-                  hasController
-                      ? () async {
-                        await _removeLayers();
-                        await _addStyleLayers();
-                      }
-                      : null,
+              onPressed: hasController
+                  ? () async {
+                      await _removeLayers();
+                      await _addStyleLayers();
+                    }
+                  : null,
             ),
             ExampleButton(
               label: 'Remove Layers',
@@ -480,10 +480,9 @@ class _EditStyleLayerAnimatedBodyState
             ExampleButton(
               label: _isAnimating ? 'Stop Color' : 'Animate Color',
               icon: _isAnimating ? Icons.stop : Icons.palette,
-              onPressed:
-                  hasController
-                      ? (_isAnimating ? _stopAnimation : _startColorAnimation)
-                      : null,
+              onPressed: hasController
+                  ? (_isAnimating ? _stopAnimation : _startColorAnimation)
+                  : null,
             ),
           ],
         ),

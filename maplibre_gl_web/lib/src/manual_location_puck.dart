@@ -130,11 +130,10 @@ class ManualLocationPuck {
     // [_updateAccuracyCircle]) to avoid per-update layout reflows.
     final accuracyWrapper =
         web.document.createElement('div') as web.HTMLDivElement;
-    final accuracyEl =
-        web.document.createElement('div') as web.HTMLDivElement
-          ..className = 'maplibregl-user-location-accuracy-circle'
-          ..style.width = '${_accuracyBaseDiameterPx}px'
-          ..style.height = '${_accuracyBaseDiameterPx}px';
+    final accuracyEl = web.document.createElement('div') as web.HTMLDivElement
+      ..className = 'maplibregl-user-location-accuracy-circle'
+      ..style.width = '${_accuracyBaseDiameterPx}px'
+      ..style.height = '${_accuracyBaseDiameterPx}px';
     accuracyWrapper.appendChild(accuracyEl);
     _accuracyEl = accuracyEl;
     _accuracyMarker =
@@ -154,13 +153,11 @@ class ManualLocationPuck {
     // Dot: reuses maplibre-gl-js' own class (blue dot + pulse). The bearing
     // arrow is a child element rotated via CSS transform (maplibre-gl-js ships
     // no built-in heading arrow class).
-    final dotEl =
-        web.document.createElement('div') as web.HTMLDivElement
-          ..className = 'maplibregl-user-location-dot';
-    final arrowEl =
-        web.document.createElement('div') as web.HTMLDivElement
-          ..className = 'maplibre-gl-manual-location-arrow'
-          ..style.display = 'none';
+    final dotEl = web.document.createElement('div') as web.HTMLDivElement
+      ..className = 'maplibregl-user-location-dot';
+    final arrowEl = web.document.createElement('div') as web.HTMLDivElement
+      ..className = 'maplibre-gl-manual-location-arrow'
+      ..style.display = 'none';
     dotEl.appendChild(arrowEl);
     _arrowEl = arrowEl;
     _dotMarker =
@@ -251,9 +248,8 @@ class ManualLocationPuck {
   void _injectStyle() {
     if (_styleInjected) return;
     _styleInjected = true;
-    final style =
-        web.document.createElement('style') as web.HTMLStyleElement
-          ..textContent = '''
+    final style = web.document.createElement('style') as web.HTMLStyleElement
+      ..textContent = '''
             .maplibre-gl-manual-location-arrow {
               position: absolute;
               left: 50%;

@@ -490,20 +490,19 @@ void main() {
 
     await pumpMap(
       tester,
-      builder:
-          (onMapCreated, onStyleLoaded) => MapLibreMap(
-            styleString: offlineStyle,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(0, 0),
-              zoom: 3,
-            ),
-            onMapCreated: (controller) {
-              badRange = errorOf(controller.setLayerZoomRange('x', 10, 2));
-              validRange = errorOf(controller.setLayerZoomRange('x', 2, 10));
-              onMapCreated(controller);
-            },
-            onStyleLoadedCallback: onStyleLoaded,
-          ),
+      builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+        styleString: offlineStyle,
+        initialCameraPosition: const CameraPosition(
+          target: LatLng(0, 0),
+          zoom: 3,
+        ),
+        onMapCreated: (controller) {
+          badRange = errorOf(controller.setLayerZoomRange('x', 10, 2));
+          validRange = errorOf(controller.setLayerZoomRange('x', 2, 10));
+          onMapCreated(controller);
+        },
+        onStyleLoadedCallback: onStyleLoaded,
+      ),
     );
 
     final bad = await pumpUntil(tester, badRange, 'bad range');

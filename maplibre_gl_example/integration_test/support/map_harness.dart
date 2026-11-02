@@ -114,19 +114,17 @@ Future<MapLibreMapController> pumpMap(
       home: Scaffold(
         body: Align(
           alignment: Alignment.topLeft,
-          child:
-              resizableSize == null
-                  ? SizedBox(width: size.width, height: size.height, child: map)
-                  : ValueListenableBuilder<Size>(
-                    valueListenable: resizableSize,
-                    builder:
-                        (context, size, child) => SizedBox(
-                          width: size.width,
-                          height: size.height,
-                          child: child,
-                        ),
-                    child: map,
+          child: resizableSize == null
+              ? SizedBox(width: size.width, height: size.height, child: map)
+              : ValueListenableBuilder<Size>(
+                  valueListenable: resizableSize,
+                  builder: (context, size, child) => SizedBox(
+                    width: size.width,
+                    height: size.height,
+                    child: child,
                   ),
+                  child: map,
+                ),
         ),
       ),
     ),

@@ -30,14 +30,13 @@ void main() {
     ) async {
       final controller = await pumpMap(
         tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: _camera,
-              symbolPlacementTransitionsEnabled: false,
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: onStyleLoaded,
-            ),
+        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+          styleString: offlineStyle,
+          initialCameraPosition: _camera,
+          symbolPlacementTransitionsEnabled: false,
+          onMapCreated: onMapCreated,
+          onStyleLoadedCallback: onStyleLoaded,
+        ),
       );
       await _addSymbols(tester, controller, pointCollection(count: 1));
 
@@ -91,17 +90,16 @@ void main() {
       var styleLoads = 0;
       final controller = await pumpMap(
         tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: _camera,
-              symbolPlacementTransitionsEnabled: false,
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: () {
-                styleLoads++;
-                onStyleLoaded();
-              },
-            ),
+        builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+          styleString: offlineStyle,
+          initialCameraPosition: _camera,
+          symbolPlacementTransitionsEnabled: false,
+          onMapCreated: onMapCreated,
+          onStyleLoadedCallback: () {
+            styleLoads++;
+            onStyleLoaded();
+          },
+        ),
       );
 
       await pumpUntil(
@@ -136,10 +134,9 @@ Future<void> _addSymbols(
   MapLibreMapController controller,
   Map<String, dynamic> data,
 ) async {
-  final png =
-      (await rootBundle.load(
-        'assets/symbols/custom-marker.png',
-      )).buffer.asUint8List();
+  final png = (await rootBundle.load(
+    'assets/symbols/custom-marker.png',
+  )).buffer.asUint8List();
   await pumpUntil(tester, controller.addImage('marker', png), 'addImage');
   await pumpUntil(
     tester,

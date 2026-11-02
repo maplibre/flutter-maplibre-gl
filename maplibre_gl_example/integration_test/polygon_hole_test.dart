@@ -55,11 +55,10 @@ bool get _onAndroid => testPlatform == TestPlatform.android;
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  for (final variant
-      in {
-        'same winding as the outer ring': _holeSameWinding,
-        'opposite winding (RFC 7946)': _holeSameWinding.reversed.toList(),
-      }.entries) {
+  for (final variant in {
+    'same winding as the outer ring': _holeSameWinding,
+    'opposite winding (RFC 7946)': _holeSameWinding.reversed.toList(),
+  }.entries) {
     group(variant.key, () {
       testWidgets('a tap in the hole taps the map', (tester) async {
         if (!_onAndroid) return;
@@ -183,21 +182,19 @@ Future<_MapProbe> _pumpHoledMap(
   List<List<double>> hole,
 ) async {
   final probe = _MapProbe(tester);
-  final controller =
-      probe.controller = await pumpMap(
-        tester,
-        builder:
-            (onMapCreated, onStyleLoaded) => MapLibreMap(
-              styleString: offlineStyle,
-              initialCameraPosition: const CameraPosition(
-                target: _center,
-                zoom: 10,
-              ),
-              onMapCreated: onMapCreated,
-              onStyleLoadedCallback: onStyleLoaded,
-              onMapClick: (_, latLng) => probe.clicks.add(latLng),
-            ),
-      );
+  final controller = probe.controller = await pumpMap(
+    tester,
+    builder: (onMapCreated, onStyleLoaded) => MapLibreMap(
+      styleString: offlineStyle,
+      initialCameraPosition: const CameraPosition(
+        target: _center,
+        zoom: 10,
+      ),
+      onMapCreated: onMapCreated,
+      onStyleLoadedCallback: onStyleLoaded,
+      onMapClick: (_, latLng) => probe.clicks.add(latLng),
+    ),
+  );
   controller.onFeatureTapped.add(
     (point, latLng, id, layerId, annotation) => probe.featureTaps.add(layerId),
   );

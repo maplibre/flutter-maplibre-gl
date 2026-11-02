@@ -157,8 +157,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       // The view decides the translucency, over the deprecated option.
       mapOptions.translucentTextureSurface =
           android.surface == AndroidMapSurface.translucentTextureView
-              ? true
-              : null;
+          ? true
+          : null;
     }
     return PgCreationParams(
       styleString: params['styleString'] as String?,
@@ -197,23 +197,20 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final locationSource = options['locationSource'] as String?;
     return PgMapOptions(
       compassEnabled: flag('compassEnabled'),
-      cameraTargetBounds:
-          targetBounds == null
-              ? null
-              : PgCameraTargetBounds(
-                bounds:
-                    targetBounds.first == null
-                        ? null
-                        : _pgLatLngBounds(targetBounds.first as List<dynamic>),
-              ),
+      cameraTargetBounds: targetBounds == null
+          ? null
+          : PgCameraTargetBounds(
+              bounds: targetBounds.first == null
+                  ? null
+                  : _pgLatLngBounds(targetBounds.first as List<dynamic>),
+            ),
       styleString: options['styleString'] as String?,
-      minMaxZoomPreference:
-          zoomRange == null
-              ? null
-              : PgMinMaxZoomPreference(
-                minZoom: (zoomRange[0] as num?)?.toDouble(),
-                maxZoom: (zoomRange[1] as num?)?.toDouble(),
-              ),
+      minMaxZoomPreference: zoomRange == null
+          ? null
+          : PgMinMaxZoomPreference(
+              minZoom: (zoomRange[0] as num?)?.toDouble(),
+              maxZoom: (zoomRange[1] as num?)?.toDouble(),
+            ),
       rotateGesturesEnabled: flag('rotateGesturesEnabled'),
       scrollGesturesEnabled: flag('scrollGesturesEnabled'),
       tiltGesturesEnabled: flag('tiltGesturesEnabled'),
@@ -231,18 +228,17 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         PgMyLocationRenderMode.values,
         'myLocationRenderMode',
       ),
-      myLocationStyle:
-          puckStyle == null
-              ? null
-              : PgMyLocationStyle(
-                fillColor: puckStyle['fillColor'] as int?,
-                bearingColor: puckStyle['bearingColor'] as int?,
-                accuracyColor: puckStyle['accuracyColor'] as int?,
-                accuracyCircleEnabled:
-                    puckStyle['accuracyCircleEnabled'] as bool? ?? true,
-                pulseEnabled: puckStyle['pulseEnabled'] as bool?,
-                pulseColor: puckStyle['pulseColor'] as int?,
-              ),
+      myLocationStyle: puckStyle == null
+          ? null
+          : PgMyLocationStyle(
+              fillColor: puckStyle['fillColor'] as int?,
+              bearingColor: puckStyle['bearingColor'] as int?,
+              accuracyColor: puckStyle['accuracyColor'] as int?,
+              accuracyCircleEnabled:
+                  puckStyle['accuracyCircleEnabled'] as bool? ?? true,
+              pulseEnabled: puckStyle['pulseEnabled'] as bool?,
+              pulseColor: puckStyle['pulseColor'] as int?,
+            ),
       logoEnabled: flag('logoEnabled'),
       logoViewPosition: enumAt(PgOrnamentPosition.values, 'logoViewPosition'),
       logoViewMargins: margins('logoViewMargins'),
@@ -258,12 +254,12 @@ class _MapLibreNativePlatform extends MapLibrePlatform
       ),
       attributionButtonMargins: margins('attributionButtonMargins'),
       attributionButtonColor: options['attributionButtonColor'] as int?,
-      locationEngineProperties:
-          engine == null ? null : _locationEngineProperties(engine),
-      locationSource:
-          locationSource == null
-              ? null
-              : PgLocationSource.values.byName(locationSource),
+      locationEngineProperties: engine == null
+          ? null
+          : _locationEngineProperties(engine),
+      locationSource: locationSource == null
+          ? null
+          : PgLocationSource.values.byName(locationSource),
       foregroundLoadColor: options['foregroundLoadColor'] as int?,
       translucentTextureSurface: flag('translucentTextureSurface'),
       featureTapsTriggersMapClick: flag('featureTapsTriggersMapClick'),
@@ -390,20 +386,19 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         speed: userLocation.speed,
         horizontalAccuracy: userLocation.horizontalAccuracy,
         verticalAccuracy: userLocation.verticalAccuracy,
-        heading:
-            heading == null
-                ? null
-                : UserHeading(
-                  magneticHeading: heading.magneticHeading,
-                  trueHeading: heading.trueHeading,
-                  headingAccuracy: heading.headingAccuracy,
-                  x: heading.x,
-                  y: heading.y,
-                  z: heading.z,
-                  timestamp: DateTime.fromMillisecondsSinceEpoch(
-                    heading.timestamp,
-                  ),
+        heading: heading == null
+            ? null
+            : UserHeading(
+                magneticHeading: heading.magneticHeading,
+                trueHeading: heading.trueHeading,
+                headingAccuracy: heading.headingAccuracy,
+                x: heading.x,
+                y: heading.y,
+                z: heading.z,
+                timestamp: DateTime.fromMillisecondsSinceEpoch(
+                  heading.timestamp,
                 ),
+              ),
         timestamp: DateTime.fromMillisecondsSinceEpoch(userLocation.timestamp),
       ),
     );
@@ -500,10 +495,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
         case 'zoomBy':
           return PgCameraUpdateZoomBy(
             amount: at(1),
-            focus:
-                values.length > 2
-                    ? _pgScreenPoint(values[2] as List<dynamic>)
-                    : null,
+            focus: values.length > 2
+                ? _pgScreenPoint(values[2] as List<dynamic>)
+                : null,
           );
         case 'zoomIn':
           return PgCameraUpdateZoomIn();
@@ -670,10 +664,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   Future<bool> editGeoJsonSource(String id, String data) {
     final input = (data, _featureIdsOf(id));
     return _writeGeoJson(id, () async {
-      final (json, reason) =
-          data.length > _geoJsonTextOffloadLength
-              ? await compute(_checkGeoJsonText, input)
-              : _checkGeoJsonText(input);
+      final (json, reason) = data.length > _geoJsonTextOffloadLength
+          ? await compute(_checkGeoJsonText, input)
+          : _checkGeoJsonText(input);
       if (reason != null) throw invalidGeoJson(id, reason);
       return _api.mapEditGeoJsonSource(id, json!);
     });
@@ -1044,10 +1037,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     Map<String, dynamic> geojsonFeature,
   ) {
     // A feature replaces the one with its id, so it keeps that id.
-    final ids =
-        _featureIdsOf(sourceId) == _FeatureIds.generate
-            ? _FeatureIds.asTheyAre
-            : _defaultFeatureIds;
+    final ids = _featureIdsOf(sourceId) == _FeatureIds.generate
+        ? _FeatureIds.asTheyAre
+        : _defaultFeatureIds;
     return _writeGeoJson(sourceId, () async {
       await _api.sourceSetFeature(
         sourceId,
@@ -1064,8 +1056,8 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   /// What the data the plugin sets to the source [sourceId] gets for its ids.
   _FeatureIds _featureIdsOf(String sourceId) =>
       _generatedIdSources.contains(sourceId)
-          ? _FeatureIds.generate
-          : _defaultFeatureIds;
+      ? _FeatureIds.generate
+      : _defaultFeatureIds;
 
   /// What the ids of GeoJSON data get on this platform, without `generateId`.
   static _FeatureIds get _defaultFeatureIds =>
@@ -1127,14 +1119,13 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     // A failed call must not block the calls queued behind it, so its error
     // is ignored for chaining purposes only. Callers still see it through
     // the future returned here.
-    final next =
-        pending.isEmpty
-            ? call()
-            : Future.wait(
-              pending.map(
-                (future) => future.then<void>((_) {}, onError: (_) {}),
-              ),
-            ).then((_) => call());
+    final next = pending.isEmpty
+        ? call()
+        : Future.wait(
+            pending.map(
+              (future) => future.then<void>((_) {}, onError: (_) {}),
+            ),
+          ).then((_) => call());
     for (final name in names) {
       _pendingCalls[name] = next;
     }
@@ -1188,10 +1179,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }) async {
     final encode = feature ? _checkAndEncodeFeature : _checkAndEncodeGeoJson;
     final input = (geojson, ids);
-    final (json, reason) =
-        encodesInBackground(geojson)
-            ? await compute(encode, input)
-            : encode(input);
+    final (json, reason) = encodesInBackground(geojson)
+        ? await compute(encode, input)
+        : encode(input);
     if (reason != null) {
       throw feature
           ? invalidGeoJsonFeature(sourceId, reason)
@@ -1278,8 +1268,9 @@ class _MapLibreNativePlatform extends MapLibrePlatform
     final marked = <int>[];
     final reason = check(
       geojson,
-      onFeature:
-          ids == _FeatureIds.markStringIds ? _collectStringIds(marked) : null,
+      onFeature: ids == _FeatureIds.markStringIds
+          ? _collectStringIds(marked)
+          : null,
     );
     if (reason != null) return (null, reason);
     return switch (ids) {
@@ -1325,13 +1316,14 @@ class _MapLibreNativePlatform extends MapLibrePlatform
 
   /// Adds to [indexes] the index of each feature whose id is text that reads
   /// as a number.
-  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) => (
-    index,
-    feature,
-  ) {
-    final id = feature['id'];
-    if (id is String && _numericText.hasMatch(id)) indexes.add(index);
-  };
+  static GeoJsonFeatureVisitor _collectStringIds(List<int> indexes) =>
+      (
+        index,
+        feature,
+      ) {
+        final id = feature['id'];
+        if (id is String && _numericText.hasMatch(id)) indexes.add(index);
+      };
 
   /// [geojson] with [_stringIdMarker] in the properties of the features at
   /// [indexes]: a FeatureCollection's, or 0 for a Feature. Returns [geojson]

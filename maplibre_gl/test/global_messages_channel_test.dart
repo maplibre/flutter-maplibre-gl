@@ -712,29 +712,21 @@ void main() {
         'another completedResourceSize': (e) => e.completedResourceSize = 1,
         'another errorCode': (e) => e.errorCode = 'other',
         'another errorMessage': (e) => e.errorMessage = 'other',
-        'another value in errorDetails':
-            (e) =>
-                e.errorDetails = {
-                  'urls': ['a', 'c'],
-                  'retry': true,
-                },
-        'a shorter list in errorDetails':
-            (e) =>
-                e.errorDetails = {
-                  'urls': ['a'],
-                  'retry': true,
-                },
-        'another key in errorDetails':
-            (e) =>
-                e.errorDetails = {
-                  'urls': ['a', 'b'],
-                  'retries': true,
-                },
-        'fewer entries in errorDetails':
-            (e) =>
-                e.errorDetails = {
-                  'urls': ['a', 'b'],
-                },
+        'another value in errorDetails': (e) => e.errorDetails = {
+          'urls': ['a', 'c'],
+          'retry': true,
+        },
+        'a shorter list in errorDetails': (e) => e.errorDetails = {
+          'urls': ['a'],
+          'retry': true,
+        },
+        'another key in errorDetails': (e) => e.errorDetails = {
+          'urls': ['a', 'b'],
+          'retries': true,
+        },
+        'fewer entries in errorDetails': (e) => e.errorDetails = {
+          'urls': ['a', 'b'],
+        },
       };
 
       for (final MapEntry(key: field, value: change) in changes.entries) {
@@ -749,10 +741,11 @@ void main() {
       test('any two NaN progress values are equal and hash alike', () {
         // A NaN with other bits than double.nan, so the two are not
         // identical and the comparison has to look at the values.
-        final otherNaN = (ByteData(8)
-              ..setUint32(0, 0x7FF80000)
-              ..setUint32(4, 1))
-            .getFloat64(0);
+        final otherNaN =
+            (ByteData(8)
+                  ..setUint32(0, 0x7FF80000)
+                  ..setUint32(4, 1))
+                .getFloat64(0);
         final a = PgOfflineDownloadEvent(
           status: PgOfflineDownloadStatus.progress,
           progress: double.nan,

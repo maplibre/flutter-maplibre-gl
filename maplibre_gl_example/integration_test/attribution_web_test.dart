@@ -39,9 +39,8 @@ void main() {
       if (!kIsWeb) return;
       await pumpMap(
         tester,
-        builder:
-            (onMapCreated, onStyleLoaded) =>
-                _map(onMapCreated, onStyleLoaded, enabled: false),
+        builder: (onMapCreated, onStyleLoaded) =>
+            _map(onMapCreated, onStyleLoaded, enabled: false),
       );
 
       expect(_attributions(), 0);
@@ -51,9 +50,8 @@ void main() {
       if (!kIsWeb) return;
       await pumpMap(
         tester,
-        builder:
-            (onMapCreated, onStyleLoaded) =>
-                _map(onMapCreated, onStyleLoaded, enabled: true),
+        builder: (onMapCreated, onStyleLoaded) =>
+            _map(onMapCreated, onStyleLoaded, enabled: true),
       );
 
       expect(_attributions(), 1);
@@ -134,14 +132,13 @@ void main() {
 
 /// The number of attribution controls in the page, or in the control corner
 /// matched by [corner].
-int _attributions([String? corner]) =>
-    web.document
-        .querySelectorAll(
-          corner == null
-              ? '.maplibregl-ctrl-attrib'
-              : '$corner .maplibregl-ctrl-attrib',
-        )
-        .length;
+int _attributions([String? corner]) => web.document
+    .querySelectorAll(
+      corner == null
+          ? '.maplibregl-ctrl-attrib'
+          : '$corner .maplibregl-ctrl-attrib',
+    )
+    .length;
 
 MapLibreMap _map(
   MapCreatedCallback onMapCreated,

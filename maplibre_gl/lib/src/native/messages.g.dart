@@ -2376,8 +2376,9 @@ class MapLibreGlobalHostApi {
     BinaryMessenger? binaryMessenger,
     String messageChannelSuffix = '',
   }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix =
-           messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
+           ? '.$messageChannelSuffix'
+           : '';
 
   final BinaryMessenger? pigeonVar_binaryMessenger;
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -2770,8 +2771,9 @@ abstract class MapLibreOfflineDownloadFlutterApi {
     BinaryMessenger? binaryMessenger,
     String messageChannelSuffix = '',
   }) {
-    messageChannelSuffix =
-        messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty
+        ? '.$messageChannelSuffix'
+        : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.maplibre_gl.MapLibreOfflineDownloadFlutterApi.onDownloadEvent$messageChannelSuffix',
@@ -2816,8 +2818,9 @@ class MapLibreMapHostApi {
     BinaryMessenger? binaryMessenger,
     String messageChannelSuffix = '',
   }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix =
-           messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
+           ? '.$messageChannelSuffix'
+           : '';
 
   final BinaryMessenger? pigeonVar_binaryMessenger;
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -4846,8 +4849,9 @@ abstract class MapLibreMapFlutterApi {
     BinaryMessenger? binaryMessenger,
     String messageChannelSuffix = '',
   }) {
-    messageChannelSuffix =
-        messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty
+        ? '.$messageChannelSuffix'
+        : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapFlutterApi.featureOnTap$messageChannelSuffix',

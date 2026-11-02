@@ -218,8 +218,8 @@ class _MapGesturesBodyState extends State<_MapGesturesBody> {
                 ExampleSegment(value: PanInertia.normal, label: 'Normal'),
               ],
               selected: _panInertia,
-              onSelectionChanged:
-                  (value) => setState(() => _panInertia = value),
+              onSelectionChanged: (value) =>
+                  setState(() => _panInertia = value),
             ),
           ],
         ),

@@ -78,8 +78,9 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
 
   // Current stacking order, topmost layer first. Kept in sync with the
   // native layer stack via [MapLibreMapController.moveLayer].
-  final List<String> _layerOrder =
-      _demoLayers.reversed.map((l) => l.id).toList();
+  final List<String> _layerOrder = _demoLayers.reversed
+      .map((l) => l.id)
+      .toList();
 
   void _onMapCreated(MapLibreMapController controller) {
     setState(() => _controller = controller);
@@ -190,9 +191,8 @@ class _MoveLayerExampleBodyState extends State<_MoveLayerExampleBody> {
               physics: const NeverScrollableScrollPhysics(),
               buildDefaultDragHandles: false,
               itemCount: _layerOrder.length,
-              onReorderItem:
-                  (oldIndex, newIndex) =>
-                      unawaited(_onReorder(oldIndex, newIndex)),
+              onReorderItem: (oldIndex, newIndex) =>
+                  unawaited(_onReorder(oldIndex, newIndex)),
               itemBuilder: (context, index) {
                 final layerId = _layerOrder[index];
                 final layer = _layerFor(layerId);

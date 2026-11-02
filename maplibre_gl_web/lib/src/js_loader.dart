@@ -113,8 +113,9 @@ abstract final class MapLibreJsLoader {
     }
 
     final scriptUrl = source.scriptUrl ?? defaultScriptUrl;
-    final styleUrl =
-        source.scriptUrl == null ? defaultStyleUrl : source.styleUrl;
+    final styleUrl = source.scriptUrl == null
+        ? defaultStyleUrl
+        : source.styleUrl;
 
     // The stylesheet must not be fatal: it only affects how the controls and
     // the location puck look, so a blocked maplibre-gl.css must not take the
@@ -228,10 +229,9 @@ abstract final class MapLibreJsLoader {
 
   static Future<void> _injectStylesheet(String url) {
     final completer = Completer<void>();
-    final link =
-        web.document.createElement('link') as web.HTMLLinkElement
-          ..rel = 'stylesheet'
-          ..href = url;
+    final link = web.document.createElement('link') as web.HTMLLinkElement
+      ..rel = 'stylesheet'
+      ..href = url;
     link.addEventListener(
       'load',
       ((web.Event _) {

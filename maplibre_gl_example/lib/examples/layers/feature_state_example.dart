@@ -206,14 +206,13 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
     // Re-read the last touched feature so the panel keeps showing the
     // platform truth instead of a stale map.
     final lastId = _lastTouchedId;
-    final reported =
-        lastId == null
-            ? null
-            : await _readStateUntil(
-              controller,
-              lastId,
-              (state) => state?['selected'] != true,
-            );
+    final reported = lastId == null
+        ? null
+        : await _readStateUntil(
+            controller,
+            lastId,
+            (state) => state?['selected'] != true,
+          );
 
     if (mounted) {
       setState(() {
@@ -268,10 +267,9 @@ class _FeatureStateBodyState extends State<_FeatureStateBody> {
                   label: 'Clear all',
                   icon: Icons.clear,
                   style: ExampleButtonStyle.tonal,
-                  onPressed:
-                      _selectedIds.isEmpty
-                          ? null
-                          : () => unawaited(_clearAll()),
+                  onPressed: _selectedIds.isEmpty
+                      ? null
+                      : () => unawaited(_clearAll()),
                 ),
               ],
             ),
