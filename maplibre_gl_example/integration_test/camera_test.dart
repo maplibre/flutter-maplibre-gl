@@ -1583,16 +1583,21 @@ void main() {
         'toScreenLocation $point',
       );
       // The inset and the padding leave a 260 x 160 area from (20, 20) to
-      // (280, 180), centered at (150, 100). The height limits the fit.
+      // (280, 180), centered at (150, 100). The height limits the fit. The
+      // center is there from the start, so wait for the animated zoom too.
       await pumpUntilValue(
         tester,
-        () => screen(const LatLng(0, 0)),
-        (point) => (point.x - 150).abs() < 3 && (point.y - 100).abs() < 3,
-        'bounds centered in the padded area',
+        () async => (
+          center: await controller.toScreenLocation(const LatLng(0, 0)),
+          north: await controller.toScreenLocation(const LatLng(10, 0)),
+        ),
+        (points) =>
+            (points.center.x - 150).abs() < 3 &&
+            (points.center.y - 100).abs() < 3 &&
+            (points.north.y - 20).abs() < 3,
+        'bounds fitted to the padded area',
       );
-      final north = await screen(const LatLng(10, 0));
       final south = await screen(const LatLng(-10, 0));
-      expect(north.y, closeTo(20, 3), reason: 'north edge $north');
       expect(south.y, closeTo(180, 3), reason: 'south edge $south');
 
       // The inset is still on after the fit and the padding is not: a later
