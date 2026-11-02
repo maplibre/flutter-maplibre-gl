@@ -65,9 +65,9 @@ temp/
 # AI Tools
 .claude
 
-# MkDocs
+# Docs site (Zensical)
 website/site/
 website/.venv/
 # Local copy of the Flutter web demo, so the live-demo iframes resolve during
-# `mkdocs serve`. In production CI assembles it into the Pages bundle instead.
+# `zensical serve`. In production CI assembles it into the Pages bundle instead.
 website/docs/demo/
