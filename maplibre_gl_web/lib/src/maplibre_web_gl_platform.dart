@@ -92,6 +92,9 @@ class MapLibreMapController extends MapLibrePlatform
   /// onCameraMoveStarted.
   bool _skipCameraMoveStarted = false;
 
+  /// Whether `cameraTargetBounds` moved the target of the last camera change.
+  bool _targetClamped = false;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -1460,9 +1463,28 @@ class MapLibreMapController extends MapLibrePlatform
 
   // Positions go out only while [_trackCameraPosition] is on, as on Android
   // and iOS.
-  void _onCameraMove(_) {
+  void _onCameraMove(Event e) {
+    _stopInertiaAtTargetBounds(e);
     if (!_trackCameraPosition) return;
     onCameraMovePlatform(_readCameraPosition());
+  }
+
+  /// Ends the glide after a drag once `cameraTargetBounds` stops it, as on
+  /// Android. The map stands at the edge, but maplibre-gl-js would go on
+  /// easing towards the target outside, firing moves at the same place
+  /// before its moveend. Its frames carry the event that ended the drag.
+  void _stopInertiaAtTargetBounds(Event e) {
+    if (!_targetClamped) return;
+    final type = (e.jsObject as JSObject)
+        .getProperty<JSObject?>('originalEvent'.toJS)
+        ?.getProperty<JSString?>('type'.toJS)
+        ?.toDart;
+    if (type != 'mouseup' && type != 'touchend' && type != 'pointerup') {
+      return;
+    }
+    _targetClamped = false;
+    // Not from inside the frame that fired this move.
+    scheduleMicrotask(_map.stop);
   }
 
   void _onCameraIdle(_) {
@@ -1731,18 +1753,38 @@ class MapLibreMapController extends MapLibrePlatform
     }
   }
 
+  /// Limits the camera target, the center of the view, to [bounds], as on
+  /// Android. maplibre-gl-js `setMaxBounds` is not used: it keeps the whole
+  /// visible area inside the bounds, so it zooms in. The clamp runs on every
+  /// camera change, from gestures and camera calls, and leaves zoom, tilt and
+  /// bearing alone.
   @override
   void setCameraTargetBounds(LatLngBounds? bounds) {
     if (bounds == null) {
-      _map.setMaxBounds(null);
-    } else {
-      _map.setMaxBounds(
-        LngLatBounds(
-          LngLat(bounds.southwest.longitude, bounds.southwest.latitude),
-          LngLat(bounds.northeast.longitude, bounds.northeast.latitude),
-        ),
-      );
+      _map.setCenterClamp(null);
+      _targetClamped = false;
+      return;
     }
+    _map.setCenterClamp((lng, lat) {
+      final clamped = clampCameraTarget(lat, lng, bounds);
+      _targetClamped = clamped != null;
+      return clamped;
+    });
+    // The clamp runs on the next camera change only: a target outside the new
+    // bounds moves in now, without animation.
+    final center = _map.getCenter();
+    final clamped = clampCameraTarget(
+      center.lat.toDouble(),
+      center.lng.toDouble(),
+      bounds,
+    );
+    if (clamped == null) return;
+    _cancelCameraAnimation();
+    final idleHeld = _stopCamera();
+    _startCameraMove(
+      idleHeld,
+      () => _map.jumpTo(CameraOptions(center: center)),
+    );
   }
 
   @override

@@ -98,6 +98,7 @@
 * **iOS**: `getTelemetryEnabled` answers `false` and `setTelemetryEnabled` does nothing, as on Android and web: MapLibre collects no telemetry. iOS stored the flag and answered it back (#1142).
 * **iOS, Web**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, without `onUserLocationUpdated` meanwhile. Web throws `MANUAL_LOCATION_SOURCE_DISABLED` without the manual source, as Android and iOS (#1142).
 * **Android**: `updateManualLocation` works on every map created with `ManualLocationSource()`: with `myLocationEnabled` off the location is kept and the puck appears there when it is turned on, instead of throwing `LOCATION_COMPONENT_NOT_READY` when the map was created with the location off (#1143).
+* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android and as documented, instead of keeping the whole visible area inside them. The map no longer zooms in to fit the bounds and can show the area around them; a camera call to a target outside the bounds stops at the nearest point inside (#793).
 
 ### Fixed
 * **Android**: with `doubleClickZoomEnabled: false`, a tap is reported when the finger lifts, as on iOS, instead of after the double-tap timeout of about 300 ms, and two quick taps are two taps instead of none. With double-tap zoom on, taps still wait for the timeout on both platforms (#1162).

@@ -97,6 +97,56 @@ extension MLNCoordinateBounds {
     func toPigeon() -> PgLatLngBounds {
         return PgLatLngBounds(southwest: sw.toPigeon(), northeast: ne.toPigeon())
     }
+
+    /// The bounds with south below north and west left of east, as Android's
+    /// `LatLngBounds.Builder` makes them. A west east of the east never spans
+    /// the antimeridian: it spans the longitudes between the two.
+    var ordered: MLNCoordinateBounds {
+        return MLNCoordinateBounds(
+            sw: CLLocationCoordinate2D(
+                latitude: min(sw.latitude, ne.latitude),
+                longitude: min(sw.longitude, ne.longitude)
+            ),
+            ne: CLLocationCoordinate2D(
+                latitude: max(sw.latitude, ne.latitude),
+                longitude: max(sw.longitude, ne.longitude)
+            )
+        )
+    }
+
+    /// The nearest point inside the ordered bounds to `coordinate`, latitude and
+    /// longitude clamped apart as MapLibre Native's `LatLngBounds::constrain`
+    /// does, or nil when `coordinate` is inside. A longitude is also tried a
+    /// world away: MLNMapView wraps it, so past the antimeridian the nearest
+    /// edge is the one across it. `tolerance`, in degrees, absorbs the rounding
+    /// of a camera already on an edge.
+    func clamping(
+        _ coordinate: CLLocationCoordinate2D,
+        tolerance: CLLocationDegrees = 1e-9
+    ) -> CLLocationCoordinate2D? {
+        func distance(_ value: Double, from low: Double, to high: Double) -> Double {
+            return max(low - value, value - high, 0)
+        }
+        let longitude = [
+            coordinate.longitude,
+            coordinate.longitude - 360,
+            coordinate.longitude + 360,
+        ].min {
+            distance($0, from: sw.longitude, to: ne.longitude)
+                < distance($1, from: sw.longitude, to: ne.longitude)
+        }!
+        let latitudeOutside = distance(coordinate.latitude, from: sw.latitude, to: ne.latitude) > tolerance
+        let longitudeOutside = distance(longitude, from: sw.longitude, to: ne.longitude) > tolerance
+        guard latitudeOutside || longitudeOutside else { return nil }
+        return CLLocationCoordinate2D(
+            latitude: latitudeOutside
+                ? min(max(coordinate.latitude, sw.latitude), ne.latitude)
+                : coordinate.latitude,
+            longitude: longitudeOutside
+                ? min(max(longitude, sw.longitude), ne.longitude)
+                : coordinate.longitude
+        )
+    }
 }
 
 extension PgLatLng {

@@ -53,6 +53,10 @@ enum PanInertia {
 /// Used with [MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
 /// from not specifying anything (null `CameraTargetBounds`).
+///
+/// The bounds constrain the center of the map view, for gestures and camera
+/// calls. A target outside them is moved to the nearest point inside. They set
+/// no minimum zoom, so the map can show area outside the bounds.
 @immutable
 class CameraTargetBounds {
   /// Creates a camera target bounds with the specified bounding box, or null
