@@ -618,7 +618,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     func mapTakeSnapshot(width: Int64?, height: Int64?, result: @escaping FlutterResult) {
-        guard let styleURL = snapshotStyleURL() else {
+        // styleURL is set before the style loads, so check the style, as
+        // Android does.
+        guard mapView.style != nil, let styleURL = snapshotStyleURL() else {
             result(FlutterError(
                 code: "STYLE_NOT_READY",
                 message: "Map style is not loaded",
@@ -4182,7 +4184,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         if !styleIsJSON {
             return mapView.styleURL
         }
-        guard mapView.style != nil, let data = mapView.styleJSON.data(using: .utf8) else {
+        guard let data = mapView.styleJSON.data(using: .utf8) else {
             return nil
         }
         let file = FileManager.default.temporaryDirectory

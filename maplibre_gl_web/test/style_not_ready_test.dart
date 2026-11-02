@@ -119,6 +119,24 @@ void main() {
     });
   }
 
+  test('takeSnapshot throws STYLE_NOT_READY before the style loads', () async {
+    final recorded = <String>[];
+    final controller = MapLibreMapController()
+      ..debugSetMap(
+        MapLibreMap.fromJsObject(recordingMap(recorded) as MapLibreMapJsImpl),
+      );
+
+    // The message of Android and iOS for this call.
+    await expectLater(
+      controller.takeSnapshot(),
+      throwsA(
+        isA<PlatformException>()
+            .having((e) => e.code, 'code', 'STYLE_NOT_READY')
+            .having((e) => e.message, 'message', 'Map style is not loaded'),
+      ),
+    );
+  });
+
   // An empty list changes nothing, so it needs no style, as on Android and
   // iOS.
   test('setLayersVisibility with no ids answers an empty list', () async {
