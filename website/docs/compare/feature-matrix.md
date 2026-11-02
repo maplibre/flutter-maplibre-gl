@@ -131,4 +131,4 @@ What works on each platform. flutter-maplibre-gl uses MapLibre Native on Android
     `pauseMap()` and `resumeMap()` are no-ops on web rather than errors, so no `kIsWeb` guard is needed around them. See [Startup & Performance](../advanced/performance.md#pause-maps-that-are-off-screen).
 
 !!! note "Camera animation easing"
-    `easeCamera`'s `CameraAnimationInterpolation` is partial on Android: the Android SDK exposes only a linear-or-not easing flag, so `easeInOut`, `easeOut` and `fastOutLinearIn` all render as the native ease-in/ease-out curve. iOS and web implement all four curves.
+    `easeCamera`'s `CameraAnimationInterpolation` is partial on Android and iOS. The Android SDK exposes only a linear-or-not easing flag, so `easeInOut`, `easeOut` and `fastOutLinearIn` all ease out along MapLibre Native's own curve. The iOS SDK can only ease along curves starting with the control point `(0, 0)`: `easeOut` is exact, `fastOutLinearIn` within 1%, and `easeInOut` eases out as on Android. Web implements all four curves.
