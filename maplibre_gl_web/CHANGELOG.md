@@ -63,6 +63,7 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 * A GeoJSON, image or raster-dem source url and the url of `editGeoJsonUrl` are percent-encoded as on Android and iOS, so a url with a space loads, and `editGeoJsonUrl` answers `false` for an empty url. Tile source `bounds` that cross the antimeridian take every longitude, so their tiles load (#1123).
 * Feature ids come back from the queries and the cluster calls as they are in the data: `"2"` and `2.5` no longer turn into `2`, and string ids such as `"poi-12"` are no longer lost. `["id"]` filters, feature state and the tap, drag and hover callbacks use the same ids. A source the app gives a `promoteId` keeps it, and a source with `generateId` keeps the ids MapLibre GL JS generates (#1124).
 * `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1158).
+* `takeSnapshot` before the style has loaded throws `STYLE_NOT_READY`, as on Android and iOS, instead of taking a snapshot of the style still loading (#1187).
 
 ## [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.0...v0.27.1)
 
