@@ -100,7 +100,7 @@ android {
         // then nothing from Google is downloaded or compiled, and high accuracy uses the platform
         // LocationManager (#1014).
         if (useGooglePlayServicesLocation) {
-            implementation 'com.google.android.gms:play-services-base:18.10.1'
+            implementation 'com.google.android.gms:play-services-base:18.11.1'
             implementation 'com.google.android.gms:play-services-location:21.4.0'
         }
     }
