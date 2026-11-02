@@ -201,7 +201,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
   * In add-to-app, the offline downloads of a destroyed Flutter engine no longer send events to it.
 * **iOS**: `CameraPosition.zoom` in `onCameraMove`, `onCameraIdle` and `cameraPosition` no longer drifts by floating point noise while the map pans. It is bit-identical between events, as on Android and web (#1155).
 * **iOS, Web**: `animateCamera`, `easeCamera` or `moveCamera` during a fling or a running animation fires `onCameraIdle` once, when the camera settles, as on Android. It also fired where the earlier motion stopped, followed by a second `onCameraMoveStarted` (#1156, #1158).
-* Invalid filters and camera durations fail the same way on every platform (#TBD):
+* Invalid filters and camera durations fail the same way on every platform (#1184):
   * A filter with a NaN or infinite number, which JSON cannot hold, throws `INVALID_EXPRESSION` in `setLayerFilter`, the layer adds and the queries. Android and iOS threw a `JsonUnsupportedObjectError`, and web passed the number on to MapLibre GL JS.
   * `animateCamera` and `easeCamera` throw an `ArgumentError` for a negative duration, as `setTrackingCameraOptions` does. Android failed with a generic error, iOS used its default duration, and web passed it on to MapLibre GL JS.
 
