@@ -190,6 +190,47 @@ class MapLibreMap extends Camera {
   MapLibreMap setMaxBounds(LngLatBounds? bounds) =>
       MapLibreMap.fromJsObject(jsObject.setMaxBounds(bounds?.jsObject));
 
+  /// Sets or clears a clamp on the camera center. [clampCenter] gets the
+  /// center the camera is about to take, as longitude and latitude, and returns
+  /// the center to use instead, or null to keep it. Zoom, pitch and bearing are
+  /// never touched. It runs for gestures and for `jumpTo`, `easeTo` and
+  /// `flyTo` alike. A null [clampCenter] removes the clamp.
+  ///
+  /// Unlike [setMaxBounds], which keeps the whole visible area inside the
+  /// bounds and so forces a minimum zoom, this limits the center only.
+  void setCenterClamp(
+    ({double lng, double lat})? Function(double lng, double lat)? clampCenter,
+  ) {
+    final JSFunction? transform = clampCenter == null
+        ? null
+        : ((JSObject state) {
+            final result = JSObject();
+            final center = state.getProperty<JSObject?>('center'.toJS);
+            if (center != null) {
+              final next = clampCenter(
+                center.getProperty<JSNumber>('lng'.toJS).toDartDouble,
+                center.getProperty<JSNumber>('lat'.toJS).toDartDouble,
+              );
+              if (next != null) {
+                final clamped = LngLat(next.lng, next.lat).jsObject as JSObject;
+                result.setProperty('center'.toJS, clamped);
+              }
+            }
+            return result;
+          }).toJS;
+    // Library 6 has a setter; 5 has the property on the map itself.
+    if ((jsObject as JSObject)
+        .hasProperty('setTransformCameraUpdate'.toJS)
+        .toDart) {
+      jsObject.setTransformCameraUpdate(transform);
+    } else {
+      (jsObject as JSObject).setProperty(
+        'transformCameraUpdate'.toJS,
+        transform,
+      );
+    }
+  }
+
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
   ///  the map will zoom to the new minimum.

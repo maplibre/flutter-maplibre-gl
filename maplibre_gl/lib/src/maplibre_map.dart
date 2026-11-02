@@ -265,6 +265,11 @@ class MapLibreMap extends StatefulWidget {
   final bool symbolPlacementTransitionsEnabled;
 
   /// Geographical bounding box for the camera target.
+  ///
+  /// Only the center of the map view is bounded, for gestures and camera calls
+  /// alike. A target outside the bounds is moved to the nearest point inside.
+  /// There is no minimum zoom, so the map can show area outside the bounds.
+  /// Android, iOS and web behave the same.
   final CameraTargetBounds cameraTargetBounds;
 
   /// A MapLibre GL style document defining the map's appearance.

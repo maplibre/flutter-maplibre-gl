@@ -1,6 +1,6 @@
 # Camera Bounds
 
-Constrain the camera so users can't pan outside a geographic area or zoom beyond specified levels. Useful for apps focused on a specific region.
+Keep the camera target inside a geographic area, or limit the zoom levels. Useful for apps focused on a specific region.
 
 ## Constrain geographic bounds
 
@@ -21,7 +21,11 @@ MapLibreMap(
 )
 ```
 
-Users cannot pan outside the specified bounds. The map snaps back if they try.
+The bounds limit the camera target, the center of the map view. The target stays inside them for gestures and for camera calls such as `moveCamera` and `animateCamera`. A target outside the bounds is moved to the nearest point inside them, so the map stops at the edge.
+
+The bounds set no minimum zoom and do not clip the map: a zoomed out map can show area outside them. To keep the user from zooming out that far, set `minMaxZoomPreference`. Zoom, bearing and tilt are not changed by the bounds. When you change the bounds while the target is outside the new ones, the target moves inside at once.
+
+The map behaves the same on Android, iOS and web, with one difference on web: when a drag goes past the edge and comes back in the same gesture, the map moves again only once the pointer is back where the target reached the edge.
 
 ## Remove bounds constraint
 
@@ -45,16 +49,6 @@ MapLibreMap(
 
 Constraining the camera and moving it to a region are different jobs. For the
 one-off move, see [Fit a bounding box](camera-controls.md#fit-a-bounding-box).
-
-## Platform notes
-
-!!! info "iOS implementation"
-    iOS lacks a native `setLatLngBoundsForCameraTarget` API equivalent to Android's. The current iOS implementation intercepts camera movement via the delegate's `shouldChangeFrom:to:` method and rejects out-of-bounds positions.
-
-    **Known caveats on iOS:**
-    - Only blocks user gestures (pan, pinch). Programmatic `animateCamera()` calls are not blocked.
-    - No per-axis clamping: diagonal pans near the boundary may feel slightly sticky.
-    - Android has the more complete implementation.
 
 ## Key APIs
 

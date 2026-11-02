@@ -19,6 +19,7 @@ import 'android_feature_drag_test.dart' as android_feature_drag;
 import 'android_tap_timing_test.dart' as android_tap_timing;
 import 'annotations_test.dart' as annotations;
 import 'attribution_test.dart' as attribution;
+import 'camera_target_bounds_test.dart' as camera_target_bounds;
 import 'camera_test.dart' as camera;
 import 'feature_id_test.dart' as feature_id;
 import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
@@ -42,6 +43,7 @@ void main() {
   android_tap_timing.main();
   annotations.main();
   attribution.main();
+  camera_target_bounds.main();
   camera.main();
   feature_id.main();
   feature_hit_tolerance.main();
