@@ -98,6 +98,7 @@ nav:
       - Annotations vs Style Layers: concepts/annotations-vs-layers.md
       - Working with GeoJSON: concepts/geojson.md
       - Map Styles: concepts/styles.md
+      - Errors: concepts/errors.md
     - Camera:
       - camera/index.md
       - Camera Controls: camera/camera-controls.md

@@ -1,8 +1,10 @@
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
+The interface shared by the platform packages of [`maplibre_gl`](https://pub.dev/packages/maplibre_gl). Apps depend on `maplibre_gl`, whose [changelog](https://pub.dev/packages/maplibre_gl/changelog) covers every platform; this one matters to platform packages and tests with fakes.
+
 ### Actions needed
 * Flutter 3.44 and Dart 3.12 are the minimum (#1177).
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed: extend `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) shows (#1133).
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed: extend `MapLibrePlatform` or `MapLibreGlobalPlatform` instead, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#tests-and-platform-packages) shows (#1133).
 * `onCameraMoveStartedPlatform` no longer takes `null`: pass `CameraMoveReason.programmatic`, or `gesture` for a move of the user (#1159).
 * `MapLibrePlatform.addHeatmapLayer` takes a `filter`, so an override has to add it (#1088).
 

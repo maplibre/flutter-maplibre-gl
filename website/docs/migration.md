@@ -2,126 +2,64 @@
 
 ## Upgrading to 0.28.0
 
-0.28.0 makes Android, iOS and web behave the same: the same error codes, the same results, the same gestures. Most apps compile unchanged. Check the sections below if your app calls `setLayerFilter`, catches platform errors, or works around a platform quirk.
+0.28.0 makes Android, iOS and web behave the same, where possible. Most apps compile unchanged: raise the minimum versions, then go through the sections below in order, skipping those that do not apply to your app.
 
-Update your `pubspec.yaml`:
+Update your `pubspec.yaml`, then run `flutter pub upgrade maplibre_gl`:
 
 ```yaml
 dependencies:
   maplibre_gl: ^0.28.0
 ```
 
-Then run `flutter pub upgrade maplibre_gl`. The [CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) lists every change.
+!!! tip "Using an AI coding agent?"
+    Give it this page and ask it to apply the changes to your app and list what it could not check.
 
 ### Minimum versions
 
 * Flutter 3.44 and Dart 3.12. Apps on an older Flutter stay on 0.27.x.
-* iOS 15.5, which MapLibre iOS 7 requires: raise `IPHONEOS_DEPLOYMENT_TARGET` in Xcode and, with CocoaPods, `platform :ios, '15.5'` in `ios/Podfile`.
-* Android API 24 (`minSdkVersion`), the default of Flutter 3.44 apps: raise a lower `minSdk` in `android/app/build.gradle`.
+* iOS 15.5: raise `IPHONEOS_DEPLOYMENT_TARGET` in Xcode and, with CocoaPods, `platform :ios, '15.5'` in `ios/Podfile`.
+* Android API 24: raise a lower `minSdk` in `android/app/build.gradle`.
 
 Flutter 3.44 builds the iOS plugin with Swift Package Manager, and MapLibre iOS no longer publishes to CocoaPods. If your app turned [Swift Package Manager](getting-started.md#swift-package-manager) off, turn it back on. Add-to-app modules keep using CocoaPods.
 
-### Layer filters
-
-`setLayerFilter` returns `Future<void>` and throws on failure instead of returning `false`. It also takes the filter as an expression list, besides a JSON string:
-
-```dart
-// Before
-final ok = await controller.setLayerFilter('pois', filterJson);
-if (!ok) showError();
-
-// After
-try {
-  await controller.setLayerFilter('pois', filter);
-} on PlatformException catch (e) {
-  showError(e.code); // LAYER_NOT_FOUND_ERROR, INVALID_LAYER_TYPE or INVALID_EXPRESSION
-}
-```
-
-`setFilter` and `getFilter` keep working as deprecated aliases. `setLayerFilter(id, null)` and `removeLayerFilter(id)` remove a filter.
-
 ### Error codes
 
-Every platform reports the same codes, in `SCREAMING_SNAKE_CASE`. The iOS codes are renamed:
-
-| Before (iOS) | 0.28.0 |
-|---|---|
-| `layerNotFound` | `LAYER_NOT_FOUND_ERROR` |
-| `invalidExpression` | `INVALID_EXPRESSION` |
-| `invalidLayerType` | `INVALID_LAYER_TYPE` |
-| `sourceAlreadyExists`, `duplicateSource` | `SOURCE_ALREADY_EXISTS` |
-| `layerAlreadyExists`, `duplicateLayer` | `LAYER_ALREADY_EXISTS` |
-| `styleNotFound` | `STYLE_NOT_READY` |
-| `sourceNotFound`, `noSuchSource` | `SOURCE_NOT_FOUND` |
-| `invalidSourceType` | `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for source properties that cannot build a source |
-| `parseError` | `INVALID_GEOJSON` |
-
-On Android, the ambient cache calls fail with `AMBIENT_CACHE_ERROR`, as on iOS, and `setMapLanguage` and `matchMapLanguageWithDeviceDefault` with `LOCALIZATION_ERROR`. Android also has its own `MAP_NOT_READY`, for a call made while the map view is rebuilt after the activity was recreated.
-
-The offline codes, of the calls and of the download `Error` events, are renamed on Android and iOS. [Errors](advanced/offline-regions.md#errors) says when each one fires:
-
-| Before | 0.28.0 |
-|---|---|
-| `invalidRegionDefinition` | `INVALID_REGION_DEFINITION` |
-| `tileCountLimitExceeded` | `TILE_COUNT_LIMIT_EXCEEDED` |
-| `RegionDeleted` | `REGION_DELETED` |
-| `RegionReplaced` | `REGION_REPLACED` |
-| `DatabaseReset` | `DATABASE_RESET` |
-| `UpdateMetadataError`, `DeleteRegionError`, `PauseRegionError`, `ResumeRegionError`, `GetRegionStatusError` for an id no region has | `REGION_NOT_FOUND` |
-| `mergeOfflineRegions Error`, `RegionListError`, `ResetDatabaseError`, and the five codes above for any other failure of the database | `OFFLINE_DATABASE_ERROR` |
-| `ClearAmbientCacheError`, `SetMaximumAmbientCacheSizeError` | `AMBIENT_CACHE_ERROR` |
-| `SetOfflineTileCountLimitError` and `SetMaximumAmbientCacheSizeError` for a negative value (iOS), `InvalidMaxRequests`, `InvalidMaxRequestsPerHost` (Android), `UpdateMetadataError` for metadata that is not JSON-encodable (iOS) | `INVALID_ARGUMENT` |
-| `SetHttpHeadersError`, `SetMaxConcurrentRequestsError` (Android) | `HTTP_CLIENT_ERROR` |
+Every platform now reports the same [error codes](concepts/errors.md). Two changes matter when upgrading.
 
 #### Calls that now throw
 
-Calls that did nothing, or crashed, on some platforms now throw on all of them. Add a `catch` where your app can hit them:
+Calls that did nothing, or crashed, on some platforms now throw on all of them. Add a `catch` where your app can hit them, or the error goes unhandled. The ones most apps meet:
 
-* Source, layer and image calls made before the style has loaded throw `STYLE_NOT_READY`.
-* A missing layer throws `LAYER_NOT_FOUND_ERROR`, and a source or layer id already in use `SOURCE_ALREADY_EXISTS` or `LAYER_ALREADY_EXISTS`.
-* Data that is not valid GeoJSON throws `INVALID_GEOJSON` from the GeoJSON calls and `addSource`. A feature with `"id": null` counts as invalid.
-* A layer property value MapLibre rejects throws `INVALID_EXPRESSION` for an expression or `INVALID_ARGUMENT` for any other value, and changes nothing.
-* A layer whose type cannot draw its source, such as a raster layer on a GeoJSON source, throws `UNSUPPORTED_SOURCE_TYPE`.
-* A layer on a vector source without `sourceLayer` throws `SOURCE_LAYER_REQUIRED`.
-* `addSource` throws `INVALID_ARGUMENT` for an image source without `url` or corners, or a source without `url`, `tiles` or `data`. Image bytes go through `addImageSource`.
-* The cluster calls throw `CLUSTER_NOT_FOUND` for an unknown cluster, and `getClusterLeaves` throws `INVALID_ARGUMENT` for a negative `limit` or `offset`.
-* `addImage` throws `INVALID_IMAGE` for bytes that are not an image.
-* `installOfflineMapTiles` throws `INVALID_ARGUMENT` for a missing file and `OFFLINE_DATABASE_ERROR` when the copy fails.
-* **Android, iOS**: `setLight` throws `INVALID_ARGUMENT` for a value it cannot apply.
-* **Android, iOS**: GeoJSON with a NaN or infinite number throws `INVALID_GEOJSON`, since JSON cannot hold it. Web takes such a number.
-* **Android, iOS**: offline metadata `jsonEncode` cannot encode, such as `NaN`, throws `INVALID_ARGUMENT`, and so do a negative `setOfflineTileCountLimit` and a `setOfflineMaxConcurrentRequests` below 1.
-* **Web**: a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`. Android and iOS take any zoom.
+* `STYLE_NOT_READY`: a source, layer or image call made before the style loaded. Move it to `onStyleLoadedCallback`.
+* `LAYER_NOT_FOUND_ERROR`, `SOURCE_NOT_FOUND`, `LAYER_ALREADY_EXISTS`, `SOURCE_ALREADY_EXISTS`: an id that is missing, or already in use.
+* `INVALID_GEOJSON`, `INVALID_EXPRESSION`, `INVALID_ARGUMENT`: data, a filter or a property value MapLibre cannot use.
+* **Android, iOS**: a call on a disposed map throws `MAP_DISPOSED` instead of a `MissingPluginException`.
+* **iOS, Web**: `setOffline` throws an `UnsupportedError`: call it on Android only.
+* **Web**: the offline calls and the HTTP header calls throw an `UnsupportedError`: guard them with `kIsWeb`.
 
-### Android: numeric feature ids
+The [full list](concepts/errors.md#codes) says when each code fires.
 
-On Android numeric GeoJSON feature ids stay numbers, as on iOS and web. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`:
+#### Renamed codes
 
-```dart
-// Source data: {'type': 'Feature', 'id': 2, ...}
-final features = await controller.queryRenderedFeatures(point, ['pois'], null);
+If your app compares `PlatformException.code`, update these:
 
-// Before (Android)
-final isSelected = features.first['id'] == '2';
-await controller.setLayerFilter('pois', ['==', ['id'], '2']);
+| Before | Platform | 0.28.0 |
+|---|---|---|
+| `layerNotFound` | iOS | `LAYER_NOT_FOUND_ERROR` |
+| `invalidExpression` | iOS | `INVALID_EXPRESSION` |
+| `invalidLayerType` | iOS | `INVALID_LAYER_TYPE` |
+| `sourceAlreadyExists`, `duplicateSource` | iOS | `SOURCE_ALREADY_EXISTS` |
+| `layerAlreadyExists`, `duplicateLayer` | iOS | `LAYER_ALREADY_EXISTS` |
+| `styleNotFound` | iOS | `STYLE_NOT_READY` |
+| `sourceNotFound`, `noSuchSource` | iOS | `SOURCE_NOT_FOUND` |
+| `invalidSourceType` | iOS | `UNSUPPORTED_SOURCE_TYPE`, or `INVALID_ARGUMENT` for bad source properties |
+| `parseError` | iOS | `INVALID_GEOJSON` |
+| Ambient cache errors | Android | `AMBIENT_CACHE_ERROR` |
+| Map language errors | Android | `LOCALIZATION_ERROR` |
+| `SetHttpHeadersError`, `SetMaxConcurrentRequestsError` | Android | `HTTP_CLIENT_ERROR` |
+| Offline per-call codes, such as `DeleteRegionError` | Android, iOS | `REGION_NOT_FOUND` for an unknown id, `INVALID_ARGUMENT` for a bad value, `OFFLINE_DATABASE_ERROR` otherwise |
 
-// After (every platform)
-final isSelected = features.first['id'] == 2;
-await controller.setLayerFilter('pois', ['==', ['id'], 2]);
-```
-
-Ids come back as they are in the data, except for GeoJSON loaded from a URL or declared in the style: on Android and web only its integer ids are sure to match. With `generateId: true`, Android and iOS number the features by index too.
-
-### iOS: hex colors with alpha
-
-On iOS `#rgba` and `#rrggbbaa` read the alpha last, as in CSS and on Android and web. If you wrote `#aarrggbb` for iOS, move the alpha to the end:
-
-```dart
-// Before (iOS): red at 50% opacity
-fillColor: '#80ff0000',
-
-// After (every platform)
-fillColor: '#ff000080',
-```
+The other offline codes only change case, such as `RegionDeleted` to `REGION_DELETED`. [Errors](advanced/offline-regions.md#errors) lists every offline code and when it fires.
 
 ### Android: screen points in logical pixels
 
@@ -140,15 +78,89 @@ final left = point.x;
 
 Code that only passes a point from one call to another, such as the `onMapClick` point to `queryRenderedFeatures`, works unchanged.
 
-### Android and iOS: Pigeon messages
+### Android: numeric feature ids
 
-The plugin talks to Android and iOS through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of method channels. Map code works as before, with these differences:
+On Android numeric GeoJSON feature ids stay numbers, as on iOS and web. Read `feature['id']` as a `num` and compare it with `2`, not `"2"`:
 
-* A call on a disposed map throws a `PlatformException` with code `MAP_DISPOSED` instead of a `MissingPluginException`.
-* `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>`: their value was always `null`.
-* Tests that mock the plugin's method channels no longer intercept anything. Install a fake `MapLibrePlatform` through `MapLibrePlatform.createInstance`, and a fake `MapLibreGlobalPlatform` as `MapLibreGlobalPlatform.instance`.
-* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed: a fake or a platform package extends `MapLibrePlatform` or `MapLibreGlobalPlatform`.
-* A fake or a platform package passes what started a camera move to `onCameraMoveStartedPlatform`, which no longer takes `null`.
+```dart
+// Source data: {'type': 'Feature', 'id': 2, ...}
+final features = await controller.queryRenderedFeatures(point, ['pois'], null);
+
+// Before (Android)
+final isSelected = features.first['id'] == '2';
+await controller.setLayerFilter('pois', ['==', ['id'], '2']);
+
+// After (every platform)
+final isSelected = features.first['id'] == 2;
+await controller.setLayerFilter('pois', ['==', ['id'], 2]);
+```
+
+GeoJSON loaded from a URL or declared in the style is the exception: on Android and web only its integer ids are sure to match.
+
+### Return types
+
+`setLayerFilter` returns `Future<void>` and throws on failure instead of returning `false`:
+
+```dart
+// Before
+final ok = await controller.setLayerFilter('pois', filterJson);
+if (!ok) showError();
+
+// After
+try {
+  await controller.setLayerFilter('pois', filter);
+} on PlatformException catch (e) {
+  showError(e.code); // LAYER_NOT_FOUND_ERROR, INVALID_LAYER_TYPE or INVALID_EXPRESSION
+}
+```
+
+`setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>`: drop any use of their value, which was always `null`.
+
+### Camera
+
+* Awaited `animateCamera` and `easeCamera` complete when the camera arrives, with `false` when interrupted. Code after them now runs after the animation.
+* **Android, iOS**: they also complete with `false` when the map is disposed mid-animation: check `mounted` before calling `setState`.
+* **Android**: a positive `x` in `CameraUpdate.scrollBy` moves the view east, as on iOS and web: remove any Android-only sign flip.
+* **Android**: `setCameraBounds` `padding` is in logical pixels, as on iOS and web: remove any scaling by the pixel ratio.
+* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them.
+* **Web**: `onCameraMove` and `controller.cameraPosition` need `trackCameraPosition: true`, as on Android and iOS: set it if you read them.
+
+### Feature taps and drags
+
+Taps and drags on annotations and draggable features work the same on every platform. Check flows that depend on them:
+
+* A drag starts only after the finger or mouse moves a little, so a tap on a draggable feature stays a tap.
+* A second finger ends the drag with an `end` event and lets the map pinch.
+* **Android**: a drag no longer fires `onMapLongClick`.
+* **Android, iOS**: taps and drags pick the nearest feature within 8 logical pixels, so a tap next to a feature can now select it.
+
+### How the map looks
+
+* **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color: set `fillOutlineColor` to keep the old look.
+* **Android, iOS**: `line-pattern` images are drawn about 1.7 times smaller, the size MapLibre GL JS uses.
+* **iOS**: an `iconImage` naming an asset with `2.0x` or `3.0x` variants is sized like `Image.asset`: remove any iOS-only `iconSize` that made up for it.
+* **iOS**: `#rgba` and `#rrggbbaa` colors read the alpha last, as in CSS and on Android and web. Move the alpha of an `#aarrggbb` color to the end:
+
+```dart
+// Before (iOS): red at 50% opacity
+fillColor: '#80ff0000',
+
+// After (every platform)
+fillColor: '#ff000080',
+```
+
+### Offline and HTTP headers
+
+* **Android**: the `setCustomHeaders` filter matches anywhere in the URL, as on iOS: anchor it with `^` and `$` to match the whole URL.
+* **Android, iOS**: offline region metadata is stored as `jsonEncode` writes it, so a `Uint8List` reads back as a list of numbers.
+
+### Tests and platform packages
+
+The plugin talks to Android and iOS through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of method channels. App code is not affected, but tests and platform packages are:
+
+* Mocks of the plugin's method channels no longer intercept anything: install a fake `MapLibrePlatform` and `MapLibreGlobalPlatform` instead.
+* `MapLibreMethodChannel` and `MapLibreGlobalMethodChannel` are removed: extend `MapLibrePlatform` or `MapLibreGlobalPlatform`.
+* `onCameraMoveStartedPlatform` no longer takes `null`: pass what started the move.
 
 ```dart
 // Before
@@ -162,44 +174,19 @@ class FakeMapPlatform extends MapLibrePlatform {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+MapLibrePlatform.createInstance = FakeMapPlatform.new;
 final previous = MapLibreGlobalPlatform.instance;
 addTearDown(() => MapLibreGlobalPlatform.instance = previous);
 onCameraMoveStartedPlatform(CameraMoveReason.programmatic); // or .gesture
 ```
 
-### Feature drag and hit testing
-
-Dragging annotations and draggable features works the same on every platform:
-
-* A drag starts only after the finger or mouse moves a little, so a tap on a draggable feature stays a tap, with no drag events.
-* A second finger ends the drag with an `end` event and lets the map pinch.
-* **Android**: a drag no longer fires `onMapLongClick`.
-* **Android, iOS**: taps and drags pick the nearest feature within 8 logical pixels, so a tap next to a feature can now select it.
-* **Web**: features can be dragged with a finger on touch screens too.
-
-If a flow relied on a drag starting at touch down, or on tapping right next to a feature without selecting it, check it.
-
-### Web: browsers without WebGL2
-
-On a browser without WebGL2 the map is no longer created blank: the controller future completes with an error and `onMapCreated` is not called. The error says whether a MapLibre GL JS 5 build would work, see [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
-
-### Android: building without Google Play Services
-
-Nothing changes for apps that use Google Play Services. F-Droid and other FOSS builds can leave it out with one line:
-
-```properties title="android/gradle.properties"
-maplibre_gl.playServicesLocation=false
-```
-
-See [Building without Google Play Services](advanced/user-location.md#building-without-google-play-services), and [F-Droid](advanced/user-location.md#f-droid) for its `prebuild` step.
-
 ### Android: platform view mode
 
-`useHybridComposition` and `translucentTextureSurface` are deprecated in favor of `androidView`, which sets for each map the view it draws into and how Flutter places it:
+`useHybridComposition` and `translucentTextureSurface` still work, but are deprecated in favor of `androidView`:
 
 ```dart
 // Before
-MapLibreMap.useHybridComposition = true; // or MapLibreMethodChannel.useHybridComposition
+MapLibreMap.useHybridComposition = true;
 MapLibreMap(translucentTextureSurface: true);
 
 // After
@@ -209,46 +196,9 @@ MapLibreMap(androidView: const AndroidMapView(surface: AndroidMapSurface.translu
 
 Despite its name, `useHybridComposition` never selected Hybrid Composition: that is `composition: AndroidComposition.hybridComposition`. See [Platform view mode (Android)](advanced/performance.md#platform-view-mode-android).
 
-### Behaviour changes
+### Web: browsers without WebGL2
 
-None of these need a code change, but code that worked before can behave differently.
-
-#### Camera
-
-* `animateCamera` and `easeCamera` complete when the camera arrives, with `false` when interrupted, so code after an awaited call runs after the animation.
-* **Android, iOS**: they complete with `false` when the map is disposed mid-animation, instead of never: check `mounted` before calling `setState`.
-* **Android**: `CameraUpdate.scrollBy` pans as on iOS and web, so a positive `x` moves the view east: remove any Android-only sign flip.
-* **Android**: `setCameraBounds` `padding` is in logical pixels, as on iOS and web: drop any scaling by the pixel ratio.
-* **iOS**: `moveCamera` completes with `true` instead of `null`, and `newLatLng` and `newLatLngZoom` keep the requested zoom.
-* **iOS**: `onCameraMove` also fires for moves without animation, and its last call has the position where the camera stopped.
-* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them.
-* **Web**: `onCameraMove` and `controller.cameraPosition` need `trackCameraPosition: true`, as on Android and iOS.
-
-#### Layers and sources
-
-* The `setSymbol*Overlap` and `setSymbol*IgnorePlacement` setters keep the symbol layer in its place instead of moving it on top.
-* A source url with a space, such as an iOS path under `Library/Application Support`, is percent-encoded and loads on every platform.
-* Tile source `bounds` that cross the antimeridian, with west greater than east, load the tiles on both sides.
-* **Android, iOS**: fill annotations without a `fillOutlineColor` get an outline in their fill color instead of a transparent one.
-* **Android, iOS**: `line-pattern` images are drawn at the size MapLibre GL JS uses, about 1.7 times smaller than before.
-* **iOS**: an `iconImage` naming an asset with `2.0x` or `3.0x` variants is sized like `Image.asset`: drop any iOS-only `iconSize` that made up for it.
-* **iOS**: [feature state](advanced/feature-state.md) works, so a platform guard can go. Features need a top-level `id`: `promoteId` is web only.
-* **iOS**: `getLayerProperties` and `getSourceProperties` read layers and sources added at runtime, and colors read as `rgba(...)` text, like Android.
-* **Web**: `querySourceFeatures` applies its `filter`, and `removeFeatureState` with a `stateKey` removes only that key.
-
-#### Offline and network
-
-* **Android**: the `setCustomHeaders` filter matches anywhere in the URL, as on iOS, so headers can reach more URLs: anchor it with `^` and `$`.
-* **Android**: `resumeOfflineRegionDownload` resumes a region paused in an earlier app session, as on iOS. Follow it with `getOfflineRegionStatus`: it sends no events.
-* **Android, iOS**: offline region metadata is stored as `jsonEncode` writes it, so a `Uint8List` is a list of numbers.
-* **iOS, Web**: `setOffline` throws an `UnsupportedError`: neither can force the map offline, so call it on Android only.
-* **Web**: the offline calls, `setHttpHeaders`, `setCustomHeaders` and `getCustomHeaders` throw an `UnsupportedError` that names the call.
-
-#### Location
-
-* `updateManualLocation` works on every map created with `ManualLocationSource()`, also while `myLocationEnabled` is off: the puck appears once it is on.
-* **Android**: on Android 12 and later without Google Play Services, high accuracy uses the `fused` provider, so a network fix can arrive before the GPS one.
-* **Web**: `updateManualLocation` throws `MANUAL_LOCATION_SOURCE_DISABLED` without `ManualLocationSource()`, as on Android and iOS.
+On a browser without WebGL2 the map fails to create instead of showing up blank: the controller future completes with an error and `onMapCreated` is not called. To support those browsers, load a MapLibre GL JS 5 build: see [Web: the engine moves to MapLibre GL JS 6](#web-the-engine-moves-to-maplibre-gl-js-6).
 
 ## Upgrading to 0.27.1
 

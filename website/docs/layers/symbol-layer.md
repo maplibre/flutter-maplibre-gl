@@ -109,6 +109,19 @@ SymbolLayerProperties(
 )
 ```
 
+## Raise symbols above the map (web)
+
+On web, `symbolHeightOffset` places icons and text the given number of meters above their anchor, for labels that float over 3D buildings or terrain:
+
+```dart
+const SymbolLayerProperties(
+  textField: [Expressions.get, 'name'],
+  symbolHeightOffset: 30,
+)
+```
+
+Android and iOS ignore it.
+
 ## Update layer properties
 
 ```dart

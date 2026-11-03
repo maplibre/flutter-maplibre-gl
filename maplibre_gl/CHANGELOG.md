@@ -1,45 +1,45 @@
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Highlights
-**Android, iOS and web now work alike**: the same call gives the same result, and the same error, on every platform. Android and iOS also reach native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of hand-written method channels.
-
-The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 6.16**, brings feature state to iOS and global state to Android and iOS, adds layer calls such as `moveLayer` and `setLayerZoomRange`, and updates a single annotation about 5x faster. Android maps can now draw with Vulkan and build without Google Play Services. **Most apps upgrade without code changes**: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
+**Android, iOS and web now behave the same, where possible**: most calls give the same result, and the same error, on every platform. Android and iOS also reach native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of hand-written method channels.\
+The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 6.16**, brings feature state to iOS and global state to Android and iOS, adds layer calls such as `moveLayer` and `setLayerZoomRange`, and updates a single annotation about 5x faster. Android maps can now draw with [Vulkan](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#rendering-backend-android) and build [without Google Play Services](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/#building-without-google-play-services).\
+**Most apps upgrade without code changes**: check Actions needed below and the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280).
 
 ### Actions needed
 * Flutter 3.44, Dart 3.12, Android API 24 and iOS 15.5 are the minimum, and iOS builds with Swift Package Manager: turn it back on if your app disabled it. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#minimum-versions) (#1170, #1177).
-* Errors are the same on every platform: some codes are renamed, and calls that did nothing or crashed now throw. Update your `catch` blocks with the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) (#1055, #1068, #1111, #1119, #1123, #1140, #1143).
-* `setLayerFilter` returns `Future<void>` and throws on failure instead of returning `false`: replace checks on the result with a `try`/`catch` (#1055).
-* **Android**: screen points, in `toScreenLocation`, `toLatLng`, the queries and the tap and drag callbacks, are in logical pixels as on iOS and web. Remove any Android-only `devicePixelRatio` scaling (#1130).
-* **Android**: numeric GeoJSON feature ids stay numbers: read `feature['id']` as `num` and compare it with `2`, not `"2"` (#1073, #1124).
-* **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls: install a fake `MapLibrePlatform` instead, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-and-ios-pigeon-messages) shows (#1114, #1115, #1133, #1159).
+* Errors are the same on every platform: some codes are renamed, and calls that did nothing or crashed now throw. Update your `catch` blocks: see the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) and [Errors](https://maplibre.org/flutter-maplibre-gl/concepts/errors/) (#1055, #1068, #1111, #1119, #1123, #1140, #1143).
+* `setLayerFilter` returns `Future<void>` and throws on failure instead of returning `false`: replace checks on the result with a [`try`/`catch`](https://maplibre.org/flutter-maplibre-gl/migration/#return-types) (#1055).
+* **Android**: screen points, in `toScreenLocation`, `toLatLng`, the queries and the tap and drag callbacks, are in logical pixels as on iOS and web. Remove any Android-only `devicePixelRatio` [scaling](https://maplibre.org/flutter-maplibre-gl/migration/#android-screen-points-in-logical-pixels) (#1130).
+* **Android**: numeric GeoJSON feature ids stay numbers: read `feature['id']` as `num` and compare it with `2`, not `"2"`, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-numeric-feature-ids) shows (#1073, #1124).
+* **Android, iOS**: tests that mock the plugin's method channels no longer intercept its calls: install a fake `MapLibrePlatform` instead, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#tests-and-platform-packages) shows (#1114, #1115, #1133, #1159).
 
 ### Added
-* `moveLayer` moves a layer below another one, or to the top, without recreating it (#1086).
-* `setLayerZoomRange` changes the zoom range in which a layer is drawn (#1092).
-* `onCameraMoveStarted` tells whether a user gesture or the app moved the camera, and the controller's `cameraMoveReason` keeps it until the camera stops (#1159).
-* `setLayersVisibility` shows or hides several layers in one call (#1109).
-* `addImage` takes a `pixelRatio`: pass `MediaQuery.devicePixelRatioOf(context)` for the same size on every platform (#1129).
-* `MapLibreMap.myLocationStyle` recolors the user-location puck (#1101).
+* [`moveLayer`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) moves a layer below another one, or to the top, without recreating it (#1086).
+* [`setLayerZoomRange`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) changes the zoom range in which a layer is drawn (#1092).
+* [`onCameraMoveStarted`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#tell-the-users-moves-from-the-apps) tells whether a user gesture or the app moved the camera, and the controller's `cameraMoveReason` keeps it until the camera stops (#1159).
+* [`setLayersVisibility`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) shows or hides several layers in one call (#1109).
+* `addImage` takes a [`pixelRatio`](https://maplibre.org/flutter-maplibre-gl/annotations/markers/#where-icons-come-from): pass `MediaQuery.devicePixelRatioOf(context)` for the same size on every platform (#1129).
+* [`MapLibreMap.myLocationStyle`](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/#style-the-puck) recolors the user-location puck (#1101).
 * `removeLayerFilter` removes a layer's filter (#1055).
-* `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan (#1032).
-* `MapLibreMap.symbolPlacementTransitionsEnabled` turns off the symbol fade, so a symbol whose data changes no longer flickers (#1056).
-* `MapLibreMap.attributionEnabled` hides the attribution button; the attribution must then be shown elsewhere (#1092).
-* `Expressions.semiliteral` builds an array of expressions, for properties such as `textOffset` (#1084).
-* **Android, iOS, Web**: feature state works on iOS too, with the same errors on every platform. See the [feature state guide](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) (#951, #1145).
-* **Android**: `MapLibreMap.androidView` picks, for each map, the view it draws into and how it is composed with your widgets. See the [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) (#1161).
-* **Android**: `maplibre_gl.renderer` in `android/gradle.properties` picks OpenGL ES, the default, Vulkan, or `auto`. See the [performance guide](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#rendering-backend-android) (#1160).
-* **Android**: `maplibre_gl.playServicesLocation=false` in `android/gradle.properties` builds without Google Play Services, for F-Droid and other FOSS builds (#1102).
-* **Android, iOS**: `setGlobalStateProperty` works as on web, also in a layer `visibility`, and `getGlobalState` reads the state back on every platform (#1179).
-* **Android, iOS**: `setMaximumAmbientCacheSize` limits the ambient tile cache; `0` turns it off (#1037).
-* **iOS**: `MapLibreMap.hapticFeedbackEnabled` turns off the vibration played when the map rotates back to north (#1036).
-* **Web**: `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS (#1119).
-* **Web**: `symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
+* [`MapLibreMap.panInertia`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#glide-after-a-pan) sets how long the map keeps gliding after a pan (#1032).
+* [`MapLibreMap.symbolPlacementTransitionsEnabled`](https://maplibre.org/flutter-maplibre-gl/layers/symbol-layer/#symbols-that-update-often) turns off the symbol fade, so a symbol whose data changes no longer flickers (#1056).
+* [`MapLibreMap.attributionEnabled`](https://maplibre.org/flutter-maplibre-gl/concepts/styles/#attribution) hides the attribution button; the attribution must then be shown elsewhere (#1092).
+* [`Expressions.semiliteral`](https://maplibre.org/flutter-maplibre-gl/advanced/expressions/#semiliteral-an-array-of-expressions) builds an array of expressions, for properties such as `textOffset` (#1084).
+* **Android, iOS, Web**: [feature state](https://maplibre.org/flutter-maplibre-gl/advanced/feature-state/) works on iOS too, with the same errors on every platform (#951, #1145).
+* **Android**: [`MapLibreMap.androidView`](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#platform-view-mode-android) picks, for each map, the view it draws into and how it is composed with your widgets (#1161).
+* **Android**: [`maplibre_gl.renderer`](https://maplibre.org/flutter-maplibre-gl/advanced/performance/#rendering-backend-android) in `android/gradle.properties` picks OpenGL ES, the default, Vulkan, or `auto` (#1160).
+* **Android**: [`maplibre_gl.playServicesLocation=false`](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/#building-without-google-play-services) in `android/gradle.properties` builds without Google Play Services, for F-Droid and other FOSS builds (#1102).
+* **Android, iOS**: [`setGlobalStateProperty`](https://maplibre.org/flutter-maplibre-gl/advanced/expressions/#global-state) works as on web, also in a layer `visibility`, and `getGlobalState` reads the state back on every platform (#1179).
+* **Android, iOS**: [`setMaximumAmbientCacheSize`](https://maplibre.org/flutter-maplibre-gl/advanced/offline-regions/#limit-the-ambient-cache) limits the ambient tile cache; `0` turns it off (#1037).
+* **iOS**: [`MapLibreMap.hapticFeedbackEnabled`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#glide-after-a-pan) turns off the vibration played when the map rotates back to north (#1036).
+* **Web**: [`addImageSource`](https://maplibre.org/flutter-maplibre-gl/layers/various-sources/#image-source-geo-referenced-overlay), `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS (#1119).
+* **Web**: [`symbolHeightOffset`](https://maplibre.org/flutter-maplibre-gl/layers/symbol-layer/#raise-symbols-above-the-map-web) raises icons and text above the map, in meters (#1084).
 
 ### Changed
 
 #### Native engines and platform
 * **Android**: MapLibre Native upgraded from 13.5.0 to 13.7.1 ([13.6.0](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.6.0), [13.7.1](https://github.com/maplibre/maplibre-native/releases/tag/android-v13.7.1)): fewer crashes on dispose, and `line-pattern` images drawn about 1.7x smaller, as on web (#1080).
-* **Android**: `useHybridComposition` and `translucentTextureSurface` are deprecated in favor of `androidView`. See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-platform-view-mode) (#1161, #1163).
+* **Android**: `useHybridComposition` and `translucentTextureSurface` are deprecated in favor of `androidView`, as the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#android-platform-view-mode) shows (#1161, #1163).
 * **Android**: Play Services Base upgraded from 18.10.1 to 18.11.1 (#1181).
 * **Android, iOS**: the plugin talks to native code through typed [Pigeon](https://pub.dev/packages/pigeon) messages instead of method channels. `setOffline`, `setOfflineTileCountLimit` and `deleteOfflineRegion` return `Future<void>` (#1114, #1115, #1117, #1119).
 * **iOS**: MapLibre Native upgraded from 6.28.0 to [7.0.0](https://github.com/maplibre/maplibre-native/releases/tag/ios-v7.0.0): symbols repaint with feature state, `split` and `join` work, and `line-pattern` images are drawn about 1.7x smaller (#1082, #1170).
@@ -51,8 +51,8 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
   * **Android, iOS**: if the map is disposed first, they complete with `false` instead of never: check `mounted` before using the controller.
   * **iOS**: `animateCamera` and `easeCamera` complete with `true`, or `false` when interrupted, and `moveCamera` with `true`, instead of `null`.
   * **Web**: they completed when the camera started, and `animateCamera` completes with `false` when interrupted.
-* **iOS, Web**: `cameraTargetBounds` keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them (#793).
-* **Web**: `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS (#1126).
+* **iOS, Web**: [`cameraTargetBounds`](https://maplibre.org/flutter-maplibre-gl/camera/camera-bounds/#constrain-geographic-bounds) keeps the camera target inside the bounds, as on Android, so the map no longer zooms in to fit them (#793).
+* **Web**: `onCameraMove` and the controller's `cameraPosition` need [`trackCameraPosition: true`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#react-to-camera-movement), as on Android and iOS (#1126).
 
 #### Gestures and annotations
 * **Android, iOS, Web**: feature drags and taps work the same on every platform (#1044, #1051, #1077, #1079, #1149):
@@ -79,7 +79,7 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
 * **Web**: a layer `minzoom` or `maxzoom` outside 0 to 24 throws `INVALID_ARGUMENT`, where MapLibre GL JS dropped the layer (#1123).
 
 #### Location
-* **Android, iOS, Web**: `updateManualLocation` works on any map created with `ManualLocationSource()`, also while `myLocationEnabled` is off (#1142, #1143).
+* **Android, iOS, Web**: [`updateManualLocation`](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/#drive-the-puck-yourself) works on any map created with `ManualLocationSource()`, also while `myLocationEnabled` is off (#1142, #1143).
 * **Android**: without Google Play Services, high accuracy uses Android's fused provider on Android 12 and later instead of GPS only (#1102).
 
 #### Offline and network
@@ -190,6 +190,7 @@ The release moves to **MapLibre Android 13.7, MapLibre iOS 7 and MapLibre GL JS 
 * **Web**: changing another map option no longer moves the attribution control back to the bottom right (#1092).
 
 ### Docs
+* An [Errors](https://maplibre.org/flutter-maplibre-gl/concepts/errors/) page lists every error code, when it fires and how to avoid the common ones, and [Architecture](https://maplibre.org/flutter-maplibre-gl/concepts/architecture/) explains the Pigeon bridge (#1188).
 * The migration guide covers [upgrading to 0.28.0](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280): renamed error codes, the calls that now throw, and each platform change (#1085, #1118).
 * A guide on [loading a local MBTiles file](https://maplibre.org/flutter-maplibre-gl/advanced/mbtiles/) on Android and iOS (#1031).
 

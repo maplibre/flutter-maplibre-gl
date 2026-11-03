@@ -1,6 +1,6 @@
 # Architecture
 
-Understanding how flutter-maplibre-gl works under the hood helps you write better code, debug issues faster, and know when to use `kIsWeb` guards.
+How a call travels from your Dart code to the map engine and back, and what that means for your app.
 
 ## The three-layer stack
 
@@ -28,13 +28,10 @@ flowchart TD
 
 ### Layer 1: The Flutter widget
 
-`MapLibreMap` is a Flutter widget that embeds a native map view using a [Platform View](https://docs.flutter.dev/platform-integration/platform-views). It is **not** drawn by Flutter's Skia/Impeller renderer, the map is rendered natively at full GPU speed by [MapLibre Native](https://github.com/maplibre/maplibre-native), the project's C++ engine.
+`MapLibreMap` embeds the map with a [Platform View](https://docs.flutter.dev/platform-integration/platform-views): the map engine draws it, not Flutter. [MapLibre Native](https://github.com/maplibre/maplibre-native) draws it on Android and iOS, MapLibre GL JS on web.
 
-This means:
-
-- Maps look and perform identically to native apps
-- Custom Flutter widgets painted *over* the map work fine (use `Stack`)
-- Custom Flutter widgets *inside* the map tile layer are not possible
+- Flutter widgets drawn over the map, in a `Stack`, work.
+- Flutter widgets inside the map are not possible: use annotations or style layers.
 
 ### Layer 2: The controller
 
@@ -48,13 +45,19 @@ MapLibreMap(
 )
 ```
 
-The widget creates the controller (and the platform bridge) once the native view is ready, then hands it to you through `onMapCreated`. From that point the controller talks to the bridge **directly**, not through the widget: it sends operations down (camera movement, adding layers and sources, managing annotations, querying features, taking snapshots) and receives events back up (taps, drags, camera moves) as streams.
+The controller is your handle to one map. It sends calls down (camera, layers, sources, annotations, queries, snapshots) and receives events back up (taps, drags, camera moves). Every call crosses to the map engine and is asynchronous, so `await` it.
 
 ### Layer 3: The platform bridge
 
-On **Android and iOS**, the controller communicates with the native MapLibre SDK through messages generated with [Pigeon](https://pub.dev/packages/pigeon) from `maplibre_gl/pigeons/messages.dart`, which give Dart, Kotlin and Swift one typed contract. Each map has its own `MapLibreMapHostApi` for the calls down and `MapLibreMapFlutterApi` for the events up, told apart by the map's id. The plugin-wide calls that need no map (offline regions, the offline database, the ambient cache, HTTP headers, `preWarm`) go through `MapLibreGlobalHostApi`. Each call still crosses the Dart-to-native boundary and is asynchronous.
+- **Android, iOS**: typed [Pigeon](https://pub.dev/packages/pigeon) messages, generated from `maplibre_gl/pigeons/messages.dart`, give Dart, Kotlin and Swift one contract. Both platforms receive the same arguments and answer with the same results and [error codes](errors.md).
+- **Web**: `dart:js_interop` calls MapLibre GL JS directly in the browser, behind the same controller API.
 
-On **Web**, there is no native side to message. Instead, the web implementation uses `dart:js_interop` to call MapLibre GL JS directly in the browser. The same `MapLibreMapController` API is exposed, but the underlying calls go to JavaScript.
+Each map has a `MapLibreMapHostApi` for the calls down and a `MapLibreMapFlutterApi` for the events up. The calls that need no map, such as offline regions, the ambient cache and HTTP headers, go through `MapLibreGlobalHostApi`.
+
+??? info "Before 0.28.0: method channels"
+    Up to 0.27.x, Android and iOS were reached through hand-written method channels: string method names and untyped maps, decoded separately in Kotlin, Java and Swift. A platform could read an argument differently or answer with its own error code, and tests mocked the channels.
+
+    To move tests to the new bridge, see [Tests and platform packages](../migration.md#tests-and-platform-packages). The [0.27.1 version of this page](https://github.com/maplibre/flutter-maplibre-gl/blob/v0.27.1/website/docs/concepts/architecture.md) describes the old bridge.
 
 ## Platform differences
 
@@ -75,7 +78,7 @@ Some features are only available on certain platforms:
 <span class="ic ic--yes">✔</span> supported &nbsp;·&nbsp; <span class="ic ic--no">✘</span> not available
 { .legend }
 
-These are the differences the three-layer stack itself creates: offline caching lives in MapLibre Native, and hover exists only where there is a pointer. For the complete platform breakdown see the [Feature Matrix](../compare/feature-matrix.md).
+These are the differences the three-layer stack itself creates: offline caching lives in MapLibre Native, and hover exists only where there is a pointer. Everything else behaves the same, errors included. For the complete platform breakdown see the [Feature Matrix](../compare/feature-matrix.md).
 
 Use `kIsWeb` from `package:flutter/foundation.dart` to guard platform-specific code:
 
@@ -122,3 +125,4 @@ Always check `if (mounted)` before calling `setState()` inside async callbacks, 
 
 - [Annotations vs Style Layers](annotations-vs-layers.md): the two APIs for putting data on the map
 - [Working with GeoJSON](geojson.md): the data format underlying everything
+- [Errors](errors.md): the error codes every platform reports, and how to catch them

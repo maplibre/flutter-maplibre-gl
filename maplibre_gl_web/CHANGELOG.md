@@ -2,30 +2,32 @@ See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/bl
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
+The web implementation of [`maplibre_gl`](https://pub.dev/packages/maplibre_gl): apps depend on `maplibre_gl`, whose [changelog](https://pub.dev/packages/maplibre_gl/changelog) covers every platform.
+
 ### Actions needed
 * Flutter 3.44 and Dart 3.12 are the minimum (#1177).
-* Calls that did nothing, or answered a wrong value, now throw the errors Android and iOS throw. Update your `catch` blocks with the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) (#1065, #1068, #1119, #1123).
+* Calls that did nothing, or answered a wrong value, now throw the errors Android and iOS throw. Update your `catch` blocks: see the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#error-codes) and [Errors](https://maplibre.org/flutter-maplibre-gl/concepts/errors/) (#1065, #1068, #1119, #1123).
 
 ### Added
-* `moveLayer` moves a layer below another one, or to the top, without recreating it (#1086).
-* `setLayerZoomRange` changes the zoom range in which a layer is drawn (#1092).
-* `onCameraMoveStarted` tells whether a user gesture or the app moved the camera; the mouse wheel and the keyboard count as gestures (#1159).
-* `setLayersVisibility` shows or hides several layers in one call (#1109).
-* `addImage` takes a `pixelRatio`: pass `MediaQuery.devicePixelRatioOf(context)` for the size Android and iOS draw (#1129).
-* `addImageSource`, `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS (#1119).
-* `getGlobalState()` reads the style's global state, and `setGlobalStateProperty` throws the errors Android and iOS throw (#1179).
-* `MapLibreMap.myLocationStyle` recolors the user-location puck (#1101).
-* `MapLibreMap.panInertia` sets how long the map keeps gliding after a pan (#1032).
-* `MapLibreMap.symbolPlacementTransitionsEnabled` turns off the symbol fade, so a symbol whose data changes no longer flickers (#1056).
-* `MapLibreMap.attributionEnabled` hides the attribution button; the attribution must then be shown elsewhere (#1092).
-* `symbolHeightOffset` and `symbolHeightAnchor` raise icons and text above the map (#1084).
+* [`moveLayer`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) moves a layer below another one, or to the top, without recreating it (#1086).
+* [`setLayerZoomRange`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) changes the zoom range in which a layer is drawn (#1092).
+* [`onCameraMoveStarted`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#tell-the-users-moves-from-the-apps) tells whether a user gesture or the app moved the camera; the mouse wheel and the keyboard count as gestures (#1159).
+* [`setLayersVisibility`](https://maplibre.org/flutter-maplibre-gl/layers/#manage-layers) shows or hides several layers in one call (#1109).
+* `addImage` takes a [`pixelRatio`](https://maplibre.org/flutter-maplibre-gl/annotations/markers/#where-icons-come-from): pass `MediaQuery.devicePixelRatioOf(context)` for the size Android and iOS draw (#1129).
+* [`addImageSource`](https://maplibre.org/flutter-maplibre-gl/layers/various-sources/#image-source-geo-referenced-overlay), `updateImageSource`, `addImageLayer` and `addImageLayerBelow` work as on Android and iOS (#1119).
+* [`getGlobalState()`](https://maplibre.org/flutter-maplibre-gl/advanced/expressions/#global-state) reads the style's global state, and `setGlobalStateProperty` throws the errors Android and iOS throw (#1179).
+* [`MapLibreMap.myLocationStyle`](https://maplibre.org/flutter-maplibre-gl/advanced/user-location/#style-the-puck) recolors the user-location puck (#1101).
+* [`MapLibreMap.panInertia`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#glide-after-a-pan) sets how long the map keeps gliding after a pan (#1032).
+* [`MapLibreMap.symbolPlacementTransitionsEnabled`](https://maplibre.org/flutter-maplibre-gl/layers/symbol-layer/#symbols-that-update-often) turns off the symbol fade, so a symbol whose data changes no longer flickers (#1056).
+* [`MapLibreMap.attributionEnabled`](https://maplibre.org/flutter-maplibre-gl/concepts/styles/#attribution) hides the attribution button; the attribution must then be shown elsewhere (#1092).
+* [`symbolHeightOffset`](https://maplibre.org/flutter-maplibre-gl/layers/symbol-layer/#raise-symbols-above-the-map-web) raises icons and text above the map, in meters (#1084).
 
 ### Changed
 * maplibre-gl-js upgraded from 6.4.1 to 6.16.0 ([release notes](https://github.com/maplibre/maplibre-gl-js/blob/main/CHANGELOG.md)), with fewer main thread stalls. Without WebGL2 the map fails to create instead of staying blank (#1081, #1171).
 * `animateCamera` and `easeCamera` complete when the camera arrives instead of when it starts; `animateCamera` completes with `false` when interrupted (#1069, #1089).
-* `onCameraMove` and the controller's `cameraPosition` need `trackCameraPosition: true`, as on Android and iOS (#1126).
+* `onCameraMove` and the controller's `cameraPosition` need [`trackCameraPosition: true`](https://maplibre.org/flutter-maplibre-gl/camera/camera-controls/#react-to-camera-movement), as on Android and iOS (#1126).
 * `setGeoJsonFeature` finds a feature by its top-level `id` only, as on Android and iOS (#1123).
-* `cameraTargetBounds` keeps the camera target inside the bounds, as on Android and iOS, so the map no longer zooms in to fit them (#793).
+* [`cameraTargetBounds`](https://maplibre.org/flutter-maplibre-gl/camera/camera-bounds/#constrain-geographic-bounds) keeps the camera target inside the bounds, as on Android and iOS, so the map no longer zooms in to fit them (#793).
 * An `iconImage` naming an asset with `2.0x` or `3.0x` variants uses the file nearest the screen, like `Image.asset` (#1131).
 * A feature drag starts only after the mouse moves a little, so a click on a draggable feature stays a click (#1077).
 * Draggable features can be dragged with a finger on touch screens (#1149).

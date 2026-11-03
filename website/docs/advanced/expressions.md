@@ -205,6 +205,21 @@ await controller.addCircleLayer(
 );
 ```
 
+## `semiliteral`: an array of expressions
+
+`literal` keeps an array exactly as written. `semiliteral` evaluates the expressions inside it, for array properties such as `textOffset`:
+
+```dart
+SymbolLayerProperties(
+  textOffset: [
+    Expressions.semiliteral,
+    [[Expressions.get, 'dx'], [Expressions.get, 'dy']],
+  ],
+)
+```
+
+It works on Android, iOS and web, though the style spec lists it for MapLibre GL JS only so far.
+
 ## Global state
 
 `Expressions.globalState` reads a value shared by the whole style instead of a
@@ -264,5 +279,6 @@ from its defaults.
 | `Expressions.lineProgress` | `"line-progress"` | Line gradient position |
 | `Expressions.has` | `"has"` | Check property exists |
 | `Expressions.not` | `"!"` | Negate a boolean |
+| `Expressions.semiliteral` | `"semiliteral"` | Array of expressions |
 
 For the full expression reference, see the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec/expressions/).
