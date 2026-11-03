@@ -26,15 +26,32 @@
 
 ## 🖼️ What it looks like
 
-| **3D buildings** | **Clustering** | **Globe, on web** |
-|:---:|:---:|:---:|
-| <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/buildings-3d.webp" width="270" alt="Midtown Manhattan with the camera pitched and rotated"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/cluster.webp" width="270" alt="GeoJSON points clustered with live counts"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/globe.webp" width="270" alt="globe projection rendered by MapLibre GL JS"> |
+<table align="center">
+  <tr>
+    <th colspan="2">Android, iOS and web</th>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/platforms.webp" width="827" alt="the same 3D map of Lower Manhattan on web, Android and iOS"></td>
+  </tr>
+  <tr>
+    <th>Globe, on web</th>
+    <th>Heatmaps</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/globe.webp" width="400" alt="globe projection rendered by MapLibre GL JS"></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/heatmap.webp" width="400" alt="earthquakes drawn as a heatmap, weighted by magnitude"></td>
+  </tr>
+  <tr>
+    <th>Clustering</th>
+    <th>Annotations</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/cluster.webp" width="400" alt="GeoJSON points clustered with live counts"></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/annotations.webp" width="400" alt="symbol markers with icons and labels"></td>
+  </tr>
+</table>
 
-| **Data-driven styling** | **Heatmaps** | **Annotations** |
-|:---:|:---:|:---:|
-| <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/expressions.webp" width="270" alt="countries coloured and faded by their own properties"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/heatmap.webp" width="270" alt="point density drawn on the GPU"> | <img src="https://raw.githubusercontent.com/maplibre/flutter-maplibre-gl/main/maplibre_gl/screenshots/annotations.webp" width="270" alt="symbol markers with custom icons and labels"> |
-
-All of these are live in the [demo](https://maplibre.org/flutter-maplibre-gl/demo/), and every [guide](https://maplibre.org/flutter-maplibre-gl/) embeds an interactive map you can pan and click.
+The [demo](https://maplibre.org/flutter-maplibre-gl/demo/) runs the plugin in your browser, and every [guide](https://maplibre.org/flutter-maplibre-gl/) embeds an interactive map you can pan and click.
 
 ## 🚀 Quick start
 
