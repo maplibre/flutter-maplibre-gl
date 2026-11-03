@@ -8,17 +8,15 @@ funding:
   - https://github.com/sponsors/maplibre
   - https://opencollective.com/maplibre
 screenshots:
-  - description: "Fill-extrusion buildings over Midtown Manhattan, camera pitched and rotated. The style describes the 3D, the plugin sets tilt and bearing."
-    path: screenshots/buildings-3d.webp
-  - description: "Clustered GeoJSON points with live counts. Tapping a cluster zooms to exactly the level where it splits, via getClusterExpansionZoom."
-    path: screenshots/cluster.webp
-  - description: "Globe projection with atmosphere and stars, from setProjection and setSky. Web only: Android and iOS render the mercator projection on a flat map."
+  - description: "The same 3D map of Lower Manhattan on web, Android and iOS. Buildings are coloured by height with a data-driven expression."
+    path: screenshots/platforms.webp
+  - description: "Globe projection with atmosphere, set with setProjection and setSky. Web only."
     path: screenshots/globe.webp
-  - description: "Data-driven styling: a match expression colours each country by continent, an interpolate expression sets opacity from GDP per capita."
-    path: screenshots/expressions.webp
-  - description: "A heatmap layer drawing point density on the GPU, with radius and colour ramp driven by zoom and per-point weight."
+  - description: "Earthquakes from a GeoJSON source drawn as a heatmap layer, weighted by magnitude."
     path: screenshots/heatmap.webp
-  - description: "Symbol annotations with custom icons and text labels, added with addSymbol and tappable through onSymbolTapped."
+  - description: "Clustered GeoJSON points with counts. Tapping a cluster zooms in to where it splits, via getClusterExpansionZoom."
+    path: screenshots/cluster.webp
+  - description: "Symbol annotations with a custom icon and labels, added with addSymbol and tappable through onSymbolTapped."
     path: screenshots/annotations.webp
 topics:
   - map
