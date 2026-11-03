@@ -18,7 +18,7 @@ dependencies:
 
 * Flutter 3.44 and Dart 3.12. Apps on an older Flutter stay on 0.27.x.
 * iOS 15.5: raise `IPHONEOS_DEPLOYMENT_TARGET` in Xcode and, with CocoaPods, `platform :ios, '15.5'` in `ios/Podfile`.
-* Android API 24: raise a lower `minSdk` in `android/app/build.gradle`.
+* Android API 24: raise a lower `minSdk` in `android/app/build.gradle.kts`, or `build.gradle` in older apps.
 
 Flutter 3.44 builds the iOS plugin with Swift Package Manager, and MapLibre iOS no longer publishes to CocoaPods. If your app turned [Swift Package Manager](getting-started.md#swift-package-manager) off, turn it back on. Add-to-app modules keep using CocoaPods.
 
@@ -28,7 +28,7 @@ Every platform now reports the same [error codes](concepts/errors.md). Two chang
 
 #### Calls that now throw
 
-Calls that did nothing, or crashed, on some platforms now throw on all of them. Add a `catch` where your app can hit them, or the error goes unhandled. The ones most apps meet:
+Calls that did nothing, or crashed, on some platforms now throw. Add a `catch` where your app can hit them, or the error goes unhandled. The ones most apps meet:
 
 * `STYLE_NOT_READY`: a source, layer or image call made before the style loaded. Move it to `onStyleLoadedCallback`.
 * `LAYER_NOT_FOUND_ERROR`, `SOURCE_NOT_FOUND`, `LAYER_ALREADY_EXISTS`, `SOURCE_ALREADY_EXISTS`: an id that is missing, or already in use.
@@ -168,7 +168,9 @@ class FakeMapPlatform extends MapLibreMethodChannel { ... }
 tearDown(() => MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel());
 onCameraMoveStartedPlatform(null);
 
-// After
+// After: MapLibreGlobalPlatform comes from maplibre_gl_platform_interface
+import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
+
 class FakeMapPlatform extends MapLibrePlatform {
   // Override what the test calls; any other call throws.
   @override
