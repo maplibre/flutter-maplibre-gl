@@ -195,6 +195,18 @@ MapLibreMap(
 )
 ```
 
+## Glide after a pan
+
+`panInertia` sets how long the map keeps gliding after the user drags it and lets go:
+
+```dart
+MapLibreMap(
+  panInertia: PanInertia.short, // none, short or normal, the default
+)
+```
+
+On iOS it also applies to the glide after a pinch or a rotation, and `hapticFeedbackEnabled: false` turns off the light vibration when the user rotates the map back to north.
+
 ## Key APIs
 
 - [`MapLibreMapController.animateCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/animateCamera.html)
@@ -203,3 +215,4 @@ MapLibreMap(
 - [`CameraUpdate`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraUpdate-class.html)
 - [`CameraPosition`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraPosition-class.html)
 - [`CameraMoveReason`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraMoveReason.html)
+- [`PanInertia`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/PanInertia.html)

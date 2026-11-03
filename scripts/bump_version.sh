@@ -29,8 +29,10 @@ PACKAGES=(maplibre_gl maplibre_gl_platform_interface maplibre_gl_web maplibre_gl
 # Changelogs that get their own page on pub.dev, plus the root one.
 CHANGELOGS=(CHANGELOG.md maplibre_gl/CHANGELOG.md maplibre_gl_platform_interface/CHANGELOG.md maplibre_gl_web/CHANGELOG.md)
 
-# Files documenting the version an app should depend on.
-DOC_FILES=(README.md website/docs/index.md website/docs/getting-started.md website/docs/migration.md)
+# Files documenting the version an app should depend on. Not the migration
+# guide: each of its sections pins the release it is about, and the new one is
+# written by hand.
+DOC_FILES=(README.md website/docs/index.md website/docs/getting-started.md)
 
 usage() {
   cat <<EOF

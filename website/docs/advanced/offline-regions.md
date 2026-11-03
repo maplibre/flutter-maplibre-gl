@@ -258,7 +258,7 @@ database. Not available on web, which has no ambient cache.
 ## Errors
 
 The offline calls fail with a `PlatformException` whose `code` is the same on
-Android and iOS:
+Android and iOS. The codes of the other calls are in [Errors](../concepts/errors.md).
 
 | Code | When |
 |---|---|

@@ -76,7 +76,7 @@ MapLibreMap(
 
 Then head to the [getting started guide](https://maplibre.org/flutter-maplibre-gl/getting-started/) for platform setup (location permissions on iOS/Android; web needs no `index.html` changes) and to learn how to add markers, layers, offline tiles and more.
 
-> Upgrading from an earlier release? See the [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/).
+Upgrading from 0.27? The [migration guide](https://maplibre.org/flutter-maplibre-gl/migration/#upgrading-to-0280) lists what to check.
 
 ## 🗺️ Feature support
 
