@@ -218,7 +218,7 @@ SymbolLayerProperties(
 )
 ```
 
-It works on Android, iOS and web, though the style spec lists it for MapLibre GL JS only so far.
+MapLibre GL JS supports it, and so do MapLibre Android 13.7 and iOS 6.31, though the style spec does not list them yet.
 
 ## Global state
 
