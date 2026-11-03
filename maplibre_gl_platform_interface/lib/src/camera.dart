@@ -105,7 +105,8 @@ class CameraUpdate {
   /// geographical bounding box is centered in the map view at the greatest
   /// possible zoom level. A non-zero [left], [top], [right] and [bottom] padding
   /// insets the bounding box from the map view's edges.
-  /// The camera's new tilt and bearing will both be 0.0.
+  /// The camera keeps its current bearing and tilt, and the bounding box is
+  /// fitted as seen at that bearing.
   CameraUpdate.newLatLngBounds(
     LatLngBounds bounds, {
     double left = 0,
@@ -132,6 +133,7 @@ class CameraUpdate {
   /// For a camera with bearing 0.0 (pointing north), scrolling by 50,75 moves
   /// the camera's target to a geographical location that is 50 to the east and
   /// 75 to the south of the current location, measured in screen coordinates.
+  /// The distances are in logical pixels on every platform.
   CameraUpdate.scrollBy(double dx, double dy)
     : this._(<dynamic>['scrollBy', dx, dy]);
 
@@ -175,4 +177,16 @@ class CameraUpdate {
   final dynamic _json;
 
   dynamic toJson() => _json;
+}
+
+/// What started a movement of the camera.
+enum CameraMoveReason {
+  /// A gesture of the user on the map, such as a pan, pinch, rotation, tilt
+  /// or double tap, with the fling after it. On web also the mouse wheel and
+  /// the keyboard.
+  gesture,
+
+  /// Anything else: a camera call of the app, a tap on the compass, location
+  /// tracking.
+  programmatic,
 }

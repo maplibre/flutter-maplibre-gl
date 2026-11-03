@@ -61,24 +61,22 @@ class MapExampleScaffold extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final mapHeight = screenHeight * mapHeightRatio;
 
-    final body =
-        mapOnly
-            ? map
-            : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: mapHeight, child: map),
-                Expanded(
-                  child: SingleChildScrollView(child: _buildControls(theme)),
-                ),
-              ],
-            );
+    final body = mapOnly
+        ? map
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: mapHeight, child: map),
+              Expanded(
+                child: SingleChildScrollView(child: _buildControls(theme)),
+              ),
+            ],
+          );
 
     return Scaffold(
-      appBar:
-          showAppBar && title != null
-              ? AppBar(title: Text(title!), elevation: 0)
-              : null,
+      appBar: showAppBar && title != null
+          ? AppBar(title: Text(title!), elevation: 0)
+          : null,
       body: body,
       floatingActionButton: floatingActionButton,
     );
@@ -158,10 +156,9 @@ class MapExampleScaffoldBuilder extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar:
-          showAppBar && title != null
-              ? AppBar(title: Text(title!), elevation: 0)
-              : null,
+      appBar: showAppBar && title != null
+          ? AppBar(title: Text(title!), elevation: 0)
+          : null,
       body: body,
       floatingActionButton: floatingActionButton,
     );

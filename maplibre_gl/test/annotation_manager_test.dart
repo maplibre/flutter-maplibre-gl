@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -277,6 +278,40 @@ void main() {
 
       expect(controller.symbols, isEmpty);
     });
+
+    test('overlap setters keep the symbol layer in its slot', () async {
+      // Symbol sits between line and circle here, with a user layer on top.
+      final ordered = FakeMapLibrePlatform();
+      final c = MapLibreMapController(
+        maplibrePlatform: ordered,
+        initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+        annotationOrder: const [
+          AnnotationType.line,
+          AnnotationType.symbol,
+          AnnotationType.circle,
+        ],
+        annotationConsumeTapEvents: const [],
+      );
+      c.lineManager = LineManager(c);
+      await c.lineManager!.initialize();
+      c.symbolManager = SymbolManager(c);
+      await c.symbolManager!.initialize();
+      c.circleManager = CircleManager(c);
+      await c.circleManager!.initialize();
+      await c.addLayer('user', 'user', const FillLayerProperties());
+
+      final before = List.of(ordered.layerStack);
+      expect(before.last, 'user');
+
+      await c.setSymbolIconAllowOverlap(true);
+      await c.setSymbolIconIgnorePlacement(true);
+      await c.setSymbolTextAllowOverlap(true);
+      await c.setSymbolTextIgnorePlacement(true);
+
+      expect(ordered.layerStack, before);
+      final symbolAdds = ordered.callsFor('addSymbolLayer');
+      expect(symbolAdds.length, 5);
+    });
   });
 
   group('AnnotationManager initialization', () {
@@ -402,6 +437,27 @@ void main() {
       expect(controller.onFeatureDrag.length, initial);
     });
 
+    test('a manager disposed while initializing stops there', () async {
+      final callbacks = controller.onFeatureDrag.length;
+      final manager = FillManager(controller);
+
+      final release = Completer<void>();
+      platform.onAddGeoJsonSource = (_) => release.future;
+      final initializing = manager.initialize();
+      await pumpEventQueue();
+
+      platform.onAddGeoJsonSource = null;
+      await manager.dispose();
+      release.complete();
+      await initializing;
+
+      // Only the first source went out, before the dispose.
+      expect(platform.callsFor('addGeoJsonSource'), hasLength(1));
+      expect(platform.wasCalled('addFillLayer'), isFalse);
+      expect(controller.onFeatureDrag.length, callbacks);
+      expect(manager.isInitialized, isFalse);
+    });
+
     test(
       'drag event after style reload does not target a disposed manager',
       () async {
@@ -489,6 +545,132 @@ void main() {
     });
   });
 
+  group('AnnotationManager set', () {
+    /// The single feature sent by the one setFeatureForGeoJsonSource call
+    /// recorded since the last reset, after checking that no whole source was
+    /// rewritten.
+    Map<String, dynamic> singleFeatureWrite(String sourceId) {
+      expect(platform.wasCalled('setGeoJsonSource'), isFalse);
+      final calls = platform.callsFor('setFeatureForGeoJsonSource');
+      expect(calls, hasLength(1));
+      expect(calls.single.positionalArgs[0], sourceId);
+      return calls.single.positionalArgs[1] as Map<String, dynamic>;
+    }
+
+    test('updateCircle sends only the updated circle', () async {
+      await controller.addCircles([
+        const CircleOptions(geometry: LatLng(1, 2)),
+        const CircleOptions(geometry: LatLng(3, 4)),
+      ]);
+      final circle = controller.circles.first;
+      platform.reset();
+
+      await controller.updateCircle(
+        circle,
+        const CircleOptions(circleRadius: 15.0),
+      );
+
+      final feature = singleFeatureWrite(controller.circleManager!.layerIds[0]);
+      expect(feature['id'], circle.id);
+      expect(feature['properties']['circleRadius'], 15.0);
+    });
+
+    test('updateSymbol sends only the updated symbol', () async {
+      await controller.addSymbols([
+        const SymbolOptions(geometry: LatLng(1, 2)),
+        const SymbolOptions(geometry: LatLng(3, 4)),
+      ]);
+      final symbol = controller.symbols.first;
+      platform.reset();
+
+      await controller.updateSymbol(
+        symbol,
+        const SymbolOptions(geometry: LatLng(5, 6)),
+      );
+
+      final feature = singleFeatureWrite(controller.symbolManager!.layerIds[0]);
+      expect(feature['id'], symbol.id);
+      expect(feature['geometry']['coordinates'], [6.0, 5.0]);
+    });
+
+    test('dragging a circle sends only that circle', () async {
+      await controller.addCircles([
+        const CircleOptions(geometry: LatLng(10, 20), draggable: true),
+        const CircleOptions(geometry: LatLng(30, 40), draggable: true),
+      ]);
+      final circle = controller.circles.first;
+      platform.reset();
+
+      platform.onFeatureDraggedPlatform.call({
+        'id': circle.id,
+        'eventType': DragEventType.drag.name,
+        'point': const Point(0.0, 0.0),
+        'origin': const LatLng(10, 20),
+        'current': const LatLng(11, 22),
+        'delta': const LatLng(1, 2),
+      });
+      await pumpEventQueue();
+
+      final feature = singleFeatureWrite(controller.circleManager!.layerIds[0]);
+      expect(feature['id'], circle.id);
+      expect(feature['geometry']['coordinates'], [22.0, 11.0]);
+    });
+
+    test(
+      'a circle removed and added again is still updated in place',
+      () async {
+        final circle = await controller.addCircle(
+          const CircleOptions(geometry: LatLng(10, 20)),
+        );
+        await controller.removeCircle(circle);
+        await controller.circleManager!.add(circle);
+        platform.reset();
+
+        await controller.updateCircle(
+          circle,
+          const CircleOptions(circleRadius: 15.0),
+        );
+
+        expect(
+          singleFeatureWrite(controller.circleManager!.layerIds[0])['id'],
+          circle.id,
+        );
+      },
+    );
+
+    test('updateLine on the same layer sends only the updated line', () async {
+      final line = await controller.addLine(
+        const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
+      );
+      platform.reset();
+
+      await controller.updateLine(line, const LineOptions(lineWidth: 4.0));
+
+      expect(
+        singleFeatureWrite(controller.lineManager!.layerIds[0])['id'],
+        line.id,
+      );
+    });
+
+    test('updateLine that changes layer rewrites every line source', () async {
+      final line = await controller.addLine(
+        const LineOptions(geometry: [LatLng(0, 0), LatLng(1, 1)]),
+      );
+      platform.reset();
+
+      await controller.updateLine(
+        line,
+        const LineOptions(linePattern: 'pattern'),
+      );
+
+      expect(platform.wasCalled('setFeatureForGeoJsonSource'), isFalse);
+      expect([
+        for (final call in platform.callsFor('setGeoJsonSource'))
+          call.positionalArgs[0],
+      ], controller.lineManager!.layerIds);
+    });
+  });
+
   group('Annotation tap callbacks', () {
     test('onCircleTapped fires when feature tapped', () async {
       final circle = await controller.addCircle(
@@ -544,6 +726,104 @@ void main() {
       });
 
       expect(tappedId, circle.id);
+    });
+  });
+
+  group('Feature event ids', () {
+    // iOS and web report a numeric id as a number, Android as text: the
+    // callbacks take it as text everywhere.
+    Map<String, dynamic> drag(Object id) => {
+      'id': id,
+      'eventType': DragEventType.drag.name,
+      'point': const Point(0.0, 0.0),
+      'origin': const LatLng(10, 20),
+      'current': const LatLng(11, 22),
+      'delta': const LatLng(1, 2),
+    };
+
+    Map<String, dynamic> hover(Object id) => {
+      'id': id,
+      'eventType': HoverEventType.enter.name,
+      'point': const Point(0.0, 0.0),
+      'latLng': const LatLng(10, 20),
+    };
+
+    test('a numeric id reaches the tap callback as text', () {
+      final ids = <String>[];
+      controller.onFeatureTapped.add(
+        (point, latLng, id, layerId, annotation) => ids.add(id),
+      );
+
+      platform.onFeatureTappedPlatform.call({
+        'id': 2.5,
+        'layerId': 'pois',
+        'point': const Point(0.0, 0.0),
+        'latLng': const LatLng(10, 20),
+      });
+
+      expect(ids, ['2.5']);
+    });
+
+    test('a numeric id reaches the drag callback as text', () {
+      final ids = <String>[];
+      final annotations = <Annotation?>[];
+      controller.onFeatureDrag.add((
+        point,
+        origin,
+        current,
+        delta,
+        id,
+        annotation,
+        eventType,
+      ) {
+        ids.add(id);
+        annotations.add(annotation);
+      });
+
+      platform.onFeatureDraggedPlatform.call(drag(7));
+
+      expect(ids, ['7']);
+      expect(annotations, [null]);
+    });
+
+    test('a numeric id reaches the hover callback as text', () {
+      final ids = <String>[];
+      final annotations = <Annotation?>[];
+      controller.onFeatureHover.add((point, latLng, id, annotation, type) {
+        ids.add(id);
+        annotations.add(annotation);
+      });
+
+      platform.onFeatureHoverPlatform.call(hover(7));
+
+      expect(ids, ['7']);
+      expect(annotations, [null]);
+    });
+
+    test('drag and hover still resolve an annotation', () async {
+      final circle = await controller.addCircle(
+        const CircleOptions(geometry: LatLng(10, 20), draggable: true),
+      );
+      final resolved = <Annotation?>[];
+      controller.onFeatureDrag.add((
+        point,
+        origin,
+        current,
+        delta,
+        id,
+        annotation,
+        eventType,
+      ) {
+        resolved.add(annotation);
+      });
+      controller.onFeatureHover.add(
+        (point, latLng, id, annotation, type) => resolved.add(annotation),
+      );
+
+      platform.onFeatureDraggedPlatform.call(drag(circle.id));
+      platform.onFeatureHoverPlatform.call(hover(circle.id));
+
+      expect(resolved, [circle, circle]);
     });
   });
 }

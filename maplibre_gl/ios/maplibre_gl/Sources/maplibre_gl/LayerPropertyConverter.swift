@@ -6,526 +6,1291 @@ import MapLibre
 class LayerPropertyConverter {
     class func addSymbolProperties(symbolLayer: MLNSymbolStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setSymbolProperty(symbolLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `symbolLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setSymbolProperty(
+        _ symbolLayer: MLNSymbolStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "icon-opacity":
+                symbolLayer.iconOpacity = expression
+            case "icon-color":
+                symbolLayer.iconColor = expression
+            case "icon-halo-color":
+                symbolLayer.iconHaloColor = expression
+            case "icon-halo-width":
+                symbolLayer.iconHaloWidth = expression
+            case "icon-halo-blur":
+                symbolLayer.iconHaloBlur = expression
+            case "icon-translate":
+                symbolLayer.iconTranslation = expression
+            case "icon-translate-anchor":
+                symbolLayer.iconTranslationAnchor = expression
+            case "text-opacity":
+                symbolLayer.textOpacity = expression
+            case "text-color":
+                symbolLayer.textColor = expression
+            case "text-halo-color":
+                symbolLayer.textHaloColor = expression
+            case "text-halo-width":
+                symbolLayer.textHaloWidth = expression
+            case "text-halo-blur":
+                symbolLayer.textHaloBlur = expression
+            case "text-translate":
+                symbolLayer.textTranslation = expression
+            case "text-translate-anchor":
+                symbolLayer.textTranslationAnchor = expression
+            case "symbol-placement":
+                symbolLayer.symbolPlacement = expression
+            case "symbol-spacing":
+                symbolLayer.symbolSpacing = expression
+            case "symbol-avoid-edges":
+                symbolLayer.symbolAvoidsEdges = expression
+            case "symbol-sort-key":
+                symbolLayer.symbolSortKey = expression
+            case "symbol-z-order":
+                symbolLayer.symbolZOrder = expression
+            case "icon-allow-overlap":
+                symbolLayer.iconAllowsOverlap = expression
+            case "icon-ignore-placement":
+                symbolLayer.iconIgnoresPlacement = expression
+            case "icon-optional":
+                symbolLayer.iconOptional = expression
+            case "icon-rotation-alignment":
+                symbolLayer.iconRotationAlignment = expression
+            case "icon-size":
+                symbolLayer.iconScale = expression
+            case "icon-text-fit":
+                symbolLayer.iconTextFit = expression
+            case "icon-text-fit-padding":
+                symbolLayer.iconTextFitPadding = expression
+            case "icon-image":
+                symbolLayer.iconImageName = expression
+            case "icon-rotate":
+                symbolLayer.iconRotation = expression
+            case "icon-padding":
+                symbolLayer.iconPadding = expression
+            case "icon-keep-upright":
+                symbolLayer.keepsIconUpright = expression
+            case "icon-offset":
+                symbolLayer.iconOffset = expression
+            case "icon-anchor":
+                symbolLayer.iconAnchor = expression
+            case "icon-pitch-alignment":
+                symbolLayer.iconPitchAlignment = expression
+            case "text-pitch-alignment":
+                symbolLayer.textPitchAlignment = expression
+            case "text-rotation-alignment":
+                symbolLayer.textRotationAlignment = expression
+            case "text-field":
+                symbolLayer.text = expression
+            case "text-font":
+                symbolLayer.textFontNames = expression
+            case "text-size":
+                symbolLayer.textFontSize = expression
+            case "text-max-width":
+                symbolLayer.maximumTextWidth = expression
+            case "text-line-height":
+                symbolLayer.textLineHeight = expression
+            case "text-letter-spacing":
+                symbolLayer.textLetterSpacing = expression
+            case "text-justify":
+                symbolLayer.textJustification = expression
+            case "text-radial-offset":
+                symbolLayer.textRadialOffset = expression
+            case "text-variable-anchor":
+                symbolLayer.textVariableAnchor = expression
+            case "text-variable-anchor-offset":
+                symbolLayer.textVariableAnchorOffset = expression
+            case "text-anchor":
+                symbolLayer.textAnchor = expression
+            case "text-max-angle":
+                symbolLayer.maximumTextAngle = expression
+            case "text-writing-mode":
+                symbolLayer.textWritingModes = expression
+            case "text-rotate":
+                symbolLayer.textRotation = expression
+            case "text-padding":
+                symbolLayer.textPadding = expression
+            case "text-keep-upright":
+                symbolLayer.keepsTextUpright = expression
+            case "text-transform":
+                symbolLayer.textTransform = expression
+            case "text-offset":
+                symbolLayer.textOffset = expression
+            case "text-allow-overlap":
+                symbolLayer.textAllowsOverlap = expression
+            case "text-ignore-placement":
+                symbolLayer.textIgnoresPlacement = expression
+            case "text-optional":
+                symbolLayer.textOptional = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    symbolLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    symbolLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "icon-opacity":
-                    symbolLayer.iconOpacity = expression
-                case "icon-color":
-                    symbolLayer.iconColor = expression
-                case "icon-halo-color":
-                    symbolLayer.iconHaloColor = expression
-                case "icon-halo-width":
-                    symbolLayer.iconHaloWidth = expression
-                case "icon-halo-blur":
-                    symbolLayer.iconHaloBlur = expression
-                case "icon-translate":
-                    symbolLayer.iconTranslation = expression
-                case "icon-translate-anchor":
-                    symbolLayer.iconTranslationAnchor = expression
-                case "text-opacity":
-                    symbolLayer.textOpacity = expression
-                case "text-color":
-                    symbolLayer.textColor = expression
-                case "text-halo-color":
-                    symbolLayer.textHaloColor = expression
-                case "text-halo-width":
-                    symbolLayer.textHaloWidth = expression
-                case "text-halo-blur":
-                    symbolLayer.textHaloBlur = expression
-                case "text-translate":
-                    symbolLayer.textTranslation = expression
-                case "text-translate-anchor":
-                    symbolLayer.textTranslationAnchor = expression
-                case "symbol-placement":
-                    symbolLayer.symbolPlacement = expression
-                case "symbol-spacing":
-                    symbolLayer.symbolSpacing = expression
-                case "symbol-avoid-edges":
-                    symbolLayer.symbolAvoidsEdges = expression
-                case "symbol-sort-key":
-                    symbolLayer.symbolSortKey = expression
-                case "symbol-z-order":
-                    symbolLayer.symbolZOrder = expression
-                case "icon-allow-overlap":
-                    symbolLayer.iconAllowsOverlap = expression
-                case "icon-ignore-placement":
-                    symbolLayer.iconIgnoresPlacement = expression
-                case "icon-optional":
-                    symbolLayer.iconOptional = expression
-                case "icon-rotation-alignment":
-                    symbolLayer.iconRotationAlignment = expression
-                case "icon-size":
-                    symbolLayer.iconScale = expression
-                case "icon-text-fit":
-                    symbolLayer.iconTextFit = expression
-                case "icon-text-fit-padding":
-                    symbolLayer.iconTextFitPadding = expression
-                case "icon-image":
-                    symbolLayer.iconImageName = expression
-                case "icon-rotate":
-                    symbolLayer.iconRotation = expression
-                case "icon-padding":
-                    symbolLayer.iconPadding = expression
-                case "icon-keep-upright":
-                    symbolLayer.keepsIconUpright = expression
-                case "icon-offset":
-                    symbolLayer.iconOffset = expression
-                case "icon-anchor":
-                    symbolLayer.iconAnchor = expression
-                case "icon-pitch-alignment":
-                    symbolLayer.iconPitchAlignment = expression
-                case "text-pitch-alignment":
-                    symbolLayer.textPitchAlignment = expression
-                case "text-rotation-alignment":
-                    symbolLayer.textRotationAlignment = expression
-                case "text-field":
-                    symbolLayer.text = expression
-                case "text-font":
-                    symbolLayer.textFontNames = expression
-                case "text-size":
-                    symbolLayer.textFontSize = expression
-                case "text-max-width":
-                    symbolLayer.maximumTextWidth = expression
-                case "text-line-height":
-                    symbolLayer.textLineHeight = expression
-                case "text-letter-spacing":
-                    symbolLayer.textLetterSpacing = expression
-                case "text-justify":
-                    symbolLayer.textJustification = expression
-                case "text-radial-offset":
-                    symbolLayer.textRadialOffset = expression
-                case "text-variable-anchor":
-                    symbolLayer.textVariableAnchor = expression
-                case "text-variable-anchor-offset":
-                    symbolLayer.textVariableAnchorOffset = expression
-                case "text-anchor":
-                    symbolLayer.textAnchor = expression
-                case "text-max-angle":
-                    symbolLayer.maximumTextAngle = expression
-                case "text-writing-mode":
-                    symbolLayer.textWritingModes = expression
-                case "text-rotate":
-                    symbolLayer.textRotation = expression
-                case "text-padding":
-                    symbolLayer.textPadding = expression
-                case "text-keep-upright":
-                    symbolLayer.keepsTextUpright = expression
-                case "text-transform":
-                    symbolLayer.textTransform = expression
-                case "text-offset":
-                    symbolLayer.textOffset = expression
-                case "text-allow-overlap":
-                    symbolLayer.textAllowsOverlap = expression
-                case "text-ignore-placement":
-                    symbolLayer.textIgnoresPlacement = expression
-                case "text-optional":
-                    symbolLayer.textOptional = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            symbolLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `symbolLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getSymbolProperty(
+        _ symbolLayer: MLNSymbolStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "icon-opacity":
+                return symbolLayer.iconOpacity
+            case "icon-color":
+                return symbolLayer.iconColor
+            case "icon-halo-color":
+                return symbolLayer.iconHaloColor
+            case "icon-halo-width":
+                return symbolLayer.iconHaloWidth
+            case "icon-halo-blur":
+                return symbolLayer.iconHaloBlur
+            case "icon-translate":
+                return symbolLayer.iconTranslation
+            case "icon-translate-anchor":
+                return symbolLayer.iconTranslationAnchor
+            case "text-opacity":
+                return symbolLayer.textOpacity
+            case "text-color":
+                return symbolLayer.textColor
+            case "text-halo-color":
+                return symbolLayer.textHaloColor
+            case "text-halo-width":
+                return symbolLayer.textHaloWidth
+            case "text-halo-blur":
+                return symbolLayer.textHaloBlur
+            case "text-translate":
+                return symbolLayer.textTranslation
+            case "text-translate-anchor":
+                return symbolLayer.textTranslationAnchor
+            case "symbol-placement":
+                return symbolLayer.symbolPlacement
+            case "symbol-spacing":
+                return symbolLayer.symbolSpacing
+            case "symbol-avoid-edges":
+                return symbolLayer.symbolAvoidsEdges
+            case "symbol-sort-key":
+                return symbolLayer.symbolSortKey
+            case "symbol-z-order":
+                return symbolLayer.symbolZOrder
+            case "icon-allow-overlap":
+                return symbolLayer.iconAllowsOverlap
+            case "icon-ignore-placement":
+                return symbolLayer.iconIgnoresPlacement
+            case "icon-optional":
+                return symbolLayer.iconOptional
+            case "icon-rotation-alignment":
+                return symbolLayer.iconRotationAlignment
+            case "icon-size":
+                return symbolLayer.iconScale
+            case "icon-text-fit":
+                return symbolLayer.iconTextFit
+            case "icon-text-fit-padding":
+                return symbolLayer.iconTextFitPadding
+            case "icon-image":
+                return symbolLayer.iconImageName
+            case "icon-rotate":
+                return symbolLayer.iconRotation
+            case "icon-padding":
+                return symbolLayer.iconPadding
+            case "icon-keep-upright":
+                return symbolLayer.keepsIconUpright
+            case "icon-offset":
+                return symbolLayer.iconOffset
+            case "icon-anchor":
+                return symbolLayer.iconAnchor
+            case "icon-pitch-alignment":
+                return symbolLayer.iconPitchAlignment
+            case "text-pitch-alignment":
+                return symbolLayer.textPitchAlignment
+            case "text-rotation-alignment":
+                return symbolLayer.textRotationAlignment
+            case "text-field":
+                return symbolLayer.text
+            case "text-font":
+                return symbolLayer.textFontNames
+            case "text-size":
+                return symbolLayer.textFontSize
+            case "text-max-width":
+                return symbolLayer.maximumTextWidth
+            case "text-line-height":
+                return symbolLayer.textLineHeight
+            case "text-letter-spacing":
+                return symbolLayer.textLetterSpacing
+            case "text-justify":
+                return symbolLayer.textJustification
+            case "text-radial-offset":
+                return symbolLayer.textRadialOffset
+            case "text-variable-anchor":
+                return symbolLayer.textVariableAnchor
+            case "text-variable-anchor-offset":
+                return symbolLayer.textVariableAnchorOffset
+            case "text-anchor":
+                return symbolLayer.textAnchor
+            case "text-max-angle":
+                return symbolLayer.maximumTextAngle
+            case "text-writing-mode":
+                return symbolLayer.textWritingModes
+            case "text-rotate":
+                return symbolLayer.textRotation
+            case "text-padding":
+                return symbolLayer.textPadding
+            case "text-keep-upright":
+                return symbolLayer.keepsTextUpright
+            case "text-transform":
+                return symbolLayer.textTransform
+            case "text-offset":
+                return symbolLayer.textOffset
+            case "text-allow-overlap":
+                return symbolLayer.textAllowsOverlap
+            case "text-ignore-placement":
+                return symbolLayer.textIgnoresPlacement
+            case "text-optional":
+                return symbolLayer.textOptional
+            default:
+                return nil
         }
     }
 
     class func addCircleProperties(circleLayer: MLNCircleStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setCircleProperty(circleLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `circleLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setCircleProperty(
+        _ circleLayer: MLNCircleStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "circle-radius":
+                circleLayer.circleRadius = expression
+            case "circle-color":
+                circleLayer.circleColor = expression
+            case "circle-blur":
+                circleLayer.circleBlur = expression
+            case "circle-opacity":
+                circleLayer.circleOpacity = expression
+            case "circle-translate":
+                circleLayer.circleTranslation = expression
+            case "circle-translate-anchor":
+                circleLayer.circleTranslationAnchor = expression
+            case "circle-pitch-scale":
+                circleLayer.circleScaleAlignment = expression
+            case "circle-pitch-alignment":
+                circleLayer.circlePitchAlignment = expression
+            case "circle-stroke-width":
+                circleLayer.circleStrokeWidth = expression
+            case "circle-stroke-color":
+                circleLayer.circleStrokeColor = expression
+            case "circle-stroke-opacity":
+                circleLayer.circleStrokeOpacity = expression
+            case "circle-sort-key":
+                circleLayer.circleSortKey = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    circleLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    circleLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "circle-radius":
-                    circleLayer.circleRadius = expression
-                case "circle-color":
-                    circleLayer.circleColor = expression
-                case "circle-blur":
-                    circleLayer.circleBlur = expression
-                case "circle-opacity":
-                    circleLayer.circleOpacity = expression
-                case "circle-translate":
-                    circleLayer.circleTranslation = expression
-                case "circle-translate-anchor":
-                    circleLayer.circleTranslationAnchor = expression
-                case "circle-pitch-scale":
-                    circleLayer.circleScaleAlignment = expression
-                case "circle-pitch-alignment":
-                    circleLayer.circlePitchAlignment = expression
-                case "circle-stroke-width":
-                    circleLayer.circleStrokeWidth = expression
-                case "circle-stroke-color":
-                    circleLayer.circleStrokeColor = expression
-                case "circle-stroke-opacity":
-                    circleLayer.circleStrokeOpacity = expression
-                case "circle-sort-key":
-                    circleLayer.circleSortKey = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            circleLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `circleLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getCircleProperty(
+        _ circleLayer: MLNCircleStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "circle-radius":
+                return circleLayer.circleRadius
+            case "circle-color":
+                return circleLayer.circleColor
+            case "circle-blur":
+                return circleLayer.circleBlur
+            case "circle-opacity":
+                return circleLayer.circleOpacity
+            case "circle-translate":
+                return circleLayer.circleTranslation
+            case "circle-translate-anchor":
+                return circleLayer.circleTranslationAnchor
+            case "circle-pitch-scale":
+                return circleLayer.circleScaleAlignment
+            case "circle-pitch-alignment":
+                return circleLayer.circlePitchAlignment
+            case "circle-stroke-width":
+                return circleLayer.circleStrokeWidth
+            case "circle-stroke-color":
+                return circleLayer.circleStrokeColor
+            case "circle-stroke-opacity":
+                return circleLayer.circleStrokeOpacity
+            case "circle-sort-key":
+                return circleLayer.circleSortKey
+            default:
+                return nil
         }
     }
 
     class func addLineProperties(lineLayer: MLNLineStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setLineProperty(lineLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `lineLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setLineProperty(
+        _ lineLayer: MLNLineStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "line-opacity":
+                lineLayer.lineOpacity = expression
+            case "line-color":
+                lineLayer.lineColor = expression
+            case "line-translate":
+                lineLayer.lineTranslation = expression
+            case "line-translate-anchor":
+                lineLayer.lineTranslationAnchor = expression
+            case "line-width":
+                lineLayer.lineWidth = expression
+            case "line-gap-width":
+                lineLayer.lineGapWidth = expression
+            case "line-offset":
+                lineLayer.lineOffset = expression
+            case "line-blur":
+                lineLayer.lineBlur = expression
+            case "line-dasharray":
+                lineLayer.lineDashPattern = expression
+            case "line-pattern":
+                lineLayer.linePattern = expression
+            case "line-gradient":
+                lineLayer.lineGradient = expression
+            case "line-cap":
+                lineLayer.lineCap = expression
+            case "line-join":
+                lineLayer.lineJoin = expression
+            case "line-miter-limit":
+                lineLayer.lineMiterLimit = expression
+            case "line-round-limit":
+                lineLayer.lineRoundLimit = expression
+            case "line-sort-key":
+                lineLayer.lineSortKey = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    lineLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    lineLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "line-opacity":
-                    lineLayer.lineOpacity = expression
-                case "line-color":
-                    lineLayer.lineColor = expression
-                case "line-translate":
-                    lineLayer.lineTranslation = expression
-                case "line-translate-anchor":
-                    lineLayer.lineTranslationAnchor = expression
-                case "line-width":
-                    lineLayer.lineWidth = expression
-                case "line-gap-width":
-                    lineLayer.lineGapWidth = expression
-                case "line-offset":
-                    lineLayer.lineOffset = expression
-                case "line-blur":
-                    lineLayer.lineBlur = expression
-                case "line-dasharray":
-                    lineLayer.lineDashPattern = expression
-                case "line-pattern":
-                    lineLayer.linePattern = expression
-                case "line-gradient":
-                    lineLayer.lineGradient = expression
-                case "line-cap":
-                    lineLayer.lineCap = expression
-                case "line-join":
-                    lineLayer.lineJoin = expression
-                case "line-miter-limit":
-                    lineLayer.lineMiterLimit = expression
-                case "line-round-limit":
-                    lineLayer.lineRoundLimit = expression
-                case "line-sort-key":
-                    lineLayer.lineSortKey = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            lineLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `lineLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getLineProperty(
+        _ lineLayer: MLNLineStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "line-opacity":
+                return lineLayer.lineOpacity
+            case "line-color":
+                return lineLayer.lineColor
+            case "line-translate":
+                return lineLayer.lineTranslation
+            case "line-translate-anchor":
+                return lineLayer.lineTranslationAnchor
+            case "line-width":
+                return lineLayer.lineWidth
+            case "line-gap-width":
+                return lineLayer.lineGapWidth
+            case "line-offset":
+                return lineLayer.lineOffset
+            case "line-blur":
+                return lineLayer.lineBlur
+            case "line-dasharray":
+                return lineLayer.lineDashPattern
+            case "line-pattern":
+                return lineLayer.linePattern
+            case "line-gradient":
+                return lineLayer.lineGradient
+            case "line-cap":
+                return lineLayer.lineCap
+            case "line-join":
+                return lineLayer.lineJoin
+            case "line-miter-limit":
+                return lineLayer.lineMiterLimit
+            case "line-round-limit":
+                return lineLayer.lineRoundLimit
+            case "line-sort-key":
+                return lineLayer.lineSortKey
+            default:
+                return nil
         }
     }
 
     class func addFillProperties(fillLayer: MLNFillStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setFillProperty(fillLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `fillLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setFillProperty(
+        _ fillLayer: MLNFillStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "fill-antialias":
+                fillLayer.fillAntialiased = expression
+            case "fill-opacity":
+                fillLayer.fillOpacity = expression
+            case "fill-color":
+                fillLayer.fillColor = expression
+            case "fill-outline-color":
+                fillLayer.fillOutlineColor = expression
+            case "fill-translate":
+                fillLayer.fillTranslation = expression
+            case "fill-translate-anchor":
+                fillLayer.fillTranslationAnchor = expression
+            case "fill-pattern":
+                fillLayer.fillPattern = expression
+            case "fill-sort-key":
+                fillLayer.fillSortKey = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    fillLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    fillLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "fill-antialias":
-                    fillLayer.fillAntialiased = expression
-                case "fill-opacity":
-                    fillLayer.fillOpacity = expression
-                case "fill-color":
-                    fillLayer.fillColor = expression
-                case "fill-outline-color":
-                    fillLayer.fillOutlineColor = expression
-                case "fill-translate":
-                    fillLayer.fillTranslation = expression
-                case "fill-translate-anchor":
-                    fillLayer.fillTranslationAnchor = expression
-                case "fill-pattern":
-                    fillLayer.fillPattern = expression
-                case "fill-sort-key":
-                    fillLayer.fillSortKey = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            fillLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `fillLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getFillProperty(
+        _ fillLayer: MLNFillStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "fill-antialias":
+                return fillLayer.fillAntialiased
+            case "fill-opacity":
+                return fillLayer.fillOpacity
+            case "fill-color":
+                return fillLayer.fillColor
+            case "fill-outline-color":
+                return fillLayer.fillOutlineColor
+            case "fill-translate":
+                return fillLayer.fillTranslation
+            case "fill-translate-anchor":
+                return fillLayer.fillTranslationAnchor
+            case "fill-pattern":
+                return fillLayer.fillPattern
+            case "fill-sort-key":
+                return fillLayer.fillSortKey
+            default:
+                return nil
         }
     }
 
     class func addFillExtrusionProperties(fillExtrusionLayer: MLNFillExtrusionStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setFillExtrusionProperty(fillExtrusionLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `fillExtrusionLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setFillExtrusionProperty(
+        _ fillExtrusionLayer: MLNFillExtrusionStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "fill-extrusion-opacity":
+                fillExtrusionLayer.fillExtrusionOpacity = expression
+            case "fill-extrusion-color":
+                fillExtrusionLayer.fillExtrusionColor = expression
+            case "fill-extrusion-translate":
+                fillExtrusionLayer.fillExtrusionTranslation = expression
+            case "fill-extrusion-translate-anchor":
+                fillExtrusionLayer.fillExtrusionTranslationAnchor = expression
+            case "fill-extrusion-pattern":
+                fillExtrusionLayer.fillExtrusionPattern = expression
+            case "fill-extrusion-height":
+                fillExtrusionLayer.fillExtrusionHeight = expression
+            case "fill-extrusion-base":
+                fillExtrusionLayer.fillExtrusionBase = expression
+            case "fill-extrusion-vertical-gradient":
+                fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    fillExtrusionLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    fillExtrusionLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "fill-extrusion-opacity":
-                    fillExtrusionLayer.fillExtrusionOpacity = expression
-                case "fill-extrusion-color":
-                    fillExtrusionLayer.fillExtrusionColor = expression
-                case "fill-extrusion-translate":
-                    fillExtrusionLayer.fillExtrusionTranslation = expression
-                case "fill-extrusion-translate-anchor":
-                    fillExtrusionLayer.fillExtrusionTranslationAnchor = expression
-                case "fill-extrusion-pattern":
-                    fillExtrusionLayer.fillExtrusionPattern = expression
-                case "fill-extrusion-height":
-                    fillExtrusionLayer.fillExtrusionHeight = expression
-                case "fill-extrusion-base":
-                    fillExtrusionLayer.fillExtrusionBase = expression
-                case "fill-extrusion-vertical-gradient":
-                    fillExtrusionLayer.fillExtrusionHasVerticalGradient = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            fillExtrusionLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-                case "fill-extrusion-rounded-corner-distance":
-                    fillExtrusionLayer.fillExtrusionRoundedCornerDistance = expression
-             
-                default:
-                    break
-            }
+            case "fill-extrusion-rounded-corner-distance":
+                fillExtrusionLayer.fillExtrusionRoundedCornerDistance = expression
+            default:
+                break
+        }
+    }
+
+    /// The value `fillExtrusionLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getFillExtrusionProperty(
+        _ fillExtrusionLayer: MLNFillExtrusionStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "fill-extrusion-opacity":
+                return fillExtrusionLayer.fillExtrusionOpacity
+            case "fill-extrusion-color":
+                return fillExtrusionLayer.fillExtrusionColor
+            case "fill-extrusion-translate":
+                return fillExtrusionLayer.fillExtrusionTranslation
+            case "fill-extrusion-translate-anchor":
+                return fillExtrusionLayer.fillExtrusionTranslationAnchor
+            case "fill-extrusion-pattern":
+                return fillExtrusionLayer.fillExtrusionPattern
+            case "fill-extrusion-height":
+                return fillExtrusionLayer.fillExtrusionHeight
+            case "fill-extrusion-base":
+                return fillExtrusionLayer.fillExtrusionBase
+            case "fill-extrusion-vertical-gradient":
+                return fillExtrusionLayer.fillExtrusionHasVerticalGradient
+            case "fill-extrusion-rounded-corner-distance":
+                return fillExtrusionLayer.fillExtrusionRoundedCornerDistance
+            default:
+                return nil
         }
     }
 
     class func addRasterProperties(rasterLayer: MLNRasterStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setRasterProperty(rasterLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `rasterLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setRasterProperty(
+        _ rasterLayer: MLNRasterStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "raster-opacity":
+                rasterLayer.rasterOpacity = expression
+            case "raster-hue-rotate":
+                rasterLayer.rasterHueRotation = expression
+            case "raster-brightness-min":
+                rasterLayer.minimumRasterBrightness = expression
+            case "raster-brightness-max":
+                rasterLayer.maximumRasterBrightness = expression
+            case "raster-saturation":
+                rasterLayer.rasterSaturation = expression
+            case "raster-contrast":
+                rasterLayer.rasterContrast = expression
+            case "raster-resampling":
+                rasterLayer.rasterResamplingMode = expression
+            case "raster-fade-duration":
+                rasterLayer.rasterFadeDuration = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    rasterLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    rasterLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "raster-opacity":
-                    rasterLayer.rasterOpacity = expression
-                case "raster-hue-rotate":
-                    rasterLayer.rasterHueRotation = expression
-                case "raster-brightness-min":
-                    rasterLayer.minimumRasterBrightness = expression
-                case "raster-brightness-max":
-                    rasterLayer.maximumRasterBrightness = expression
-                case "raster-saturation":
-                    rasterLayer.rasterSaturation = expression
-                case "raster-contrast":
-                    rasterLayer.rasterContrast = expression
-                case "raster-resampling":
-                    rasterLayer.rasterResamplingMode = expression
-                case "raster-fade-duration":
-                    rasterLayer.rasterFadeDuration = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            rasterLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `rasterLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getRasterProperty(
+        _ rasterLayer: MLNRasterStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "raster-opacity":
+                return rasterLayer.rasterOpacity
+            case "raster-hue-rotate":
+                return rasterLayer.rasterHueRotation
+            case "raster-brightness-min":
+                return rasterLayer.minimumRasterBrightness
+            case "raster-brightness-max":
+                return rasterLayer.maximumRasterBrightness
+            case "raster-saturation":
+                return rasterLayer.rasterSaturation
+            case "raster-contrast":
+                return rasterLayer.rasterContrast
+            case "raster-resampling":
+                return rasterLayer.rasterResamplingMode
+            case "raster-fade-duration":
+                return rasterLayer.rasterFadeDuration
+            default:
+                return nil
         }
     }
 
     class func addHillshadeProperties(hillshadeLayer: MLNHillshadeStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setHillshadeProperty(hillshadeLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `hillshadeLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setHillshadeProperty(
+        _ hillshadeLayer: MLNHillshadeStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "hillshade-illumination-direction":
+                hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
+            case "hillshade-illumination-altitude":
+                hillshadeLayer.hillshadeIlluminationAltitude = wrapValueAsArray(expression)
+            case "hillshade-illumination-anchor":
+                hillshadeLayer.hillshadeIlluminationAnchor = expression
+            case "hillshade-exaggeration":
+                hillshadeLayer.hillshadeExaggeration = expression
+            case "hillshade-shadow-color":
+                hillshadeLayer.hillshadeShadowColor = wrapColorAsArray(expression)
+            case "hillshade-highlight-color":
+                hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
+            case "hillshade-accent-color":
+                hillshadeLayer.hillshadeAccentColor = expression
+            case "hillshade-method":
+                hillshadeLayer.hillshadeMethod = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    hillshadeLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    hillshadeLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "hillshade-illumination-direction":
-                    hillshadeLayer.hillshadeIlluminationDirection = wrapValueAsArray(expression)
-                case "hillshade-illumination-altitude":
-                    hillshadeLayer.hillshadeIlluminationAltitude = wrapValueAsArray(expression)
-                case "hillshade-illumination-anchor":
-                    hillshadeLayer.hillshadeIlluminationAnchor = expression
-                case "hillshade-exaggeration":
-                    hillshadeLayer.hillshadeExaggeration = expression
-                case "hillshade-shadow-color":
-                    hillshadeLayer.hillshadeShadowColor = wrapColorAsArray(expression)
-                case "hillshade-highlight-color":
-                    hillshadeLayer.hillshadeHighlightColor = wrapColorAsArray(expression)
-                case "hillshade-accent-color":
-                    hillshadeLayer.hillshadeAccentColor = expression
-                case "hillshade-method":
-                    hillshadeLayer.hillshadeMethod = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            hillshadeLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `hillshadeLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getHillshadeProperty(
+        _ hillshadeLayer: MLNHillshadeStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "hillshade-illumination-direction":
+                return hillshadeLayer.hillshadeIlluminationDirection
+            case "hillshade-illumination-altitude":
+                return hillshadeLayer.hillshadeIlluminationAltitude
+            case "hillshade-illumination-anchor":
+                return hillshadeLayer.hillshadeIlluminationAnchor
+            case "hillshade-exaggeration":
+                return hillshadeLayer.hillshadeExaggeration
+            case "hillshade-shadow-color":
+                return hillshadeLayer.hillshadeShadowColor
+            case "hillshade-highlight-color":
+                return hillshadeLayer.hillshadeHighlightColor
+            case "hillshade-accent-color":
+                return hillshadeLayer.hillshadeAccentColor
+            case "hillshade-method":
+                return hillshadeLayer.hillshadeMethod
+            default:
+                return nil
         }
     }
 
     class func addHeatmapProperties(heatmapLayer: MLNHeatmapStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setHeatmapProperty(heatmapLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `heatmapLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setHeatmapProperty(
+        _ heatmapLayer: MLNHeatmapStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "heatmap-radius":
+                heatmapLayer.heatmapRadius = expression
+            case "heatmap-weight":
+                heatmapLayer.heatmapWeight = expression
+            case "heatmap-intensity":
+                heatmapLayer.heatmapIntensity = expression
+            case "heatmap-color":
+                heatmapLayer.heatmapColor = expression
+            case "heatmap-opacity":
+                heatmapLayer.heatmapOpacity = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    heatmapLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    heatmapLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "heatmap-radius":
-                    heatmapLayer.heatmapRadius = expression
-                case "heatmap-weight":
-                    heatmapLayer.heatmapWeight = expression
-                case "heatmap-intensity":
-                    heatmapLayer.heatmapIntensity = expression
-                case "heatmap-color":
-                    heatmapLayer.heatmapColor = expression
-                case "heatmap-opacity":
-                    heatmapLayer.heatmapOpacity = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            heatmapLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `heatmapLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getHeatmapProperty(
+        _ heatmapLayer: MLNHeatmapStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "heatmap-radius":
+                return heatmapLayer.heatmapRadius
+            case "heatmap-weight":
+                return heatmapLayer.heatmapWeight
+            case "heatmap-intensity":
+                return heatmapLayer.heatmapIntensity
+            case "heatmap-color":
+                return heatmapLayer.heatmapColor
+            case "heatmap-opacity":
+                return heatmapLayer.heatmapOpacity
+            default:
+                return nil
         }
     }
 
     class func addColorReliefProperties(colorReliefLayer: MLNColorReliefStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
+            }
+            setColorReliefProperty(colorReliefLayer, propertyName, value: propertyValue, expression: expression)
+        }
+    }
+
+    /// Sets `propertyName` of `colorReliefLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setColorReliefProperty(
+        _ colorReliefLayer: MLNColorReliefStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "color-relief-opacity":
+                colorReliefLayer.colorReliefOpacity = expression
+            case "color-relief-color":
+                colorReliefLayer.colorReliefColor = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    colorReliefLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    colorReliefLayer.visibilityExpression = expression
                 }
-                expression = expr
-            }
-            
-            switch propertyName {
-                case "color-relief-opacity":
-                    colorReliefLayer.colorReliefOpacity = expression
-                case "color-relief-color":
-                    colorReliefLayer.colorReliefColor = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            colorReliefLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            default:
+                break
+        }
+    }
+
+    /// The value `colorReliefLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getColorReliefProperty(
+        _ colorReliefLayer: MLNColorReliefStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "color-relief-opacity":
+                return colorReliefLayer.colorReliefOpacity
+            case "color-relief-color":
+                return colorReliefLayer.colorReliefColor
+            default:
+                return nil
         }
     }
 
     class func addBackgroundProperties(backgroundLayer: MLNBackgroundStyleLayer, properties: [String: Any]) {
         for (propertyName, propertyValue) in properties {
-            // Check if the value is explicitly null to clear the property
-            var expression: NSExpression?
-            if propertyValue is NSNull {
-                expression = nil
-            } else {
-                guard let expr = interpretExpression(propertyName: propertyName, value: propertyValue) else {
-                    continue
-                }
-                expression = expr
+            // Null resets the property, and a value that cannot be read leaves it as it is.
+            let expression = propertyExpression(propertyName, value: propertyValue)
+            if expression == nil, !(propertyValue is NSNull) {
+                continue
             }
-            
-            switch propertyName {
-                case "background-color":
-                    backgroundLayer.backgroundColor = expression
-                case "background-pattern":
-                    backgroundLayer.backgroundPattern = expression
-                case "background-opacity":
-                    backgroundLayer.backgroundOpacity = expression
-                case "visibility":
-                    if !(propertyValue is NSNull) {
-                        if let visibilityValue = propertyValue as? String {
-                            backgroundLayer.isVisible = visibilityValue == "visible"
-                        }
-                    }
-             
-                default:
-                    break
-            }
+            setBackgroundProperty(backgroundLayer, propertyName, value: propertyValue, expression: expression)
         }
+    }
+
+    /// Sets `propertyName` of `backgroundLayer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `propertyValue`.
+    class func setBackgroundProperty(
+        _ backgroundLayer: MLNBackgroundStyleLayer,
+        _ propertyName: String,
+        value propertyValue: Any,
+        expression: NSExpression?
+    ) {
+        switch propertyName {
+            case "background-color":
+                backgroundLayer.backgroundColor = expression
+            case "background-pattern":
+                backgroundLayer.backgroundPattern = expression
+            case "background-opacity":
+                backgroundLayer.backgroundOpacity = expression
+            case "visibility":
+                if let visibilityValue = propertyValue as? String {
+                    backgroundLayer.isVisible = visibilityValue == "visible"
+                } else {
+                    // An expression, which may only read the global state, or nil, which resets it.
+                    backgroundLayer.visibilityExpression = expression
+                }
+            default:
+                break
+        }
+    }
+
+    /// The value `backgroundLayer` holds for `propertyName`, or nil for a
+    /// property this converter does not read.
+    class func getBackgroundProperty(
+        _ backgroundLayer: MLNBackgroundStyleLayer,
+        _ propertyName: String
+    ) -> NSExpression? {
+        switch propertyName {
+            case "background-color":
+                return backgroundLayer.backgroundColor
+            case "background-pattern":
+                return backgroundLayer.backgroundPattern
+            case "background-opacity":
+                return backgroundLayer.backgroundOpacity
+            default:
+                return nil
+        }
+    }
+
+    /// Sets `propertyName` of `layer` to `expression`, which
+    /// `propertyExpression(_:value:)` made from `value`. False for a layer
+    /// type this converter does not know.
+    @discardableResult
+    class func setProperty(
+        _ propertyName: String,
+        value: Any,
+        expression: NSExpression?,
+        on layer: MLNStyleLayer
+    ) -> Bool {
+        switch layer {
+        case let symbolLayer as MLNSymbolStyleLayer:
+            setSymbolProperty(symbolLayer, propertyName, value: value, expression: expression)
+        case let circleLayer as MLNCircleStyleLayer:
+            setCircleProperty(circleLayer, propertyName, value: value, expression: expression)
+        case let lineLayer as MLNLineStyleLayer:
+            setLineProperty(lineLayer, propertyName, value: value, expression: expression)
+        case let fillLayer as MLNFillStyleLayer:
+            setFillProperty(fillLayer, propertyName, value: value, expression: expression)
+        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+            setFillExtrusionProperty(fillExtrusionLayer, propertyName, value: value, expression: expression)
+        case let rasterLayer as MLNRasterStyleLayer:
+            setRasterProperty(rasterLayer, propertyName, value: value, expression: expression)
+        case let hillshadeLayer as MLNHillshadeStyleLayer:
+            setHillshadeProperty(hillshadeLayer, propertyName, value: value, expression: expression)
+        case let heatmapLayer as MLNHeatmapStyleLayer:
+            setHeatmapProperty(heatmapLayer, propertyName, value: value, expression: expression)
+        case let colorReliefLayer as MLNColorReliefStyleLayer:
+            setColorReliefProperty(colorReliefLayer, propertyName, value: value, expression: expression)
+        case let backgroundLayer as MLNBackgroundStyleLayer:
+            setBackgroundProperty(backgroundLayer, propertyName, value: value, expression: expression)
+        default:
+            return false
+        }
+        return true
+    }
+
+    /// The paint and layout properties `propertyValue(_:of:)` reads on
+    /// `layer`, all but `visibility`, or nil for a layer type this converter
+    /// does not know.
+    class func readableProperties(of layer: MLNStyleLayer) -> (paint: [String], layout: [String])? {
+        switch layer {
+        case is MLNSymbolStyleLayer:
+            return (
+                paint: [
+                    "icon-opacity",
+                    "icon-color",
+                    "icon-halo-color",
+                    "icon-halo-width",
+                    "icon-halo-blur",
+                    "icon-translate",
+                    "icon-translate-anchor",
+                    "text-opacity",
+                    "text-color",
+                    "text-halo-color",
+                    "text-halo-width",
+                    "text-halo-blur",
+                    "text-translate",
+                    "text-translate-anchor",
+                ],
+                layout: [
+                    "symbol-placement",
+                    "symbol-spacing",
+                    "symbol-avoid-edges",
+                    "symbol-sort-key",
+                    "symbol-z-order",
+                    "icon-allow-overlap",
+                    "icon-ignore-placement",
+                    "icon-optional",
+                    "icon-rotation-alignment",
+                    "icon-size",
+                    "icon-text-fit",
+                    "icon-text-fit-padding",
+                    "icon-image",
+                    "icon-rotate",
+                    "icon-padding",
+                    "icon-keep-upright",
+                    "icon-offset",
+                    "icon-anchor",
+                    "icon-pitch-alignment",
+                    "text-pitch-alignment",
+                    "text-rotation-alignment",
+                    "text-field",
+                    "text-font",
+                    "text-size",
+                    "text-max-width",
+                    "text-line-height",
+                    "text-letter-spacing",
+                    "text-justify",
+                    "text-radial-offset",
+                    "text-variable-anchor",
+                    "text-variable-anchor-offset",
+                    "text-anchor",
+                    "text-max-angle",
+                    "text-writing-mode",
+                    "text-rotate",
+                    "text-padding",
+                    "text-keep-upright",
+                    "text-transform",
+                    "text-offset",
+                    "text-allow-overlap",
+                    "text-ignore-placement",
+                    "text-optional",
+                ]
+            )
+        case is MLNCircleStyleLayer:
+            return (
+                paint: [
+                    "circle-radius",
+                    "circle-color",
+                    "circle-blur",
+                    "circle-opacity",
+                    "circle-translate",
+                    "circle-translate-anchor",
+                    "circle-pitch-scale",
+                    "circle-pitch-alignment",
+                    "circle-stroke-width",
+                    "circle-stroke-color",
+                    "circle-stroke-opacity",
+                ],
+                layout: [
+                    "circle-sort-key",
+                ]
+            )
+        case is MLNLineStyleLayer:
+            return (
+                paint: [
+                    "line-opacity",
+                    "line-color",
+                    "line-translate",
+                    "line-translate-anchor",
+                    "line-width",
+                    "line-gap-width",
+                    "line-offset",
+                    "line-blur",
+                    "line-dasharray",
+                    "line-pattern",
+                    "line-gradient",
+                ],
+                layout: [
+                    "line-cap",
+                    "line-join",
+                    "line-miter-limit",
+                    "line-round-limit",
+                    "line-sort-key",
+                ]
+            )
+        case is MLNFillStyleLayer:
+            return (
+                paint: [
+                    "fill-antialias",
+                    "fill-opacity",
+                    "fill-color",
+                    "fill-outline-color",
+                    "fill-translate",
+                    "fill-translate-anchor",
+                    "fill-pattern",
+                ],
+                layout: [
+                    "fill-sort-key",
+                ]
+            )
+        case is MLNFillExtrusionStyleLayer:
+            return (
+                paint: [
+                    "fill-extrusion-opacity",
+                    "fill-extrusion-color",
+                    "fill-extrusion-translate",
+                    "fill-extrusion-translate-anchor",
+                    "fill-extrusion-pattern",
+                    "fill-extrusion-height",
+                    "fill-extrusion-base",
+                    "fill-extrusion-vertical-gradient",
+                ],
+                layout: [
+                    "fill-extrusion-rounded-corner-distance",
+                ]
+            )
+        case is MLNRasterStyleLayer:
+            return (
+                paint: [
+                    "raster-opacity",
+                    "raster-hue-rotate",
+                    "raster-brightness-min",
+                    "raster-brightness-max",
+                    "raster-saturation",
+                    "raster-contrast",
+                    "raster-resampling",
+                    "raster-fade-duration",
+                ],
+                layout: [
+                ]
+            )
+        case is MLNHillshadeStyleLayer:
+            return (
+                paint: [
+                    "hillshade-illumination-direction",
+                    "hillshade-illumination-altitude",
+                    "hillshade-illumination-anchor",
+                    "hillshade-exaggeration",
+                    "hillshade-shadow-color",
+                    "hillshade-highlight-color",
+                    "hillshade-accent-color",
+                    "hillshade-method",
+                ],
+                layout: [
+                ]
+            )
+        case is MLNHeatmapStyleLayer:
+            return (
+                paint: [
+                    "heatmap-radius",
+                    "heatmap-weight",
+                    "heatmap-intensity",
+                    "heatmap-color",
+                    "heatmap-opacity",
+                ],
+                layout: [
+                ]
+            )
+        case is MLNColorReliefStyleLayer:
+            return (
+                paint: [
+                    "color-relief-opacity",
+                    "color-relief-color",
+                ],
+                layout: [
+                ]
+            )
+        case is MLNBackgroundStyleLayer:
+            return (
+                paint: [
+                    "background-color",
+                    "background-pattern",
+                    "background-opacity",
+                ],
+                layout: [
+                ]
+            )
+        default:
+            return nil
+        }
+    }
+
+    /// The value `layer` holds for `propertyName`, or nil for a property this
+    /// converter does not read. MapLibre reads a property that was never set
+    /// as its default value, and may raise an Objective-C exception.
+    class func propertyValue(_ propertyName: String, of layer: MLNStyleLayer) -> NSExpression? {
+        switch layer {
+        case let symbolLayer as MLNSymbolStyleLayer:
+            return getSymbolProperty(symbolLayer, propertyName)
+        case let circleLayer as MLNCircleStyleLayer:
+            return getCircleProperty(circleLayer, propertyName)
+        case let lineLayer as MLNLineStyleLayer:
+            return getLineProperty(lineLayer, propertyName)
+        case let fillLayer as MLNFillStyleLayer:
+            return getFillProperty(fillLayer, propertyName)
+        case let fillExtrusionLayer as MLNFillExtrusionStyleLayer:
+            return getFillExtrusionProperty(fillExtrusionLayer, propertyName)
+        case let rasterLayer as MLNRasterStyleLayer:
+            return getRasterProperty(rasterLayer, propertyName)
+        case let hillshadeLayer as MLNHillshadeStyleLayer:
+            return getHillshadeProperty(hillshadeLayer, propertyName)
+        case let heatmapLayer as MLNHeatmapStyleLayer:
+            return getHeatmapProperty(heatmapLayer, propertyName)
+        case let colorReliefLayer as MLNColorReliefStyleLayer:
+            return getColorReliefProperty(colorReliefLayer, propertyName)
+        case let backgroundLayer as MLNBackgroundStyleLayer:
+            return getBackgroundProperty(backgroundLayer, propertyName)
+        default:
+            return nil
+        }
+    }
+
+    /// The style-spec JSON of `expression`, a value `propertyValue(_:of:)`
+    /// read, in the shape Android answers: a constant as a plain value, with
+    /// a color as `rgba(r,g,b,a)` text, and anything else as an expression,
+    /// with a color as `["rgba", r, g, b, a]`. MapLibre may raise an
+    /// Objective-C exception for an expression it has no JSON for.
+    class func styleJSON(_ expression: NSExpression) -> Any? {
+        let json: Any = expression.mgl_jsonExpressionObject
+        if json is NSNull { return nil }
+        let isConstant = expression.expressionType == .constantValue
+            || expression.expressionType == .aggregate
+        return styleValue(json, isConstant: isConstant)
+    }
+
+    private class func styleValue(_ json: Any, isConstant: Bool) -> Any {
+        if let number = json as? NSNumber {
+            // A Float would read as 0.10000000149011612 rather than 0.1.
+            if String(cString: number.objCType) == "f" {
+                return Double(String(number.floatValue)) ?? number
+            }
+            return number
+        }
+        if let object = json as? [String: Any] {
+            return object.mapValues { styleValue($0, isConstant: isConstant) }
+        }
+        guard let array = json as? [Any] else { return json }
+        if let rgba = colorComponents(array) {
+            if isConstant {
+                return "rgba(" + rgba.map(cssNumber).joined(separator: ",") + ")"
+            }
+            return ["rgba", rgba[0], rgba[1], rgba[2], rgba[3]] as [Any]
+        }
+        // MapLibre wraps a constant array in a literal expression.
+        if isConstant, array.count == 2, array[0] as? String == "literal" {
+            return styleValue(array[1], isConstant: true)
+        }
+        return array.map { styleValue($0, isConstant: isConstant) }
+    }
+
+    /// The red, green, blue and alpha of a color MapLibre wrote as
+    /// `["rgb", r, g, b]` or `["rgba", r, g, b, a]`, or nil for any other
+    /// array. Like Android, the alpha keeps two decimals; the channels keep
+    /// three, which drops the noise of the Float MapLibre stores them in.
+    private class func colorComponents(_ array: [Any]) -> [Double]? {
+        guard let operation = array.first as? String,
+              operation == "rgb" && array.count == 4 || operation == "rgba" && array.count == 5
+        else { return nil }
+        var rgba: [Double] = []
+        for item in array.dropFirst() {
+            guard let number = item as? NSNumber, isNumber(number) else { return nil }
+            rgba.append(number.doubleValue)
+        }
+        let channels = rgba.prefix(3).map { ($0 * 1000).rounded() / 1000 }
+        let alpha = rgba.count == 4 ? (rgba[3] * 100).rounded() / 100 : 1
+        return channels + [alpha]
+    }
+
+    private class func cssNumber(_ value: Double) -> String {
+        return value == value.rounded() ? String(Int(value)) : String(value)
+    }
+
+    /// The expression `value` sets `propertyName` to, or nil for NSNull, which
+    /// resets the property, and for a value that cannot be read. MapLibre may
+    /// raise an Objective-C exception for a value it rejects.
+    class func propertyExpression(_ propertyName: String, value: Any) -> NSExpression? {
+        return value is NSNull ? nil : interpretExpression(propertyName: propertyName, value: value)
     }
 
     /// Wraps a single-color NSExpression in an array, as required by
@@ -546,6 +1311,254 @@ class LayerPropertyConverter {
             return NSExpression(forConstantValue: [number])
         }
         return expression
+    }
+
+    /// The kind of constant each property takes, by name: see
+    /// `buildConstantKinds` in scripts/lib/generate.dart.
+    private static let constantKinds: [String: String] = [
+        "background-color": "color",
+        "background-opacity": "number",
+        "background-pattern": "string",
+        "circle-blur": "number",
+        "circle-color": "color",
+        "circle-opacity": "number",
+        "circle-pitch-alignment": "enum:map|viewport",
+        "circle-pitch-scale": "enum:map|viewport",
+        "circle-radius": "number",
+        "circle-sort-key": "number",
+        "circle-stroke-color": "color",
+        "circle-stroke-opacity": "number",
+        "circle-stroke-width": "number",
+        "circle-translate": "array:2:number",
+        "circle-translate-anchor": "enum:map|viewport",
+        "color-relief-color": "color",
+        "color-relief-opacity": "number",
+        "fill-antialias": "boolean",
+        "fill-color": "color",
+        "fill-extrusion-base": "number",
+        "fill-extrusion-color": "color",
+        "fill-extrusion-height": "number",
+        "fill-extrusion-opacity": "number",
+        "fill-extrusion-pattern": "string",
+        "fill-extrusion-rounded-corner-distance": "number",
+        "fill-extrusion-translate": "array:2:number",
+        "fill-extrusion-translate-anchor": "enum:map|viewport",
+        "fill-extrusion-vertical-gradient": "boolean",
+        "fill-layer-blend": "enum:normal|multiply|color|luminosity|plus-lighter|screen|overlay",
+        "fill-layer-opacity": "number",
+        "fill-opacity": "number",
+        "fill-outline-color": "color",
+        "fill-pattern": "string",
+        "fill-sort-key": "number",
+        "fill-translate": "array:2:number",
+        "fill-translate-anchor": "enum:map|viewport",
+        "heatmap-color": "color",
+        "heatmap-intensity": "number",
+        "heatmap-opacity": "number",
+        "heatmap-radius": "number",
+        "heatmap-weight": "number",
+        "hillshade-accent-color": "color",
+        "hillshade-exaggeration": "number",
+        "hillshade-illumination-anchor": "enum:map|viewport",
+        "hillshade-method": "enum:standard|basic|combined|igor|multidirectional",
+        "icon-allow-overlap": "boolean",
+        "icon-anchor": "enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "icon-color": "color",
+        "icon-halo-blur": "number",
+        "icon-halo-color": "color",
+        "icon-halo-width": "number",
+        "icon-ignore-placement": "boolean",
+        "icon-image": "string",
+        "icon-keep-upright": "boolean",
+        "icon-offset": "array:2:number",
+        "icon-opacity": "number",
+        "icon-optional": "boolean",
+        "icon-overlap": "enum:never|always|cooperative",
+        "icon-pitch-alignment": "enum:map|viewport|auto",
+        "icon-rotate": "number",
+        "icon-rotation-alignment": "enum:map|viewport|auto",
+        "icon-size": "number",
+        "icon-text-fit": "enum:none|width|height|both",
+        "icon-text-fit-padding": "array:4:number",
+        "icon-translate": "array:2:number",
+        "icon-translate-anchor": "enum:map|viewport",
+        "line-blur": "number",
+        "line-cap": "enum:butt|round|square",
+        "line-color": "color",
+        "line-dasharray": "array:*:number",
+        "line-gap-width": "number",
+        "line-gradient": "color",
+        "line-join": "enum:bevel|round|miter",
+        "line-layer-blend": "enum:normal|multiply|color|luminosity|plus-lighter|screen|overlay",
+        "line-layer-opacity": "number",
+        "line-miter-limit": "number",
+        "line-offset": "number",
+        "line-opacity": "number",
+        "line-pattern": "string",
+        "line-round-limit": "number",
+        "line-sort-key": "number",
+        "line-translate": "array:2:number",
+        "line-translate-anchor": "enum:map|viewport",
+        "line-width": "number",
+        "raster-brightness-max": "number",
+        "raster-brightness-min": "number",
+        "raster-contrast": "number",
+        "raster-fade-duration": "number",
+        "raster-hue-rotate": "number",
+        "raster-opacity": "number",
+        "raster-resampling": "enum:linear|nearest",
+        "raster-saturation": "number",
+        "resampling": "enum:linear|nearest",
+        "symbol-avoid-edges": "boolean",
+        "symbol-height-anchor": "enum:ground|absolute",
+        "symbol-height-offset": "number",
+        "symbol-placement": "enum:point|line|line-center",
+        "symbol-sort-key": "number",
+        "symbol-spacing": "number",
+        "symbol-z-order": "enum:auto|viewport-y|source",
+        "text-allow-overlap": "boolean",
+        "text-anchor": "enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "text-color": "color",
+        "text-font": "array:*:string",
+        "text-halo-blur": "number",
+        "text-halo-color": "color",
+        "text-halo-width": "number",
+        "text-ignore-placement": "boolean",
+        "text-justify": "enum:auto|left|center|right",
+        "text-keep-upright": "boolean",
+        "text-letter-spacing": "number",
+        "text-line-height": "number",
+        "text-max-angle": "number",
+        "text-max-width": "number",
+        "text-offset": "array:2:number",
+        "text-opacity": "number",
+        "text-optional": "boolean",
+        "text-overlap": "enum:never|always|cooperative",
+        "text-padding": "number",
+        "text-pitch-alignment": "enum:map|viewport|auto",
+        "text-radial-offset": "number",
+        "text-rotate": "number",
+        "text-rotation-alignment": "enum:map|viewport|viewport-glyph|auto",
+        "text-size": "number",
+        "text-transform": "enum:none|uppercase|lowercase",
+        "text-translate": "array:2:number",
+        "text-translate-anchor": "enum:map|viewport",
+        "text-variable-anchor": "array:*:enum:center|left|right|top|bottom|top-left|top-right|bottom-left|bottom-right",
+        "text-writing-mode": "array:*:enum:horizontal|vertical",
+        "visibility": "enum:visible|none",
+    ]
+
+    /// Why `value`, a constant rather than an expression, is not of the kind
+    /// `propertyName` takes, or nil. MapLibre on iOS does not check it: a
+    /// string where a number goes reads as 0, and a color it cannot parse as
+    /// black.
+    class func constantError(propertyName: String, value: Any) -> String? {
+        guard let kind = constantKinds[propertyName] else { return nil }
+        return kindError(kind, value)
+    }
+
+    private class func kindError(_ kind: String, _ value: Any) -> String? {
+        if kind.hasPrefix("array:") {
+            let parts = kind.split(separator: ":", maxSplits: 2).map(String.init)
+            guard let items = value as? [Any] else {
+                return "Expected an array, found \(describe(value))."
+            }
+            if parts[1] != "*", let length = Int(parts[1]), items.count != length {
+                return "Expected an array of \(length) items, found \(items.count)."
+            }
+            for item in items {
+                if let error = kindError(parts[2], item) { return error }
+            }
+            return nil
+        }
+        if kind.hasPrefix("enum:") {
+            let values = kind.dropFirst("enum:".count).split(separator: "|").map(String.init)
+            guard let string = value as? String, values.contains(string) else {
+                return "Expected one of \(values.joined(separator: ", ")), found \(describe(value))."
+            }
+            return nil
+        }
+        let matches: Bool
+        switch kind {
+        case "number": matches = isNumber(value)
+        case "boolean": matches = isBoolean(value)
+        case "string": matches = value is String
+        case "color":
+            if let color = value as? String {
+                return isColor(color) ? nil : "Could not parse color from value '\(color)'."
+            }
+            matches = false
+        default: matches = true
+        }
+        return matches ? nil : "Expected a \(kind), found \(describe(value))."
+    }
+
+    /// Whether `css` is a color MapLibre reads: a CSS color name, a hex color
+    /// of hex digits, or an rgb, rgba, hsl or hsla function. Like MapLibre, it
+    /// ignores spaces and case, and leaves the numbers of a function to
+    /// MapLibre. MapLibre Native reads a hex color with other digits as black.
+    class func isColor(_ css: String) -> Bool {
+        let color = css.replacingOccurrences(of: " ", with: "").lowercased()
+        if cssColorNames.contains(color) { return true }
+        if color.hasPrefix("#") { return UIColor(hexString: color) != nil }
+        guard let open = color.firstIndex(of: "("), color.hasSuffix(")") else { return false }
+        let name = color[..<open]
+        let count = color[color.index(after: open)..<color.index(before: color.endIndex)]
+            .split(separator: ",", omittingEmptySubsequences: false).count
+        switch name {
+        case "rgb", "hsl": return count == 3
+        case "rgba", "hsla": return count == 4
+        default: return false
+        }
+    }
+
+    private static let cssColorNames: Set<String> = [
+        "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
+        "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
+        "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue",
+        "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
+        "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", "darkred", "darksalmon",
+        "darkseagreen", "darkslateblue", "darkslategray", "darkslategrey", "darkturquoise",
+        "darkviolet", "deeppink", "deepskyblue", "dimgray", "dimgrey", "dodgerblue", "firebrick",
+        "floralwhite", "forestgreen", "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+        "gray", "green", "greenyellow", "grey", "honeydew", "hotpink", "indianred", "indigo",
+        "ivory", "khaki", "lavender", "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
+        "lightcoral", "lightcyan", "lightgoldenrodyellow", "lightgray", "lightgreen", "lightgrey",
+        "lightpink", "lightsalmon", "lightseagreen", "lightskyblue", "lightslategray",
+        "lightslategrey", "lightsteelblue", "lightyellow", "lime", "limegreen", "linen", "magenta",
+        "maroon", "mediumaquamarine", "mediumblue", "mediumorchid", "mediumpurple",
+        "mediumseagreen", "mediumslateblue", "mediumspringgreen", "mediumturquoise",
+        "mediumvioletred", "midnightblue", "mintcream", "mistyrose", "moccasin", "navajowhite",
+        "navy", "oldlace", "olive", "olivedrab", "orange", "orangered", "orchid", "palegoldenrod",
+        "palegreen", "paleturquoise", "palevioletred", "papayawhip", "peachpuff", "peru", "pink",
+        "plum", "powderblue", "purple", "rebeccapurple", "red", "rosybrown", "royalblue",
+        "saddlebrown", "salmon", "sandybrown", "seagreen", "seashell", "sienna", "silver",
+        "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen", "steelblue", "tan",
+        "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white",
+        "whitesmoke", "yellow", "yellowgreen",
+    ]
+
+    /// Whether `value` is a number. The channel hands booleans over as
+    /// NSNumbers too.
+    private class func isNumber(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) != CFBooleanGetTypeID()
+    }
+
+    private class func isBoolean(_ value: Any) -> Bool {
+        guard let number = value as? NSNumber else { return false }
+        return CFGetTypeID(number) == CFBooleanGetTypeID()
+    }
+
+    private class func describe(_ value: Any) -> String {
+        switch value {
+        case is String: return "a string"
+        case let number as NSNumber:
+            return CFGetTypeID(number) == CFBooleanGetTypeID() ? "a boolean" : "a number"
+        case is [Any]: return "an array"
+        case is [String: Any]: return "an object"
+        default: return "\(type(of: value))"
+        }
     }
 
     private class func interpretExpression(propertyName: String, value: Any) -> NSExpression? {

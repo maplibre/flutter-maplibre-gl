@@ -34,10 +34,29 @@ enum ScaleControlPosition { topLeft, topRight, bottomLeft, bottomRight }
 /// Scale Control Unit
 enum ScaleControlUnit { metric, imperial, nautical }
 
+/// How long the map keeps gliding after a pan.
+///
+/// Pan inertia is the glide that follows when you drag the map and let go
+/// while it is still moving: the map carries on and slows down to a stop.
+enum PanInertia {
+  /// The map stops as soon as you let go.
+  none,
+
+  /// The map glides for a shorter distance and stops sooner.
+  short,
+
+  /// The map glides as it always has. This is the default.
+  normal,
+}
+
 /// Bounds for the map camera target.
 /// Used with [MapLibreMapOptions] to wrap a [LatLngBounds] value. This allows
 /// distinguishing between specifying an unbounded target (null `LatLngBounds`)
 /// from not specifying anything (null `CameraTargetBounds`).
+///
+/// The bounds constrain the center of the map view, for gestures and camera
+/// calls. A target outside them is moved to the nearest point inside. They set
+/// no minimum zoom, so the map can show area outside the bounds.
 @immutable
 class CameraTargetBounds {
   /// Creates a camera target bounds with the specified bounding box, or null

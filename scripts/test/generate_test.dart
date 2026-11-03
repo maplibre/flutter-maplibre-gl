@@ -164,6 +164,19 @@ void main() {
       expect(properties[2]['iosExpression'], 'expression');
     });
 
+    // The Swift converter reads and writes each property under this name.
+    test('names the iOS property, renamed or not', () {
+      final properties = buildStyleProperties({
+        'layout_symbol': {
+          'icon-size': {'type': 'number', 'doc': 'size'},
+          'icon-optional': {'type': 'boolean', 'doc': 'optional'},
+        },
+      }, 'layout_symbol');
+
+      expect(properties[0]['iosName'], 'iconScale');
+      expect(properties[1]['iosName'], 'iconOptional');
+    });
+
     // The layout branch of the native templates has no wrap, so an array-typed
     // layout property has to stop generation rather than be emitted unwrapped.
     test('refuses an array-typed layout property', () {
@@ -217,6 +230,124 @@ void main() {
         platformVersion: '13.4.1',
       );
       expect(android.map((p) => p['value']), ['raster-opacity']);
+    });
+  });
+
+  group('constantKind', () {
+    test('names the kind of each constant the Swift converter checks', () {
+      expect(constantKind({'type': 'number'}), 'number');
+      expect(constantKind({'type': 'boolean'}), 'boolean');
+      expect(constantKind({'type': 'string'}), 'string');
+      expect(constantKind({'type': 'resolvedImage'}), 'string');
+      expect(constantKind({'type': 'color'}), 'color');
+      expect(
+        constantKind({
+          'type': 'enum',
+          'values': {'butt': {}, 'round': {}},
+        }),
+        'enum:butt|round',
+      );
+      expect(
+        constantKind({'type': 'array', 'value': 'number', 'length': 2}),
+        'array:2:number',
+      );
+      expect(
+        constantKind({
+          'type': 'array',
+          'value': 'enum',
+          'values': {'top': {}, 'left': {}},
+        }),
+        'array:*:enum:top|left',
+      );
+    });
+
+    test('leaves out the kinds it does not check', () {
+      expect(constantKind({'type': 'formatted'}), isNull);
+      expect(constantKind({'type': 'padding'}), isNull);
+      expect(constantKind({'type': 'array', 'value': 'padding'}), isNull);
+    });
+  });
+
+  test('buildClassDocSplit wraps each paragraph and keeps them apart', () {
+    expect(buildClassDocSplit(null), isEmpty);
+    expect(buildClassDocSplit(['One.', 'Two.']), ['One.', '', 'Two.']);
+  });
+
+  group('specDoc', () {
+    test('drops images, whose assets live on the spec site', () {
+      expect(
+        specDoc('Blends the layer.\n\n![Examples](assets/blend.svg)'),
+        'Blends the layer.',
+      );
+    });
+
+    test('makes links relative to the spec site absolute', () {
+      expect(
+        specDoc('Like [`let`](expressions/#let).'),
+        'Like [`let`]($styleSpecUrl'
+        'expressions/#let).',
+      );
+    });
+
+    test('keeps absolute links and anchors', () {
+      const doc = 'See [W3C](https://www.w3.org/) and [`image`](#image).';
+      expect(specDoc(doc), doc);
+    });
+  });
+
+  group('splitIntoChunks', () {
+    test('wraps a line at the length', () {
+      expect(splitIntoChunks('one two three', 7), ['one two', 'three']);
+    });
+
+    test('wraps each line apart and keeps one blank line between them', () {
+      expect(splitIntoChunks('Tokens:\n\n\n - `{z}` zoom\n - `{x}`', 70), [
+        'Tokens:',
+        '',
+        '- `{z}` zoom',
+        '- `{x}`',
+      ]);
+    });
+
+    test('puts the prefix on every line but the blank ones', () {
+      expect(splitIntoChunks('One.\n\nTwo.', 70, prefix: '  '), [
+        '  One.',
+        '',
+        '  Two.',
+      ]);
+    });
+  });
+
+  group('isImplementedSomewhere', () {
+    test('true when one platform implements it', () {
+      expect(
+        isImplementedSomewhere({
+          'sdk-support': {
+            'basic functionality': {
+              'js': '6.0.0',
+              'android': 'https://github.com/maplibre/maplibre-native/issues/1',
+            },
+          },
+        }),
+        isTrue,
+      );
+    });
+
+    test('false when every platform carries an issue', () {
+      expect(
+        isImplementedSomewhere({
+          'sdk-support': {
+            'basic functionality': {
+              'js': 'https://github.com/maplibre/maplibre-gl-js/issues/1',
+            },
+          },
+        }),
+        isFalse,
+      );
+    });
+
+    test('true when the spec says nothing about it', () {
+      expect(isImplementedSomewhere({'type': 'number'}), isTrue);
     });
   });
 }

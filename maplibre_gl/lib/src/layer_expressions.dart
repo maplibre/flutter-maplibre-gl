@@ -6,6 +6,7 @@ part of '../maplibre_gl.dart';
 class Expressions {
   /// Binds expressions to named variables, which can then be referenced in
   /// the result expression using `["var", "variable_name"]`.
+  ///
   /// - [Visualize population
   /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
@@ -13,7 +14,9 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const let = "let";
 
-  /// References variable bound using `let`.
+  /// References variable bound using
+  /// [`let`](https://maplibre.org/maplibre-style-spec/expressions/#let).
+  ///
   /// - [Visualize population
   /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
@@ -21,13 +24,22 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const varExpression = "var";
 
-  /// Provides a literal array or object value.
+  /// Provides a literal array or object value, treating nested values as
+  /// literals themselves.
+  ///
   /// - [Display and style rich text
   /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const literal = "literal";
+
+  /// Provides an array value, evaluating expressions in the elements of the
+  /// array.
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  static const semiliteral = "semiliteral";
 
   /// Asserts that the input is an array (optionally with a specific item
   /// type and length). If, when the input expression is evaluated, it is
@@ -46,6 +58,7 @@ class Expressions {
 
   /// Determines whether an item exists in an array or a substring exists in
   /// a string.
+  ///
   /// - [Measure
   /// distances](https://maplibre.org/maplibre-gl-js/docs/examples/measure-distances/)
   ///
@@ -74,8 +87,10 @@ class Expressions {
 
   /// Selects the first output whose corresponding test condition evaluates
   /// to true, or the fallback value otherwise.
+  ///
   /// - [Create a hover
   /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -86,12 +101,15 @@ class Expressions {
   /// Selects the output whose label value matches the input value, or the
   /// fallback value if no match is found. The input can be any expression
   /// (e.g. `["get", "building_type"]`). Each label must be either:
+  ///
   /// - a single literal value; or
+  ///
   /// - an array of literal values, whose values must be all strings or all
   /// numbers (e.g. `[100, 101]` or `["c", "b"]`). The input matches if any
-  /// of the values in the array matches, similar to the `"in"`
-  /// operator.Each label must be unique. If the input type does not match
-  /// the type of the labels, the result will be the fallback value.
+  /// of the values in the array matches, similar to the `"in"` operator.
+  ///
+  /// Each label must be unique. If the input type does not match the type
+  /// of the labels, the result will be the fallback value.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -99,6 +117,7 @@ class Expressions {
 
   /// Evaluates each expression in turn until the first non-null value is
   /// obtained, and returns that value.
+  ///
   /// - [Use a fallback
   /// image](https://maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/)
   ///
@@ -109,9 +128,11 @@ class Expressions {
   /// Produces discrete, stepped results by evaluating a piecewise-constant
   /// function defined by pairs of input and output values ("stops"). The
   /// `input` may be any numeric expression (e.g., `["get", "population"]`).
-  /// Stop inputs must be numeric literals in strictly ascending
-  /// order.Returns the output value of the stop just less than the input,
-  /// or the first output if the input is less than the first stop.
+  /// Stop inputs must be numeric literals in strictly ascending order.
+  ///
+  /// Returns the output value of the stop just less than the input, or the
+  /// first output if the input is less than the first stop.
+  ///
   /// - [Create and style
   /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
@@ -124,12 +145,16 @@ class Expressions {
   /// expression (e.g., `["get", "population"]`). Stop inputs must be
   /// numeric literals in strictly ascending order. The output type must be
   /// `number`, `array<number>`, `color`, `array<color>`, or `projection`.
+  ///
   /// - [Animate map camera around a
-  /// point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-camera-around-point/)
+  /// point](https://maplibre.org/maplibre-gl-js/docs/examples/animate-map-camera-around-a-point/)
+  ///
   /// - [Change building color based on zoom
   /// level](https://maplibre.org/maplibre-gl-js/docs/examples/change-building-color-based-on-zoom-level/)
+  ///
   /// - [Create a heatmap
-  /// layer](https://maplibre.org/maplibre-gl-js/docs/examples/heatmap-layer/)
+  /// layer](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-heatmap-layer/)
+  ///
   /// - [Visualize population
   /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
@@ -138,18 +163,20 @@ class Expressions {
   static const interpolate = "interpolate";
 
   /// Produces continuous, smooth results by interpolating between pairs of
-  /// input and output values ("stops"). Works like `interpolate`, but the
-  /// output type must be `color` or `array<color>`, and the interpolation
-  /// is performed in the Hue-Chroma-Luminance color space.
+  /// input and output values ("stops"). Works like
+  /// [`interpolate`](https://maplibre.org/maplibre-style-spec/expressions/#interpolate),
+  /// but the output type must be `color` or `array<color>`, and the
+  /// interpolation is performed in the Hue-Chroma-Luminance color space.
   ///
   /// Sdk Support:
   ///   basic functionality with js (not on ios, android)
   static const interpolateHcl = "interpolate-hcl";
 
   /// Produces continuous, smooth results by interpolating between pairs of
-  /// input and output values ("stops"). Works like `interpolate`, but the
-  /// output type must be `color` or `array<color>`, and the interpolation
-  /// is performed in the CIELAB color space.
+  /// input and output values ("stops"). Works like
+  /// [`interpolate`](https://maplibre.org/maplibre-style-spec/expressions/#interpolate),
+  /// but the output type must be `color` or `array<color>`, and the
+  /// interpolation is performed in the CIELAB color space.
   ///
   /// Sdk Support:
   ///   basic functionality with js (not on ios, android)
@@ -198,6 +225,7 @@ class Expressions {
   /// Asserts that the input value is a boolean. If multiple values are
   /// provided, each one is evaluated in order until a boolean is obtained.
   /// If none of the inputs are booleans, the expression is an error.
+  ///
   /// - [Create a hover
   /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
   ///
@@ -214,19 +242,23 @@ class Expressions {
   static const object = "object";
 
   /// Returns a `collator` for use in locale-dependent comparison
-  /// operations. Use `resolved-locale` to test the results of locale
-  /// fallback behavior.
+  /// operations. Use
+  /// [`resolved-locale`](https://maplibre.org/maplibre-style-spec/expressions/#resolved-locale)
+  /// to test the results of locale fallback behavior.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const collator = "collator";
 
   /// Returns a `formatted` string for displaying mixed-format text in the
-  /// `text-field` property. The input may contain a string literal or
-  /// expression, including an [`'image'`](#image) expression. Strings may
-  /// be followed by a style override object.
+  /// [`text-field`](https://maplibre.org/maplibre-style-spec/layers/#text-field)
+  /// property. The input may contain a string literal or expression,
+  /// including an [`'image'`](#image) expression. Strings may be followed
+  /// by a style override object.
+  ///
   /// - [Change the case of
-  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-case-of-labels/)
+  ///
   /// - [Display and style rich text
   /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/display-and-style-rich-text-labels/)
   ///
@@ -234,13 +266,17 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const format = "format";
 
-  /// Returns an `image` type for use in `icon-image`, `*-pattern` entries
-  /// and as a section in the `format` expression. If set, the `image`
-  /// argument will check that the requested image exists in the style and
-  /// will return either the resolved image name or `null`, depending on
-  /// whether or not the image is currently in the style. This validation
-  /// process is synchronous and requires the image to have been added to
-  /// the style before requesting it in the `image` argument.
+  /// Returns an `image` type for use in
+  /// [`icon-image`](https://maplibre.org/maplibre-style-spec/layers/#icon-image),
+  /// `*-pattern` entries and as a section in the
+  /// [`format`](https://maplibre.org/maplibre-style-spec/expressions/#format)
+  /// expression. If set, the `image` argument will check that the requested
+  /// image exists in the style and will return either the resolved image
+  /// name or `null`, depending on whether or not the image is currently in
+  /// the style. This validation process is synchronous and requires the
+  /// image to have been added to the style before requesting it in the
+  /// `image` argument.
+  ///
   /// - [Use a fallback
   /// image](https://maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/)
   ///
@@ -255,11 +291,12 @@ class Expressions {
   /// retrieved property.
   ///
   /// Sdk Support:
-  ///   basic functionality with js (not on android, ios)
+  ///   basic functionality with js, android, ios
   static const globalState = "global-state";
 
   /// Converts the input number into a string representation using the
   /// provided format_options.
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -279,6 +316,7 @@ class Expressions {
   /// specified by the
   /// [`JSON.stringify`](https://tc39.github.io/ecma262/#sec-json.stringify)
   /// function of the ECMAScript Language Specification.
+  ///
   /// - [Create a time
   /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
   ///
@@ -319,6 +357,7 @@ class Expressions {
   /// each one is evaluated in order until the first successful conversion
   /// is obtained. If none of the inputs can be converted, the expression is
   /// an error.
+  ///
   /// - [Visualize population
   /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
@@ -346,10 +385,13 @@ class Expressions {
   /// Retrieves a property value from the current feature's properties, or
   /// from another object if a second argument is provided. Returns null if
   /// the requested property is missing.
+  ///
   /// - [Change the case of
-  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-case-of-labels/)
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
+  ///
   /// - [Extrude polygons for 3D indoor
   /// mapping](https://maplibre.org/maplibre-gl-js/docs/examples/extrude-polygons-for-3d-indoor-mapping/)
   ///
@@ -359,6 +401,7 @@ class Expressions {
 
   /// Tests for the presence of a property value in the current feature's
   /// properties, or from another object if a second argument is provided.
+  ///
   /// - [Create and style
   /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
@@ -373,8 +416,8 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const length = "length";
 
-  /// Gets the feature properties object.  Note that in some cases, it may
-  /// be more efficient to use `["get", "property_name"]` directly.
+  /// Gets the feature properties object. Note that in some cases, it may be
+  /// more efficient to use `["get", "property_name"]` directly.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -390,6 +433,7 @@ class Expressions {
   /// `promoteId` property, which may be a number, string, or any primitive
   /// data type. Note that `["feature-state"]` can only be used with paint
   /// properties that support data-driven styling.
+  ///
   /// - [Create a hover
   /// effect](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-hover-effect/)
   ///
@@ -411,7 +455,7 @@ class Expressions {
   ///   basic functionality with js, android, ios
   static const id = "id";
 
-  /// Gets the current zoom level.  Note that in style layout and paint
+  /// Gets the current zoom level. Note that in style layout and paint
   /// properties, `["zoom"]` may only appear as the input to a top-level
   /// `"step"` or `"interpolate"` expression.
   ///
@@ -421,23 +465,26 @@ class Expressions {
 
   /// Gets the kernel density estimation of a pixel in a heatmap layer,
   /// which is a relative measure of how many data points are crowded around
-  /// a particular pixel. Can only be used in the `heatmap-color` property.
+  /// a particular pixel. Can only be used in the
+  /// [`heatmap-color`](https://maplibre.org/maplibre-style-spec/layers/#heatmap-color)
+  /// property.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const heatmapDensity = "heatmap-density";
 
-  /// Gets the elevation of a pixel (in meters above the vertical datum
-  /// reference of the `raster-dem` tiles) from a `raster-dem` source. Can
-  /// only be used in the `color-relief-color` property of a `color-relief`
-  /// layer.
+  /// Gets the elevation in meters at the current point. For a `raster-dem`
+  /// source this is the elevation of a pixel above the vertical datum
+  /// reference of the tiles; for a fill extrusion it is the height above
+  /// the ground.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const elevation = "elevation";
 
   /// Gets the progress along a gradient line. Can only be used in the
-  /// `line-gradient` property.
+  /// [`line-gradient`](https://maplibre.org/maplibre-style-spec/layers/#line-gradient)
+  /// property.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -472,6 +519,7 @@ class Expressions {
 
   /// Returns the result of floating point division of the first input by
   /// the second.
+  ///
   /// - [Visualize population
   /// density](https://maplibre.org/maplibre-gl-js/docs/examples/visualize-population-density/)
   ///
@@ -616,14 +664,19 @@ class Expressions {
   /// comparison is strictly typed: values of different runtime types are
   /// always considered unequal. Cases where the types are known to be
   /// different at parse time are considered invalid and will produce a
-  /// parse error. Accepts an optional `collator` argument to control
-  /// locale-dependent string comparisons.
+  /// parse error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
+  ///
   /// - [Add multiple geometries from one GeoJSON
-  /// source](https://maplibre.org/maplibre-gl-js/docs/examples/multiple-geometries/)
+  /// source](https://maplibre.org/maplibre-gl-js/docs/examples/add-multiple-geometries-from-one-geojson-source/)
+  ///
   /// - [Create a time
-  /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
+  /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
+  ///
   /// - [Display buildings in
   /// 3D](https://maplibre.org/maplibre-gl-js/docs/examples/display-buildings-in-3d/)
+  ///
   /// - [Filter symbols by toggling a
   /// list](https://maplibre.org/maplibre-gl-js/docs/examples/filter-symbols-by-toggling-a-list/)
   ///
@@ -635,8 +688,10 @@ class Expressions {
   /// The comparison is strictly typed: values of different runtime types
   /// are always considered unequal. Cases where the types are known to be
   /// different at parse time are considered invalid and will produce a
-  /// parse error. Accepts an optional `collator` argument to control
-  /// locale-dependent string comparisons.
+  /// parse error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -649,8 +704,9 @@ class Expressions {
   /// strings or both numbers; if during evaluation they are not, expression
   /// evaluation produces an error. Cases where this constraint is known not
   /// to hold at parse time are considered in valid and will produce a parse
-  /// error. Accepts an optional `collator` argument to control
-  /// locale-dependent string comparisons.
+  /// error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -661,8 +717,10 @@ class Expressions {
   /// strings or both numbers; if during evaluation they are not, expression
   /// evaluation produces an error. Cases where this constraint is known not
   /// to hold at parse time are considered in valid and will produce a parse
-  /// error. Accepts an optional `collator` argument to control
-  /// locale-dependent string comparisons.
+  /// error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -675,8 +733,10 @@ class Expressions {
   /// both strings or both numbers; if during evaluation they are not,
   /// expression evaluation produces an error. Cases where this constraint
   /// is known not to hold at parse time are considered in valid and will
-  /// produce a parse error. Accepts an optional `collator` argument to
-  /// control locale-dependent string comparisons.
+  /// produce a parse error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -689,8 +749,9 @@ class Expressions {
   /// strings or both numbers; if during evaluation they are not, expression
   /// evaluation produces an error. Cases where this constraint is known not
   /// to hold at parse time are considered in valid and will produce a parse
-  /// error. Accepts an optional `collator` argument to control
-  /// locale-dependent string comparisons.
+  /// error. Accepts an optional
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator)
+  /// argument to control locale-dependent string comparisons.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -700,6 +761,7 @@ class Expressions {
   /// inputs are evaluated in order, and evaluation is short-circuiting:
   /// once an input expression evaluates to `false`, the result is `false`
   /// and no further input expressions are evaluated.
+  ///
   /// - [Display HTML clusters with custom
   /// properties](https://maplibre.org/maplibre-gl-js/docs/examples/display-html-clusters-with-custom-properties/)
   ///
@@ -718,6 +780,7 @@ class Expressions {
 
   /// Logical negation. Returns `true` if the input is `false`, and `false`
   /// if the input is `true`.
+  ///
   /// - [Create and style
   /// clusters](https://maplibre.org/maplibre-gl-js/docs/examples/create-and-style-clusters/)
   ///
@@ -728,11 +791,14 @@ class Expressions {
   /// Returns `true` if the evaluated feature is fully contained inside a
   /// boundary of the input geometry, `false` otherwise. The input value can
   /// be a valid GeoJSON of type `Polygon`, `MultiPolygon`, `Feature`, or
-  /// `FeatureCollection`. Supported features for evaluation:- `Point`:
-  /// Returns `false` if a point is on the boundary or falls outside the
-  /// boundary.- `LineString`: Returns `false` if any part of a line falls
-  /// outside the boundary, the line intersects the boundary, or a line's
-  /// endpoint is on the boundary.
+  /// `FeatureCollection`. Supported features for evaluation:
+  ///
+  /// - `Point`: Returns `false` if a point is on the boundary or falls
+  /// outside the boundary.
+  ///
+  /// - `LineString`: Returns `false` if any part of a line falls outside
+  /// the boundary, the line intersects the boundary, or a line's endpoint
+  /// is on the boundary.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -751,8 +817,9 @@ class Expressions {
   /// Returns the input string converted to uppercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
   /// mappings in the Unicode Character Database.
+  ///
   /// - [Change the case of
-  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-case-of-labels/)
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -761,21 +828,27 @@ class Expressions {
   /// Returns the input string converted to lowercase. Follows the Unicode
   /// Default Case Conversion algorithm and the locale-insensitive case
   /// mappings in the Unicode Character Database.
+  ///
   /// - [Change the case of
-  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-case-of-labels/)
+  /// labels](https://maplibre.org/maplibre-gl-js/docs/examples/change-the-case-of-labels/)
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   static const downcase = "downcase";
 
   /// Returns a `string` consisting of the concatenation of the inputs. Each
-  /// input is converted to a string as if by `to-string`.
+  /// input is converted to a string as if by
+  /// [`to-string`](https://maplibre.org/maplibre-style-spec/expressions/#to-string).
+  ///
   /// - [Add a generated icon to the
   /// map](https://maplibre.org/maplibre-gl-js/docs/examples/add-a-generated-icon-to-the-map/)
+  ///
   /// - [Create a time
   /// slider](https://maplibre.org/maplibre-gl-js/docs/examples/create-a-time-slider/)
+  ///
   /// - [Use a fallback
-  /// image](https://maplibre.org/maplibre-gl-js/docs/examples/fallback-image/)
+  /// image](https://maplibre.org/maplibre-gl-js/docs/examples/use-a-fallback-image/)
+  ///
   /// - [Variable label
   /// placement](https://maplibre.org/maplibre-gl-js/docs/examples/variable-label-placement/)
   ///
@@ -784,8 +857,9 @@ class Expressions {
   static const concat = "concat";
 
   /// Returns the IETF language tag of the locale being used by the provided
-  /// `collator`. This can be used to determine the default system locale,
-  /// or to determine if a requested locale was successfully loaded.
+  /// [`collator`](https://maplibre.org/maplibre-style-spec/expressions/#collator).
+  /// This can be used to determine the default system locale, or to
+  /// determine if a requested locale was successfully loaded.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -795,13 +869,13 @@ class Expressions {
   /// a separator string.
   ///
   /// Sdk Support:
-  ///   basic functionality with js (not on android, ios)
+  ///   basic functionality with js, android, ios
   static const split = "split";
 
   /// Returns a string formed by concatenating the elements of the input
   /// array, inserting a separator between each element.
   ///
   /// Sdk Support:
-  ///   basic functionality with js (not on android, ios)
+  ///   basic functionality with js, android, ios
   static const join = "join";
 }

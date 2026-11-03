@@ -18,9 +18,18 @@ class OfflineManagerUtils {
         metadata: [String: Any],
         result: @escaping FlutterResult,
         registrar _: FlutterPluginRegistrar,
-        channelHandler: OfflineChannelHandler
+        channelHandler: OfflineDownloadEvents
     ) {
-        // Prepare downloader
+        // The pack context is JSON. JSONSerialization raises an NSException,
+        // which Swift cannot catch, for a value that is not, such as bytes or NaN.
+        guard JSONSerialization.isValidJSONObject(metadata) else {
+            result(FlutterError(
+                code: OfflineErrorCode.invalidArgument,
+                message: "Metadata is not JSON serializable",
+                details: nil
+            ))
+            return
+        }
         let downloader = OfflinePackDownloader(
             result: result,
             channelHandler: channelHandler,
@@ -28,14 +37,53 @@ class OfflineManagerUtils {
             metadata: metadata
         )
 
-        // Download region
-        let id = downloader.download()
-        // retain downloader by its generated id
-        activeDownloaders[id] = downloader
+        // The duplicate check in download() reads the stored packs, so wait for
+        // them: before they load it would miss an existing pack of the same area.
+        whenPacksLoaded {
+            downloader.download()
+        }
     }
 
     static func mergeRegions(result: @escaping FlutterResult, path: String) {
-        let url = URL(fileURLWithPath: path)
+        // The snapshot below is only meaningful once the stored packs have loaded:
+        // taken earlier it is empty and every pack would be reported as imported.
+        whenPacksLoaded {
+            addContents(result: result, path: path)
+        }
+    }
+
+    private static func addContents(result: @escaping FlutterResult, path: String) {
+        // addContentsOfURL raises an exception the call cannot catch for a file
+        // it cannot write to. As on Android, a file that can only be read, such
+        // as one in the app bundle, is merged from a copy, and a missing one
+        // fails the call.
+        let fileManager = FileManager.default
+        let url: URL
+        var copyDirectory: URL?
+        if fileManager.isWritableFile(atPath: path) {
+            url = URL(fileURLWithPath: path)
+        } else if fileManager.isReadableFile(atPath: path) {
+            let directory = fileManager.temporaryDirectory
+                .appendingPathComponent("maplibre_gl_merge_\(UUID().uuidString)")
+            let copy = directory.appendingPathComponent(
+                URL(fileURLWithPath: path).lastPathComponent
+            )
+            do {
+                try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+                try fileManager.copyItem(atPath: path, toPath: copy.path)
+                // The copy keeps the permissions of the original.
+                try fileManager.setAttributes([.posixPermissions: 0o644], ofItemAtPath: copy.path)
+            } catch {
+                try? fileManager.removeItem(at: directory)
+                result(databaseError(error.localizedDescription))
+                return
+            }
+            url = copy
+            copyDirectory = directory
+        } else {
+            result(databaseError("Secondary database needs to be located in a readable path."))
+            return
+        }
         // addContentsOfURL's completion hands back *all known* packs, not just the
         // ones imported from `url` (see MLNOfflineStorage.h). Snapshot the packs
         // that already exist so we can return only the newly imported ones.
@@ -48,8 +96,11 @@ class OfflineManagerUtils {
             (MLNOfflineStorage.shared.packs ?? []).map(packIdentityKey(for:))
         )
         MLNOfflineStorage.shared.addContents(of: url, withCompletionHandler: { _, packs, error in
+            if let copyDirectory = copyDirectory {
+                try? FileManager.default.removeItem(at: copyDirectory)
+            }
             if let error = error {
-                result(FlutterError(code: "mergeOfflineRegions", message: error.localizedDescription, details: nil))
+                result(databaseError(error.localizedDescription))
                 return
             }
             let importedPacks = (packs ?? []).filter {
@@ -59,7 +110,7 @@ class OfflineManagerUtils {
             guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
                   let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
             else {
-                result(FlutterError(code: "mergeOfflineRegions", message: "Failed to serialize merged regions", details: nil))
+                result(databaseError("Failed to serialize the merged regions"))
                 return
             }
             result(regionsArgsJsonString)
@@ -88,7 +139,8 @@ class OfflineManagerUtils {
         // external DB or from Android). Mirror Android's metadataBytesToMap: try
         // to parse the context bytes as a JSON dict, fall back to empty dict.
         // Use a deterministic ID so the same pack always receives the same ID
-        // across sessions (pack.context is read-only, so we cannot persist it).
+        // across sessions without writing to its context; once the app sets
+        // metadata on it, updateRegionMetadata stores that ID in the context.
         guard let id = deterministicPackId(for: pack),
               let tileRegion = pack.region as? MLNTilePyramidOfflineRegion else { return nil }
         let metadata: [String: Any]
@@ -98,31 +150,85 @@ class OfflineManagerUtils {
         } else {
             metadata = [:]
         }
-        let definition = OfflineRegionDefinition(
-            bounds: [tileRegion.bounds.sw, tileRegion.bounds.ne].map { [$0.latitude, $0.longitude] },
-            mapStyleUrl: tileRegion.styleURL,
-            minZoom: tileRegion.minimumZoomLevel,
-            maxZoom: tileRegion.maximumZoomLevel
-        )
-        return OfflineRegion(id: id, metadata: metadata, definition: definition).toDictionary()
+        return OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: OfflineRegionDefinition(region: tileRegion)
+        ).toDictionary()
     }
 
     static func regionsList(result: @escaping FlutterResult) {
-        let offlineStorage = MLNOfflineStorage.shared
-        guard let packs = offlineStorage.packs else {
-            result("[]")
-            return
+        // Right after launch `packs` is still nil while the store loads, and
+        // answering then reported no regions at all (#381).
+        whenPacksLoaded {
+            let packs = MLNOfflineStorage.shared.packs ?? []
+            listRegions(result: result, packs: packs)
         }
-        let regionsArgs = packs.compactMap { pack in
-            OfflineRegion.fromOfflinePack(pack)?.toDictionary()
-        }
+    }
+
+    private static func listRegions(result: @escaping FlutterResult, packs: [MLNOfflinePack]) {
+        let regionsArgs = packs.compactMap(regionDictionary(for:))
         guard let regionsArgsJsonData = try? JSONSerialization.data(withJSONObject: regionsArgs),
               let regionsArgsJsonString = String(data: regionsArgsJsonData, encoding: .utf8)
         else {
-            result(FlutterError(code: "RegionListError", message: nil, details: nil))
+            result(databaseError("Failed to serialize the regions"))
             return
         }
         result(regionsArgsJsonString)
+    }
+
+    static func updateRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        whenPacksLoaded {
+            setRegionMetadata(result: result, id: id, metadata: metadata)
+        }
+    }
+
+    private static func setRegionMetadata(
+        result: @escaping FlutterResult,
+        id: Int,
+        metadata: [String: Any]
+    ) {
+        // Error codes and messages mirror Android's updateRegionMetadata.
+        guard let pack = findPack(id: id),
+              let tileRegion = pack.region as? MLNTilePyramidOfflineRegion
+        else {
+            result(missingRegionError(id: id))
+            return
+        }
+        // The pack context is JSON, so metadata that is not cannot be stored.
+        guard JSONSerialization.isValidJSONObject(metadata) else {
+            result(FlutterError(
+                code: OfflineErrorCode.invalidArgument,
+                message: "Metadata is not JSON serializable",
+                details: nil
+            ))
+            return
+        }
+        // The context keeps the shape it is created with at download time, so
+        // the region keeps its ID. A pack imported without a Flutter context
+        // gets the ID it was already listed under written into it.
+        let region = OfflineRegion(
+            id: id,
+            metadata: metadata,
+            definition: OfflineRegionDefinition(region: tileRegion)
+        )
+        pack.setContext(region.prepareContext()) { error in
+            if let error = error {
+                result(databaseError(error.localizedDescription))
+                return
+            }
+            guard let jsonData = try? JSONSerialization.data(withJSONObject: region.toDictionary()),
+                  let jsonString = String(data: jsonData, encoding: .utf8)
+            else {
+                result(databaseError("Failed to serialize the updated region"))
+                return
+            }
+            result(jsonString)
+        }
     }
 
     static func setOfflineTileCountLimit(result: @escaping FlutterResult, maximumCount: UInt64) {
@@ -135,7 +241,21 @@ class OfflineManagerUtils {
         MLNOfflineStorage.shared.clearAmbientCache { error in
             if let error = error {
                 result(FlutterError(
-                    code: "ClearAmbientCacheError",
+                    code: OfflineErrorCode.ambientCacheError,
+                    message: error.localizedDescription,
+                    details: nil
+                ))
+            } else {
+                result(nil)
+            }
+        }
+    }
+
+    static func setMaximumAmbientCacheSize(result: @escaping FlutterResult, bytes: UInt64) {
+        MLNOfflineStorage.shared.setMaximumAmbientCacheSize(UInt(bytes)) { error in
+            if let error = error {
+                result(FlutterError(
+                    code: OfflineErrorCode.ambientCacheError,
                     message: error.localizedDescription,
                     details: nil
                 ))
@@ -146,6 +266,16 @@ class OfflineManagerUtils {
     }
 
     static func resetOfflineDatabase(result: @escaping FlutterResult) {
+        // The reload below waits for the next KVO change of `packs`. Before the
+        // stored packs have loaded, that change could be the first load rather
+        // than the reload, answering Dart while the stale packs are still
+        // listed. Waiting also keeps the reset behind calls queued before it.
+        whenPacksLoaded {
+            resetLoadedOfflineDatabase(result: result)
+        }
+    }
+
+    private static func resetLoadedOfflineDatabase(result: @escaping FlutterResult) {
         // Any tracked in-progress downloads are invalidated by the reset.
         for (_, pack) in activePacks {
             pack.suspend()
@@ -153,7 +283,7 @@ class OfflineManagerUtils {
         // Terminate the Dart-side subscriptions so their Futures resolve.
         for (_, downloader) in activeDownloaders {
             downloader.terminate(
-                errorCode: "DatabaseReset",
+                errorCode: OfflineErrorCode.databaseReset,
                 errorMessage: "Offline database was reset before the download completed"
             )
         }
@@ -162,11 +292,7 @@ class OfflineManagerUtils {
 
         MLNOfflineStorage.shared.resetDatabase { error in
             if let error = error {
-                result(FlutterError(
-                    code: "ResetDatabaseError",
-                    message: error.localizedDescription,
-                    details: nil
-                ))
+                result(databaseError(error.localizedDescription))
                 return
             }
             // resetDatabase wipes the underlying SQLite DB but leaves the
@@ -186,13 +312,15 @@ class OfflineManagerUtils {
     }
 
     static func deleteRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded {
+            removeRegion(result: result, id: id)
+        }
+    }
+
+    private static func removeRegion(result: @escaping FlutterResult, id: Int) {
         let offlineStorage = MLNOfflineStorage.shared
         guard let pacs = offlineStorage.packs else {
-            result(FlutterError(
-                code: "DeleteRegionError",
-                message: "Offline packs are unavailable",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
             return
         }
         let packToRemove = pacs.first(where: { pack -> Bool in
@@ -209,7 +337,7 @@ class OfflineManagerUtils {
             packToRemoveUnwrapped.suspend()
             // Terminate the Dart-side subscription if a download is in flight.
             activeDownloaders[id]?.terminate(
-                errorCode: "RegionDeleted",
+                errorCode: OfflineErrorCode.regionDeleted,
                 errorMessage: "Region was deleted before the download completed"
             )
             activePacks.removeValue(forKey: id)
@@ -217,21 +345,13 @@ class OfflineManagerUtils {
 
             offlineStorage.removePack(packToRemoveUnwrapped) { error in
                 if let error = error {
-                    result(FlutterError(
-                        code: "DeleteRegionError",
-                        message: error.localizedDescription,
-                        details: nil
-                    ))
+                    result(databaseError(error.localizedDescription))
                 } else {
                     result(nil)
                 }
             }
         } else {
-            result(FlutterError(
-                code: "DeleteRegionError",
-                message: "There is no region with given id to delete",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -243,34 +363,43 @@ class OfflineManagerUtils {
     // MARK: Pause / Resume
 
     static func pauseRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { pauseLoadedRegion(result: result, id: id) }
+    }
+
+    private static func pauseLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
             pack.suspend()
             result(nil)
         } else {
-            result(FlutterError(
-                code: "PauseRegionError",
-                message: "There is no active region with given id to pause",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
     static func resumeRegion(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { resumeLoadedRegion(result: result, id: id) }
+    }
+
+    private static func resumeLoadedRegion(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
-            pack.resume()
+            // Resuming a complete pack would only show it active until MapLibre
+            // reports it complete again. A pack with no download of this session
+            // behind it resumes without events.
+            if pack.state != .complete {
+                pack.resume()
+            }
             result(nil)
         } else {
-            result(FlutterError(
-                code: "ResumeRegionError",
-                message: "There is no active region with given id to resume",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
     // MARK: Region Status
 
     static func getRegionStatus(result: @escaping FlutterResult, id: Int) {
+        whenPacksLoaded { returnRegionStatus(result: result, id: id) }
+    }
+
+    private static func returnRegionStatus(result: @escaping FlutterResult, id: Int) {
         if let pack = findPack(id: id) {
             let progress = pack.progress
             let completedCount = progress.countOfResourcesCompleted
@@ -290,16 +419,12 @@ class OfflineManagerUtils {
             guard let jsonData = try? JSONSerialization.data(withJSONObject: statusDict),
                   let jsonString = String(data: jsonData, encoding: .utf8)
             else {
-                result(FlutterError(code: "GetRegionStatusError", message: "Failed to serialize status", details: nil))
+                result(databaseError("Failed to serialize the status"))
                 return
             }
             result(jsonString)
         } else {
-            result(FlutterError(
-                code: "GetRegionStatusError",
-                message: "There is no region with given id",
-                details: nil
-            ))
+            result(missingRegionError(id: id))
         }
     }
 
@@ -314,16 +439,88 @@ class OfflineManagerUtils {
             sessionConfig.httpMaximumConnectionsPerHost = maxPerHost
             // With custom headers set, MapLibreHeadersProtocol intercepts the
             // request and opens the connection on a session of its own, so the
-            // limit above no longer governs it and has to be relayed.
+            // limit above does not apply to it and has to be relayed.
             MapLibreHeadersProtocol.setMaxConnectionsPerHost(maxPerHost)
         }
         MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
         result(nil)
     }
 
+    // MARK: Errors
+
+    /// The error for a region `findPack` did not find: `REGION_NOT_FOUND`, or
+    /// `OFFLINE_DATABASE_ERROR` when the stored packs never loaded.
+    private static func missingRegionError(id: Int) -> FlutterError {
+        if MLNOfflineStorage.shared.packs == nil {
+            return databaseError("The offline regions could not be loaded")
+        }
+        return FlutterError(
+            code: OfflineErrorCode.regionNotFound,
+            message: "There is no offline region with id \(id).",
+            details: nil
+        )
+    }
+
+    /// A failure of the offline database, with what MapLibre reported.
+    private static func databaseError(_ message: String?) -> FlutterError {
+        FlutterError(code: OfflineErrorCode.offlineDatabaseError, message: message, details: nil)
+    }
+
     // MARK: Pack Lookup
 
-    /// Finds a pack by region ID, checking active packs first then falling back to storage
+    /// How long `whenPacksLoaded` waits for the stored packs before giving up.
+    private static let packsLoadTimeout: TimeInterval = 10
+
+    /// Calls waiting in `whenPacksLoaded`, oldest first. Only touched on the
+    /// main queue.
+    private static var pendingUntilPacksLoaded: [() -> Void] = []
+
+    /// The one observer waiting for the packs while calls are queued.
+    private static var packsLoadedObserver: PacksLoadedObserver?
+
+    /// Runs `completion` on the main queue once `MLNOfflineStorage.shared.packs`
+    /// has loaded. The store loads its packs asynchronously, so right after
+    /// launch the property is still nil and every lookup would miss. Runs at
+    /// once when the packs are already there and no earlier call is waiting;
+    /// otherwise queues it behind the earlier ones. A single observer waits for
+    /// the KVO change and then runs the queue in the order the calls were made,
+    /// like Android answers them, since separate KVO observers are not
+    /// notified in a guaranteed order. After `packsLoadTimeout` the queue runs
+    /// with whatever is available, so a store that never loads cannot leave a
+    /// call unanswered.
+    static func whenPacksLoaded(_ completion: @escaping () -> Void) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { whenPacksLoaded(completion) }
+            return
+        }
+        let storage = MLNOfflineStorage.shared
+        // Even with the packs loaded, wait behind calls that are still queued:
+        // running now would answer this call before them.
+        if pendingUntilPacksLoaded.isEmpty, storage.packs != nil {
+            completion()
+            return
+        }
+        pendingUntilPacksLoaded.append(completion)
+        guard packsLoadedObserver == nil else { return }
+        let observer = PacksLoadedObserver(storage: storage, timeout: packsLoadTimeout) {
+            packsLoadedObserver = nil
+            runPendingUntilPacksLoaded()
+        }
+        packsLoadedObserver = observer
+        observer.start()
+    }
+
+    /// Runs the queued calls in FIFO order. Takes them one at a time, so a call
+    /// that queues another one while it runs lands behind those still waiting.
+    private static func runPendingUntilPacksLoaded() {
+        while !pendingUntilPacksLoaded.isEmpty {
+            let next = pendingUntilPacksLoaded.removeFirst()
+            next()
+        }
+    }
+
+    /// Finds a pack by region ID, checking active packs first then falling back to storage.
+    /// Call it from `whenPacksLoaded`, or a stored pack can be missed right after launch.
     private static func findPack(id: Int) -> MLNOfflinePack? {
         // Check active packs first (in-progress downloads)
         if let pack = activePacks[id] {
@@ -383,6 +580,57 @@ class OfflineManagerUtils {
     }
 }
 
+/// One-shot KVO observer that waits for `MLNOfflineStorage.packs` to become
+/// non-nil, or for a timeout, whichever comes first, and then calls `onLoaded`
+/// exactly once, on the main queue. `OfflineManagerUtils` keeps it alive while
+/// it waits.
+private final class PacksLoadedObserver: NSObject {
+    private let storage: MLNOfflineStorage
+    private let timeout: TimeInterval
+    private let onLoaded: () -> Void
+    private var finished = false
+
+    init(storage: MLNOfflineStorage, timeout: TimeInterval, onLoaded: @escaping () -> Void) {
+        self.storage = storage
+        self.timeout = timeout
+        self.onLoaded = onLoaded
+        super.init()
+    }
+
+    func start() {
+        // .initial reports the current value as soon as the observer is added,
+        // so packs that load between the caller's check and this call are not
+        // missed.
+        storage.addObserver(self, forKeyPath: "packs", options: [.initial, .new], context: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+            self?.finish()
+        }
+    }
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of _: Any?,
+        change _: [NSKeyValueChangeKey: Any]?,
+        context _: UnsafeMutableRawPointer?
+    ) {
+        guard keyPath == "packs" else { return }
+        // KVO can fire on any thread, and synchronously inside addObserver for
+        // .initial: hop to the main queue so `finished` is only touched there
+        // and the observer is never removed from within its own registration.
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.storage.packs != nil else { return }
+            self.finish()
+        }
+    }
+
+    private func finish() {
+        guard !finished else { return }
+        finished = true
+        storage.removeObserver(self, forKeyPath: "packs")
+        onLoaded()
+    }
+}
+
 /// One-shot KVO observer for `MLNOfflineStorage.packs`. Retains itself until
 /// the first change notification fires, then deregisters and invokes `onChange`.
 private final class PacksReloadObserver: NSObject {
@@ -411,4 +659,27 @@ private final class PacksReloadObserver: NSObject {
         retainCycle = nil
         callback()
     }
+}
+
+/// The error codes of the offline calls and download events, the same as on
+/// Android.
+enum OfflineErrorCode {
+    /// No offline region has the id the call was given.
+    static let regionNotFound = "REGION_NOT_FOUND"
+    /// The offline database failed an operation, with MapLibre's message.
+    static let offlineDatabaseError = "OFFLINE_DATABASE_ERROR"
+    /// The ambient cache failed an operation, with MapLibre's message.
+    static let ambientCacheError = "AMBIENT_CACHE_ERROR"
+    /// An argument the call cannot use, such as a negative limit.
+    static let invalidArgument = "INVALID_ARGUMENT"
+    /// A region definition MapLibre cannot download.
+    static let invalidRegionDefinition = "INVALID_REGION_DEFINITION"
+    /// The download needs more tiles than the offline tile count limit.
+    static let tileCountLimitExceeded = "TILE_COUNT_LIMIT_EXCEEDED"
+    /// The region was deleted before its download completed.
+    static let regionDeleted = "REGION_DELETED"
+    /// A download of the same area replaced the region before it completed.
+    static let regionReplaced = "REGION_REPLACED"
+    /// The offline database was reset before the download completed.
+    static let databaseReset = "DATABASE_RESET"
 }

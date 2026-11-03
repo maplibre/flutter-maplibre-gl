@@ -18,6 +18,8 @@ plugins:
 
 theme:
   name: material
+  variant: classic
+  custom_dir: overrides
   favicon: assets/icon.png
   logo: assets/icon.png
   icon:
@@ -40,8 +42,6 @@ theme:
     - content.code.copy
     - content.code.annotate
     - search.highlight
-    - search.suggest
-    - search.share
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -60,9 +60,6 @@ theme:
 
 extra_css:
   - stylesheets/extra.css
-
-extra_javascript:
-  - javascripts/shortcuts.js
 
 extra:
   social:
@@ -101,6 +98,7 @@ nav:
       - Annotations vs Style Layers: concepts/annotations-vs-layers.md
       - Working with GeoJSON: concepts/geojson.md
       - Map Styles: concepts/styles.md
+      - Errors: concepts/errors.md
     - Camera:
       - camera/index.md
       - Camera Controls: camera/camera-controls.md
@@ -127,6 +125,7 @@ nav:
       - Data-Driven Expressions: advanced/expressions.md
       - Globe, Terrain and Sky: advanced/globe-terrain-sky.md
       - PMTiles: advanced/pmtiles.md
+      - MBTiles: advanced/mbtiles.md
       - Offline Regions: advanced/offline-regions.md
       - Map Language: advanced/map-language.md
       - Snapshot: advanced/snapshot.md

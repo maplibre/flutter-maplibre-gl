@@ -42,21 +42,30 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:collection/collection.dart';
 
+import 'package:maplibre_gl_platform_interface/download_region_status.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
+
+import 'src/geojson_size.dart';
+
+// Generated from pigeons/messages.dart: the messages to Android and iOS.
+import 'src/native/messages.g.dart';
 
 // Offline database file copy needs dart:io on mobile; the web stub throws.
 import 'src/offline_export_stub.dart'
     if (dart.library.io) 'src/offline_export_io.dart';
 
+export 'package:maplibre_gl_platform_interface/download_region_status.dart';
 export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart'
     show
         Annotation,
         ArgumentCallbacks,
         AttributionButtonPosition,
         CameraAnimationInterpolation,
+        CameraMoveReason,
         CameraPosition,
         CameraTargetBounds,
         CameraUpdate,
@@ -80,12 +89,16 @@ export 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.da
         ManualLocationSource,
         ManualLocationUpdate,
         MapLibreJsSource,
-        MapLibreMethodChannel,
         MapLibrePlatform,
         MinMaxZoomPreference,
         MyLocationRenderMode,
+        MyLocationStyle,
         MyLocationTrackingMode,
+        OfflineRegion,
+        OfflineRegionDefinition,
+        OfflineRegionStatus,
         OnPlatformViewCreatedCallback,
+        PanInertia,
         PlatformLocationSource,
         RasterDemSourceProperties,
         RasterSourceProperties,
@@ -107,9 +120,11 @@ part 'src/maplibre_map.dart';
 
 part 'src/global.dart';
 
-part 'src/offline_region.dart';
+part 'src/native_global_platform.dart';
 
-part 'src/download_region_status.dart';
+part 'src/native_map_platform.dart';
+
+part 'src/geojson_writer.dart';
 
 part 'src/layer_expressions.dart';
 

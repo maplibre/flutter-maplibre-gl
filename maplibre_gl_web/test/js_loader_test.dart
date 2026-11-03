@@ -16,6 +16,8 @@ import 'package:maplibre_gl_web/src/js_loader.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  // The default, as no registrant runs in tests.
+  final unregistered = MapLibreGlobalPlatform.instance;
 
   setUp(() {
     MapLibreJsLoader.debugReset();
@@ -27,7 +29,7 @@ void main() {
     MapLibreJsLoader.debugReset();
     MapLibreJsSource.configured = null;
     globalContext.delete('maplibregl'.toJS);
-    MapLibreGlobalPlatform.instance = MapLibreGlobalMethodChannel();
+    MapLibreGlobalPlatform.instance = unregistered;
   });
 
   group('MapLibreJsLoader.ensureLoaded', () {
@@ -216,7 +218,7 @@ void main() {
 
   group('plugin registration', () {
     test('registerWith installs the web global platform, so preWarm from '
-        'main() reaches the loader and not the method channel', () async {
+        'main() reaches the loader', () async {
       MapLibreMapPlugin.registerWith(webPluginRegistrar);
 
       expect(MapLibreGlobalPlatform.instance, isA<MapLibreGlobalWeb>());

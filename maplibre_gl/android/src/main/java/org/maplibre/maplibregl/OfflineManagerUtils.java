@@ -4,7 +4,10 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.offline.OfflineManager;
@@ -17,12 +20,25 @@ import io.flutter.plugin.common.MethodChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class OfflineManagerUtils {
   private static final String TAG = "OfflineManagerUtils";
+
+  // The error codes of the offline calls and download events, shared with iOS.
+  private static final String REGION_NOT_FOUND = "REGION_NOT_FOUND";
+  private static final String OFFLINE_DATABASE_ERROR = "OFFLINE_DATABASE_ERROR";
+  private static final String AMBIENT_CACHE_ERROR = "AMBIENT_CACHE_ERROR";
+  private static final String INVALID_REGION_DEFINITION = "INVALID_REGION_DEFINITION";
+  private static final String TILE_COUNT_LIMIT_EXCEEDED = "TILE_COUNT_LIMIT_EXCEEDED";
+  private static final String REGION_DELETED = "REGION_DELETED";
+  private static final String REGION_REPLACED = "REGION_REPLACED";
+  private static final String DATABASE_RESET = "DATABASE_RESET";
+  private static final String INVALID_ARGUMENT = "INVALID_ARGUMENT";
 
   /**
    * Minimum interval between progress events forwarded to Dart. When tiles are
@@ -34,15 +50,22 @@ abstract class OfflineManagerUtils {
    */
   private static final long PROGRESS_EMIT_MIN_INTERVAL_MS = 100L;
 
-  /** Holds the state needed to observe and control an in-progress download. */
+  /**
+   * Holds the state needed to observe and control an in-progress download.
+   * {@code channelHandler} is null for a region resumed by resumeUntracked,
+   * which nothing on the Dart side listens to.
+   */
   static class ActiveDownload {
     final OfflineRegion region;
-    final OfflineChannelHandlerImpl channelHandler;
+    @Nullable final OfflineDownloadEvents channelHandler;
     final AtomicBoolean isComplete;
     long lastProgressEmitMs;
     long lastEmittedCompletedCount;
 
-    ActiveDownload(OfflineRegion region, OfflineChannelHandlerImpl channelHandler, AtomicBoolean isComplete) {
+    ActiveDownload(
+        OfflineRegion region,
+        @Nullable OfflineDownloadEvents channelHandler,
+        AtomicBoolean isComplete) {
       this.region = region;
       this.channelHandler = channelHandler;
       this.isComplete = isComplete;
@@ -53,6 +76,13 @@ abstract class OfflineManagerUtils {
 
   static final Map<Long, ActiveDownload> activeDownloads = new HashMap<>();
 
+  /**
+   * The regions a resume is looking up, before it starts them. A pause in the meantime takes the
+   * region out, so the resume answers without starting a download the pause already stopped.
+   * Calls and SDK callbacks all run on the main thread, in the order they arrive.
+   */
+  static final Set<Long> pendingResumes = new HashSet<>();
+
   static void mergeRegions(MethodChannel.Result result, Context context, String path) {
     OfflineManager.Companion.getInstance(context)
         .mergeOfflineRegions(
@@ -60,17 +90,12 @@ abstract class OfflineManagerUtils {
             new OfflineManager.MergeOfflineRegionsCallback() {
               public void onMerge(OfflineRegion[] offlineRegions) {
                 if (result == null) return;
-                List<Map<String, Object>> regionsArgs = new ArrayList<>();
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  regionsArgs.add(offlineRegionToMap(offlineRegion));
-                }
-                String json = new Gson().toJson(regionsArgs);
-                result.success(json);
+                guard(result, () -> result.success(regionsToJson(offlineRegions)));
               }
 
               public void onError(String error) {
                 if (result == null) return;
-                result.error("mergeOfflineRegions Error", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -91,7 +116,25 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(@NonNull String message) {
-                result.error("ClearAmbientCacheError", message, null);
+                result.error(AMBIENT_CACHE_ERROR, message, null);
+              }
+            });
+  }
+
+  static void setMaximumAmbientCacheSize(
+      MethodChannel.Result result, Context context, long bytes) {
+    OfflineManager.Companion.getInstance(context)
+        .setMaximumAmbientCacheSize(
+            bytes,
+            new OfflineManager.FileSourceCallback() {
+              @Override
+              public void onSuccess() {
+                result.success(null);
+              }
+
+              @Override
+              public void onError(@NonNull String message) {
+                result.error(AMBIENT_CACHE_ERROR, message, null);
               }
             });
   }
@@ -107,12 +150,15 @@ abstract class OfflineManagerUtils {
       }
       // Terminate the in-flight download on the Dart side so its stream
       // subscription is cleaned up and the awaiting Future resolves.
-      ad.channelHandler.onError(
-          "DatabaseReset",
-          "Offline database was reset before the download completed",
-          null);
+      if (ad.channelHandler != null) {
+        ad.channelHandler.onError(
+            DATABASE_RESET,
+            "Offline database was reset before the download completed",
+            null);
+      }
     }
     activeDownloads.clear();
+    pendingResumes.clear();
 
     OfflineManager.Companion.getInstance(context)
         .resetDatabase(
@@ -124,17 +170,18 @@ abstract class OfflineManagerUtils {
 
               @Override
               public void onError(@NonNull String message) {
-                result.error("ResetDatabaseError", message, null);
+                result.error(OFFLINE_DATABASE_ERROR, message, null);
               }
             });
   }
 
   /**
    * Creates and sets an {@link OfflineRegion.OfflineRegionObserver} on the given region.
-   * The observer forwards progress, completion, and error events to the channel handler.
+   * The observer forwards progress, completion, and error events to the channel handler,
+   * when there is one, and stops the download once it completes either way.
    */
   private static void setObserverOnRegion(
-      OfflineRegion region, OfflineChannelHandlerImpl channelHandler,
+      OfflineRegion region, @Nullable OfflineDownloadEvents channelHandler,
       AtomicBoolean isComplete, Context context) {
     OfflineRegion.OfflineRegionObserver observer =
         new OfflineRegion.OfflineRegionObserver() {
@@ -149,7 +196,12 @@ abstract class OfflineManagerUtils {
               isComplete.set(true);
               region.setDownloadState(OfflineRegion.STATE_INACTIVE);
               activeDownloads.remove(region.getId());
-              channelHandler.onSuccess();
+              if (channelHandler != null) {
+                channelHandler.onSuccess();
+              }
+              return;
+            }
+            if (channelHandler == null) {
               return;
             }
             // Throttle: when tiles come from cache, the SDK fires hundreds of
@@ -186,8 +238,8 @@ abstract class OfflineManagerUtils {
           public void onError(OfflineRegionError error) {
             // Recoverable: the SDK re-requests what failed once the network is
             // back, so this only reports and the download stays active. Ending
-            // it here lost the whole download to any brief outage.
-            // tileCountLimitExceeded below is the one that is really terminal.
+            // it here would lose the whole download to any brief outage.
+            // Only the tile count limit below is terminal.
             Log.w(
                 TAG,
                 "offline download error, the SDK will retry (reason "
@@ -202,8 +254,12 @@ abstract class OfflineManagerUtils {
             region.setDownloadState(OfflineRegion.STATE_INACTIVE);
             activeDownloads.remove(region.getId());
             isComplete.set(true);
+            // A region nobody listens to stops but is kept, as iOS keeps its pack.
+            if (channelHandler == null) {
+              return;
+            }
             channelHandler.onError(
-                "tileCountLimitExceeded",
+                TILE_COUNT_LIMIT_EXCEEDED,
                 "MapLibre tile count limit exceeded: " + limit,
                 null);
             deleteRegion(null, context, region.getId());
@@ -217,14 +273,23 @@ abstract class OfflineManagerUtils {
       Context context,
       Map<String, Object> definitionMap,
       Map<String, Object> metadataMap,
-      OfflineChannelHandlerImpl channelHandler) {
+      OfflineDownloadEvents channelHandler) {
     float pixelDensity = context.getResources().getDisplayMetrics().density;
-    OfflineRegionDefinition definition = mapToRegionDefinition(definitionMap, pixelDensity);
-    String metadataJson = "{}";
-    if (metadataMap != null) {
-      metadataJson = new Gson().toJson(metadataMap);
+    final OfflineRegionDefinition definition;
+    try {
+      definition = mapToRegionDefinition(definitionMap, pixelDensity);
+    } catch (RuntimeException e) {
+      // A key is missing or has the wrong type.
+      result.error(
+          INVALID_REGION_DEFINITION,
+          "The region definition needs bounds, mapStyleUrl, minZoom and maxZoom.",
+          null);
+      return;
     }
-    final String metadata = metadataJson;
+    final String metadata = metadataToJson(metadataMap, result);
+    if (metadata == null) {
+      return;
+    }
     // Downloading the same area twice would otherwise create a second, duplicate
     // region (createOfflineRegion does not deduplicate). Remove any existing
     // region covering the same area first, then create, so a re-download replaces
@@ -234,8 +299,12 @@ abstract class OfflineManagerUtils {
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
-                OfflineRegion duplicate = findRegionMatching(offlineRegions, definition);
-                if (duplicate != null) {
+                guard(result, () -> {
+                  OfflineRegion duplicate = findRegionMatching(offlineRegions, definition);
+                  if (duplicate == null) {
+                    createRegion(result, context, definition, metadata, channelHandler);
+                    return;
+                  }
                   // Tear down any in-flight download tracked for the region we're
                   // about to replace, so we don't leak its activeDownloads entry
                   // or leave its Dart subscription waiting forever.
@@ -244,7 +313,8 @@ abstract class OfflineManagerUtils {
                       new OfflineRegion.OfflineRegionDeleteCallback() {
                         @Override
                         public void onDelete() {
-                          createRegion(result, context, definition, metadata, channelHandler);
+                          guard(result, () ->
+                              createRegion(result, context, definition, metadata, channelHandler));
                         }
 
                         @Override
@@ -252,19 +322,19 @@ abstract class OfflineManagerUtils {
                           // Fall back to creating anyway; a stale duplicate is
                           // better than failing the whole download.
                           Log.e(TAG, "Failed to remove duplicate region: " + error);
-                          createRegion(result, context, definition, metadata, channelHandler);
+                          guard(result, () ->
+                              createRegion(result, context, definition, metadata, channelHandler));
                         }
                       });
-                } else {
-                  createRegion(result, context, definition, metadata, channelHandler);
-                }
+                });
               }
 
               @Override
               public void onError(String error) {
                 // If we can't list regions, still attempt the download.
                 Log.e(TAG, "Failed to list regions for dedup: " + error);
-                createRegion(result, context, definition, metadata, channelHandler);
+                guard(result, () ->
+                    createRegion(result, context, definition, metadata, channelHandler));
               }
             });
   }
@@ -310,10 +380,12 @@ abstract class OfflineManagerUtils {
     if (active != null) {
       active.isComplete.set(true);
       active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
-      active.channelHandler.onError(
-          "RegionReplaced",
-          "Region was replaced by a new download of the same area",
-          null);
+      if (active.channelHandler != null) {
+        active.channelHandler.onError(
+            REGION_REPLACED,
+            "Region was replaced by a new download of the same area",
+            null);
+      }
     }
   }
 
@@ -322,7 +394,7 @@ abstract class OfflineManagerUtils {
       Context context,
       OfflineRegionDefinition definition,
       String metadata,
-      OfflineChannelHandlerImpl channelHandler) {
+      OfflineDownloadEvents channelHandler) {
     AtomicBoolean isComplete = new AtomicBoolean(false);
     // Download region
     OfflineManager.Companion.getInstance(context)
@@ -335,16 +407,18 @@ abstract class OfflineManagerUtils {
               @Override
               public void onCreate(OfflineRegion offlineRegion) {
                 _offlineRegion = offlineRegion;
-                // Track BEFORE result.success so the Dart side can't race us by
-                // invoking pause/resume before this region is registered.
-                activeDownloads.put(offlineRegion.getId(),
-                    new ActiveDownload(offlineRegion, channelHandler, isComplete));
-                setObserverOnRegion(offlineRegion, channelHandler, isComplete, context);
-                _offlineRegion.setDownloadState(OfflineRegion.STATE_ACTIVE);
+                guard(result, () -> {
+                  // Track BEFORE result.success so the Dart side can't race us by
+                  // invoking pause/resume before this region is registered.
+                  activeDownloads.put(offlineRegion.getId(),
+                      new ActiveDownload(offlineRegion, channelHandler, isComplete));
+                  setObserverOnRegion(offlineRegion, channelHandler, isComplete, context);
+                  _offlineRegion.setDownloadState(OfflineRegion.STATE_ACTIVE);
 
-                Map<String, Object> regionData = offlineRegionToMap(offlineRegion);
-                result.success(new Gson().toJson(regionData));
-                channelHandler.onStart();
+                  Map<String, Object> regionData = offlineRegionToMap(offlineRegion);
+                  result.success(new Gson().toJson(regionData));
+                  channelHandler.onStart();
+                });
               }
 
               @Override
@@ -354,8 +428,8 @@ abstract class OfflineManagerUtils {
                 if (_offlineRegion != null) {
                   _offlineRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
                 }
-                channelHandler.onError("invalidRegionDefinition", error, null);
-                result.error("invalidRegionDefinition", error, null);
+                channelHandler.onError(INVALID_REGION_DEFINITION, error, null);
+                result.error(INVALID_REGION_DEFINITION, error, null);
               }
             });
   }
@@ -366,118 +440,118 @@ abstract class OfflineManagerUtils {
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
-                List<Map<String, Object>> regionsArgs = new ArrayList<>();
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  regionsArgs.add(offlineRegionToMap(offlineRegion));
-                }
-                result.success(new Gson().toJson(regionsArgs));
+                guard(result, () -> result.success(regionsToJson(offlineRegions)));
               }
 
               @Override
               public void onError(String error) {
-                result.error("RegionListError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
 
   static void updateRegionMetadata(
       MethodChannel.Result result, Context context, long id, Map<String, Object> metadataMap) {
-    OfflineManager.Companion.getInstance(context)
-        .listOfflineRegions(
-            new OfflineManager.ListOfflineRegionsCallback() {
-              @Override
-              public void onList(OfflineRegion[] offlineRegions) {
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getId() != id) continue;
-
-                  String metadata = "{}";
-                  if (metadataMap != null) {
-                    metadata = new Gson().toJson(metadataMap);
-                  }
-                  offlineRegion.updateMetadata(
-                      metadata.getBytes(),
-                      new OfflineRegion.OfflineRegionUpdateMetadataCallback() {
-                        @Override
-                        public void onUpdate(byte[] metadataBytes) {
-                          Map<String, Object> regionData = offlineRegionToMap(offlineRegion);
-                          regionData.put("metadata", metadataBytesToMap(metadataBytes));
-
-                          if (result == null) return;
-                          result.success(new Gson().toJson(regionData));
-                        }
-
-                        @Override
-                        public void onError(String error) {
-                          if (result == null) return;
-                          result.error("UpdateMetadataError", error, null);
-                        }
-                      });
-                  return;
-                }
-                if (result == null) return;
-                result.error(
-                    "UpdateMetadataError",
-                    "There is no " + "region with given id to " + "update.",
-                    null);
-              }
-
-              @Override
-              public void onError(String error) {
-                if (result == null) return;
-                result.error("RegionListError", error, null);
-              }
-            });
-  }
-
-  static void deleteRegion(MethodChannel.Result result, Context context, long id) {
-    ActiveDownload active = activeDownloads.remove(id);
-    if (active != null) {
-      active.isComplete.set(true);
-      active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
-      // Terminate the in-flight download on the Dart side so its stream
-      // subscription is cleaned up and the awaiting Future resolves.
-      active.channelHandler.onError(
-          "RegionDeleted",
-          "Region was deleted before the download completed",
-          null);
+    final String metadata = metadataToJson(metadataMap, result);
+    if (metadata == null) {
+      return;
     }
     OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getId() != id) continue;
+                guard(result, () -> updateMetadata(result, offlineRegions, id, metadata));
+              }
 
-                  offlineRegion.delete(
-                      new OfflineRegion.OfflineRegionDeleteCallback() {
-                        @Override
-                        public void onDelete() {
-                          if (result == null) return;
-                          result.success(null);
-                        }
+              @Override
+              public void onError(String error) {
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
+              }
+            });
+  }
 
-                        @Override
-                        public void onError(String error) {
-                          if (result == null) return;
-                          result.error("DeleteRegionError", error, null);
-                        }
-                      });
-                  return;
-                }
-                if (result == null) return;
-                result.error(
-                    "DeleteRegionError",
-                    "There is no " + "region with given id to " + "delete.",
-                    null);
+  private static void updateMetadata(
+      MethodChannel.Result result, OfflineRegion[] offlineRegions, long id, String metadata) {
+    for (OfflineRegion offlineRegion : offlineRegions) {
+      if (offlineRegion.getId() != id) continue;
+
+      offlineRegion.updateMetadata(
+          metadata.getBytes(),
+          new OfflineRegion.OfflineRegionUpdateMetadataCallback() {
+            @Override
+            public void onUpdate(byte[] metadataBytes) {
+              guard(result, () -> {
+                Map<String, Object> regionData = offlineRegionToMap(offlineRegion);
+                regionData.put("metadata", metadataBytesToMap(metadataBytes));
+                result.success(new Gson().toJson(regionData));
+              });
+            }
+
+            @Override
+            public void onError(String error) {
+              result.error(OFFLINE_DATABASE_ERROR, error, null);
+            }
+          });
+      return;
+    }
+    regionNotFound(result, id);
+  }
+
+  static void deleteRegion(MethodChannel.Result result, Context context, long id) {
+    pendingResumes.remove(id);
+    ActiveDownload active = activeDownloads.remove(id);
+    if (active != null) {
+      active.isComplete.set(true);
+      active.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
+      // Terminate the in-flight download on the Dart side so its stream
+      // subscription is cleaned up and the awaiting Future resolves.
+      if (active.channelHandler != null) {
+        active.channelHandler.onError(
+            REGION_DELETED,
+            "Region was deleted before the download completed",
+            null);
+      }
+    }
+    OfflineManager.Companion.getInstance(context)
+        .listOfflineRegions(
+            new OfflineManager.ListOfflineRegionsCallback() {
+              @Override
+              public void onList(OfflineRegion[] offlineRegions) {
+                guard(result, () -> deleteListed(result, offlineRegions, id));
               }
 
               @Override
               public void onError(String error) {
                 if (result == null) return;
-                result.error("RegionListError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
+  }
+
+  private static void deleteListed(
+      @Nullable MethodChannel.Result result, OfflineRegion[] offlineRegions, long id) {
+    for (OfflineRegion offlineRegion : offlineRegions) {
+      if (offlineRegion.getId() != id) continue;
+
+      offlineRegion.delete(
+          new OfflineRegion.OfflineRegionDeleteCallback() {
+            @Override
+            public void onDelete() {
+              if (result == null) return;
+              result.success(null);
+            }
+
+            @Override
+            public void onError(String error) {
+              if (result == null) return;
+              result.error(OFFLINE_DATABASE_ERROR, error, null);
+            }
+          });
+      return;
+    }
+    if (result == null) return;
+    regionNotFound(result, id);
   }
 
   // Pause / Resume / Status
@@ -488,7 +562,9 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_INACTIVE);
       result.success(null);
     } else {
-      findRegionById(context, id, result, "PauseRegionError", foundRegion -> {
+      // A resume still looking the region up must not start it after this pause.
+      pendingResumes.remove(id);
+      findRegionById(context, id, result, foundRegion -> {
         foundRegion.setDownloadState(OfflineRegion.STATE_INACTIVE);
         result.success(null);
       });
@@ -499,7 +575,7 @@ abstract class OfflineManagerUtils {
     ActiveDownload download = activeDownloads.get(id);
     if (download != null) {
       // Deliver status messages even while inactive so the state-change
-      // callback fires after STATE_ACTIVE — some paths rely on this to
+      // callback fires after STATE_ACTIVE: some paths rely on this to
       // re-arm internal tile dispatching.
       download.region.setDeliverInactiveMessages(true);
       // Re-set the observer to ensure callbacks fire after resume
@@ -507,14 +583,82 @@ abstract class OfflineManagerUtils {
       download.region.setDownloadState(OfflineRegion.STATE_ACTIVE);
       result.success(null);
     } else {
-      findRegionById(context, id, result, "ResumeRegionError", foundRegion -> {
-        // Region was not tracked (e.g. app restarted) — we cannot resume
-        // progress events without a channel handler, so return an error.
-        result.error(
-            "ResumeRegionError",
-            "Region is no longer actively tracked. Please restart the download.",
-            null);
-      });
+      // No download of this session follows the region: it was paused before
+      // the app restarted, merged in, or its download ended.
+      pendingResumes.add(id);
+      findRegionById(
+          context,
+          id,
+          new ForwardingResult(result) {
+            @Override
+            public void error(String code, @Nullable String message, @Nullable Object details) {
+              pendingResumes.remove(id);
+              super.error(code, message, details);
+            }
+          },
+          foundRegion -> resumeUntracked(result, context, foundRegion));
+    }
+  }
+
+  /**
+   * Resumes a region no download of this session follows. As on iOS, it sends
+   * no download events: getOfflineRegionStatus reports its progress. It is
+   * tracked so that pause, status and delete reach the region object that
+   * downloads. A complete region is left as it is.
+   */
+  private static void resumeUntracked(
+      MethodChannel.Result result, Context context, OfflineRegion region) {
+    region.getStatus(
+        new OfflineRegion.OfflineRegionStatusCallback() {
+          @Override
+          public void onStatus(OfflineRegionStatus status) {
+            guard(result, () -> {
+              // Paused while this resume looked the region up, complete, or already
+              // started by another resume meanwhile.
+              final boolean stillWanted = pendingResumes.remove(region.getId());
+              if (!stillWanted
+                  || status.isComplete()
+                  || activeDownloads.containsKey(region.getId())) {
+                result.success(null);
+                return;
+              }
+              AtomicBoolean isComplete = new AtomicBoolean(false);
+              activeDownloads.put(region.getId(), new ActiveDownload(region, null, isComplete));
+              setObserverOnRegion(region, null, isComplete, context);
+              region.setDownloadState(OfflineRegion.STATE_ACTIVE);
+              result.success(null);
+            });
+          }
+
+          @Override
+          public void onError(String error) {
+            pendingResumes.remove(region.getId());
+            result.error(OFFLINE_DATABASE_ERROR, error, null);
+          }
+        });
+  }
+
+  /** Passes every answer on to {@code target}, for a subclass to see them first. */
+  private static class ForwardingResult implements MethodChannel.Result {
+    private final MethodChannel.Result target;
+
+    ForwardingResult(MethodChannel.Result target) {
+      this.target = target;
+    }
+
+    @Override
+    public void success(@Nullable Object value) {
+      target.success(value);
+    }
+
+    @Override
+    public void error(String code, @Nullable String message, @Nullable Object details) {
+      target.error(code, message, details);
+    }
+
+    @Override
+    public void notImplemented() {
+      target.notImplemented();
     }
   }
 
@@ -523,23 +667,25 @@ abstract class OfflineManagerUtils {
   }
 
   private static void findRegionById(
-      Context context, long id, MethodChannel.Result result, String errorCode, RegionCallback callback) {
+      Context context, long id, MethodChannel.Result result, RegionCallback callback) {
     OfflineManager.Companion.getInstance(context)
         .listOfflineRegions(
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getId() != id) continue;
-                  callback.onFound(offlineRegion);
-                  return;
-                }
-                result.error(errorCode, "There is no region with given id", null);
+                guard(result, () -> {
+                  for (OfflineRegion offlineRegion : offlineRegions) {
+                    if (offlineRegion.getId() != id) continue;
+                    callback.onFound(offlineRegion);
+                    return;
+                  }
+                  regionNotFound(result, id);
+                });
               }
 
               @Override
               public void onError(String error) {
-                result.error(errorCode, error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -557,18 +703,19 @@ abstract class OfflineManagerUtils {
             new OfflineManager.ListOfflineRegionsCallback() {
               @Override
               public void onList(OfflineRegion[] offlineRegions) {
-                for (OfflineRegion offlineRegion : offlineRegions) {
-                  if (offlineRegion.getId() != id) continue;
-                  fetchAndReturnStatus(result, offlineRegion);
-                  return;
-                }
-                result.error(
-                    "GetRegionStatusError", "There is no region with given id", null);
+                guard(result, () -> {
+                  for (OfflineRegion offlineRegion : offlineRegions) {
+                    if (offlineRegion.getId() != id) continue;
+                    fetchAndReturnStatus(result, offlineRegion);
+                    return;
+                  }
+                  regionNotFound(result, id);
+                });
               }
 
               @Override
               public void onError(String error) {
-                result.error("GetRegionStatusError", error, null);
+                result.error(OFFLINE_DATABASE_ERROR, error, null);
               }
             });
   }
@@ -578,23 +725,30 @@ abstract class OfflineManagerUtils {
         new OfflineRegion.OfflineRegionStatusCallback() {
           @Override
           public void onStatus(OfflineRegionStatus status) {
-            double progress =
-                calculateDownloadingProgress(
-                    status.getRequiredResourceCount(), status.getCompletedResourceCount());
-            Map<String, Object> statusMap = new HashMap<>();
-            statusMap.put("completedResourceCount", status.getCompletedResourceCount());
-            statusMap.put("requiredResourceCount", status.getRequiredResourceCount());
-            statusMap.put("completedResourceSize", status.getCompletedResourceSize());
-            statusMap.put("isComplete", status.isComplete());
-            statusMap.put("downloadProgress", progress);
-            result.success(new Gson().toJson(statusMap));
+            guard(result, () -> {
+              double progress =
+                  calculateDownloadingProgress(
+                      status.getRequiredResourceCount(), status.getCompletedResourceCount());
+              Map<String, Object> statusMap = new HashMap<>();
+              statusMap.put("completedResourceCount", status.getCompletedResourceCount());
+              statusMap.put("requiredResourceCount", status.getRequiredResourceCount());
+              statusMap.put("completedResourceSize", status.getCompletedResourceSize());
+              statusMap.put("isComplete", status.isComplete());
+              statusMap.put("downloadProgress", progress);
+              result.success(new Gson().toJson(statusMap));
+            });
           }
 
           @Override
           public void onError(String error) {
-            result.error("GetRegionStatusError", error, null);
+            result.error(OFFLINE_DATABASE_ERROR, error, null);
           }
         });
+  }
+
+  /** Answers REGION_NOT_FOUND for {@code id}. */
+  private static void regionNotFound(MethodChannel.Result result, long id) {
+    result.error(REGION_NOT_FOUND, "There is no offline region with id " + id + ".", null);
   }
 
   private static double calculateDownloadingProgress(
@@ -655,17 +809,68 @@ abstract class OfflineManagerUtils {
     return boundsList;
   }
 
-  private static Map<String, Object> metadataBytesToMap(byte[] metadataBytes) {
+  /**
+   * The metadata of a region as a map. Metadata that is not a JSON object, such as {@code []} or
+   * what another tool wrote into a merged database, reads as an empty map, as on iOS.
+   */
+  static Map<String, Object> metadataBytesToMap(@Nullable byte[] metadataBytes) {
     if (metadataBytes != null) {
-      // Gson returns null for empty or "null" payloads, which can happen with
-      // offline databases created by external tools. Fall back to an empty map
-      // so the Dart side never receives a null metadata value.
-      Map<String, Object> metadata =
-          new Gson().fromJson(new String(metadataBytes), HashMap.class);
-      if (metadata != null) {
-        return metadata;
+      try {
+        // Null for an empty or "null" payload. Whole numbers read as Long, as
+        // on iOS, instead of Double: a version 2 stays 2, not 2.0.
+        Map<String, Object> metadata =
+            new GsonBuilder()
+                .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+                .create()
+                .fromJson(new String(metadataBytes), HashMap.class);
+        if (metadata != null) {
+          return metadata;
+        }
+      } catch (RuntimeException e) {
+        Log.w(TAG, "Reading offline region metadata that is not a JSON object as empty: " + e);
       }
     }
-    return new HashMap();
+    return new HashMap<>();
+  }
+
+  /**
+   * The metadata as JSON, "{}" for none. Answers INVALID_ARGUMENT and returns null for metadata
+   * JSON cannot hold, such as a NaN.
+   */
+  @Nullable
+  static String metadataToJson(
+      @Nullable Map<String, Object> metadataMap, MethodChannel.Result result) {
+    if (metadataMap == null) {
+      return "{}";
+    }
+    try {
+      return new Gson().toJson(metadataMap);
+    } catch (RuntimeException e) {
+      result.error(INVALID_ARGUMENT, "Metadata is not JSON serializable", null);
+      return null;
+    }
+  }
+
+  private static String regionsToJson(OfflineRegion[] offlineRegions) {
+    List<Map<String, Object>> regions = new ArrayList<>();
+    for (OfflineRegion offlineRegion : offlineRegions) {
+      regions.add(offlineRegionToMap(offlineRegion));
+    }
+    return new Gson().toJson(regions);
+  }
+
+  /**
+   * Runs the body of an SDK callback that answers {@code result}. What it throws answers code
+   * "error" instead of crashing the app, unless the call has already been answered.
+   */
+  static void guard(@Nullable MethodChannel.Result result, Runnable body) {
+    try {
+      body.run();
+    } catch (RuntimeException e) {
+      Log.e(TAG, "An offline callback failed", e);
+      if (result != null) {
+        result.error("error", e.getMessage(), Log.getStackTraceString(e));
+      }
+    }
   }
 }

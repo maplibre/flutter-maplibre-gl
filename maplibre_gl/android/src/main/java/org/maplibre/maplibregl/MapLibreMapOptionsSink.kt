@@ -8,8 +8,8 @@ import org.maplibre.android.location.engine.LocationEngineRequest
 
 /** Receiver of MapLibreMap configuration options.  */
 internal interface MapLibreMapOptionsSink {
-    // todo: dddd replace with CameraPosition.Builder target
-    fun setCameraTargetBounds(bounds: LatLngBounds)
+    /** Null lifts the restriction. */
+    fun setCameraTargetBounds(bounds: LatLngBounds?)
 
     fun setCompassEnabled(compassEnabled: Boolean)
 
@@ -30,11 +30,17 @@ internal interface MapLibreMapOptionsSink {
 
     fun setDoubleClickZoomEnabled(doubleClickZoomEnabled: Boolean)
 
+    /** Index of the Dart `PanInertia` value: 0 none, 1 short, 2 normal. */
+    fun setPanInertia(panInertia: Int)
+
     fun setMyLocationEnabled(myLocationEnabled: Boolean)
 
     fun setMyLocationTrackingMode(myLocationTrackingMode: Int)
 
     fun setMyLocationRenderMode(myLocationRenderMode: Int)
+
+    /** Colors of the user-location puck, from the Dart `MyLocationStyle`. */
+    fun setMyLocationStyle(style: LocationPuckStyle)
 
     fun setLogoEnabled(logoEnabled: Boolean)
 
@@ -45,6 +51,8 @@ internal interface MapLibreMapOptionsSink {
     fun setCompassGravity(gravity: Int)
 
     fun setCompassViewMargins(x: Int, y: Int)
+
+    fun setAttributionEnabled(attributionEnabled: Boolean)
 
     fun setAttributionButtonGravity(gravity: Int)
 
@@ -62,5 +70,6 @@ internal interface MapLibreMapOptionsSink {
 
     fun setFeatureTapsTriggersMapClick(triggers: Boolean)
 
-    fun setUseHybridComposition(useHybridComposition: Boolean)
+    /** Whether MapLibre fades symbols in and out as it places them; kept across style loads. */
+    fun setSymbolPlacementTransitionsEnabled(enabled: Boolean)
 }

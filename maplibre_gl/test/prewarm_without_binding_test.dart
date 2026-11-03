@@ -1,5 +1,5 @@
 // The crash under test is the Android and iOS path, where preWarm() reaches
-// native over a method channel. Under `flutter test --platform chrome` there is
+// native over a Pigeon channel. Under `flutter test --platform chrome` there is
 // no platform to answer that channel and no registered web implementation, so
 // the call never completes and the test times out instead of asserting
 // anything. `melos run test:web` runs this package under Chrome, hence vm only.
@@ -14,7 +14,7 @@ library;
 //
 // Regression test for the "Binding has not yet been initialized" crash: the
 // method is documented as the first thing in `main()`, before `runApp()`, and
-// on Android and iOS it reaches native over a method channel, which resolves
+// on Android and iOS it reaches native over a Pigeon channel, which resolves
 // its messenger through ServicesBinding.instance.
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';

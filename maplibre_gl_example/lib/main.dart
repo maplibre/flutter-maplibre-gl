@@ -20,6 +20,7 @@ import 'shared/tile_client_identity.dart';
 import 'examples/basics/full_map_example.dart';
 import 'examples/basics/multi_style_switch.dart';
 import 'examples/layers/background_layer_example.dart';
+import 'examples/layers/live_symbols_example.dart';
 import 'examples/layers/various_sources.dart';
 import 'examples/basics/get_map_state.dart';
 import 'examples/basics/gps_location_page.dart';
@@ -51,6 +52,7 @@ import 'examples/layers/line_layer_example.dart';
 import 'examples/layers/symbol_layer_example.dart';
 import 'examples/layers/edit_style_layer_animated.dart';
 import 'examples/layers/edit_style_layer_draggable.dart';
+import 'examples/layers/move_layer_example.dart';
 
 // Advanced examples
 import 'examples/advanced/globe_terrain_sky.dart';
@@ -130,11 +132,10 @@ class MapLibreExampleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initialPage =
-        [
-          ..._allPages,
-          ..._docPages,
-        ].where((p) => p.slug == _initialExampleSlug()).firstOrNull;
+    final initialPage = [
+      ..._allPages,
+      ..._docPages,
+    ].where((p) => p.slug == _initialExampleSlug()).firstOrNull;
 
     return MaterialApp(
       title: 'MapLibre Examples',
@@ -154,10 +155,9 @@ class MapLibreExampleApp extends StatelessWidget {
         ),
       ),
       themeMode: ThemeMode.system,
-      home:
-          initialPage == null
-              ? const MapsDemo()
-              : _DemoStyleGate(page: initialPage),
+      home: initialPage == null
+          ? const MapsDemo()
+          : _DemoStyleGate(page: initialPage),
     );
   }
 }
@@ -224,10 +224,11 @@ final List<ExamplePage> _allPages = <ExamplePage>[
   const FillLayerExample(),
   const LineLayerExample(),
   const BackgroundLayerExample(),
-  // Feature state is available on web and Android, not on iOS yet.
-  if (FeatureStateExample.isSupported) const FeatureStateExample(),
+  const FeatureStateExample(),
   const EditStyleLayerAnimatedExample(),
+  const LiveSymbolsExample(),
   const EditStyleLayerDraggableExample(),
+  const MoveLayerExample(),
 
   // Advanced
   const MapLanguageExample(),
@@ -281,11 +282,10 @@ class _MapsDemoState extends State<MapsDemo> {
     if (context.mounted) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder:
-              (_) => Scaffold(
-                appBar: AppBar(title: Text(page.title)),
-                body: page,
-              ),
+          builder: (_) => Scaffold(
+            appBar: AppBar(title: Text(page.title)),
+            body: page,
+          ),
         ),
       );
     }
@@ -405,17 +405,16 @@ class _MapsDemoState extends State<MapsDemo> {
                       ),
                     ),
                     subtitle: Text('${pages.length} examples'),
-                    children:
-                        pages
-                            .map(
-                              (page) => ListTile(
-                                leading: page.leading,
-                                title: Text(page.title),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () => _pushPage(context, page),
-                              ),
-                            )
-                            .toList(),
+                    children: pages
+                        .map(
+                          (page) => ListTile(
+                            leading: page.leading,
+                            title: Text(page.title),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => _pushPage(context, page),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ),
               );

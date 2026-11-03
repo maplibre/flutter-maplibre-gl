@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'dart:math';
 import 'dart:ui' as ui;
@@ -25,11 +26,14 @@ import 'package:maplibre_gl_web/src/geo/lng_lat.dart';
 import 'package:maplibre_gl_web/src/geo/lng_lat_bounds.dart';
 import 'package:maplibre_gl_web/src/global_web_platform.dart';
 import 'package:maplibre_gl_web/src/interop/style/feature_identifier_interop.dart';
+import 'package:maplibre_gl_web/src/interop/style/sources/geojson_source_interop.dart';
 import 'package:maplibre_gl_web/src/interop/ui/control/geolocate_control_interop.dart';
 import 'package:maplibre_gl_web/src/js_loader.dart';
 import 'package:maplibre_gl_web/src/layer_tools.dart';
+import 'package:maplibre_gl_web/src/location_puck_style.dart';
 import 'package:maplibre_gl_web/src/manual_location_puck.dart';
 import 'package:maplibre_gl_web/src/style/sources/geojson_source.dart';
+import 'package:maplibre_gl_web/src/style_checks.dart' as checks;
 import 'package:maplibre_gl_web/src/ui/camera.dart';
 import 'package:maplibre_gl_web/src/ui/control/attribution_control.dart';
 import 'package:maplibre_gl_web/src/ui/control/geolocate_control.dart';
@@ -40,6 +44,11 @@ import 'package:maplibre_gl_web/src/util/evented.dart';
 import 'package:maplibre_gl_web/src/utils.dart';
 import 'package:maplibre_gl_web/src/webgl_support.dart';
 import 'package:maplibre_gl_web/src/camera_easing_math.dart';
+import 'package:maplibre_gl_web/src/camera_target_bounds.dart';
+import 'package:maplibre_gl_web/src/camera_move_reason.dart';
+import 'package:maplibre_gl_web/src/feature_drag.dart';
+import 'package:maplibre_gl_web/src/feature_id_interop.dart';
+import 'package:maplibre_gl_web/src/feature_ids.dart';
 
 part 'src/convert.dart';
 

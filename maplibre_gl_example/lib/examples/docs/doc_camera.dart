@@ -27,6 +27,11 @@ class _DocCameraBodyState extends State<_DocCameraBody> {
   MapLibreMapController? _controller;
   int _currentCity = 0;
 
+  // Whether the user moved the map, so "Search this area" shows up once the
+  // camera stops. Moves of the app, like the fly to the next city, leave it.
+  bool _movedByUser = false;
+  bool _showSearchArea = false;
+
   static const List<Map<String, Object>> _cities = [
     {'name': 'Tokyo', 'lat': 35.6762, 'lng': 139.6503, 'zoom': 10.0},
     {'name': 'New York', 'lat': 40.7128, 'lng': -74.0060, 'zoom': 10.0},
@@ -58,21 +63,48 @@ class _DocCameraBodyState extends State<_DocCameraBody> {
     );
   }
 
+  void _onCameraMoveStarted(CameraMoveReason reason) {
+    _movedByUser = reason == CameraMoveReason.gesture;
+    if (_showSearchArea) setState(() => _showSearchArea = false);
+  }
+
+  void _onCameraIdle() {
+    if (_movedByUser) setState(() => _showSearchArea = true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MapExampleScaffold(
       mapOnly: true,
       controls: const [],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _flyToNext,
-        icon: const Icon(Icons.flight_takeoff),
-        label: const Text('Fly to next city'),
-        backgroundColor: const Color(0xFF296CA8),
-        foregroundColor: Colors.white,
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (_showSearchArea) ...[
+            FloatingActionButton.extended(
+              heroTag: 'searchArea',
+              onPressed: () => setState(() => _showSearchArea = false),
+              icon: const Icon(Icons.search),
+              label: const Text('Search this area'),
+            ),
+            const SizedBox(height: 12),
+          ],
+          FloatingActionButton.extended(
+            heroTag: 'flyToNext',
+            onPressed: _flyToNext,
+            icon: const Icon(Icons.flight_takeoff),
+            label: const Text('Fly to next city'),
+            backgroundColor: const Color(0xFF296CA8),
+            foregroundColor: Colors.white,
+          ),
+        ],
       ),
       map: MapLibreMap(
         styleString: ExampleConstants.demoMapStyle,
         onMapCreated: _onMapCreated,
+        onCameraMoveStarted: _onCameraMoveStarted,
+        onCameraIdle: _onCameraIdle,
         initialCameraPosition: const CameraPosition(
           target: LatLng(35.6762, 139.6503),
           zoom: 10.0,

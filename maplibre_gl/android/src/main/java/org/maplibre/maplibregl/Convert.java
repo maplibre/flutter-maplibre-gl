@@ -4,86 +4,135 @@
 
 package org.maplibre.maplibregl;
 
-import android.content.Context;
-import android.graphics.Point;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import org.maplibre.android.location.engine.LocationEngineRequest;
-import org.maplibre.geojson.Polygon;
+import android.graphics.PointF;
+import androidx.annotation.NonNull;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.maplibre.android.camera.CameraPosition;
 import org.maplibre.android.camera.CameraUpdate;
 import org.maplibre.android.camera.CameraUpdateFactory;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.maps.MapLibreMap;
+import org.maplibre.android.maps.Projection;
+import org.maplibre.android.style.expressions.Expression;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Conversions between JSON-like values and MapLibreMaps data types. */
+/**
+ * Readers of the untyped values, such as layer and source properties, and the camera math behind
+ * the camera updates of {@link PigeonConvert}.
+ */
 class Convert {
-
-  private static final String TAG = "Convert";
 
   static boolean toBoolean(Object o) {
     return (Boolean) o;
   }
 
-  static CameraPosition toCameraPosition(Object o) {
-    final Map<?, ?> data = toMap(o);
-    final CameraPosition.Builder builder = new CameraPosition.Builder();
-    builder.bearing(toFloat(data.get("bearing")));
-    builder.target(toLatLng(data.get("target")));
-    builder.tilt(toFloat(data.get("tilt")));
-    builder.zoom(toFloat(data.get("zoom")));
-    return builder.build();
+  /**
+   * Pans like maplibre-gl-js panBy: a positive {@code dx} moves the view east, a positive {@code
+   * dy} south, in logical pixels. MapLibreMap.scrollBy pans the other way and moves the camera
+   * outside any CameraUpdate.
+   */
+  static CameraUpdate scrollBy(MapLibreMap maplibreMap, double dx, double dy, float density) {
+    final Projection projection = maplibreMap.getProjection();
+    final PointF center = projection.toScreenLocation(maplibreMap.getCameraPosition().target);
+    center.offset(toFractionalPixels(dx, density), toFractionalPixels(dy, density));
+    return CameraUpdateFactory.newLatLng(projection.fromScreenLocation(center));
   }
 
-  static boolean isScrollByCameraUpdate(Object o) {
-    return toString(toList(o).get(0)).equals("scrollBy");
+  /**
+   * Zooms by {@code amount}, keeping the location under the focus (in logical pixels) in place.
+   * CameraUpdateFactory.zoomBy(amount, point) would recenter on the point instead.
+   */
+  static CameraUpdate zoomBy(
+      MapLibreMap maplibreMap, double amount, double focusX, double focusY, float density) {
+    final float focusPixelX = toFractionalPixels(focusX, density);
+    final float focusPixelY = toFractionalPixels(focusY, density);
+    final Projection projection = maplibreMap.getProjection();
+    final CameraPosition camera = maplibreMap.getCameraPosition();
+    final PointF center = projection.toScreenLocation(camera.target);
+    final float scale = (float) Math.pow(2, -amount);
+    final PointF target =
+        new PointF(
+            focusPixelX + (center.x - focusPixelX) * scale,
+            focusPixelY + (center.y - focusPixelY) * scale);
+    return CameraUpdateFactory.newCameraPosition(
+        new CameraPosition.Builder(camera)
+            .target(projection.fromScreenLocation(target))
+            .zoom(camera.zoom + amount)
+            .build());
   }
 
-  static CameraUpdate toCameraUpdate(Object o, MapLibreMap maplibreMap, float density) {
-    final List<?> data = toList(o);
-    switch (toString(data.get(0))) {
-      case "newCameraPosition":
-        return CameraUpdateFactory.newCameraPosition(toCameraPosition(data.get(1)));
-      case "newLatLng":
-        return CameraUpdateFactory.newLatLng(toLatLng(data.get(1)));
-      case "newLatLngBounds":
-        return CameraUpdateFactory.newLatLngBounds(
-            toLatLngBounds(data.get(1)),
-            toPixels(data.get(2), density),
-            toPixels(data.get(3), density),
-            toPixels(data.get(4), density),
-            toPixels(data.get(5), density));
-      case "newLatLngZoom":
-        return CameraUpdateFactory.newLatLngZoom(toLatLng(data.get(1)), toFloat(data.get(2)));
-      case "scrollBy":
-        maplibreMap.scrollBy(
-            toFractionalPixels(data.get(1), density), toFractionalPixels(data.get(2), density));
-        return null;
-      case "zoomBy":
-        if (data.size() == 2) {
-          return CameraUpdateFactory.zoomBy(toFloat(data.get(1)));
-        } else {
-          return CameraUpdateFactory.zoomBy(toFloat(data.get(1)), toPoint(data.get(2), density));
-        }
-      case "zoomIn":
-        return CameraUpdateFactory.zoomIn();
-      case "zoomOut":
-        return CameraUpdateFactory.zoomOut();
-      case "zoomTo":
-        return CameraUpdateFactory.zoomTo(toFloat(data.get(1)));
-      case "bearingTo":
-        return CameraUpdateFactory.bearingTo(toFloat(data.get(1)));
-      case "tiltTo":
-        return CameraUpdateFactory.tiltTo(toFloat(data.get(1)));
-      default:
-        throw new IllegalArgumentException("Cannot interpret " + o + " as CameraUpdate");
+  /**
+   * Fits the bounds inside the map padding plus the given padding (in logical pixels), with the
+   * bounds in the middle of the padded area, as maplibre-gl-js fitBounds and iOS do.
+   *
+   * <p>CameraUpdateFactory.newLatLngBounds puts the padding in the camera position it moves to, so
+   * it stays on as the map padding after the move and every later camera target is the center of
+   * the padded area (#1047). Here the center is shifted instead, and the camera position carries
+   * no padding, so the map keeps its own.
+   */
+  static CameraUpdate toBoundsCameraUpdate(
+      MapLibreMap maplibreMap,
+      LatLngBounds bounds,
+      double left,
+      double top,
+      double right,
+      double bottom,
+      float density) {
+    final double[] mapPadding = maplibreMap.getCameraPosition().padding;
+    final double[] padding = {left, top, right, bottom};
+    final int[] fitPadding = new int[4];
+    for (int i = 0; i < 4; i++) {
+      final double mapSide = mapPadding != null && mapPadding.length == 4 ? mapPadding[i] : 0;
+      fitPadding[i] = (int) (padding[i] * density + mapSide);
     }
+    final CameraPosition fit = maplibreMap.getCameraForLatLngBounds(bounds, fitPadding);
+    if (fit == null || fit.target == null) {
+      // No camera came back to shift, for instance while the map has no size
+      // yet. Let the SDK fit the bounds when the move runs, as before: the
+      // bounds still land in the padded area, but the padding stays on as the
+      // map padding after the move.
+      return CameraUpdateFactory.newLatLngBounds(
+          bounds,
+          (int) (left * density),
+          (int) (top * density),
+          (int) (right * density),
+          (int) (bottom * density));
+    }
+    return CameraUpdateFactory.newCameraPosition(
+        new CameraPosition.Builder()
+            .target(
+                offset(fit.target, fit.zoom, fit.bearing, (right - left) / 2, (bottom - top) / 2))
+            .zoom(fit.zoom)
+            .bearing(fit.bearing)
+            .tilt(fit.tilt)
+            .build());
+  }
+
+  /**
+   * The coordinate dx logical pixels right and dy down on screen from center, for a camera at zoom
+   * facing bearing, in Web Mercator with 512 pixel tiles. The tilt is left out, as maplibre-gl-js
+   * does when it fits bounds. The longitude is wrapped into [-180, 180). iOS does the same sums.
+   */
+  static LatLng offset(LatLng center, double zoom, double bearing, double dx, double dy) {
+    final double worldSize = 512 * Math.pow(2, zoom);
+    final double radians = Math.toRadians(bearing);
+    final double offsetX = dx * Math.cos(radians) - dy * Math.sin(radians);
+    final double offsetY = dx * Math.sin(radians) + dy * Math.cos(radians);
+    final double sinLatitude = Math.sin(Math.toRadians(center.getLatitude()));
+    final double x = (center.getLongitude() + 180) / 360 * worldSize + offsetX;
+    final double y =
+        (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * worldSize
+            + offsetY;
+    final double longitude = ((x / worldSize * 360) % 360 + 360) % 360 - 180;
+    return new LatLng(
+        Math.toDegrees(Math.atan(Math.sinh(Math.PI * (1 - 2 * y / worldSize)))), longitude);
   }
 
   static double toDouble(Object o) {
@@ -94,57 +143,33 @@ class Convert {
     return ((Number) o).floatValue();
   }
 
-  static Float toFloatWrapper(Object o) {
-    return (o == null) ? null : toFloat(o);
-  }
-
   static int toInt(Object o) {
     return ((Number) o).intValue();
   }
 
-  static Object toJson(CameraPosition position) {
+  /**
+   * Narrows {@code value}, a Dart int that Pigeon delivers as a long, to an int. A value outside 32
+   * bits throws, failing the call with code "error", rather than wrapping around.
+   */
+  static int toIntExact(long value) {
+    final int narrowed = (int) value;
+    if (narrowed != value) {
+      throw new IllegalArgumentException(value + " does not fit in a 32-bit int.");
+    }
+    return narrowed;
+  }
+
+  /** The camera position of camera#onMove and camera#onIdle, with the fields of the map above. */
+  static PgCameraPosition toPgCameraPosition(CameraPosition position) {
     if (position == null) {
       return null;
     }
-    final Map<String, Object> data = new HashMap<>();
-    data.put("bearing", position.bearing);
-    data.put("target", toJson(position.target));
-    data.put("tilt", position.tilt);
-    data.put("zoom", position.zoom);
-    return data;
+    return new PgCameraPosition(
+        position.bearing,
+        new PgLatLng(position.target.getLatitude(), position.target.getLongitude()),
+        position.tilt,
+        position.zoom);
   }
-
-  private static Object toJson(LatLng latLng) {
-    return Arrays.asList(latLng.getLatitude(), latLng.getLongitude());
-  }
-
-  static LatLng toLatLng(Object o) {
-    final List<?> data = toList(o);
-    return new LatLng(toDouble(data.get(0)), toDouble(data.get(1)));
-  }
-
-  static LatLngBounds toLatLngBounds(Object o) {
-    if (o == null) {
-      return null;
-    }
-    final List<?> data = toList(o);
-    LatLng[] boundsArray = new LatLng[] {toLatLng(data.get(0)), toLatLng(data.get(1))};
-    List<LatLng> bounds = Arrays.asList(boundsArray);
-    LatLngBounds.Builder builder = new LatLngBounds.Builder();
-    builder.includes(bounds);
-    return builder.build();
-  }
-
-static LocationEngineRequest toLocationEngineRequest(Object o) {
-  if (o == null) {
-    return null;
-  }
-  List<?> data = toList(o);
-  return new LocationEngineRequest.Builder(toInt(data.get(0)))
-          .setPriority(toInt(data.get(1)))
-          .setDisplacement(toInt(data.get(2)))
-          .build();
-}
 
   static List<LatLng> toLatLngList(Object o, boolean flippedOrder) {
     if (o == null) {
@@ -163,183 +188,100 @@ static LocationEngineRequest toLocationEngineRequest(Object o) {
     return latLngList;
   }
 
-  private static List<List<LatLng>> toLatLngListList(Object o) {
-    if (o == null) {
-      return null;
-    }
-    final List<?> data = toList(o);
-    List<List<LatLng>> latLngListList = new ArrayList<>();
-    for (int i = 0; i < data.size(); i++) {
-      List<LatLng> latLngList = toLatLngList(data.get(i), false);
-      latLngListList.add(latLngList);
-    }
-    return latLngListList;
-  }
-
-  static Polygon interpretListLatLng(List<List<LatLng>> geometry) {
-    List<List<org.maplibre.geojson.Point>> points = new ArrayList<>(geometry.size());
-    for (List<LatLng> innerGeometry : geometry) {
-      List<org.maplibre.geojson.Point> innerPoints = new ArrayList<>(innerGeometry.size());
-      for (LatLng latLng : innerGeometry) {
-        innerPoints.add(
-            org.maplibre.geojson.Point.fromLngLat(latLng.getLongitude(), latLng.getLatitude()));
-      }
-      points.add(innerPoints);
-    }
-    return Polygon.fromLngLats(points);
-  }
-
   static List<?> toList(Object o) {
     return (List<?>) o;
-  }
-
-  static long toLong(Object o) {
-    return ((Number) o).longValue();
   }
 
   static Map<?, ?> toMap(Object o) {
     return (Map<?, ?>) o;
   }
 
-  private static float toFractionalPixels(Object o, float density) {
-    return toFloat(o) * density;
+  /** Converts {@code value} from logical to physical pixels, as the float the SDK takes. */
+  static float toFractionalPixels(double value, float density) {
+    return (float) value * density;
   }
 
-  static int toPixels(Object o, float density) {
-    return (int) toFractionalPixels(o, density);
+  /** Converts {@code value} from the physical pixels the SDK answers in to logical pixels. */
+  static double toLogicalPixels(float value, float density) {
+    return value / (double) density;
   }
 
-  private static Point toPoint(Object o, float density) {
-    final List<?> data = toList(o);
-    return new Point(toPixels(data.get(0), density), toPixels(data.get(1), density));
+  /** Converts {@code value} from logical to whole physical pixels, rounded towards zero. */
+  static int toPixels(double value, float density) {
+    return (int) toFractionalPixels(value, density);
+  }
+
+  /**
+   * {@code json} as an expression with exact numbers: an array is handed to the engine as it is,
+   * any other value as a literal. Expression.Converter would turn every number into a float, so an
+   * id like 123456789 became 123456792.
+   */
+  static Expression toExactExpression(JsonElement json) {
+    final Object value = jsonToValue(json);
+    final Object[] array =
+        value instanceof Object[] ? (Object[]) value : new Object[] {"literal", value};
+    return new Expression("literal") {
+      @NonNull
+      @Override
+      public Object[] toArray() {
+        return array;
+      }
+    };
+  }
+
+  private static Object jsonToValue(JsonElement json) {
+    if (json.isJsonArray()) {
+      JsonArray array = json.getAsJsonArray();
+      Object[] values = new Object[array.size()];
+      for (int i = 0; i < values.length; i++) {
+        values[i] = jsonToValue(array.get(i));
+      }
+      if (values.length == 2 && isGeometryOperator(array.get(0)) && array.get(1).isJsonObject()) {
+        values[1] = geoJsonArgument(array.get(0).getAsString(), array.get(1).getAsJsonObject());
+      }
+      return values;
+    }
+    if (json.isJsonObject()) {
+      Map<String, Object> values = new HashMap<>();
+      for (Map.Entry<String, JsonElement> entry : json.getAsJsonObject().entrySet()) {
+        values.put(entry.getKey(), jsonToValue(entry.getValue()));
+      }
+      return values;
+    }
+    if (json.isJsonNull()) {
+      return null;
+    }
+    JsonPrimitive primitive = json.getAsJsonPrimitive();
+    if (primitive.isBoolean()) {
+      return primitive.getAsBoolean();
+    }
+    if (primitive.isNumber()) {
+      return primitive.getAsDouble();
+    }
+    return primitive.getAsString();
+  }
+
+  // The engine reads the GeoJSON of within and distance only as text under
+  // "json", in the form Expression.within and Expression.distance build.
+  private static Map<String, Object> geoJsonArgument(String operator, JsonObject geoJson) {
+    Map<String, Object> argument = new HashMap<>();
+    if (operator.equals("within")) {
+      JsonElement type = geoJson.get("type");
+      argument.put("type", type != null ? jsonToValue(type) : null);
+    }
+    argument.put("json", geoJson.toString());
+    return argument;
+  }
+
+  private static boolean isGeometryOperator(JsonElement element) {
+    if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString()) {
+      return false;
+    }
+    final String operator = element.getAsString();
+    return operator.equals("within") || operator.equals("distance");
   }
 
   static String toString(Object o) {
     return (String) o;
-  }
-
-  static void interpretMapLibreMapOptions(Object o, MapLibreMapOptionsSink sink, Context context) {
-    final DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-    final Map<?, ?> data = toMap(o);
-
-    final Object locationEngineProperties = data.get("locationEngineProperties");
-    if (locationEngineProperties != null) {
-      final List<?> locationEnginePropertiesList = toList(locationEngineProperties);
-        sink.setLocationEngineProperties(toLocationEngineRequest(locationEnginePropertiesList));
-    }
-    final Object locationSource = data.get("locationSource");
-    if (locationSource != null) {
-      sink.setLocationSource(toString(locationSource));
-    }
-    final Object cameraTargetBounds = data.get("cameraTargetBounds");
-    if (cameraTargetBounds != null) {
-      final List<?> targetData = toList(cameraTargetBounds);
-      sink.setCameraTargetBounds(toLatLngBounds(targetData.get(0)));
-    }
-    final Object compassEnabled = data.get("compassEnabled");
-    if (compassEnabled != null) {
-      sink.setCompassEnabled(toBoolean(compassEnabled));
-    }
-    final Object styleString = data.get("styleString");
-    if (styleString != null) {
-      sink.setStyleString(toString(styleString));
-    }
-    final Object minMaxZoomPreference = data.get("minMaxZoomPreference");
-    if (minMaxZoomPreference != null) {
-      final List<?> zoomPreferenceData = toList(minMaxZoomPreference);
-      sink.setMinMaxZoomPreference( //
-          toFloatWrapper(zoomPreferenceData.get(0)), //
-          toFloatWrapper(zoomPreferenceData.get(1)));
-    }
-    final Object rotateGesturesEnabled = data.get("rotateGesturesEnabled");
-    if (rotateGesturesEnabled != null) {
-      sink.setRotateGesturesEnabled(toBoolean(rotateGesturesEnabled));
-    }
-    final Object scrollGesturesEnabled = data.get("scrollGesturesEnabled");
-    if (scrollGesturesEnabled != null) {
-      sink.setScrollGesturesEnabled(toBoolean(scrollGesturesEnabled));
-    }
-    final Object tiltGesturesEnabled = data.get("tiltGesturesEnabled");
-    if (tiltGesturesEnabled != null) {
-      sink.setTiltGesturesEnabled(toBoolean(tiltGesturesEnabled));
-    }
-    final Object trackCameraPosition = data.get("trackCameraPosition");
-    if (trackCameraPosition != null) {
-      sink.setTrackCameraPosition(toBoolean(trackCameraPosition));
-    }
-    final Object zoomGesturesEnabled = data.get("zoomGesturesEnabled");
-    if (zoomGesturesEnabled != null) {
-      sink.setZoomGesturesEnabled(toBoolean(zoomGesturesEnabled));
-    }
-    final Object doubleClickZoomEnabled = data.get("doubleClickZoomEnabled");
-    if (doubleClickZoomEnabled != null) {
-      sink.setDoubleClickZoomEnabled(toBoolean(doubleClickZoomEnabled));
-    }
-    final Object myLocationEnabled = data.get("myLocationEnabled");
-    if (myLocationEnabled != null) {
-      sink.setMyLocationEnabled(toBoolean(myLocationEnabled));
-    }
-    final Object myLocationTrackingMode = data.get("myLocationTrackingMode");
-    if (myLocationTrackingMode != null) {
-      sink.setMyLocationTrackingMode(toInt(myLocationTrackingMode));
-    }
-    final Object myLocationRenderMode = data.get("myLocationRenderMode");
-    if (myLocationRenderMode != null) {
-      sink.setMyLocationRenderMode(toInt(myLocationRenderMode));
-    }
-    final Object logoEnabled = data.get("logoEnabled");
-    if (logoEnabled != null) {
-      sink.setLogoEnabled(toBoolean(logoEnabled));
-    }
-    final Object logoViewGravity = data.get("logoViewPosition");
-    if (logoViewGravity != null) {
-      sink.setLogoViewGravity(toInt(logoViewGravity));
-    }
-    final Object logoViewMargins = data.get("logoViewMargins");
-    if (logoViewMargins != null) {
-      final List logoViewMarginsData = toList(logoViewMargins);
-      final Point point = toPoint(logoViewMarginsData, metrics.density);
-      sink.setLogoViewMargins(point.x, point.y);
-    }
-    final Object compassGravity = data.get("compassViewPosition");
-    if (compassGravity != null) {
-      sink.setCompassGravity(toInt(compassGravity));
-    }
-    final Object compassViewMargins = data.get("compassViewMargins");
-    if (compassViewMargins != null) {
-      final List compassViewMarginsData = toList(compassViewMargins);
-      final Point point = toPoint(compassViewMarginsData, metrics.density);
-      sink.setCompassViewMargins(point.x, point.y);
-    }
-    final Object attributionButtonGravity = data.get("attributionButtonPosition");
-    if (attributionButtonGravity != null) {
-      sink.setAttributionButtonGravity(toInt(attributionButtonGravity));
-    }
-    final Object attributionButtonMargins = data.get("attributionButtonMargins");
-    if (attributionButtonMargins != null) {
-      final List attributionButtonMarginsData = toList(attributionButtonMargins);
-      final Point point = toPoint(attributionButtonMarginsData, metrics.density);
-      sink.setAttributionButtonMargins(point.x, point.y);
-    }
-    final Object attributionButtonColor = data.get("attributionButtonColor");
-    if (attributionButtonColor != null) {
-      sink.setAttributionButtonColor(toInt(attributionButtonColor));
-    }
-    final Object foregroundLoadColor = data.get("foregroundLoadColor");
-    if (foregroundLoadColor != null) {
-      sink.setForegroundLoadColor(toInt(foregroundLoadColor));
-    }
-    final Object useHybridComposition = data.get("useHybridComposition");
-    if (useHybridComposition != null) {
-      sink.setUseHybridComposition(toBoolean(useHybridComposition));
-    }
-    final Object translucentTextureSurface = data.get("translucentTextureSurface");
-    if (translucentTextureSurface != null) {
-      sink.setTranslucentTextureSurface(toBoolean(translucentTextureSurface));
-    }
-    final Object featureTapsTriggersMapClick = data.get("featureTapsTriggersMapClick");
-    if (featureTapsTriggersMapClick != null) {
-      sink.setFeatureTapsTriggersMapClick(toBoolean(featureTapsTriggersMapClick));
-    }
   }
 }

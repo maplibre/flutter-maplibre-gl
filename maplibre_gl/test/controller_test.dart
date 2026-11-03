@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter/widgets.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -22,6 +24,21 @@ void main() {
       annotationConsumeTapEvents: AnnotationType.values,
     );
     platform.reset();
+  });
+
+  group('Placement transitions', () {
+    test(
+      'setSymbolPlacementTransitionsEnabled sends the option as an update',
+      () async {
+        await controller.setSymbolPlacementTransitionsEnabled(false);
+
+        final calls = platform.callsFor('updateMapOptions');
+        expect(calls.length, 1);
+        expect(calls.first.positionalArgs.first, {
+          'symbolPlacementTransitionsEnabled': false,
+        });
+      },
+    );
   });
 
   group('Camera delegation', () {
@@ -47,6 +64,21 @@ void main() {
         calls.first.namedArgs['duration'],
         const Duration(milliseconds: 500),
       );
+    });
+
+    test('animateCamera and easeCamera reject a negative duration', () async {
+      const duration = Duration(milliseconds: -1);
+      final update = CameraUpdate.zoomIn();
+
+      await expectLater(
+        controller.animateCamera(update, duration: duration),
+        throwsArgumentError,
+      );
+      await expectLater(
+        controller.easeCamera(update, duration: duration),
+        throwsArgumentError,
+      );
+      expect(platform.calls, isEmpty);
     });
 
     test('moveCamera delegates to platform', () async {
@@ -166,6 +198,29 @@ void main() {
       final calls = platform.callsFor('addSource');
       expect(calls.length, 1);
       expect(calls.first.positionalArgs[0], 'vec-1');
+    });
+
+    test('addSource rejects a tileSize outside 1 to 65535', () async {
+      for (final tileSize in [double.nan, double.infinity, 0.0, 65536.0]) {
+        await expectLater(
+          controller.addSource(
+            'raster',
+            RasterSourceProperties(tiles: const ['a'], tileSize: tileSize),
+          ),
+          throwsA(
+            isA<PlatformException>()
+                .having((e) => e.code, 'code', 'INVALID_ARGUMENT')
+                .having(
+                  (e) => e.message,
+                  'message',
+                  "Source 'raster' cannot be built from its properties as a "
+                      "'raster' source.",
+                ),
+          ),
+          reason: '$tileSize',
+        );
+      }
+      expect(platform.callsFor('addSource'), isEmpty);
     });
 
     test('removeSource delegates to platform', () async {
@@ -389,6 +444,11 @@ void main() {
       expect(calls.first.positionalArgs, ['theme', 'dark']);
     });
 
+    test('getGlobalState delegates to platform', () async {
+      expect(await controller.getGlobalState(), isEmpty);
+      expect(platform.callsFor('getGlobalState'), hasLength(1));
+    });
+
     test('addLayer with CircleLayerProperties', () async {
       await controller.addLayer(
         'src-1',
@@ -399,12 +459,78 @@ void main() {
       expect(platform.wasCalled('addCircleLayer'), isTrue);
     });
 
+    test('addLayer passes filter and enableInteraction for fill extrusion '
+        '(#360)', () async {
+      const filter = [
+        '>',
+        ['get', 'height'],
+        10,
+      ];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const FillExtrusionLayerProperties(fillExtrusionHeight: 20),
+        filter: filter,
+        enableInteraction: false,
+      );
+
+      final calls = platform.callsFor('addFillExtrusionLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+      expect(calls.first.namedArgs['enableInteraction'], isFalse);
+    });
+
+    test('addLayer passes filter for heatmap (#360)', () async {
+      const filter = ['==', 'kind', 'quake'];
+      await controller.addLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.length, 1);
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
+    test('addHeatmapLayer passes filter', () async {
+      const filter = ['has', 'mag'];
+      await controller.addHeatmapLayer(
+        'src-1',
+        'layer-1',
+        const HeatmapLayerProperties(heatmapRadius: 30),
+        filter: filter,
+      );
+
+      final calls = platform.callsFor('addHeatmapLayer');
+      expect(calls.first.namedArgs['filter'], filter);
+    });
+
     test('removeLayer delegates to platform', () async {
       await controller.removeLayer('layer-1');
 
       final calls = platform.callsFor('removeLayer');
       expect(calls.length, 1);
       expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('moveLayer delegates to platform', () async {
+      await controller.moveLayer('layer-1', belowLayerId: 'layer-2');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], 'layer-2');
+    });
+
+    test('moveLayer delegates to platform without belowLayerId', () async {
+      await controller.moveLayer('layer-1');
+
+      final calls = platform.callsFor('moveLayer');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+      expect(calls.first.namedArgs['belowLayerId'], isNull);
     });
 
     test('setLayerVisibility delegates to platform', () async {
@@ -415,6 +541,212 @@ void main() {
       expect(calls.first.positionalArgs[0], 'layer-1');
       expect(calls.first.positionalArgs[1], false);
     });
+
+    test('setLayersVisibility delegates to platform', () async {
+      final missing = await controller.setLayersVisibility([
+        'layer-1',
+        'layer-2',
+      ], false);
+
+      final calls = platform.callsFor('setLayersVisibility');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], ['layer-1', 'layer-2']);
+      expect(calls.first.positionalArgs[1], false);
+      expect(missing, isEmpty);
+    });
+
+    test('setLayersVisibility returns the skipped ids', () async {
+      final missing = await controller.setLayersVisibility([
+        'layer-1',
+        'missing-a',
+        'missing-a',
+      ], true);
+
+      expect(missing, ['missing-a']);
+    });
+
+    test('setLayerZoomRange delegates to platform', () async {
+      await controller.setLayerZoomRange('layer-1', 5.5, 15);
+
+      final calls = platform.callsFor('setLayerZoomRange');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs, ['layer-1', 5.5, 15.0]);
+    });
+
+    test('setLayerFilter passes the expression to setFilter', () async {
+      await controller.setLayerFilter('layer-1', [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter decodes a filter given as JSON', () async {
+      await controller.setLayerFilter(
+        'layer-1',
+        '["==", ["get", "type"], "park"]',
+      );
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], [
+        '==',
+        ['get', 'type'],
+        'park',
+      ]);
+    });
+
+    test('setLayerFilter passes null through to remove the filter', () async {
+      await controller.setLayerFilter('layer-1', null);
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test(
+      'setLayerFilter throws INVALID_EXPRESSION on malformed JSON',
+      () async {
+        final future = controller.setLayerFilter('layer-1', '["==", ');
+
+        await expectLater(
+          future,
+          throwsA(
+            isA<PlatformException>()
+                .having((e) => e.code, 'code', 'INVALID_EXPRESSION')
+                .having((e) => e.details, 'details', 'Not valid JSON.'),
+          ),
+        );
+        expect(platform.callsFor('setFilter'), isEmpty);
+      },
+    );
+
+    // Android and iOS send a filter as JSON, which has no NaN or infinity.
+    test('a filter JSON cannot carry throws INVALID_EXPRESSION', () async {
+      final filter = [
+        '>',
+        ['get', 'h'],
+        double.nan,
+      ];
+      final calls = <String, Future<void> Function()>{
+        'setLayerFilter': () => controller.setLayerFilter('layer-1', filter),
+        'addCircleLayer': () => controller.addCircleLayer(
+          'source',
+          'layer',
+          const CircleLayerProperties(),
+          filter: filter,
+        ),
+        'addLayer': () => controller.addLayer(
+          'source',
+          'layer',
+          const LineLayerProperties(),
+          filter: [
+            '<',
+            ['get', 'h'],
+            double.infinity,
+          ],
+        ),
+        'queryRenderedFeatures': () => controller.queryRenderedFeatures(
+          const Point(1, 2),
+          ['layer'],
+          filter,
+        ),
+        'querySourceFeatures': () =>
+            controller.querySourceFeatures('source', null, filter),
+      };
+      for (final MapEntry(:key, :value) in calls.entries) {
+        await expectLater(
+          value(),
+          throwsA(
+            isA<PlatformException>().having(
+              (e) => e.code,
+              'code',
+              'INVALID_EXPRESSION',
+            ),
+          ),
+          reason: key,
+        );
+      }
+      expect(platform.calls, isEmpty);
+    });
+
+    test('removeLayerFilter sends a null filter', () async {
+      await controller.removeLayerFilter('layer-1');
+
+      final calls = platform.callsFor('setFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs[0], 'layer-1');
+      expect(calls.first.positionalArgs[1], isNull);
+    });
+
+    test('getLayerFilter delegates to getFilter', () async {
+      await controller.getLayerFilter('layer-1');
+
+      final calls = platform.callsFor('getFilter');
+      expect(calls.length, 1);
+      expect(calls.first.positionalArgs.first, 'layer-1');
+    });
+
+    test('deprecated setFilter and getFilter still work', () async {
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.setFilter('layer-1', ['has', 'name']);
+      // Calls the deprecated alias on purpose, to check it still works.
+      // ignore: deprecated_member_use_from_same_package
+      await controller.getFilter('layer-1');
+
+      expect(platform.callsFor('setFilter').single.positionalArgs[1], [
+        'has',
+        'name',
+      ]);
+      expect(platform.callsFor('getFilter').length, 1);
+    });
+
+    test('addImage passes sdf and pixelRatio to the platform', () async {
+      final bytes = Uint8List.fromList([1, 2, 3]);
+
+      await controller.addImage('pin', bytes);
+      await controller.addImage('sharp', bytes, true, 2);
+
+      expect(
+        platform.callsFor('addImage').map((c) => c.positionalArgs).toList(),
+        [
+          ['pin', bytes, false, null],
+          ['sharp', bytes, true, 2.0],
+        ],
+      );
+    });
+
+    test(
+      'addImage rejects a pixelRatio that is not positive and finite',
+      () async {
+        final bytes = Uint8List.fromList([1, 2, 3]);
+
+        for (final ratio in [0.0, -1.0, double.nan, double.infinity]) {
+          await expectLater(
+            controller.addImage('pin', bytes, false, ratio),
+            throwsA(
+              isA<PlatformException>().having(
+                (e) => e.code,
+                'code',
+                'INVALID_ARGUMENT',
+              ),
+            ),
+            reason: 'pixelRatio $ratio',
+          );
+        }
+        expect(platform.wasCalled('addImage'), isFalse);
+      },
+    );
 
     test('addImageLayer delegates to addLayer on platform', () async {
       await controller.addImageLayer('img-layer', 'img-source');
@@ -498,6 +830,26 @@ void main() {
       expect(calls.first.namedArgs['limit'], 50);
       expect(calls.first.namedArgs['offset'], 100);
     });
+
+    test('getClusterLeaves rejects a negative limit or offset', () async {
+      final invalidArgument = throwsA(
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'INVALID_ARGUMENT',
+        ),
+      );
+
+      await expectLater(
+        controller.getClusterLeaves('events', 42, limit: -1),
+        invalidArgument,
+      );
+      await expectLater(
+        controller.getClusterLeaves('events', 42, offset: -1),
+        invalidArgument,
+      );
+      expect(platform.callsFor('getClusterLeaves'), isEmpty);
+    });
   });
 
   group('Snapshot delegation', () {
@@ -577,18 +929,55 @@ void main() {
     });
 
     test('camera move started sets isCameraMoving to true', () {
-      platform.onCameraMoveStartedPlatform.call(null);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
 
       expect(controller.isCameraMoving, isTrue);
     });
 
     test('camera idle sets isCameraMoving to false', () {
-      platform.onCameraMoveStartedPlatform.call(null);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
       platform.onCameraIdlePlatform.call(
         const CameraPosition(target: LatLng(5, 5)),
       );
 
       expect(controller.isCameraMoving, isFalse);
+    });
+
+    test('cameraMoveReason holds the reason until the camera stops', () {
+      expect(controller.cameraMoveReason, isNull);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.programmatic);
+      expect(controller.cameraMoveReason, CameraMoveReason.programmatic);
+
+      platform.onCameraIdlePlatform.call(null);
+      expect(controller.cameraMoveReason, isNull);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
+      expect(controller.cameraMoveReason, CameraMoveReason.gesture);
+    });
+
+    test('onCameraMoveStarted gets the reason', () {
+      final reasons = <CameraMoveReason>[];
+      late final MapLibreMapController reasonController;
+      reasonController = MapLibreMapController(
+        maplibrePlatform: platform,
+        annotationOrder: AnnotationType.values,
+        annotationConsumeTapEvents: AnnotationType.values,
+        onCameraMoveStarted: (reason) {
+          // Already readable from the controller.
+          expect(reasonController.cameraMoveReason, reason);
+          reasons.add(reason);
+        },
+      );
+      addTearDown(reasonController.dispose);
+
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.gesture);
+      platform.onCameraMoveStartedPlatform.call(CameraMoveReason.programmatic);
+
+      expect(reasons, [
+        CameraMoveReason.gesture,
+        CameraMoveReason.programmatic,
+      ]);
     });
 
     test('camera move updates cameraPosition', () {
@@ -682,6 +1071,54 @@ void main() {
       controller.dispose();
 
       expect(controller.isDisposed, isTrue);
+    });
+
+    group('while the style load sets up annotations', () {
+      late int styleLoadedCalls;
+      late Completer<void> release;
+
+      setUp(() async {
+        styleLoadedCalls = 0;
+        // A platform of its own: the controller from the outer setUp would
+        // answer the style load too.
+        platform = FakeMapLibrePlatform();
+        controller = MapLibreMapController(
+          maplibrePlatform: platform,
+          initialCameraPosition: const CameraPosition(target: LatLng(0, 0)),
+          annotationOrder: AnnotationType.values,
+          annotationConsumeTapEvents: AnnotationType.values,
+          onStyleLoadedCallback: () => styleLoadedCalls++,
+        );
+        release = Completer<void>();
+        platform.onAddGeoJsonSource = (_) => release.future;
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        platform.reset();
+        platform.onAddGeoJsonSource = null;
+      });
+
+      test(
+        'a call that fails because the map is gone is not an error',
+        () async {
+          // The native side removes the handlers of the map on dispose, so
+          // the pending call fails with MAP_DISPOSED. An unhandled error here
+          // fails the test.
+          controller.dispose();
+          release.completeError(PlatformException(code: 'MAP_DISPOSED'));
+          await pumpEventQueue();
+
+          expect(styleLoadedCalls, 0);
+        },
+      );
+
+      test('nothing more is sent once the pending call returns', () async {
+        controller.dispose();
+        release.complete();
+        await pumpEventQueue();
+
+        expect(platform.calls, isEmpty);
+        expect(styleLoadedCalls, 0);
+      });
     });
   });
 

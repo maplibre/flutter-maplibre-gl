@@ -12,7 +12,6 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.embedding.engine.plugins.lifecycle.HiddenLifecycleReference;
-import io.flutter.plugin.common.MethodChannel;
 import org.maplibre.android.log.Logger;
 
 /**
@@ -27,6 +26,7 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
   private Lifecycle lifecycle;
   private Context context;
   private MapLibreMapFactory mapFactory;
+  private GlobalHostApi globalHostApi;
 
   public MapLibreMapsPlugin() {
     // no-op
@@ -42,9 +42,8 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
     // INFO level includes informational messages, warnings, and errors while suppressing verbose HTTP logs
     Logger.setVerbosity(Logger.INFO);
 
-    MethodChannel methodChannel =
-        new MethodChannel(binding.getBinaryMessenger(), "plugins.flutter.io/maplibre_gl");
-    methodChannel.setMethodCallHandler(new GlobalMethodHandler(binding));
+    globalHostApi = new GlobalHostApi(binding);
+    MapLibreGlobalHostApi.Companion.setUp(binding.getBinaryMessenger(), globalHostApi, "");
 
     binding
         .getPlatformViewRegistry()
@@ -70,7 +69,11 @@ public class MapLibreMapsPlugin implements FlutterPlugin, ActivityAware {
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    // no-op
+    MapLibreGlobalHostApi.Companion.setUp(binding.getBinaryMessenger(), null, "");
+    if (globalHostApi != null) {
+      globalHostApi.detach();
+      globalHostApi = null;
+    }
   }
 
   /**

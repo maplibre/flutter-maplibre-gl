@@ -8,26 +8,31 @@ protocol MapLibreMapOptionsSink {
     func setRotateGesturesEnabled(rotateGesturesEnabled: Bool)
     func setScrollGesturesEnabled(scrollGesturesEnabled: Bool)
     func setTiltGesturesEnabled(tiltGesturesEnabled: Bool)
+    func setHapticFeedbackEnabled(hapticFeedbackEnabled: Bool)
     func setTrackCameraPosition(trackCameraPosition: Bool)
     func setZoomGesturesEnabled(zoomGesturesEnabled: Bool)
     func setDoubleClickZoomEnabled(doubleClickZoomEnabled: Bool)
+    func setPanInertia(panInertia: PgPanInertia)
     func setMyLocationEnabled(myLocationEnabled: Bool)
     func setMyLocationTrackingMode(myLocationTrackingMode: MLNUserTrackingMode)
-    func setMyLocationRenderMode(myLocationRenderMode: MyLocationRenderMode)
+    func setMyLocationRenderMode(myLocationRenderMode: PgMyLocationRenderMode)
+    func setMyLocationStyle(style: LocationPuckStyle)
     func setLogoEnabled(logoEnabled: Bool)
     func setLogoViewPosition(position: MLNOrnamentPosition)
     func setLogoViewMargins(x: Double, y: Double)
     func setCompassViewPosition(position: MLNOrnamentPosition)
     func setCompassViewMargins(x: Double, y: Double)
+    func setAttributionEnabled(attributionEnabled: Bool)
     func setAttributionButtonMargins(x: Double, y: Double)
     func setAttributionButtonPosition(position: MLNOrnamentPosition)
     func setAttributionButtonColor(color: Int)
     func setFeatureTapsTriggersMapClick(triggers: Bool)
+    func setSymbolPlacementTransitionsEnabled(enabled: Bool)
     func setLocationEngineProperties(
         enableHighAccuracy: Bool,
         distanceFilter: Double,
         intervalMs: Int,
         pulseWindowMs: Int
     )
-    func setLocationSource(token: String)
+    func setLocationSource(source: PgLocationSource)
 }

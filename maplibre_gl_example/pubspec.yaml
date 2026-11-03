@@ -1,18 +1,18 @@
 name: maplibre_gl_example
 description: Demonstrates how to use the maplibre_gl plugin.
 publish_to: 'none'
-version: 0.27.1
+version: 0.28.0
 repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 resolution: workspace
 
 environment:
-  sdk: ">=3.7.0 <4.0.0"
-  flutter: '>=3.29.0'
+  sdk: ">=3.12.0 <4.0.0"
+  flutter: '>=3.44.0'
 
 dependencies:
   collection: ^1.19.1
-  file_picker: ^12.2.0
+  file_picker: ^13.1.0
   flutter:
     sdk: flutter
   flutter_hooks: ^0.21.3+1
@@ -20,11 +20,9 @@ dependencies:
   maplibre_gl:
     path: ../maplibre_gl
   path_provider: ^2.1.5
-  # Held at 12.x: permission_handler_android 14 migrated to Flutter's built-in
-  # Kotlin unconditionally and compiles against SDK 37, so it needs Flutter 3.44
-  # and an installed Android SDK 37 to build, while its pubspec still declares
-  # flutter >=3.24.0. On anything older the Gradle build fails on an unresolved
-  # `compilerOptions`. Lift this once the example itself targets that baseline.
+  # Held at 12.x: permission_handler_android 14 requires the app to compile
+  # against Android SDK 37, and Flutter stable still sets compileSdk 36, so the
+  # build fails at checkReleaseAarMetadata. Lift this once Flutter moves to 37.
   permission_handler: ^12.0.0
   share_plus: ^13.3.0
 
@@ -68,6 +66,8 @@ flutter:
     - assets/symbols/2.0x/custom-icon.png
     - assets/symbols/3.0x/custom-icon.png
     - assets/symbols/custom-marker.png
+    # Integration tests: add_image_size_test.dart.
+    - assets/icon_size/
     - assets/style.json
     - assets/translucent_style.json
     - assets/raster_style.json

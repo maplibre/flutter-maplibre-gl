@@ -26,11 +26,11 @@ void main() {
     });
 
     test('hasClusterInspection finds the method maplibre-gl-js defines', () {
-      final target =
-          JSObject()..setProperty(
-            'getClusterExpansionZoom'.toJS,
-            ((JSNumber _) => Future<JSNumber>.value(3.toJS).toJS).toJS,
-          );
+      final target = JSObject()
+        ..setProperty(
+          'getClusterExpansionZoom'.toJS,
+          ((JSNumber _) => Future<JSNumber>.value(3.toJS).toJS).toJS,
+        );
       final source = GeoJsonSource.fromJsObject(target as GeoJsonSourceJsImpl);
 
       expect(source.hasClusterInspection, isTrue);
@@ -40,17 +40,17 @@ void main() {
       'getClusterLeaves passes id, limit and offset in that order',
       () async {
         final received = <int>[];
-        final target =
-            JSObject()..setProperty(
-              'getClusterLeaves'.toJS,
-              ((JSNumber clusterId, JSNumber limit, JSNumber offset) {
-                received
-                  ..add(clusterId.toDartInt)
-                  ..add(limit.toDartInt)
-                  ..add(offset.toDartInt);
-                return Future<JSArray<JSObject>>.value(<JSObject>[].toJS).toJS;
-              }).toJS,
-            );
+        final target = JSObject()
+          ..setProperty(
+            'getClusterLeaves'.toJS,
+            ((JSNumber clusterId, JSNumber limit, JSNumber offset) {
+              received
+                ..add(clusterId.toDartInt)
+                ..add(limit.toDartInt)
+                ..add(offset.toDartInt);
+              return Future<JSArray<JSObject>>.value(<JSObject>[].toJS).toJS;
+            }).toJS,
+          );
         final source = GeoJsonSource.fromJsObject(
           target as GeoJsonSourceJsImpl,
         );
@@ -62,11 +62,11 @@ void main() {
     );
 
     test('getClusterExpansionZoom unwraps the promise', () async {
-      final target =
-          JSObject()..setProperty(
-            'getClusterExpansionZoom'.toJS,
-            ((JSNumber _) => Future<JSNumber>.value(9.toJS).toJS).toJS,
-          );
+      final target = JSObject()
+        ..setProperty(
+          'getClusterExpansionZoom'.toJS,
+          ((JSNumber _) => Future<JSNumber>.value(9.toJS).toJS).toJS,
+        );
       final source = GeoJsonSource.fromJsObject(target as GeoJsonSourceJsImpl);
 
       expect((await source.getClusterExpansionZoom(1)).toDartDouble, 9);

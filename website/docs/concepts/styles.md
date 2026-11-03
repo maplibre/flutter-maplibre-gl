@@ -14,8 +14,8 @@ flowchart LR
     S --> GL["glyphs<br/><small>font glyph URL template</small>"]
     S --> M["metadata<br/><small>optional, ignored by renderer</small>"]
 
-    classDef root fill:#1f6feb,stroke:#1a5fd0,color:#fff;
-    class S root
+    classDef emphasis fill:#1f6feb,stroke:#1a5fd0,color:#fff;
+    class S emphasis
 ```
 
 MapLibre fetches tiles, images, and fonts as needed and renders them using the GPU, all described by this one JSON file.
@@ -289,6 +289,8 @@ MapLibreMap(
 Leave it unset to keep the MapLibre default. Android and iOS only: on web that control is HTML and is styled with CSS.
 
 Move it and recolor it, but keep it visible. Nearly every open basemap is built from OpenStreetMap data, published under the ODbL, which requires crediting `© OpenStreetMap contributors` with a link to [openstreetmap.org/copyright](https://www.openstreetmap.org/copyright); tile providers add their own terms on top. When you add a source yourself with `addSource`, set its `attribution` property so the control has something to show.
+
+If your design has no room for the button, `attributionEnabled: false` hides it. Then show the same credits somewhere else, such as an about screen.
 
 ## PMTiles styles
 

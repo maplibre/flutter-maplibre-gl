@@ -4,7 +4,7 @@ repository: https://github.com/maplibre/flutter-maplibre-gl
 issue_tracker: https://github.com/maplibre/flutter-maplibre-gl/issues
 
 environment:
-  sdk: '>=3.7.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
 
 dev_dependencies:
   melos: ^7.4.0
@@ -24,6 +24,15 @@ melos:
       exec: dart run lib/generate.dart
       packageFilters:
         scope: maplibre_code_gen
+
+    generate:pigeon:
+      description: Generate the Dart, Kotlin and Swift messages from pigeons/messages.dart
+      # Formatted twice: on the long argument lists of the layer messages, one
+      # pass of dart format leaves output that a second pass changes, which
+      # would fail format-all right after generation.
+      exec: dart run pigeon --input pigeons/messages.dart && dart format lib/src/native && dart format lib/src/native
+      packageFilters:
+        scope: maplibre_gl
 
     check-style-spec:
       description: Verify input/style.json matches the pinned upstream MapLibre style spec

@@ -6,3 +6,4 @@ How the plugin fits together, and the few decisions that shape everything you wr
 - [Annotations vs Style Layers](annotations-vs-layers.md): the two APIs for putting things on a map, when to use which, and the constraints of each
 - [Working with GeoJSON](geojson.md): geometry types, feature properties, and updating source data
 - [Map Styles](styles.md): what a style contains, how to load one, and how to switch it at runtime
+- [Errors](errors.md): how the plugin reports errors, the codes it uses, and how to avoid the common ones

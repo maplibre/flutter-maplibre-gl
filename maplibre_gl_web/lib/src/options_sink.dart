@@ -17,6 +17,7 @@ abstract class MapLibreMapOptionsSink {
     required bool tiltGesturesEnabled,
     required bool zoomGesturesEnabled,
     required bool doubleClickZoomEnabled,
+    PanInertia panInertia = PanInertia.normal,
   });
 
   void setTrackCameraPosition(bool trackCameraPosition);
@@ -27,6 +28,9 @@ abstract class MapLibreMapOptionsSink {
 
   void setMyLocationRenderMode(int myLocationRenderMode);
 
+  /// Colors of the user-location puck, as written by `MyLocationStyle.toJson`.
+  void setMyLocationStyle(Map<String, dynamic> style);
+
   void setLogoViewAlignment(LogoViewPosition position);
 
   void setLogoViewMargins(int x, int y);
@@ -34,6 +38,8 @@ abstract class MapLibreMapOptionsSink {
   void setCompassAlignment(CompassViewPosition position);
 
   void setCompassViewMargins(int x, int y);
+
+  void setAttributionEnabled(bool enabled);
 
   void setAttributionButtonAlignment(AttributionButtonPosition position);
 
@@ -46,6 +52,8 @@ abstract class MapLibreMapOptionsSink {
   void setScaleControlUnit(ScaleControlUnit unit);
 
   void setFeatureTapsTriggersMapClick(bool triggers);
+
+  void setSymbolPlacementTransitionsEnabled(bool enabled);
 
   void setLocationSource(String token);
 

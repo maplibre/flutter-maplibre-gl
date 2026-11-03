@@ -13,7 +13,7 @@ import '../../shared/shared.dart';
 /// styling dynamically without touching the source data.
 ///
 /// The page is web only because mouse events do not exist on the other
-/// platforms. Feature state itself also runs on Android; its cross-platform,
+/// platforms. Feature state itself runs on Android, iOS and web; its
 /// tap-driven side is demonstrated by the Feature State page under
 /// Layers & Sources.
 ///
@@ -220,10 +220,9 @@ class _HoverEffectBodyState extends State<_HoverEffectBody> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color:
-                                Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                       ],

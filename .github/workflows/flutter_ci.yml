@@ -18,8 +18,14 @@ permissions:
 
 jobs:
   # Detect which parts of the repo changed so we only run the relevant jobs.
-  # `code` => Dart/native/CI sources: needs quality checks + native/web builds.
+  # `code` => Dart/native/CI sources: needs the Dart checks.
+  # `android`, `ios`, `web` => what a platform builds and tests: the shared
+  #   Dart and CI sources plus that platform's own code. A web-only PR skips
+  #   the Android and iOS jobs, and so on.
   # `docs` => anything that changes the rendered site: needs the docs build.
+  #
+  # Pushes to main and release branches, and manual runs, run every platform:
+  # a merged PR is checked on all of them, and so is a toolchain that moved.
   #
   # The doc examples (maplibre_gl_example/lib/examples/docs/**) intentionally
   # belong to BOTH: they are real Dart that must compile/lint/build (code) AND
@@ -30,13 +36,53 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.filter.outputs.code }}
+      android: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.android == 'true' }}
+      ios: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.ios == 'true' }}
+      web: ${{ steps.scope.outputs.all == 'true' || steps.filter.outputs.web == 'true' }}
       docs: ${{ steps.filter.outputs.docs }}
+      gradle: ${{ steps.filter.outputs.gradle }}
     steps:
       - uses: actions/checkout@v6
+      - name: Run every platform on main, release branches and manual runs
+        id: scope
+        run: echo "all=${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release-'))) }}" >> "$GITHUB_OUTPUT"
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # The web-only integration tests (*_web_test.dart) run on web alone;
+          # every other test also runs on Android and iOS, through all_tests.dart.
           filters: |
+            shared: &shared
+              - 'maplibre_gl/lib/**'
+              - 'maplibre_gl/pigeons/**'
+              - 'maplibre_gl/pubspec.yaml'
+              - 'maplibre_gl_platform_interface/lib/**'
+              - 'maplibre_gl_platform_interface/pubspec.yaml'
+              # Every platform resolves it, through maplibre_gl's dependencies.
+              - 'maplibre_gl_web/pubspec.yaml'
+              - 'maplibre_gl_example/lib/**'
+              - 'maplibre_gl_example/assets/**'
+              - 'maplibre_gl_example/pubspec.yaml'
+              - 'pubspec.yaml'
+              - '.github/workflows/**'
+            android:
+              - *shared
+              - 'maplibre_gl/android/**'
+              - 'maplibre_gl_example/android/**'
+              - 'maplibre_gl_example/integration_test/!(*_web_test).dart'
+              - 'maplibre_gl_example/integration_test/support/**'
+            ios:
+              - *shared
+              - 'maplibre_gl/ios/**'
+              - 'maplibre_gl_example/ios/**'
+              - 'maplibre_gl_example/integration_test/!(*_web_test).dart'
+              - 'maplibre_gl_example/integration_test/support/**'
+            web:
+              - *shared
+              - 'maplibre_gl_web/**'
+              - 'maplibre_gl_example/web/**'
+              - 'maplibre_gl_example/integration_test/**'
+              - 'maplibre_gl_example/test_driver/**'
             code:
               - 'maplibre_gl/**'
               - 'maplibre_gl_platform_interface/**'
@@ -50,69 +96,27 @@ jobs:
               - 'website/**'
               - 'maplibre_gl_example/lib/examples/docs/**'
               - '.github/workflows/**'
+            # What the Gradle compat check configures: nothing else changes its result.
+            gradle:
+              - 'maplibre_gl/android/*.gradle'
+              - 'maplibre_gl/android/gradle.properties'
+              - '.github/gradle-compat/**'
+              - '.github/workflows/flutter_ci.yml'
 
-  format:
-    name: "Check formatting"
+  dart-checks:
+    name: "Dart checks"
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      - name: Lint analysis
-        run: melos run format-all
-
-  lint:
-    name: "Static code analysis"
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      - name: Lint analysis
-        run: melos run analyze-all
-
-  test:
-    name: "Run tests"
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-      - uses: bluefireteam/melos-action@v3
-        with:
-          run-bootstrap: true
-      - run: melos run test:io:coverage --no-select
-      - name: Run the code generator tests
-        run: melos run test:scripts
-      - name: Upload coverage to Codecov
-        if: always()
-        uses: codecov/codecov-action@v7
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: maplibre_gl_platform_interface/coverage/lcov.info,maplibre_gl/coverage/lcov.info
+    uses: ./.github/workflows/_dart_checks.yml
+    with:
+      upload-coverage: true
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   test-web:
     name: "Run web tests"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -125,11 +129,17 @@ jobs:
           run-bootstrap: true
       - run: melos run test:web --no-select
 
-  code-gen:
-    name: "Generate code from templates"
+  # Integration tests drive a real map, so they reach the Java, Swift and
+  # JavaScript code the unit tests only see through a mocked channel. Every
+  # test builds its map from an inline style, so no job needs the network.
+  integration-web:
+    name: "Integration tests (web)"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: maplibre_gl_example
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -139,17 +149,71 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: true
-      - name: Check style spec alignment with upstream
-        run: melos run check-style-spec
-      - run: melos run generate
-      - run: melos run format-all
-      - name: Check Git changes
-        uses: multani/git-changes-action@v1
+      # The runner image ships a chromedriver that matches its Chrome.
+      - name: Start chromedriver
+        run: |
+          "$CHROMEWEBDRIVER/chromedriver" --port=4444 &
+      # all_tests.dart runs every file in one app, so the suite builds once.
+      # The web-only tests import package:web and run apart.
+      - name: Run integration tests
+        run: |
+          status=0
+          for target in all_tests.dart manual_location_web_test.dart \
+              feature_drag_web_test.dart web_map_dom_test.dart \
+              attribution_web_test.dart my_location_style_web_test.dart; do
+            flutter drive \
+              --driver=test_driver/integration_test.dart \
+              --target="integration_test/$target" \
+              -d web-server --browser-name=chrome --headless || status=1
+          done
+          # Headless Chrome has a device pixel ratio of 1, where an asset icon
+          # always uses its main file. At 2 it must pick the 2.0x variant.
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/add_image_size_test.dart \
+            -d web-server --browser-name=chrome --headless \
+            --web-browser-flag=--force-device-scale-factor=2 || status=1
+          exit $status
+
+  integration-android:
+    name: "Integration tests (Android emulator)"
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      - name: Run integration tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          disable-animations: true
+          working-directory: maplibre_gl_example
+          script: flutter test integration_test/all_tests.dart -d emulator-5554
 
   build-android:
     name: "Build Android apk"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.android == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: android
@@ -158,99 +222,160 @@ jobs:
   # Plugin the module applies, or Flutter's fallback. The example app pins one AGP version, so it
   # exercises exactly one of those, and 0.27.0 shipped a combination where none of them did
   # (#1008, #1018). This configures the module standalone across the combinations and asserts
-  # which side ends up owning the compilation. Configuration only: seconds per leg, no Flutter SDK.
+  # which side ends up owning the compilation. Configuration only: seconds per leg, no Flutter SDK,
+  # so the legs share one runner, and the job runs only when a file it configures changes.
   # See .github/gradle-compat/README.md.
   android-gradle-compat:
-    name: "Android Gradle compat (AGP ${{ matrix.agp }}, built-in Kotlin ${{ matrix.built-in-kotlin }})"
+    name: "Android Gradle compat"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.gradle == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Gradle 9.6 removed an internal API AGP 8 relies on, so AGP 8 pairs with 9.5 at the latest.
-          - agp: '8.13.2'
-            gradle: '9.5.1'
-            kgp: '2.4.10'
-            built-in-kotlin: 'none'
-            props: ''
-            owner: 'kgp'
-          # What the Flutter template and its migrator write from 3.44 on, and the versions from #1018.
-          - agp: '9.0.1'
-            gradle: '9.5.1'
-            kgp: '2.3.20'
-            built-in-kotlin: 'off'
-            props: '-Pandroid.builtInKotlin=false -Pandroid.newDsl=false'
-            owner: 'kgp'
-          # AGP 9 out of the box, compiling Kotlin itself.
-          - agp: '9.3.1'
-            gradle: '9.5.1'
-            kgp: '2.4.10'
-            built-in-kotlin: 'default'
-            props: ''
-            owner: 'agp'
-          # The AGP and Gradle pair dependabot is proposing for the example app.
-          - agp: '9.4.0'
-            gradle: '9.7.1'
-            kgp: '2.4.10'
-            built-in-kotlin: 'off'
-            props: '-Pandroid.builtInKotlin=false -Pandroid.newDsl=false'
-            owner: 'kgp'
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v4
+      # Gradle 9.6 removed an internal API AGP 8 relies on, so AGP 8 pairs with 9.5 at the latest.
+      - uses: gradle/actions/setup-gradle@v5
         with:
-          gradle-version: ${{ matrix.gradle }}
-      - name: Configure the Android module
+          gradle-version: '9.5.1'
+      - name: AGP 8.13.2, built-in Kotlin none
         working-directory: .github/gradle-compat
         run: >
           gradle :maplibre_gl:help
-          -PagpVersion=${{ matrix.agp }}
-          -PkgpVersion=${{ matrix.kgp }}
-          -PexpectKotlinOwner=${{ matrix.owner }}
-          ${{ matrix.props }}
+          -PagpVersion=8.13.2 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
+      # What the Flutter template and its migrator write from 3.44 on, and the versions from #1018.
+      - name: AGP 9.0.1, built-in Kotlin off
+        if: ${{ !cancelled() }}
+        working-directory: .github/gradle-compat
+        run: >
+          gradle :maplibre_gl:help
+          -PagpVersion=9.0.1 -PkgpVersion=2.3.20 -PexpectKotlinOwner=kgp
+          -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
+      # AGP 9 out of the box, compiling Kotlin itself.
+      - name: AGP 9.3.1, built-in Kotlin default
+        if: ${{ !cancelled() }}
+        working-directory: .github/gradle-compat
+        run: >
+          gradle :maplibre_gl:help
+          -PagpVersion=9.3.1 -PkgpVersion=2.4.21 -PexpectKotlinOwner=agp
+      # The AGP, Gradle and Kotlin versions of the example app.
+      - uses: gradle/actions/setup-gradle@v5
+        if: ${{ !cancelled() }}
+        with:
+          gradle-version: '9.8.2'
+      - name: AGP 9.5.0, built-in Kotlin off
+        if: ${{ !cancelled() }}
+        working-directory: .github/gradle-compat
+        run: >
+          gradle :maplibre_gl:help
+          -PagpVersion=9.5.0 -PkgpVersion=2.4.21 -PexpectKotlinOwner=kgp
+          -Pandroid.builtInKotlin=false -Pandroid.newDsl=false
+      # Each maplibre_gl.renderer value resolves its MapLibre Android artifact, which the example
+      # app, built with the default, never checks; and a typo fails instead of falling back (#915).
+      - name: Renderer property
+        if: ${{ !cancelled() }}
+        working-directory: .github/gradle-compat
+        run: |
+          args="-PagpVersion=9.5.0 -PkgpVersion=2.4.21 -Pandroid.builtInKotlin=false -Pandroid.newDsl=false"
+          for pair in opengl:android-sdk-opengl vulkan:android-sdk-vulkan auto:android-sdk-vulkan-opengl; do
+            renderer=${pair%%:*} artifact=${pair#*:}
+            out=$(gradle :maplibre_gl:dependencies --configuration releaseRuntimeClasspath $args -Pmaplibre_gl.renderer=$renderer)
+            if ! grep -q "org.maplibre.gl:$artifact:" <<< "$out" || grep -q FAILED <<< "$out"; then
+              echo "$out"
+              echo "::error::maplibre_gl.renderer=$renderer did not resolve $artifact"
+              exit 1
+            fi
+          done
+          if gradle :maplibre_gl:help $args -Pmaplibre_gl.renderer=metal; then
+            echo "::error::an unknown maplibre_gl.renderer did not fail the build"
+            exit 1
+          fi
 
-  build-ios:
-    name: "Build iOS package"
+  # Also the iOS build check: a simulator build is a debug build, the same one
+  # these tests compile, so a separate build job would only spend a second
+  # macOS runner.
+  integration-ios:
+    name: "Integration tests (iOS simulator)"
     needs: changes
-    if: needs.changes.outputs.code == 'true'
-    uses: ./.github/workflows/_build.yml
-    with:
-      platform: ios
+    if: needs.changes.outputs.ios == 'true'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: bluefireteam/melos-action@v3
+        with:
+          run-bootstrap: true
+      # The newest iPhone on the newest iOS runtime the runner image ships.
+      - name: Boot a simulator
+        id: simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json | jq -r '
+            [.devices | to_entries[] | select(.key | contains("iOS"))]
+            | sort_by(.key | capture("iOS-(?<v>[0-9-]+)").v | split("-") | map(tonumber))
+            | last.value | map(select(.name | startswith("iPhone"))) | last.udid')
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+      - name: Run integration tests
+        working-directory: maplibre_gl_example
+        run: flutter test integration_test/all_tests.dart -d ${{ steps.simulator.outputs.udid }}
 
   # On main, build web in release mode and upload it so the docs deploy can
-  # reuse it (no second web build). On PRs/other branches, a plain web build.
+  # reuse it (no second web build). On PRs/other branches, a plain web build:
+  # the only release (dart2js) web compile a PR sees, since integration-web
+  # runs a debug build.
   # Also runs for docs-only changes on main, because the Pages bundle needs a
   # fresh web demo to ship alongside the rebuilt docs.
   build-web:
     name: "Build web"
     needs: changes
-    if: needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true'
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.docs == 'true'
     uses: ./.github/workflows/_build.yml
     with:
       platform: web
       web-release: ${{ github.ref == 'refs/heads/main' }}
 
-  # Build the MkDocs site and assemble the Pages bundle (web demo + docs).
+  # Build the docs site on every change to it, so a broken build fails the PR
+  # instead of the Pages deploy after the merge to main.
+  check-docs:
+    name: "Check docs build"
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: website/requirements.txt
+
+      - name: Install Zensical
+        run: pip install -r website/requirements.txt
+
+      - name: Build docs site
+        working-directory: website
+        run: zensical build
+
+  # Build the docs site with Zensical and assemble the Pages bundle (web demo + docs).
   # Runs only on main after the relevant jobs succeed, and reuses the web
   # artifact from build-web instead of rebuilding the Flutter web app.
   build-docs:
     name: "Build docs + assemble Pages bundle"
-    needs: [changes, build-web, format, lint, test, test-web]
+    needs: [changes, build-web, dart-checks, test-web]
     if: |
       always() &&
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
       (needs.changes.outputs.code == 'true' || needs.changes.outputs.docs == 'true') &&
       needs.build-web.result == 'success' &&
-      (needs.format.result == 'success' || needs.format.result == 'skipped') &&
-      (needs.lint.result == 'success' || needs.lint.result == 'skipped') &&
-      (needs.test.result == 'success' || needs.test.result == 'skipped') &&
+      (needs.dart-checks.result == 'success' || needs.dart-checks.result == 'skipped') &&
       (needs.test-web.result == 'success' || needs.test-web.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
@@ -268,12 +393,12 @@ jobs:
           cache: pip
           cache-dependency-path: website/requirements.txt
 
-      - name: Install MkDocs Material
+      - name: Install Zensical
         run: pip install -r website/requirements.txt
 
-      - name: Build MkDocs site
+      - name: Build docs site
         working-directory: website
-        run: mkdocs build
+        run: zensical build
 
       # Pages bundle layout: the docs site is the root homepage, and the
       # Flutter web demo is served under /demo/ (built with that base-href).
@@ -314,3 +439,17 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v5
+
+  # The one check branch protection should require. The jobs above skip whole
+  # platforms, and the "caller / job" check of a skipped reusable workflow may
+  # never report, leaving a required check waiting forever. This job reports
+  # for all of them: skipped passes, failed or cancelled fails.
+  ci-result:
+    name: "CI result"
+    if: always()
+    needs: [changes, dart-checks, test-web, integration-web, integration-android, build-android, android-gradle-compat, integration-ios, build-web, check-docs]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

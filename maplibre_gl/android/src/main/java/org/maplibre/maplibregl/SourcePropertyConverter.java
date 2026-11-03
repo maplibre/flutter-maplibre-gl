@@ -2,14 +2,13 @@ package org.maplibre.maplibregl;
 
 import android.net.Uri;
 import android.util.Log;
+import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.maplibre.android.style.expressions.Expression;
-import org.maplibre.geojson.FeatureCollection;
 import org.maplibre.android.geometry.LatLng;
 import org.maplibre.android.geometry.LatLngQuad;
-import org.maplibre.android.maps.Style;
 import org.maplibre.android.style.sources.GeoJsonOptions;
 import org.maplibre.android.style.sources.GeoJsonSource;
 import org.maplibre.android.style.sources.ImageSource;
@@ -20,15 +19,21 @@ import org.maplibre.android.style.sources.TileSet;
 import org.maplibre.android.style.sources.VectorSource;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 class SourcePropertyConverter {
   private static final String TAG = "SourcePropertyConverter";
 
+  /**
+   * The tile set of the {@code tiles} in {@code data}, or null without tiles.
+   *
+   * @throws IllegalArgumentException for bounds or a zoom range the engine rejects. The engine
+   *     would throw an Error the call cannot catch, so they are checked here as iOS checks them.
+   */
   static TileSet buildTileset(Map<String, Object> data) {
     final Object tiles = data.get("tiles");
 
@@ -42,11 +47,7 @@ class SourcePropertyConverter {
 
     final Object bounds = data.get("bounds");
     if (bounds != null) {
-      List<Float> boundsFloat = new ArrayList<Float>();
-      for (Object item : Convert.toList(bounds)) {
-        boundsFloat.add(Convert.toFloat(item));
-      }
-      tileSet.setBounds(boundsFloat.toArray(new Float[0]));
+      tileSet.setBounds(tileBounds(bounds));
     }
 
     final Object scheme = data.get("scheme");
@@ -54,14 +55,17 @@ class SourcePropertyConverter {
       tileSet.setScheme(Convert.toString(scheme));
     }
 
-    final Object minzoom = data.get("minzoom");
+    final Float minzoom = tileZoom(data.get("minzoom"));
     if (minzoom != null) {
-      tileSet.setMinZoom(Convert.toFloat(minzoom));
+      tileSet.setMinZoom(minzoom);
     }
 
-    final Object maxzoom = data.get("maxzoom");
+    final Float maxzoom = tileZoom(data.get("maxzoom"));
     if (maxzoom != null) {
-      tileSet.setMaxZoom(Convert.toFloat(maxzoom));
+      tileSet.setMaxZoom(maxzoom);
+    }
+    if (minzoom != null && maxzoom != null && minzoom > maxzoom) {
+      throw new IllegalArgumentException("minzoom is above maxzoom");
     }
 
     final Object attribution = data.get("attribution");
@@ -69,6 +73,57 @@ class SourcePropertyConverter {
       tileSet.setAttribution(Convert.toString(attribution));
     }
     return tileSet;
+  }
+
+  /**
+   * The bounds of a tile set, [west, south, east, north], with the latitudes clamped to the poles
+   * as the engine clamps them.
+   *
+   * @throws IllegalArgumentException unless {@code bounds} are four finite numbers with south not
+   *     above north and west not east of east.
+   */
+  static Float[] tileBounds(Object bounds) {
+    final List<?> values = bounds instanceof List ? (List<?>) bounds : null;
+    if (values == null || values.size() != 4) {
+      throw new IllegalArgumentException("bounds are not four numbers");
+    }
+    final double[] numbers = new double[4];
+    for (int i = 0; i < 4; i++) {
+      final Object value = values.get(i);
+      if (!(value instanceof Number)
+          || Double.isNaN(((Number) value).doubleValue())
+          || Double.isInfinite(((Number) value).doubleValue())) {
+        throw new IllegalArgumentException("bounds are not four numbers");
+      }
+      numbers[i] = ((Number) value).doubleValue();
+    }
+    final double west = numbers[0];
+    final double south = Math.max(-90, Math.min(90, numbers[1]));
+    final double east = numbers[2];
+    final double north = Math.max(-90, Math.min(90, numbers[3]));
+    if (south > north || west > east) {
+      throw new IllegalArgumentException("bounds are inverted");
+    }
+    return new Float[] {(float) west, (float) south, (float) east, (float) north};
+  }
+
+  /**
+   * The zoom level of a tile set, or null without one.
+   *
+   * @throws IllegalArgumentException unless {@code zoom} is a number from 0 to 255, the range the
+   *     engine takes.
+   */
+  @Nullable
+  static Float tileZoom(@Nullable Object zoom) {
+    if (zoom == null) {
+      return null;
+    }
+    if (!(zoom instanceof Number)
+        || !(((Number) zoom).doubleValue() >= 0)
+        || ((Number) zoom).doubleValue() > 255) {
+      throw new IllegalArgumentException("a zoom is not a number from 0 to 255");
+    }
+    return ((Number) zoom).floatValue();
   }
 
   static GeoJsonOptions buildGeojsonOptions(Map<String, Object> data) {
@@ -141,8 +196,9 @@ class SourcePropertyConverter {
           operatorJson = JsonParser.parseString(gson.toJson(opRaw));
         }
         final JsonElement mapExprJson = JsonParser.parseString(gson.toJson(value.get(1)));
-        final Expression operatorExpr = Expression.Converter.convert(operatorJson);
-        final Expression mapExpr = Expression.Converter.convert(mapExprJson);
+        // Exact numbers, so a threshold like 123456789 is not rounded to a float.
+        final Expression operatorExpr = Convert.toExactExpression(operatorJson);
+        final Expression mapExpr = Convert.toExactExpression(mapExprJson);
         options = options.withClusterProperty(propertyName, operatorExpr, mapExpr);
       }
     }
@@ -155,6 +211,10 @@ class SourcePropertyConverter {
     final GeoJsonOptions options = buildGeojsonOptions(properties);
     if (data != null) {
       if (data instanceof String) {
+        // An empty url would load nothing.
+        if (((String) data).isEmpty()) {
+          return null;
+        }
         try {
           final URI uri = new URI(Convert.toString(data));
           return new GeoJsonSource(id, uri, options);
@@ -163,19 +223,26 @@ class SourcePropertyConverter {
       } else {
         Gson gson = new Gson();
         String geojson = gson.toJson(data);
-        final FeatureCollection featureCollection = FeatureCollection.fromJson(geojson);
-        return new GeoJsonSource(id, featureCollection, options);
+        // Raw JSON, so the engine keeps numeric feature ids numeric; a Java
+        // FeatureCollection would turn them into Strings.
+        return new GeoJsonSource(id, geojson, options);
       }
     }
     return null;
   }
 
+  /**
+   * Builds a quad from {@code coordinates}, the four [longitude, latitude] corners of an image
+   * source from the top left clockwise.
+   */
+  static LatLngQuad buildLatLngQuad(Object coordinates) {
+    final List<LatLng> corners = Convert.toLatLngList(coordinates, true);
+    return new LatLngQuad(corners.get(0), corners.get(1), corners.get(2), corners.get(3));
+  }
+
   static ImageSource buildImageSource(String id, Map<String, Object> properties) {
     final Object url = properties.get("url");
-    List<LatLng> coordinates = Convert.toLatLngList(properties.get("coordinates"), true);
-    final LatLngQuad quad =
-        new LatLngQuad(
-            coordinates.get(0), coordinates.get(1), coordinates.get(2), coordinates.get(3));
+    final LatLngQuad quad = buildLatLngQuad(properties.get("coordinates"));
     try {
       final URI uri = new URI(Convert.toString(url));
       return new ImageSource(id, quad, uri);
@@ -184,8 +251,15 @@ class SourcePropertyConverter {
     return null;
   }
 
-  static VectorSource buildVectorSource(String id, Map<String, Object> properties) {
+  /** The url in {@code properties}, or null without one. An empty url names nothing to load. */
+  @Nullable
+  private static String url(Map<String, Object> properties) {
     final Object url = properties.get("url");
+    return url instanceof String && !((String) url).isEmpty() ? (String) url : null;
+  }
+
+  static VectorSource buildVectorSource(String id, Map<String, Object> properties) {
+    final String url = url(properties);
     if (url != null) {
       final Uri uri = Uri.parse(Convert.toString(url));
 
@@ -200,7 +274,7 @@ class SourcePropertyConverter {
   }
 
   static RasterSource buildRasterSource(String id, Map<String, Object> properties) {
-    final Object url = properties.get("url");
+    final String url = url(properties);
     final Object tileSizeObj = properties.get("tileSize");
     if (url != null) {
       final String uri = Convert.toString(url);
@@ -226,7 +300,7 @@ class SourcePropertyConverter {
   }
 
   static RasterDemSource buildRasterDemSource(String id, Map<String, Object> properties) {
-    final Object url = properties.get("url");
+    final String url = url(properties);
     if (url != null) {
       try {
         final URI uri = new URI(Convert.toString(url));
@@ -246,39 +320,46 @@ class SourcePropertyConverter {
     return null;
   }
 
-  static void addSource(String id, Map<String, Object> properties, Style style) {
-    // Check if source already exists to prevent CannotAddSourceException
-    // which can lead to native crashes. Log so callers don't silently see
-    // "success" while the existing source is kept untouched — if an update
-    // is intended, the source should be removed and re-added explicitly.
-    if (style.getSource(id) != null) {
-      Log.w(TAG, "addSource: source with id '" + id + "' already exists, skipping");
-      return;
+  /** Builds a source from its id and properties, or answers null when they describe none. */
+  private interface SourceBuilder {
+    @Nullable
+    Source build(String id, Map<String, Object> properties);
+  }
+
+  /** The builder of each source type MapLibre Native has. */
+  private static final Map<String, SourceBuilder> BUILDERS = new HashMap<>();
+
+  static {
+    BUILDERS.put("vector", SourcePropertyConverter::buildVectorSource);
+    BUILDERS.put("raster", SourcePropertyConverter::buildRasterSource);
+    BUILDERS.put("raster-dem", SourcePropertyConverter::buildRasterDemSource);
+    BUILDERS.put("image", SourcePropertyConverter::buildImageSource);
+    BUILDERS.put("geojson", SourcePropertyConverter::buildGeojsonSource);
+  }
+
+  /** Whether {@link #buildSource} knows the source type {@code type}. */
+  static boolean isSupportedType(String type) {
+    return BUILDERS.containsKey(type);
+  }
+
+  /**
+   * The source of type {@code type} that {@code properties} describe, or null when they do not
+   * describe one, such as a tiled source with neither a url nor tiles, or a type this platform
+   * does not have.
+   */
+  @Nullable
+  static Source buildSource(String id, String type, Map<String, Object> properties) {
+    final SourceBuilder builder = BUILDERS.get(type);
+    if (builder == null) {
+      return null;
     }
-
-    final Object type = properties.get("type");
-    Source source = null;
-
-    if (type != null) {
-      switch (Convert.toString(type)) {
-        case "vector":
-          source = buildVectorSource(id, properties);
-          break;
-        case "raster":
-          source = buildRasterSource(id, properties);
-          break;
-        case "raster-dem":
-          source = buildRasterDemSource(id, properties);
-          break;
-        case "image":
-          source = buildImageSource(id, properties);
-          break;
-        case "geojson":
-          source = buildGeojsonSource(id, properties);
-          break;
-        default:
-          // unsupported source type
-      }
+    final Source source;
+    try {
+      source = builder.build(id, properties);
+    } catch (RuntimeException e) {
+      // A property of the wrong kind, such as missing image coordinates.
+      Log.w(TAG, "buildSource: cannot build source '" + id + "'", e);
+      return null;
     }
 
     if (source != null) {
@@ -289,7 +370,7 @@ class SourcePropertyConverter {
       if (volatileTiles != null) {
         source.setVolatile(Convert.toBoolean(volatileTiles));
       }
-      style.addSource(source);
     }
+    return source;
   }
 }

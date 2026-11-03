@@ -8,6 +8,9 @@ abstract class SourceProperties {
 }
 {{#sourceTypes}}
 
+{{#classDocSplit}}
+/// {{{part}}}
+{{/classDocSplit}}
 class {{typePascal}}SourceProperties implements SourceProperties {
   {{#properties}}
   {{#docSplit}}

@@ -175,11 +175,11 @@ class _DocClusterBodyState extends State<_DocClusterBody> {
     final coordinatesOfCluster = (feature['geometry'] as Map?)?['coordinates'];
     final target =
         coordinatesOfCluster is List && coordinatesOfCluster.length >= 2
-            ? LatLng(
-              (coordinatesOfCluster[1] as num).toDouble(),
-              (coordinatesOfCluster[0] as num).toDouble(),
-            )
-            : coordinates;
+        ? LatLng(
+            (coordinatesOfCluster[1] as num).toDouble(),
+            (coordinatesOfCluster[0] as num).toDouble(),
+          )
+        : coordinates;
     await ctrl.animateCamera(
       CameraUpdate.newLatLngZoom(target, expansionZoom.toDouble()),
       duration: const Duration(milliseconds: 600),

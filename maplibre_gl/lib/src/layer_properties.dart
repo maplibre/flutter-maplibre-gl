@@ -42,10 +42,11 @@ class SymbolLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic iconHaloColor;
 
-  /// Distance of halo to the icon outline. The unit is in pixels only for
-  /// SDF sprites that were created with a blur radius of 8, multiplied by
-  /// the display density. I.e., the radius needs to be 16 for `@2x`
-  /// sprites, etc.
+  /// Distance of halo to the icon outline.
+  ///
+  /// The unit is in pixels only for SDF sprites that were created with a
+  /// blur radius of 8, multiplied by the display density. I.e., the radius
+  /// needs to be 16 for `@2x` sprites, etc.
   ///
   /// Type: number
   ///   default: 0
@@ -78,7 +79,8 @@ class SymbolLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic iconTranslate;
 
-  /// Controls the frame of reference for `icon-translate`.
+  /// Controls the frame of reference for
+  /// [`icon-translate`](https://maplibre.org/maplibre-style-spec/layers/#icon-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -159,7 +161,8 @@ class SymbolLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic textTranslate;
 
-  /// Controls the frame of reference for `text-translate`.
+  /// Controls the frame of reference for
+  /// [`text-translate`](https://maplibre.org/maplibre-style-spec/layers/#text-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -220,11 +223,14 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic symbolAvoidEdges;
 
   /// Sorts features in ascending order based on this value. Features with
-  /// lower sort keys are drawn and placed first.  When `icon-allow-overlap`
-  /// or `text-allow-overlap` is `false`, features with a lower sort key
-  /// will have priority during placement. When `icon-allow-overlap` or
-  /// `text-allow-overlap` is set to `true`, features with a higher sort key
-  /// will overlap over features with a lower sort key.
+  /// lower sort keys are drawn and placed first. When
+  /// [`icon-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#icon-allow-overlap)
+  /// or
+  /// [`text-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#text-allow-overlap)
+  /// is `false`, features with a lower sort key will have priority during
+  /// placement. When `icon-allow-overlap` or `text-allow-overlap` is set to
+  /// `true`, features with a higher sort key will overlap over features
+  /// with a lower sort key.
   ///
   /// Type: number
   ///
@@ -236,24 +242,40 @@ class SymbolLayerProperties implements LayerProperties {
   /// Determines whether overlapping symbols in the same layer are rendered
   /// in the order that they appear in the data source or by their
   /// y-position relative to the viewport. To control the order and
-  /// prioritization of symbols otherwise, use `symbol-sort-key`.
+  /// prioritization of symbols otherwise, use
+  /// [`symbol-sort-key`](https://maplibre.org/maplibre-style-spec/layers/#symbol-sort-key).
   ///
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "auto"
-  ///      Sorts symbols by `symbol-sort-key` if set. Otherwise, sorts
-  ///      symbols by their y-position relative to the viewport if
-  ///      `icon-allow-overlap` or `text-allow-overlap` is set to `true` or
-  ///      `icon-ignore-placement` or `text-ignore-placement` is `false`.
+  ///      Sorts symbols by
+  ///      [`symbol-sort-key`](https://maplibre.org/maplibre-style-spec/layers/#symbol-sort-key)
+  ///      if set. Otherwise, sorts symbols by their y-position relative to
+  ///      the viewport if
+  ///      [`icon-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#icon-allow-overlap)
+  ///      or
+  ///      [`text-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#text-allow-overlap)
+  ///      is set to `true` or
+  ///      [`icon-ignore-placement`](https://maplibre.org/maplibre-style-spec/layers/#icon-ignore-placement)
+  ///      or
+  ///      [`text-ignore-placement`](https://maplibre.org/maplibre-style-spec/layers/#text-ignore-placement)
+  ///      is `false`.
   ///   "viewport-y"
   ///      Sorts symbols by their y-position relative to the viewport if
-  ///      `icon-allow-overlap` or `text-allow-overlap` is set to `true` or
-  ///      `icon-ignore-placement` or `text-ignore-placement` is `false`.
+  ///      [`icon-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#icon-allow-overlap)
+  ///      or
+  ///      [`text-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#text-allow-overlap)
+  ///      is set to `true` or
+  ///      [`icon-ignore-placement`](https://maplibre.org/maplibre-style-spec/layers/#icon-ignore-placement)
+  ///      or
+  ///      [`text-ignore-placement`](https://maplibre.org/maplibre-style-spec/layers/#text-ignore-placement)
+  ///      is `false`.
   ///   "source"
-  ///      Sorts symbols by `symbol-sort-key` if set. Otherwise, no sorting
-  ///      is applied; symbols are rendered in the same order as the source
-  ///      data.
+  ///      Sorts symbols by
+  ///      [`symbol-sort-key`](https://maplibre.org/maplibre-style-spec/layers/#symbol-sort-key)
+  ///      if set. Otherwise, no sorting is applied; symbols are rendered in
+  ///      the same order as the source data.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -270,7 +292,8 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic iconAllowOverlap;
 
   /// Allows for control over whether to show an icon when it overlaps other
-  /// symbols on the map. If `icon-overlap` is not set, `icon-allow-overlap`
+  /// symbols on the map. If `icon-overlap` is not set,
+  /// [`icon-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#icon-allow-overlap)
   /// is used instead.
   ///
   /// Type: enum
@@ -312,26 +335,33 @@ class SymbolLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic iconOptional;
 
-  /// In combination with `symbol-placement`, determines the rotation
-  /// behavior of icons.
+  /// In combination with
+  /// [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement),
+  /// determines the rotation behavior of icons.
   ///
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "map"
-  ///      When `symbol-placement` is set to `point`, aligns icons
-  ///      east-west. When `symbol-placement` is set to `line` or
-  ///      `line-center`, aligns icon x-axes with the line.
+  ///      When
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement)
+  ///      is set to `point`, aligns icons east-west. When
+  ///      `symbol-placement` is set to `line` or `line-center`, aligns icon
+  ///      x-axes with the line.
   ///   "viewport"
   ///      Produces icons whose x-axes are aligned with the x-axis of the
-  ///      viewport, regardless of the value of `symbol-placement`.
+  ///      viewport, regardless of the value of
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement).
   ///   "auto"
-  ///      When `symbol-placement` is set to `point`, this is equivalent to
-  ///      `viewport`. When `symbol-placement` is set to `line` or
-  ///      `line-center`, this is equivalent to `map`.
+  ///      When
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement)
+  ///      is set to `point`, this is equivalent to `viewport`. When
+  ///      `symbol-placement` is set to `line` or `line-center`, this is
+  ///      equivalent to `map`.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
+  ///   data-driven styling on no platform yet
   final dynamic iconRotationAlignment;
 
   /// Scales the original size of the icon by the provided factor. The new
@@ -368,7 +398,8 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic iconTextFit;
 
   /// Size of the additional area added to dimensions determined by
-  /// `icon-text-fit`, in clockwise order: top, right, bottom, left.
+  /// [`icon-text-fit`](https://maplibre.org/maplibre-style-spec/layers/#icon-text-fit),
+  /// in clockwise order: top, right, bottom, left.
   ///
   /// Type: array
   ///   default: [0, 0, 0, 0]
@@ -419,9 +450,11 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// Offset distance of icon from its anchor. Positive values indicate
   /// right and down, while negative values indicate left and up. Each
-  /// component is multiplied by the value of `icon-size` to obtain the
-  /// final offset in pixels. When combined with `icon-rotate` the offset
-  /// will be as if the rotated direction was up.
+  /// component is multiplied by the value of
+  /// [`icon-size`](https://maplibre.org/maplibre-style-spec/layers/#icon-size)
+  /// to obtain the final offset in pixels. When combined with
+  /// [`icon-rotate`](https://maplibre.org/maplibre-style-spec/layers/#icon-rotate)
+  /// the offset will be as if the rotated direction was up.
   ///
   /// Type: array
   ///   default: [0, 0]
@@ -472,7 +505,8 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "viewport"
   ///      The icon is aligned to the plane of the viewport.
   ///   "auto"
-  ///      Automatically matches the value of `icon-rotation-alignment`.
+  ///      Automatically matches the value of
+  ///      [`icon-rotation-alignment`](https://maplibre.org/maplibre-style-spec/layers/#icon-rotation-alignment).
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -488,34 +522,44 @@ class SymbolLayerProperties implements LayerProperties {
   ///   "viewport"
   ///      The text is aligned to the plane of the viewport.
   ///   "auto"
-  ///      Automatically matches the value of `text-rotation-alignment`.
+  ///      Automatically matches the value of
+  ///      [`text-rotation-alignment`](https://maplibre.org/maplibre-style-spec/layers/#text-rotation-alignment).
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textPitchAlignment;
 
-  /// In combination with `symbol-placement`, determines the rotation
-  /// behavior of the individual glyphs forming the text.
+  /// In combination with
+  /// [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement),
+  /// determines the rotation behavior of the individual glyphs forming the
+  /// text.
   ///
   /// Type: enum
   ///   default: auto
   /// Options:
   ///   "map"
-  ///      When `symbol-placement` is set to `point`, aligns text east-west.
-  ///      When `symbol-placement` is set to `line` or `line-center`, aligns
-  ///      text x-axes with the line.
+  ///      When
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement)
+  ///      is set to `point`, aligns text east-west. When `symbol-placement`
+  ///      is set to `line` or `line-center`, aligns text x-axes with the
+  ///      line.
   ///   "viewport"
   ///      Produces glyphs whose x-axes are aligned with the x-axis of the
-  ///      viewport, regardless of the value of `symbol-placement`.
+  ///      viewport, regardless of the value of
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement).
   ///   "viewport-glyph"
-  ///      When `symbol-placement` is set to `point`, aligns text to the
-  ///      x-axis of the viewport. When `symbol-placement` is set to `line`
-  ///      or `line-center`, aligns glyphs to the x-axis of the viewport and
-  ///      places them along the line.
+  ///      When
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement)
+  ///      is set to `point`, aligns text to the x-axis of the viewport.
+  ///      When `symbol-placement` is set to `line` or `line-center`, aligns
+  ///      glyphs to the x-axis of the viewport and places them along the
+  ///      line.
   ///   "auto"
-  ///      When `symbol-placement` is set to `point`, this is equivalent to
-  ///      `viewport`. When `symbol-placement` is set to `line` or
-  ///      `line-center`, this is equivalent to `map`.
+  ///      When
+  ///      [`symbol-placement`](https://maplibre.org/maplibre-style-spec/layers/#symbol-placement)
+  ///      is set to `point`, this is equivalent to `viewport`. When
+  ///      `symbol-placement` is set to `line` or `line-center`, this is
+  ///      equivalent to `map`.
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -607,8 +651,11 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic textJustify;
 
   /// Radial offset of text, in the direction of the symbol's anchor. Useful
-  /// in combination with `text-variable-anchor`, which defaults to using
-  /// the two-dimensional `text-offset` if present.
+  /// in combination with
+  /// [`text-variable-anchor`](https://maplibre.org/maplibre-style-spec/layers/#text-variable-anchor),
+  /// which defaults to using the two-dimensional
+  /// [`text-offset`](https://maplibre.org/maplibre-style-spec/layers/#text-offset)
+  /// if present.
   ///
   /// Type: number
   ///   default: 0
@@ -619,11 +666,15 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic textRadialOffset;
 
   /// To increase the chance of placing high-priority labels on the map, you
-  /// can provide an array of `text-anchor` locations: the renderer will
-  /// attempt to place the label at each location, in order, before moving
-  /// onto the next label. Use `text-justify: auto` to choose justification
-  /// based on anchor position. To apply an offset, use the
-  /// `text-radial-offset` or the two-dimensional `text-offset`.
+  /// can provide an array of
+  /// [`text-anchor`](https://maplibre.org/maplibre-style-spec/layers/#text-anchor)
+  /// locations: the renderer will attempt to place the label at each
+  /// location, in order, before moving onto the next label. Use
+  /// `text-justify: auto` to choose justification based on anchor position.
+  /// To apply an offset, use the
+  /// [`text-radial-offset`](https://maplibre.org/maplibre-style-spec/layers/#text-radial-offset)
+  /// or the two-dimensional
+  /// [`text-offset`](https://maplibre.org/maplibre-style-spec/layers/#text-offset).
   ///
   /// Type: array
   /// Options:
@@ -653,10 +704,12 @@ class SymbolLayerProperties implements LayerProperties {
   final dynamic textVariableAnchor;
 
   /// To increase the chance of placing high-priority labels on the map, you
-  /// can provide an array of `text-anchor` locations, each paired with an
-  /// offset value. The renderer will attempt to place the label at each
-  /// location, in order, before moving on to the next location+offset. Use
-  /// `text-justify: auto` to choose justification based on anchor position.
+  /// can provide an array of
+  /// [`text-anchor`](https://maplibre.org/maplibre-style-spec/layers/#text-anchor)
+  /// locations, each paired with an offset value. The renderer will attempt
+  /// to place the label at each location, in order, before moving on to the
+  /// next location+offset. Use `text-justify: auto` to choose justification
+  /// based on anchor position.
   ///
   /// The length of the array must be even, and must alternate between enum
   /// and point entries. i.e., each anchor location must be accompanied by a
@@ -665,14 +718,23 @@ class SymbolLayerProperties implements LayerProperties {
   /// while negative values indicate left and up. Anchor locations may
   /// repeat, allowing the renderer to try multiple offsets to try and place
   /// a label using the same anchor.
+  ///
   /// When present, this property takes precedence over `text-anchor`,
-  /// `text-variable-anchor`, `text-offset`, and `text-radial-offset`.
+  /// [`text-variable-anchor`](https://maplibre.org/maplibre-style-spec/layers/#text-variable-anchor),
+  /// [`text-offset`](https://maplibre.org/maplibre-style-spec/layers/#text-offset),
+  /// and
+  /// [`text-radial-offset`](https://maplibre.org/maplibre-style-spec/layers/#text-radial-offset).
+  ///
   /// ```json
+  ///
   /// { "text-variable-anchor-offset": ["top", [0, 4], "left", [3,0],
   /// "bottom", [1, 1]] }
+  ///
   /// ```
+  ///
   /// When the renderer chooses the `top` anchor, `[0, 4]` will be used for
   /// `text-offset`; the text will be shifted down by 4 ems.
+  ///
   /// When the renderer chooses the `left` anchor, `[3, 0]` will be used for
   /// `text-offset`; the text will be shifted right by 3 ems.
   ///
@@ -819,7 +881,8 @@ class SymbolLayerProperties implements LayerProperties {
 
   /// Allows for control over whether to show symbol text when it overlaps
   /// other symbols on the map. If `text-overlap` is not set,
-  /// `text-allow-overlap` is used instead
+  /// [`text-allow-overlap`](https://maplibre.org/maplibre-style-spec/layers/#text-allow-overlap)
+  /// is used instead
   ///
   /// Type: enum
   /// Options:
@@ -859,6 +922,40 @@ class SymbolLayerProperties implements LayerProperties {
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic textOptional;
+
+  /// The height above the anchor, in meters, at which the symbol is placed.
+  /// Use
+  /// [`symbol-height-anchor`](https://maplibre.org/maplibre-style-spec/layers/#symbol-height-anchor)
+  /// to control what this height is measured from.
+  ///
+  /// Type: number
+  ///   default: 0
+  ///
+  /// Sdk Support:
+  ///   basic functionality with js (not on android, ios)
+  ///   data-driven styling with js (not on android, ios)
+  final dynamic symbolHeightOffset;
+
+  /// Defines what
+  /// [`symbol-height-offset`](https://maplibre.org/maplibre-style-spec/layers/#symbol-height-offset)
+  /// is measured from.
+  ///
+  /// Type: enum
+  ///   default: ground
+  /// Options:
+  ///   "ground"
+  ///      [`symbol-height-offset`](https://maplibre.org/maplibre-style-spec/layers/#symbol-height-offset)
+  ///      is measured from the ground below the symbol, i.e. the terrain
+  ///      elevation at the symbol's location, or zero when terrain is not
+  ///      enabled.
+  ///   "absolute"
+  ///      [`symbol-height-offset`](https://maplibre.org/maplibre-style-spec/layers/#symbol-height-offset)
+  ///      is measured from sea level, ignoring the terrain elevation at the
+  ///      symbol's location.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic symbolHeightAnchor;
 
   /// Whether this layer is displayed.
   ///
@@ -933,6 +1030,8 @@ class SymbolLayerProperties implements LayerProperties {
     this.textOverlap,
     this.textIgnorePlacement,
     this.textOptional,
+    this.symbolHeightOffset,
+    this.symbolHeightAnchor,
     this.visibility,
   });
 
@@ -999,6 +1098,8 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: changes.textOverlap ?? textOverlap,
       textIgnorePlacement: changes.textIgnorePlacement ?? textIgnorePlacement,
       textOptional: changes.textOptional ?? textOptional,
+      symbolHeightOffset: changes.symbolHeightOffset ?? symbolHeightOffset,
+      symbolHeightAnchor: changes.symbolHeightAnchor ?? symbolHeightAnchor,
       visibility: changes.visibility ?? visibility,
     );
   }
@@ -1070,6 +1171,8 @@ class SymbolLayerProperties implements LayerProperties {
     addIfPresent('text-overlap', textOverlap);
     addIfPresent('text-ignore-placement', textIgnorePlacement);
     addIfPresent('text-optional', textOptional);
+    addIfPresent('symbol-height-offset', symbolHeightOffset);
+    addIfPresent('symbol-height-anchor', symbolHeightAnchor);
     addIfPresent('visibility', visibility);
     return json;
   }
@@ -1134,6 +1237,8 @@ class SymbolLayerProperties implements LayerProperties {
       textOverlap: json['text-overlap'],
       textIgnorePlacement: json['text-ignore-placement'],
       textOptional: json['text-optional'],
+      symbolHeightOffset: json['symbol-height-offset'],
+      symbolHeightAnchor: json['symbol-height-anchor'],
       visibility: json['visibility'],
     );
   }
@@ -1195,7 +1300,8 @@ class CircleLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic circleTranslate;
 
-  /// Controls the frame of reference for `circle-translate`.
+  /// Controls the frame of reference for
+  /// [`circle-translate`](https://maplibre.org/maplibre-style-spec/layers/#circle-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -1239,7 +1345,7 @@ class CircleLayerProperties implements LayerProperties {
   final dynamic circlePitchAlignment;
 
   /// The width of the circle's stroke. Strokes are placed outside of the
-  /// `circle-radius`.
+  /// [`circle-radius`](https://maplibre.org/maplibre-style-spec/layers/#circle-radius).
   ///
   /// Type: number
   ///   default: 0
@@ -1391,16 +1497,18 @@ class LineLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic lineOpacity;
 
-  /// Opacity applied to the layer as a whole. Unlike `line-opacity` and
-  /// alpha values in `line-color`, which are applied per feature and
-  /// accumulate where lines overlap, `line-layer-opacity` is applied once
-  /// so overlapping lines appear as a single surface at the given opacity.
-  /// When both `line-opacity` and `line-layer-opacity` are set, the
-  /// per-feature, overlap accumulation is preserved, then layer-opacity
-  /// composites the result. This property affects only the layer it is set
-  /// on and cannot be used to composite multiple layers together or control
-  /// how this layer blends with layers above or below it.![line-opacity
-  /// vs. line-layer-opacity](assets/line-layer-opacity.svg)
+  /// Opacity applied to the layer as a whole. Unlike
+  /// [`line-opacity`](https://maplibre.org/maplibre-style-spec/layers/#line-opacity)
+  /// and alpha values in
+  /// [`line-color`](https://maplibre.org/maplibre-style-spec/layers/#line-color),
+  /// which are applied per feature and accumulate where lines overlap,
+  /// `line-layer-opacity` is applied once so overlapping lines appear as a
+  /// single surface at the given opacity. When both `line-opacity` and
+  /// `line-layer-opacity` are set, the per-feature, overlap accumulation is
+  /// preserved, then layer-opacity composites the result. This property
+  /// affects only the layer it is set on and cannot be used to composite
+  /// multiple layers together or control how this layer blends with layers
+  /// above or below it.
   ///
   /// Type: number
   ///   default: 1
@@ -1410,6 +1518,55 @@ class LineLayerProperties implements LayerProperties {
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic lineLayerOpacity;
+
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike per-feature opacity properties such as
+  /// [`line-opacity`](#line-opacity), this property affects the final
+  /// composited layer output and determines how it interacts with the
+  /// existing map contents.
+  ///
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic lineLayerBlend;
 
   /// The color with which the line will be drawn.
   ///
@@ -1431,7 +1588,8 @@ class LineLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic lineTranslate;
 
-  /// Controls the frame of reference for `line-translate`.
+  /// Controls the frame of reference for
+  /// [`line-translate`](https://maplibre.org/maplibre-style-spec/layers/#line-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -1622,6 +1780,7 @@ class LineLayerProperties implements LayerProperties {
   const LineLayerProperties({
     this.lineOpacity,
     this.lineLayerOpacity,
+    this.lineLayerBlend,
     this.lineColor,
     this.lineTranslate,
     this.lineTranslateAnchor,
@@ -1644,6 +1803,7 @@ class LineLayerProperties implements LayerProperties {
     return LineLayerProperties(
       lineOpacity: changes.lineOpacity ?? lineOpacity,
       lineLayerOpacity: changes.lineLayerOpacity ?? lineLayerOpacity,
+      lineLayerBlend: changes.lineLayerBlend ?? lineLayerBlend,
       lineColor: changes.lineColor ?? lineColor,
       lineTranslate: changes.lineTranslate ?? lineTranslate,
       lineTranslateAnchor: changes.lineTranslateAnchor ?? lineTranslateAnchor,
@@ -1674,6 +1834,7 @@ class LineLayerProperties implements LayerProperties {
 
     addIfPresent('line-opacity', lineOpacity);
     addIfPresent('line-layer-opacity', lineLayerOpacity);
+    addIfPresent('line-layer-blend', lineLayerBlend);
     addIfPresent('line-color', lineColor);
     addIfPresent('line-translate', lineTranslate);
     addIfPresent('line-translate-anchor', lineTranslateAnchor);
@@ -1697,6 +1858,7 @@ class LineLayerProperties implements LayerProperties {
     return LineLayerProperties(
       lineOpacity: json['line-opacity'],
       lineLayerOpacity: json['line-layer-opacity'],
+      lineLayerBlend: json['line-layer-blend'],
       lineColor: json['line-color'],
       lineTranslate: json['line-translate'],
       lineTranslateAnchor: json['line-translate-anchor'],
@@ -1728,7 +1890,8 @@ class FillLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic fillAntialias;
 
-  /// The opacity of the entire fill layer. In contrast to the `fill-color`,
+  /// The opacity of the entire fill layer. In contrast to the
+  /// [`fill-color`](https://maplibre.org/maplibre-style-spec/layers/#fill-color),
   /// this value will also affect the 1px stroke around the fill, if the
   /// stroke is used.
   ///
@@ -1742,17 +1905,18 @@ class FillLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic fillOpacity;
 
-  /// Opacity applied to the layer as a whole. Unlike `fill-opacity` and
-  /// alpha values in `fill-color`, which are applied per feature and
-  /// accumulate where fills overlap, `fill-layer-opacity` is applied once
-  /// so overlapping fills appear as a single surface at the given opacity.
-  /// When both `fill-opacity` and `fill-layer-opacity` are set, the
-  /// per-feature, overlap accumulation is preserved, then
-  /// `fill-layer-opacity` composites the result. This property affects only
-  /// the layer it is set on and cannot be used to composite multiple layers
-  /// together or control how this layer blends with layers above or below
-  /// it.![fill-opacity vs.
-  /// fill-layer-opacity](assets/fill-layer-opacity.svg)
+  /// Opacity applied to the layer as a whole. Unlike
+  /// [`fill-opacity`](https://maplibre.org/maplibre-style-spec/layers/#fill-opacity)
+  /// and alpha values in
+  /// [`fill-color`](https://maplibre.org/maplibre-style-spec/layers/#fill-color),
+  /// which are applied per feature and accumulate where fills overlap,
+  /// `fill-layer-opacity` is applied once so overlapping fills appear as a
+  /// single surface at the given opacity. When both `fill-opacity` and
+  /// `fill-layer-opacity` are set, the per-feature, overlap accumulation is
+  /// preserved, then `fill-layer-opacity` composites the result. This
+  /// property affects only the layer it is set on and cannot be used to
+  /// composite multiple layers together or control how this layer blends
+  /// with layers above or below it.
   ///
   /// Type: number
   ///   default: 1
@@ -1762,6 +1926,54 @@ class FillLayerProperties implements LayerProperties {
   /// Sdk Support:
   ///   basic functionality with js (not on android, ios)
   final dynamic fillLayerOpacity;
+
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike per-feature opacity properties such as
+  /// `fill-opacity`, this property affects the final composited layer
+  /// output and determines how it interacts with the existing map contents.
+  ///
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic fillLayerBlend;
 
   /// The color of the filled part of this layer. This color can be
   /// specified as `rgba` with an alpha component and the color's opacity
@@ -1777,8 +1989,9 @@ class FillLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic fillColor;
 
-  /// The outline color of the fill. Matches the value of `fill-color` if
-  /// unspecified.
+  /// The outline color of the fill. Matches the value of
+  /// [`fill-color`](https://maplibre.org/maplibre-style-spec/layers/#fill-color)
+  /// if unspecified.
   ///
   /// Type: color
   ///
@@ -1797,7 +2010,8 @@ class FillLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic fillTranslate;
 
-  /// Controls the frame of reference for `fill-translate`.
+  /// Controls the frame of reference for
+  /// [`fill-translate`](https://maplibre.org/maplibre-style-spec/layers/#fill-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -1852,6 +2066,7 @@ class FillLayerProperties implements LayerProperties {
     this.fillAntialias,
     this.fillOpacity,
     this.fillLayerOpacity,
+    this.fillLayerBlend,
     this.fillColor,
     this.fillOutlineColor,
     this.fillTranslate,
@@ -1866,6 +2081,7 @@ class FillLayerProperties implements LayerProperties {
       fillAntialias: changes.fillAntialias ?? fillAntialias,
       fillOpacity: changes.fillOpacity ?? fillOpacity,
       fillLayerOpacity: changes.fillLayerOpacity ?? fillLayerOpacity,
+      fillLayerBlend: changes.fillLayerBlend ?? fillLayerBlend,
       fillColor: changes.fillColor ?? fillColor,
       fillOutlineColor: changes.fillOutlineColor ?? fillOutlineColor,
       fillTranslate: changes.fillTranslate ?? fillTranslate,
@@ -1888,6 +2104,7 @@ class FillLayerProperties implements LayerProperties {
     addIfPresent('fill-antialias', fillAntialias);
     addIfPresent('fill-opacity', fillOpacity);
     addIfPresent('fill-layer-opacity', fillLayerOpacity);
+    addIfPresent('fill-layer-blend', fillLayerBlend);
     addIfPresent('fill-color', fillColor);
     addIfPresent('fill-outline-color', fillOutlineColor);
     addIfPresent('fill-translate', fillTranslate);
@@ -1903,6 +2120,7 @@ class FillLayerProperties implements LayerProperties {
       fillAntialias: json['fill-antialias'],
       fillOpacity: json['fill-opacity'],
       fillLayerOpacity: json['fill-layer-opacity'],
+      fillLayerBlend: json['fill-layer-blend'],
       fillColor: json['fill-color'],
       fillOutlineColor: json['fill-outline-color'],
       fillTranslate: json['fill-translate'],
@@ -1933,7 +2151,8 @@ class FillExtrusionLayerProperties implements LayerProperties {
   /// shaded differently based on this color in combination with the root
   /// `light` settings. If this color is specified as `rgba` with an alpha
   /// component, the alpha component will be ignored; use
-  /// `fill-extrusion-opacity` to set layer opacity.
+  /// [`fill-extrusion-opacity`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-opacity)
+  /// to set layer opacity.
   ///
   /// Type: color
   ///   default: #000000
@@ -1953,7 +2172,8 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic fillExtrusionTranslate;
 
-  /// Controls the frame of reference for `fill-extrusion-translate`.
+  /// Controls the frame of reference for
+  /// [`fill-extrusion-translate`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-translate).
   ///
   /// Type: enum
   ///   default: map
@@ -1979,11 +2199,12 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic fillExtrusionPattern;
 
-  /// The height with which to extrude this layer.
+  /// The height with which to extrude this layer. Negative values extrude
+  /// below ground level, so a floor that is entirely underground can be
+  /// expressed.
   ///
   /// Type: number
   ///   default: 0
-  ///   minimum: 0
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -1991,11 +2212,12 @@ class FillExtrusionLayerProperties implements LayerProperties {
   final dynamic fillExtrusionHeight;
 
   /// The height with which to extrude the base of this layer. Must be less
-  /// than or equal to `fill-extrusion-height`.
+  /// than or equal to
+  /// [`fill-extrusion-height`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-height).
+  /// Negative values extrude below ground level, e.g. underground floors.
   ///
   /// Type: number
   ///   default: 0
-  ///   minimum: 0
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
@@ -2036,7 +2258,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///   minimum: 0
   ///
   /// Sdk Support:
-  ///   basic functionality with android, ios (not on js)
+  ///   basic functionality with js, android, ios
   final dynamic fillExtrusionRoundedCornerDistance;
 
   const FillExtrusionLayerProperties({
@@ -2192,8 +2414,7 @@ class RasterLayerProperties implements LayerProperties {
   final dynamic rasterContrast;
 
   /// The resampling/interpolation method to use for overscaling, also known
-  /// as texture magnification filter.![Visual comparison of linear
-  /// resampling versus nearest resampling](assets/resampling.png)
+  /// as texture magnification filter.
   ///
   /// Type: enum
   ///   default: linear
@@ -2326,10 +2547,12 @@ class RasterLayerProperties implements LayerProperties {
 class HillshadeLayerProperties implements LayerProperties {
   // Paint Properties
   /// The direction of the light source(s) used to generate the hillshading
-  /// with 0 as the top of the viewport if `hillshade-illumination-anchor`
+  /// with 0 as the top of the viewport if
+  /// [`hillshade-illumination-anchor`](https://maplibre.org/maplibre-style-spec/layers/#hillshade-illumination-anchor)
   /// is set to `viewport` and due north if `hillshade-illumination-anchor`
-  /// is set to `map`. Only when `hillshade-method` is set to
-  /// `multidirectional` can you specify multiple light sources.
+  /// is set to `map`. Only when
+  /// [`hillshade-method`](https://maplibre.org/maplibre-style-spec/layers/#hillshade-method)
+  /// is set to `multidirectional` can you specify multiple light sources.
   ///
   /// Type: numberArray
   ///   default: 335
@@ -2341,8 +2564,9 @@ class HillshadeLayerProperties implements LayerProperties {
   final dynamic hillshadeIlluminationDirection;
 
   /// The altitude of the light source(s) used to generate the hillshading
-  /// with 0 as sunset and 90 as noon. Only when `hillshade-method` is set
-  /// to `multidirectional` can you specify multiple light sources.
+  /// with 0 as sunset and 90 as noon. Only when
+  /// [`hillshade-method`](https://maplibre.org/maplibre-style-spec/layers/#hillshade-method)
+  /// is set to `multidirectional` can you specify multiple light sources.
   ///
   /// Type: numberArray
   ///   default: 45
@@ -2380,8 +2604,9 @@ class HillshadeLayerProperties implements LayerProperties {
   final dynamic hillshadeExaggeration;
 
   /// The shading color of areas that face away from the light source(s).
-  /// Only when `hillshade-method` is set to `multidirectional` can you
-  /// specify multiple light sources.
+  /// Only when
+  /// [`hillshade-method`](https://maplibre.org/maplibre-style-spec/layers/#hillshade-method)
+  /// is set to `multidirectional` can you specify multiple light sources.
   ///
   /// Type: colorArray
   ///   default: #000000
@@ -2391,8 +2616,9 @@ class HillshadeLayerProperties implements LayerProperties {
   final dynamic hillshadeShadowColor;
 
   /// The shading color of areas that faces towards the light source(s).
-  /// Only when `hillshade-method` is set to `multidirectional` can you
-  /// specify multiple light sources.
+  /// Only when
+  /// [`hillshade-method`](https://maplibre.org/maplibre-style-spec/layers/#hillshade-method)
+  /// is set to `multidirectional` can you specify multiple light sources.
   ///
   /// Type: colorArray
   ///   default: #FFFFFF
@@ -2412,9 +2638,7 @@ class HillshadeLayerProperties implements LayerProperties {
   final dynamic hillshadeAccentColor;
 
   /// The hillshade algorithm to use, one of `standard`, `basic`,
-  /// `combined`, `igor`, or `multidirectional`.![Visual comparison of
-  /// standard, basic, igor, combined, and multidirectional
-  /// hillshade-method](assets/hillshade_methods.png)
+  /// `combined`, `igor`, or `multidirectional`.
   ///
   /// Type: enum
   ///   default: standard
@@ -2442,8 +2666,7 @@ class HillshadeLayerProperties implements LayerProperties {
   final dynamic hillshadeMethod;
 
   /// The resampling/interpolation method to use for overscaling, also known
-  /// as texture magnification filter.![Visual comparison of linear
-  /// resampling versus nearest resampling](assets/resampling.png)
+  /// as texture magnification filter.
   ///
   /// Type: enum
   ///   default: linear
@@ -2584,9 +2807,10 @@ class HeatmapLayerProperties implements LayerProperties {
   ///   data-driven styling with js, android, ios
   final dynamic heatmapWeight;
 
-  /// Similar to `heatmap-weight` but controls the intensity of the heatmap
-  /// globally. Primarily used for adjusting the heatmap based on zoom
-  /// level.
+  /// Similar to
+  /// [`heatmap-weight`](https://maplibre.org/maplibre-style-spec/layers/#heatmap-weight)
+  /// but controls the intensity of the heatmap globally. Primarily used for
+  /// adjusting the heatmap based on zoom level.
   ///
   /// Type: number
   ///   default: 1
@@ -2597,7 +2821,7 @@ class HeatmapLayerProperties implements LayerProperties {
   final dynamic heatmapIntensity;
 
   /// Defines the color of each pixel based on its density value in a
-  /// heatmap.  Should be an expression that uses `["heatmap-density"]` as
+  /// heatmap. Should be an expression that uses `["heatmap-density"]` as
   /// input.
   ///
   /// Type: color
@@ -2697,7 +2921,9 @@ class ColorReliefLayerProperties implements LayerProperties {
   final dynamic colorReliefOpacity;
 
   /// Defines the color of each pixel based on its elevation. Should be an
-  /// expression that uses `["elevation"]` as input.
+  /// expression that uses the
+  /// [`elevation`](https://maplibre.org/maplibre-style-spec/expressions/#elevation)
+  /// expression as input.
   ///
   /// Type: color
   ///
@@ -2706,8 +2932,7 @@ class ColorReliefLayerProperties implements LayerProperties {
   final dynamic colorReliefColor;
 
   /// The resampling/interpolation method to use for overscaling, also known
-  /// as texture magnification filter.![Visual comparison of linear
-  /// resampling versus nearest resampling](assets/resampling.png)
+  /// as texture magnification filter.
   ///
   /// Type: enum
   ///   default: linear

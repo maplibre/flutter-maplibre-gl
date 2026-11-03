@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -113,6 +116,96 @@ void main() {
     });
   });
 
+  group('androidView', () {
+    testWidgets('reaches the platform when set', (tester) async {
+      const view = AndroidMapView(
+        surface: AndroidMapSurface.textureView,
+        composition: AndroidComposition.hybridComposition,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(home: MapLibreMap(androidView: view)),
+      );
+
+      expect(platform.lastCreationParams!['androidView'], view);
+    });
+
+    test('compares by value', () {
+      const a = AndroidMapView(surface: AndroidMapSurface.textureView);
+      const b = AndroidMapView(surface: AndroidMapSurface.textureView);
+      const c = AndroidMapView(
+        surface: AndroidMapSurface.textureView,
+        composition: AndroidComposition.hybridComposition,
+      );
+
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(c));
+      expect(
+        c.toString(),
+        'AndroidMapView(surface: AndroidMapSurface.textureView, '
+        'composition: AndroidComposition.hybridComposition)',
+      );
+    });
+
+    testWidgets('is left out when null', (tester) async {
+      await tester.pumpWidget(MaterialApp(home: MapLibreMap()));
+
+      expect(platform.lastCreationParams!.containsKey('androidView'), isFalse);
+    });
+  });
+
+  group('disposed before the platform view is created', () {
+    testWidgets('does not wire up the platform afterwards (#1048)', (
+      tester,
+    ) async {
+      MapLibreMapController? created;
+      await tester.pumpWidget(
+        MaterialApp(home: MapLibreMap(onMapCreated: (c) => created = c)),
+      );
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      expect(platform.wasCalled('initPlatform'), isFalse);
+
+      // The platform view shows up after the widget is gone.
+      platform.lastOnPlatformViewCreated!(0);
+      await tester.pump();
+
+      expect(platform.wasCalled('initPlatform'), isFalse);
+      expect(platform.onMapStyleLoadedPlatform.isEmpty, isTrue);
+      expect(platform.onCameraMovePlatform.isEmpty, isTrue);
+      expect(created, isNull);
+    });
+
+    testWidgets('a style load during the map creation stops quietly when the '
+        'widget goes away', (tester) async {
+      // The controller listens to the platform before the map is created, so
+      // a style can load while initPlatform is still running. If the widget
+      // goes away then, the annotation setup that load started fails because
+      // the map is gone and must not surface as an unhandled error.
+      final initDone = Completer<void>();
+      platform.onInitPlatform = (_) => initDone.future;
+      final sourceAdded = Completer<void>();
+      platform.onAddGeoJsonSource = (_) => sourceAdded.future;
+      MapLibreMapController? created;
+
+      await tester.pumpWidget(
+        MaterialApp(home: MapLibreMap(onMapCreated: (c) => created = c)),
+      );
+      platform.lastOnPlatformViewCreated!(0);
+      await tester.pump();
+      platform.onMapStyleLoadedPlatform.call(null);
+      await tester.pump();
+
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      sourceAdded.completeError(PlatformException(code: 'MAP_DISPOSED'));
+      initDone.complete();
+      await tester.pump();
+
+      expect(created, isNull);
+      expect(platform.wasCalled('addFillLayer'), isFalse);
+    });
+  });
+
   group('onStyleLoaded manager disposal', () {
     test('disposes old managers and re-creates them on style reload', () async {
       final controller = MapLibreMapController(
@@ -142,6 +235,142 @@ void main() {
       expect(controller.lineManager, isNot(same(oldLine)));
 
       controller.dispose();
+    });
+  });
+
+  group('onStyleLoaded when the style is gone (#992)', () {
+    MapLibreMapController createController(void Function() onStyleLoaded) {
+      final controller = MapLibreMapController(
+        maplibrePlatform: platform,
+        annotationOrder: AnnotationType.values,
+        annotationConsumeTapEvents: AnnotationType.values,
+        onStyleLoadedCallback: onStyleLoaded,
+      );
+      addTearDown(controller.dispose);
+      return controller;
+    }
+
+    test(
+      'a STYLE_NOT_READY error is not reported and the next load recovers',
+      () async {
+        var styleLoads = 0;
+        final controller = createController(() => styleLoads++);
+        final errors = <Object>[];
+
+        final logs = <String?>[];
+        final previousDebugPrint = debugPrint;
+        debugPrint = (message, {wrapWidth}) => logs.add(message);
+        addTearDown(() => debugPrint = previousDebugPrint);
+
+        platform.onAddGeoJsonSource = (_) async {
+          throw PlatformException(
+            code: 'STYLE_NOT_READY',
+            message: 'Style is null or not fully loaded.',
+          );
+        };
+        await runZonedGuarded(() async {
+          platform.onMapStyleLoadedPlatform.call(null);
+          await pumpEventQueue();
+        }, (error, _) => errors.add(error));
+        debugPrint = previousDebugPrint;
+
+        expect(errors, isEmpty);
+        expect(logs, [contains('STYLE_NOT_READY')]);
+        expect(styleLoads, 0);
+        expect(controller.fillManager?.isInitialized ?? false, isFalse);
+
+        // The style is there by the next load.
+        platform.onAddGeoJsonSource = null;
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+
+        expect(styleLoads, 1);
+        expect(controller.fillManager!.isInitialized, isTrue);
+        expect(controller.symbolManager!.isInitialized, isTrue);
+      },
+    );
+
+    test('any other error is still reported', () async {
+      createController(() {});
+      final errors = <Object>[];
+
+      platform.onAddGeoJsonSource = (_) async {
+        throw PlatformException(code: 'SOURCE_ALREADY_EXISTS');
+      };
+      await runZonedGuarded(() async {
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+      }, (error, _) => errors.add(error));
+
+      expect(errors, [
+        isA<PlatformException>().having(
+          (e) => e.code,
+          'code',
+          'SOURCE_ALREADY_EXISTS',
+        ),
+      ]);
+    });
+
+    test('a setup overtaken by a newer style load stops quietly', () async {
+      var styleLoads = 0;
+      final controller = createController(() => styleLoads++);
+      final errors = <Object>[];
+
+      // The first load's setup is held back until the style has been
+      // replaced, and then fails against the style that is gone.
+      final release = Completer<void>();
+      var first = true;
+      platform.onAddGeoJsonSource = (_) async {
+        if (!first) return;
+        first = false;
+        await release.future;
+        throw PlatformException(code: 'LAYER_NOT_FOUND_ERROR');
+      };
+      await runZonedGuarded(() async {
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        platform.onMapStyleLoadedPlatform.call(null);
+        await pumpEventQueue();
+        release.complete();
+        await pumpEventQueue();
+      }, (error, _) => errors.add(error));
+
+      expect(errors, isEmpty);
+      expect(styleLoads, 1);
+      expect(controller.fillManager!.isInitialized, isTrue);
+      expect(controller.symbolManager!.isInitialized, isTrue);
+    });
+
+    test('a setup that succeeds after being overtaken does not call back for '
+        'the old style', () async {
+      var styleLoads = 0;
+      final controller = MapLibreMapController(
+        maplibrePlatform: platform,
+        // One manager, so the held call is inside the last initialize().
+        annotationOrder: const [AnnotationType.fill],
+        annotationConsumeTapEvents: const [AnnotationType.fill],
+        onStyleLoadedCallback: () => styleLoads++,
+      );
+      addTearDown(controller.dispose);
+
+      final release = Completer<void>();
+      var first = true;
+      platform.onAddGeoJsonSource = (_) async {
+        if (!first) return;
+        first = false;
+        await release.future;
+      };
+      platform.onMapStyleLoadedPlatform.call(null);
+      await pumpEventQueue();
+      platform.onMapStyleLoadedPlatform.call(null);
+      await pumpEventQueue();
+      expect(styleLoads, 1);
+
+      release.complete();
+      await pumpEventQueue();
+
+      expect(styleLoads, 1);
+      expect(controller.fillManager!.isInitialized, isTrue);
     });
   });
 

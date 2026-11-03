@@ -24,6 +24,19 @@ class PlatformCall {
 class FakeMapLibrePlatform extends MapLibrePlatform {
   final calls = <PlatformCall>[];
 
+  /// Style layer ids, bottom to top, as added by the add*Layer methods.
+  /// Not cleared by [reset].
+  final layerStack = <String>[];
+
+  void _stackLayer(String layerId, String? belowLayerId) {
+    final index = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    if (index < 0) {
+      layerStack.add(layerId);
+    } else {
+      layerStack.insert(index, layerId);
+    }
+  }
+
   /// Clears recorded calls.
   void reset() => calls.clear();
 
@@ -34,9 +47,14 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   /// Whether a method was called at least once.
   bool wasCalled(String method) => calls.any((c) => c.method == method);
 
+  /// Runs at the end of [initPlatform], so a test can hold the map's creation
+  /// back.
+  Future<void> Function(int id)? onInitPlatform;
+
   @override
   Future<void> initPlatform(int id) async {
     calls.add(PlatformCall('initPlatform', [id]));
+    await onInitPlatform?.call(id);
   }
 
   /// The last creationParams passed to [buildView].
@@ -45,6 +63,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   /// Whether [buildView] should automatically trigger [onPlatformViewCreated].
   bool triggerPlatformViewCreated = false;
 
+  /// The last onPlatformViewCreated callback passed to [buildView], so a test
+  /// can create the platform view later than the widget asked for it.
+  OnPlatformViewCreatedCallback? lastOnPlatformViewCreated;
+
   @override
   Widget buildView(
     Map<String, dynamic> creationParams,
@@ -52,6 +74,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
   ) {
     lastCreationParams = creationParams;
+    lastOnPlatformViewCreated = onPlatformViewCreated;
     calls.add(PlatformCall('buildView', [creationParams]));
     if (triggerPlatformViewCreated) {
       onPlatformViewCreated(0);
@@ -280,7 +303,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String name,
     Uint8List bytes, [
     bool sdf = false,
-  ]) async {}
+    double? pixelRatio,
+  ]) async {
+    calls.add(PlatformCall('addImage', [name, bytes, sdf, pixelRatio]));
+  }
 
   @override
   Future<void> addImageSource(
@@ -351,12 +377,29 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
-  Future<void> removeLayer(String layerId) async {
-    calls.add(PlatformCall('removeLayer', [layerId]));
+  Future<Map<String, dynamic>> getGlobalState() async {
+    calls.add(PlatformCall('getGlobalState', []));
+    return {};
   }
 
   @override
-  Future<List> getLayerIds() async => [];
+  Future<void> removeLayer(String layerId) async {
+    calls.add(PlatformCall('removeLayer', [layerId]));
+    layerStack.remove(layerId);
+  }
+
+  @override
+  Future<void> moveLayer(String layerId, {String? belowLayerId}) async {
+    calls.add(
+      PlatformCall('moveLayer', [layerId], {'belowLayerId': belowLayerId}),
+    );
+    layerStack.remove(layerId);
+    final below = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    layerStack.insert(below < 0 ? layerStack.length : below, layerId);
+  }
+
+  @override
+  Future<List> getLayerIds() async => List.of(layerStack);
 
   @override
   Future<List> getSourceIds() async => [];
@@ -370,10 +413,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
       null;
 
   @override
-  Future<void> setFilter(String layerId, dynamic filter) async {}
+  Future<void> setFilter(String layerId, dynamic filter) async {
+    calls.add(PlatformCall('setFilter', [layerId, filter]));
+  }
 
   @override
-  Future<dynamic> getFilter(String layerId) async => null;
+  Future<dynamic> getFilter(String layerId) async {
+    calls.add(PlatformCall('getFilter', [layerId]));
+    return null;
+  }
 
   @override
   Future<Point> toScreenLocation(LatLng latLng) async => const Point(0, 0);
@@ -388,6 +436,10 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<double> getMetersPerPixelAtLatitude(double latitude) async => 1.0;
 
+  /// Runs at the end of [addGeoJsonSource], so a test can make it fail or
+  /// hold it back.
+  Future<void> Function(String sourceId)? onAddGeoJsonSource;
+
   @override
   Future<void> addGeoJsonSource(
     String sourceId,
@@ -401,6 +453,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
         {'promoteId': promoteId},
       ),
     );
+    await onAddGeoJsonSource?.call(sourceId);
   }
 
   @override
@@ -471,6 +524,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addSymbolLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -486,6 +540,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addLineLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -509,6 +564,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addCircleLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -524,6 +580,7 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(PlatformCall('addFillLayer', [sourceId, layerId, properties]));
+    _stackLayer(layerId, belowLayerId);
   }
 
   @override
@@ -539,7 +596,11 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     required bool enableInteraction,
   }) async {
     calls.add(
-      PlatformCall('addFillExtrusionLayer', [sourceId, layerId, properties]),
+      PlatformCall(
+        'addFillExtrusionLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter, 'enableInteraction': enableInteraction},
+      ),
     );
   }
 
@@ -605,8 +666,15 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   }) async {
-    calls.add(PlatformCall('addHeatmapLayer', [sourceId, layerId, properties]));
+    calls.add(
+      PlatformCall(
+        'addHeatmapLayer',
+        [sourceId, layerId, properties],
+        {'filter': filter},
+      ),
+    );
   }
 
   @override
@@ -617,6 +685,24 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   @override
   Future<void> setLayerVisibility(String layerId, bool visible) async {
     calls.add(PlatformCall('setLayerVisibility', [layerId, visible]));
+  }
+
+  @override
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  ) async {
+    calls.add(PlatformCall('setLayersVisibility', [layerIds, visible]));
+    return layerIds.where((id) => id.startsWith('missing')).toSet().toList();
+  }
+
+  @override
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  ) async {
+    calls.add(PlatformCall('setLayerZoomRange', [layerId, minzoom, maxzoom]));
   }
 
   @override

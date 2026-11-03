@@ -29,6 +29,42 @@ MapLibreMap(
 
 On web only `none` and `tracking` are meaningful, since the browser exposes no compass heading.
 
+## Style the puck
+
+`myLocationStyle` recolors the puck, for example to match your brand or to make it stand out on a light style. Every field is optional, and a field left out keeps the platform's own look:
+
+```dart
+MapLibreMap(
+  myLocationEnabled: true,
+  myLocationStyle: const MyLocationStyle(
+    fillColor: Color(0xFFE53935),
+    bearingColor: Color(0xFF1E88E5),
+    accuracyColor: Color(0xFFE53935),
+    pulseEnabled: true,
+    pulseColor: Color(0xFFE53935),
+  ),
+)
+```
+
+The style can change while the map is shown, and setting it back to `null` restores the default look.
+
+| Field | What it colors |
+|-------|----------------|
+| `fillColor` | the location dot |
+| `bearingColor` | the arrow that points along the direction of the user |
+| `accuracyColor` | the accuracy circle; only its color is used, not its alpha |
+| `accuracyCircleEnabled` | `false` hides the accuracy circle |
+| `pulseEnabled` | turns the pulse around the dot on or off; leave it `null` for the platform default |
+| `pulseColor` | the color of the pulse |
+
+Each platform draws the puck a little differently, so a few fields land on different parts:
+
+* **Android**: `bearingColor` is the bearing chevron of `MyLocationRenderMode.compass`, and `fillColor` also colors the navigation arrow of `MyLocationRenderMode.gps`. The pulse is off by default, so `pulseColor` alone shows nothing: set `pulseEnabled: true` too. The dot still turns grey when no fix has arrived for a while.
+* **iOS**: `bearingColor` is the arrow drawn in `MyLocationTrackingMode.trackingGps`, and `fillColor` also colors the heading arrow of `MyLocationRenderMode.compass`. The pulse is on by default but only drawn while the accuracy is 10 meters or better. While the user only grants an approximate location, iOS draws a wider halo in `accuracyColor` instead, and keeps it when `accuracyCircleEnabled` is `false`.
+* **Web**: `bearingColor` is the arrow of the puck drawn for a `ManualLocationSource`; the browser geolocation puck shows no direction. The pulse is on by default.
+
+The accuracy circle keeps each platform's own translucency, about 15% opacity on Android, 10% on iOS and 20% on web, so it never hides the map below.
+
 ## Pitch the camera while tracking
 
 A navigation-style view wants both things at once: the camera pitched, and the map still following the user. The regular camera calls (`animateCamera`, `easeCamera`, `moveCamera`) are not tracking-aware, so on Android they end tracking outright: the map stops following and `onCameraTrackingChanged` reports `MyLocationTrackingMode.none`. Use `setTrackingCameraOptions` instead, which goes through the platform's tracking machinery and leaves the mode alone.
@@ -64,6 +100,31 @@ MapLibreMap(
         ),
 )
 ```
+
+### Fused location provider on Android
+
+With high accuracy on Android (`enableHighAccuracy: true`, or `priority: LocationPriority.highAccuracy`), the plugin uses Google's fused location provider, which combines GPS with Wi-Fi and cell positioning. On devices without Google Play Services, such as Huawei devices without them, it uses the platform location manager instead: Android's own fused provider on Android 12 and later, GPS only before. Android's fused provider adds Wi-Fi and cell positioning only where the device has a network location provider, such as the vendor's or microG; without one it is GPS only too. Other priorities use the platform location engine either way.
+
+### Building without Google Play Services
+
+F-Droid and other FOSS builds cannot include Google Play Services. Add this line to your app's `android/gradle.properties`:
+
+```properties title="android/gradle.properties"
+maplibre_gl.playServicesLocation=false
+```
+
+The plugin then neither depends on Play Services location nor compiles the code that uses it, so nothing from Google is downloaded or ends up in the APK. High accuracy uses the platform location manager as described above. Where that means GPS only (Android 11 and earlier, or no network location provider), indoors there may be no fix at all.
+
+#### F-Droid
+
+F-Droid also scans the source of your dependencies, and its scanner matches the Play Services lines in the plugin's `build.gradle` even though the property turns them off. With the property set, those lines and the plugin's `src/gms` folder are unused, so the build recipe can remove them after `flutter pub get` and before the scan, for example in `prebuild`:
+
+```bash
+sed -i -e '/com\.google\.android\.gms/d' "$PUB_CACHE"/hosted/pub.dev/maplibre_gl-*/android/build.gradle
+rm -rf "$PUB_CACHE"/hosted/pub.dev/maplibre_gl-*/android/src/gms
+```
+
+`PUB_CACHE` is the pub cache the recipe uses for `flutter pub get`. The app still builds the same way, and the F-Droid scanner then finds no Play Services in the source or in the APK.
 
 ### Pulsed GPS on iOS
 
@@ -122,6 +183,7 @@ Works on Android, iOS and web. On Android and iOS the pushed fixes drive the SDK
 | `myLocationEnabled` | show or hide the puck |
 | `myLocationTrackingMode` | how the camera follows the user |
 | `controller.setTrackingCameraOptions` | pitch the camera without ending tracking (not on web) |
+| `myLocationStyle` | colors of the dot, bearing arrow, accuracy circle and pulse |
 | `myLocationRenderMode` | how heading is drawn: `normal`, `compass`, or `gps` (`gps` is not supported on iOS) |
 | `locationSource` | `PlatformLocationSource` (default) or `ManualLocationSource` |
 | `locationEnginePlatforms` | per-platform engine options, including iOS pulsing |

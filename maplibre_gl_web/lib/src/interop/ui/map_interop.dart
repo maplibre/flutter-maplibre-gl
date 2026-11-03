@@ -56,6 +56,14 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   external StyleJsImpl get style;
   external JSAny? get painter;
 
+  /// How long symbols fade as they are placed, in milliseconds. The library
+  /// only takes it as the `fadeDuration` map option, but reads this field on
+  /// every frame, so writing it changes the fade on a live map.
+  @JS('_fadeDuration')
+  external JSNumber get placementFadeDuration;
+  @JS('_fadeDuration')
+  external set placementFadeDuration(JSNumber value);
+
   ///  The map's {@link ScrollZoomHandler}, which implements zooming in and out with a scroll wheel or trackpad.
   ///  Find more details and examples using `scrollZoom` in the {@link ScrollZoomHandler} section.
   external ScrollZoomHandlerJsImpl get scrollZoom;
@@ -162,6 +170,14 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  // Set the map's max bounds.
   ///  map.setMaxBounds(bounds);
   external MapLibreMapJsImpl setMaxBounds(LngLatBoundsJsImpl? bounds);
+
+  /// Sets the callback that runs before every camera change, from a gesture
+  /// or from `jumpTo`, `easeTo` and `flyTo`. It gets the camera state about
+  /// to apply and returns the values to overwrite. `null` removes it.
+  ///
+  /// Library versions 6 and later only. 5 has the `transformCameraUpdate`
+  /// property instead, see [MapLibreMap.setTransformCameraUpdate].
+  external void setTransformCameraUpdate(JSFunction? transform);
 
   ///  Sets or clears the map's minimum zoom level.
   ///  If the map's current zoom level is lower than the new minimum,
@@ -702,7 +718,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @example
   ///  // Move a layer with ID 'label' before the layer with ID 'waterways'.
   ///  map.moveLayer('label', 'waterways');
-  external MapLibreMapJsImpl moveLayer(String id, String beforeId);
+  external MapLibreMapJsImpl moveLayer(String id, [String? beforeId]);
 
   ///  Removes the layer with the given ID from the map's style.
   ///
@@ -769,7 +785,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///  @see [Create a timeline animation](https://maplibre.org/maplibre-gl-js/docs/examples/timeline-animation/)
   external MapLibreMapJsImpl setFilter(
     String layerId,
-    JSAny filter, [
+    JSAny? filter, [
     StyleSetterOptionsJsImpl? options,
   ]);
 
@@ -777,7 +793,7 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   ///  @param {string} layerId The ID of the style layer whose filter to get.
   ///  @returns {Array} The layer's filter.
-  external JSArray? getFilter(String layerId);
+  external JSAny? getFilter(String layerId);
 
   ///  Sets the value of a paint property in the specified style layer.
   ///
@@ -869,6 +885,11 @@ extension MapLibreMapJsImplExtension on MapLibreMapJsImpl {
   ///
   ///  @returns {MapLibreMap} `this`
   external MapLibreMapJsImpl setGlobalStateProperty(String name, JSAny? value);
+
+  ///  Returns the style's global state.
+  ///
+  ///  @returns {Object} Each global state property with its current value.
+  external JSAny getGlobalState();
 
   ///  Returns the value of the light object.
   ///

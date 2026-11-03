@@ -7,8 +7,8 @@ part of '../maplibre_gl_platform_interface.dart';
 /// Selects which source feeds location updates into the map's user-location
 /// component (the "puck").
 ///
-/// Pass an instance to `MapLibreMap.locationSource`. It only has an effect when
-/// `myLocationEnabled` is set to `true`.
+/// Pass an instance to `MapLibreMap.locationSource`. `myLocationEnabled`
+/// decides whether the puck is shown.
 ///
 /// See also:
 ///  * [PlatformLocationSource], the default native location engine.
@@ -34,6 +34,11 @@ class PlatformLocationSource extends LocationSource {
 /// calling `MapLibreMapController.updateManualLocation`. The accuracy ring, the
 /// tracking modes and `onUserLocationUpdated` keep working, and no location
 /// permission is required, since the SDK never queries the device.
+///
+/// This is the only requirement of `updateManualLocation`: `myLocationEnabled`
+/// only shows or hides the puck. While it is off the last location pushed is
+/// kept, without `onUserLocationUpdated`, and the puck shows up there when it
+/// turns on.
 ///
 /// Works on Android, iOS and web. Web has no native user-location component to
 /// feed, so there the plugin draws the puck itself, styled from

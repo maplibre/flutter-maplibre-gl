@@ -5,6 +5,7 @@ style from data rather than constants, and what to tune when a map-heavy app
 feels slow.
 
 - [PMTiles](pmtiles.md): serve map tiles from a single portable file
+- [MBTiles](mbtiles.md): load a local `.mbtiles` file (Android and iOS)
 - [Offline Regions](offline-regions.md): download tiles for offline use (Android & iOS)
 - [Map Language](map-language.md): switch map label language at runtime
 - [Snapshot](snapshot.md): capture a static image of the map

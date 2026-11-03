@@ -9,7 +9,7 @@ The camera defines what the user sees: the center position, zoom level, bearing 
   loading="lazy"
 ></iframe>
 
-Press the button to fly between cities around the world.
+Press the button to fly between cities around the world, or pan the map yourself: **Search this area** shows up only after your own moves, never after the flight.
 
 ## `animateCamera`: smooth animation
 
@@ -27,6 +27,8 @@ await controller.animateCamera(
   duration: const Duration(milliseconds: 2000),
 );
 ```
+
+The future completes when the animation ends: `true` once the camera has arrived, `false` if another camera call, a gesture or disposing the map cut it short. `easeCamera` completes the same way.
 
 ## `moveCamera`: instant jump
 
@@ -51,10 +53,10 @@ await controller.moveCamera(
 | `CameraUpdate.zoomIn()` | Zoom in one level |
 | `CameraUpdate.zoomOut()` | Zoom out one level |
 | `CameraUpdate.zoomTo(double)` | Zoom to a specific level |
-| `CameraUpdate.zoomBy(double)` | Relative zoom change |
+| `CameraUpdate.zoomBy(double, [Offset])` | Relative zoom change, keeping the optional focus point in place |
 | `CameraUpdate.bearingTo(double)` | Rotate to a bearing |
 | `CameraUpdate.tiltTo(double)` | Set tilt angle |
-| `CameraUpdate.scrollBy(double, double)` | Pan by pixel offset |
+| `CameraUpdate.scrollBy(double, double)` | Pan by logical pixels (positive x east, positive y south) |
 
 ## Fit a bounding box
 
@@ -96,9 +98,10 @@ await controller.easeCamera(
 );
 ```
 
-The default is `easeInOut`. Android only distinguishes linear from eased, so the other
-curves render as its native ease-in/ease-out; see the
-[Feature Matrix](../compare/feature-matrix.md).
+Web eases along every curve exactly. Android only tells linear from eased, so the other
+curves become MapLibre Native's own ease out. iOS matches `easeOut`, comes within 1% of
+`fastOutLinearIn`, and cannot ease both in and out, so `easeInOut`, the default, eases out
+as on Android; see the [Feature Matrix](../compare/feature-matrix.md).
 
 ## Padding: keep content centered behind an overlay
 
@@ -132,7 +135,77 @@ MapLibreMap(
 ```
 
 !!! tip "`trackCameraPosition: true`"
-    Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them.
+    Camera move callbacks are disabled by default for performance. Set `trackCameraPosition: true` on `MapLibreMap` to enable them. The last `onCameraMove` before `onCameraIdle` has the position where the camera stopped, also after `moveCamera`.
+
+### Tell the user's moves from the app's
+
+`onCameraMoveStarted` fires once at the start of every move, with or without `trackCameraPosition`, and says what started it:
+
+| `CameraMoveReason` | Started by |
+|---|---|
+| `gesture` | A pan, pinch, rotation, tilt or double tap of the user, and the fling after it. On web also the mouse wheel and the keyboard |
+| `programmatic` | Anything else: `animateCamera`, `easeCamera`, `moveCamera`, a tap on the compass, location tracking |
+
+While the camera moves, `controller.cameraMoveReason` holds the same value. It is `null` when the camera is still, inside `onCameraIdle` too.
+
+A move that takes over another before the camera stops, such as `animateCamera` during a fling, stays one move: one `onCameraMoveStarted` with the reason of the first, one `onCameraIdle` at the end.
+
+#### Close a popup when the user moves the map
+
+```dart
+MapLibreMap(
+  onCameraMoveStarted: (reason) {
+    if (reason == CameraMoveReason.gesture) closePopup();
+  },
+)
+```
+
+Your own `animateCamera` to the selected feature leaves the popup open.
+
+#### Show "Search this area" after the user pans
+
+Keep the reason from `onCameraMoveStarted`, since the controller's is already `null` in `onCameraIdle`:
+
+```dart
+var movedByUser = false;
+
+MapLibreMap(
+  onCameraMoveStarted: (reason) {
+    movedByUser = reason == CameraMoveReason.gesture;
+    hideSearchButton();
+  },
+  onCameraIdle: () {
+    if (movedByUser) showSearchButton();
+  },
+)
+```
+
+The demo at the top of this page does exactly this.
+
+#### Skip the app's own moves in `onCameraMove`
+
+```dart
+MapLibreMap(
+  trackCameraPosition: true,
+  onMapCreated: (c) => controller = c,
+  onCameraMove: (position) {
+    if (controller?.cameraMoveReason != CameraMoveReason.gesture) return;
+    showCoordinates(position.target);  // only while the user drags
+  },
+)
+```
+
+## Glide after a pan
+
+`panInertia` sets how long the map keeps gliding after the user drags it and lets go:
+
+```dart
+MapLibreMap(
+  panInertia: PanInertia.short, // none, short or normal, the default
+)
+```
+
+On iOS it also applies to the glide after a pinch or a rotation, and `hapticFeedbackEnabled: false` turns off the light vibration when the user rotates the map back to north.
 
 ## Key APIs
 
@@ -141,3 +214,5 @@ MapLibreMap(
 - [`MapLibreMapController.easeCamera()`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/MapLibreMapController/easeCamera.html)
 - [`CameraUpdate`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraUpdate-class.html)
 - [`CameraPosition`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraPosition-class.html)
+- [`CameraMoveReason`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/CameraMoveReason.html)
+- [`PanInertia`](https://pub.dev/documentation/maplibre_gl/latest/maplibre_gl/PanInertia.html)

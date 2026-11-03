@@ -134,7 +134,7 @@ void main() {
     });
 
     test('a non-finite camera idle still ends the movement', () {
-      platform.onCameraMoveStartedPlatform(null);
+      platform.onCameraMoveStartedPlatform(CameraMoveReason.gesture);
       expect(controller.isCameraMoving, isTrue);
 
       platform.onCameraIdlePlatform(

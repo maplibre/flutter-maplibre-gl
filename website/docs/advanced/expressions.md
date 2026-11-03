@@ -205,7 +205,22 @@ await controller.addCircleLayer(
 );
 ```
 
-## Global state (web only)
+## `semiliteral`: an array of expressions
+
+`literal` keeps an array exactly as written. `semiliteral` evaluates the expressions inside it, for array properties such as `textOffset`:
+
+```dart
+SymbolLayerProperties(
+  textOffset: [
+    Expressions.semiliteral,
+    [[Expressions.get, 'dx'], [Expressions.get, 'dy']],
+  ],
+)
+```
+
+MapLibre GL JS supports it, and so do MapLibre Android 13.7 and iOS 6.31, though the style spec does not list them yet.
+
+## Global state
 
 `Expressions.globalState` reads a value shared by the whole style instead of a
 feature property, so one switch can restyle any number of layers at once.
@@ -229,8 +244,26 @@ await controller.addFillLayer(
 await controller.setGlobalStateProperty("theme", "dark");
 ```
 
-On Android and iOS `setGlobalStateProperty` throws an `UnsupportedError`;
-MapLibre Native does not implement global state yet.
+A layer's `visibility` can read the global state too, to show or hide groups
+of layers from one switch. It can read nothing else, such as feature data:
+
+```dart
+await controller.setLayerProperties(
+  "trails",
+  const LineLayerProperties(
+    visibility: [
+      Expressions.caseExpression,
+      [Expressions.boolean, [Expressions.globalState, "hiking"], false],
+      "visible",
+      "none",
+    ],
+  ),
+);
+```
+
+`null` resets a property to the default of the style's `state`, and
+`getGlobalState()` reads every property back. Setting a style starts again
+from its defaults.
 
 ## Key `Expressions` constants
 
@@ -246,5 +279,6 @@ MapLibre Native does not implement global state yet.
 | `Expressions.lineProgress` | `"line-progress"` | Line gradient position |
 | `Expressions.has` | `"has"` | Check property exists |
 | `Expressions.not` | `"!"` | Negate a boolean |
+| `Expressions.semiliteral` | `"semiliteral"` | Array of expressions |
 
 For the full expression reference, see the [MapLibre Style Spec](https://maplibre.org/maplibre-style-spec/expressions/).

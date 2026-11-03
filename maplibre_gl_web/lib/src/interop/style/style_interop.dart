@@ -107,7 +107,7 @@ extension StyleJsImplExtension on StyleJsImpl {
 
   external void setFilter(
     String layerId,
-    JSAny filter,
+    JSAny? filter,
     StyleSetterOptionsJsImpl options,
   );
 

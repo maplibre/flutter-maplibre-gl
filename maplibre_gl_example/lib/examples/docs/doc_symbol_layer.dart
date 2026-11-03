@@ -59,19 +59,18 @@ class _DocSymbolLayerBodyState extends State<_DocSymbolLayerBody> {
 
     await ctrl.addGeoJsonSource(_sourceId, {
       'type': 'FeatureCollection',
-      'features':
-          _cities
-              .map(
-                (c) => {
-                  'type': 'Feature',
-                  'properties': {'name': c['name']},
-                  'geometry': {
-                    'type': 'Point',
-                    'coordinates': [c['lng'], c['lat']],
-                  },
-                },
-              )
-              .toList(),
+      'features': _cities
+          .map(
+            (c) => {
+              'type': 'Feature',
+              'properties': {'name': c['name']},
+              'geometry': {
+                'type': 'Point',
+                'coordinates': [c['lng'], c['lat']],
+              },
+            },
+          )
+          .toList(),
     });
 
     await ctrl.addSymbolLayer(

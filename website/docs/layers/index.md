@@ -15,3 +15,26 @@ for paths, fill for areas, heatmap and cluster for many points at once.
 - [Cluster](cluster.md): cluster many points into grouped circles
 - [GeoJSON Source](geojson-source.md): feed layers from inline data or a URL
 - [Various Sources](various-sources.md): GeoJSON, vector tiles, raster tiles, and more
+
+## Manage layers
+
+Once a layer is on the map, these calls change it without removing and adding it again:
+
+```dart
+// Draw 'labels' below 'roads'; without belowLayerId it goes on top.
+await controller.moveLayer('labels', belowLayerId: 'roads');
+
+// Draw 'buildings' only from zoom 14 up.
+await controller.setLayerZoomRange('buildings', 14, 24);
+
+// Hide a group of layers in one call, all in the same frame.
+final missing = await controller.setLayersVisibility(['roads', 'labels'], false);
+```
+
+* `moveLayer` keeps the layer's properties, filter and source.
+* `setLayerZoomRange` takes zooms from 0 to 24: `minzoom` is inclusive, `maxzoom` exclusive.
+* `setLayersVisibility` skips the ids the style does not have, and returns them.
+
+## When a call fails
+
+Layer and source calls throw a `PlatformException` with the same code on every platform, and a failed call changes nothing. The message names the property, layer or source at fault, and [Errors](../concepts/errors.md) lists every code.

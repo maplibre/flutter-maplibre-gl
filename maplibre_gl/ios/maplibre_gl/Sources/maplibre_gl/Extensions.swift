@@ -1,156 +1,229 @@
 import MapLibre
 
+extension MLNMapView {
+    /// Where the map is now, as the camera events and calls report it.
+    ///
+    /// The zoom is the map's own `zoomLevel`, not one worked out from
+    /// `camera.altitude`. The altitude is itself derived from the zoom at the
+    /// current latitude, so going back through `MLNZoomLevelForAltitude` adds
+    /// floating point noise that changes with every pan step (#1150). It also
+    /// needs the view size, so before the first layout it is not finite, which
+    /// poisons the Dart side's cached position (#903). `zoomLevel` needs
+    /// neither.
+    var pigeonCameraPosition: PgCameraPosition {
+        let camera = self.camera
+        return PgCameraPosition(
+            bearing: camera.heading,
+            target: camera.centerCoordinate.toPigeon(),
+            tilt: Double(camera.pitch),
+            zoom: zoomLevel
+        )
+    }
+}
+
 extension MLNMapCamera {
-    func toDict(mapView: MLNMapView) -> [String: Any] {
-        // MLNZoomLevelForAltitude derives the zoom from the view size, so a
-        // camera event that arrives before the map view has a laid-out frame
-        // divides by zero and yields a non-finite zoom. Sending that over the
-        // channel poisons the controller's cached camera position on the Dart
-        // side, and on a map nobody touches no later event arrives to correct
-        // it (#903). The map view's own zoomLevel needs no view size and is
-        // always finite, so it stands in.
-        let computedZoom = MLNZoomLevelForAltitude(
-            altitude,
-            pitch,
-            centerCoordinate.latitude,
+    /// The camera at `position`, its altitude worked out for the current size
+    /// of the map view.
+    static func fromPigeon(_ position: PgCameraPosition, mapView: MLNMapView) -> MLNMapCamera {
+        let location = position.target.coordinate
+        let tilt = CGFloat(position.tilt)
+        let altitude = MLNAltitudeForZoomLevel(
+            position.zoom,
+            tilt,
+            location.latitude,
             mapView.frame.size
         )
-        let zoom = computedZoom.isFinite ? Double(computedZoom) : mapView.zoomLevel
-        return ["bearing": heading,
-                "target": centerCoordinate.toArray(),
-                "tilt": pitch,
-                "zoom": zoom]
-    }
-
-    static func fromDict(_ dict: [String: Any], mapView: MLNMapView) -> MLNMapCamera? {
-        guard let target = dict["target"] as? [Double],
-              let zoom = dict["zoom"] as? Double,
-              let tilt = dict["tilt"] as? CGFloat,
-              let bearing = dict["bearing"] as? Double else { return nil }
-        let location = CLLocationCoordinate2D.fromArray(target)
-        let altitude = MLNAltitudeForZoomLevel(zoom, tilt, location.latitude, mapView.frame.size)
         return MLNMapCamera(
             lookingAtCenter: location,
             altitude: altitude,
             pitch: tilt,
-            heading: bearing
+            heading: position.bearing
         )
     }
 }
 
+extension MLNCameraChangeReason {
+    /// The reasons that name a gesture of the user.
+    static let gestures: MLNCameraChangeReason = [
+        .gesturePan,
+        .gesturePinch,
+        .gestureRotate,
+        .gestureZoomIn,
+        .gestureZoomOut,
+        .gestureOneFingerZoom,
+        .gestureTilt,
+    ]
+}
+
 extension CLLocation {
-    func toDict() -> [String: Any]? {
-        return ["position": coordinate.toArray(),
-                "altitude": altitude,
-                "bearing": course,
-                "speed": speed,
-                "horizontalAccuracy": horizontalAccuracy,
-                "verticalAccuracy": verticalAccuracy,
-                "timestamp": Int(timestamp.timeIntervalSince1970 * 1000)]
+    /// The location as `mapOnUserLocationUpdated` reports it, timestamp in
+    /// milliseconds since the epoch.
+    func toPigeon() -> PgUserLocation {
+        return PgUserLocation(
+            position: coordinate.toPigeon(),
+            altitude: altitude,
+            bearing: course,
+            speed: speed,
+            horizontalAccuracy: horizontalAccuracy,
+            verticalAccuracy: verticalAccuracy,
+            timestamp: Int64(timestamp.timeIntervalSince1970 * 1000)
+        )
     }
 }
 
 extension CLHeading {
-    func toDict() -> [String: Any]? {
-        return ["magneticHeading": magneticHeading,
-                "trueHeading": trueHeading,
-                "headingAccuracy": headingAccuracy,
-                "x": x,
-                "y": y,
-                "z": z,
-                "timestamp": Int(timestamp.timeIntervalSince1970 * 1000)]
+    /// The heading as `mapOnUserLocationUpdated` reports it, timestamp in
+    /// milliseconds since the epoch.
+    func toPigeon() -> PgUserHeading {
+        return PgUserHeading(
+            magneticHeading: magneticHeading,
+            trueHeading: trueHeading,
+            headingAccuracy: headingAccuracy,
+            x: x,
+            y: y,
+            z: z,
+            timestamp: Int64(timestamp.timeIntervalSince1970 * 1000)
+        )
     }
 }
 
 extension CLLocationCoordinate2D {
-    func toArray() -> [Double] {
-        return [latitude, longitude]
-    }
-
-    static func fromArray(_ array: [Double]) -> CLLocationCoordinate2D {
-        return CLLocationCoordinate2D(latitude: array[0], longitude: array[1])
+    func toPigeon() -> PgLatLng {
+        return PgLatLng(latitude: latitude, longitude: longitude)
     }
 }
 
 extension MLNCoordinateBounds {
-    func toArray() -> [[Double]] {
-        return [sw.toArray(), ne.toArray()]
+    func toPigeon() -> PgLatLngBounds {
+        return PgLatLngBounds(southwest: sw.toPigeon(), northeast: ne.toPigeon())
     }
 
-    static func fromArray(_ array: [[Double]]) -> MLNCoordinateBounds {
-        let southwest = CLLocationCoordinate2D.fromArray(array[0])
-        let northeast = CLLocationCoordinate2D.fromArray(array[1])
-        return MLNCoordinateBounds(sw: southwest, ne: northeast)
+    /// The bounds with south below north and west left of east, as Android's
+    /// `LatLngBounds.Builder` makes them. A west east of the east never spans
+    /// the antimeridian: it spans the longitudes between the two.
+    var ordered: MLNCoordinateBounds {
+        return MLNCoordinateBounds(
+            sw: CLLocationCoordinate2D(
+                latitude: min(sw.latitude, ne.latitude),
+                longitude: min(sw.longitude, ne.longitude)
+            ),
+            ne: CLLocationCoordinate2D(
+                latitude: max(sw.latitude, ne.latitude),
+                longitude: max(sw.longitude, ne.longitude)
+            )
+        )
+    }
+
+    /// The nearest point inside the ordered bounds to `coordinate`, latitude and
+    /// longitude clamped apart as MapLibre Native's `LatLngBounds::constrain`
+    /// does, or nil when `coordinate` is inside. A longitude is also tried a
+    /// world away: MLNMapView wraps it, so past the antimeridian the nearest
+    /// edge is the one across it. `tolerance`, in degrees, absorbs the rounding
+    /// of a camera already on an edge.
+    func clamping(
+        _ coordinate: CLLocationCoordinate2D,
+        tolerance: CLLocationDegrees = 1e-9
+    ) -> CLLocationCoordinate2D? {
+        func distance(_ value: Double, from low: Double, to high: Double) -> Double {
+            return max(low - value, value - high, 0)
+        }
+        let longitude = [
+            coordinate.longitude,
+            coordinate.longitude - 360,
+            coordinate.longitude + 360,
+        ].min {
+            distance($0, from: sw.longitude, to: ne.longitude)
+                < distance($1, from: sw.longitude, to: ne.longitude)
+        }!
+        let latitudeOutside = distance(coordinate.latitude, from: sw.latitude, to: ne.latitude) > tolerance
+        let longitudeOutside = distance(longitude, from: sw.longitude, to: ne.longitude) > tolerance
+        guard latitudeOutside || longitudeOutside else { return nil }
+        return CLLocationCoordinate2D(
+            latitude: latitudeOutside
+                ? min(max(coordinate.latitude, sw.latitude), ne.latitude)
+                : coordinate.latitude,
+            longitude: longitudeOutside
+                ? min(max(longitude, sw.longitude), ne.longitude)
+                : coordinate.longitude
+        )
     }
 }
 
-extension UIImage {
-    static func loadFromFile(imagePath: String, imageName: String) -> UIImage? {
-        // Add the trailing slash in path if missing.
-        let path = imagePath.hasSuffix("/") ? imagePath : "\(imagePath)/"
-        // Build scale dependant image path.
-        var scale = UIScreen.main.scale
-        var absolutePath = "\(path)\(scale)x/\(imageName)"
-        // Check if the image exists, if not try a an unscaled path.
-        if Bundle.main.path(forResource: absolutePath, ofType: nil) == nil {
-            absolutePath = "\(path)\(imageName)"
-        } else {
-            // found asset with higher resolution - increase scale even further to compensate
-            scale *= scale
-        }
-        // Load image if it exists.
-        if let path = Bundle.main.path(forResource: absolutePath, ofType: nil) {
-            let imageUrl = URL(fileURLWithPath: path)
-            if let imageData: Data = try? Data(contentsOf: imageUrl),
-               let image = UIImage(data: imageData, scale: scale)
-            {
-                return image
-            }
-        }
-        return nil
+extension PgLatLng {
+    var coordinate: CLLocationCoordinate2D {
+        return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    /// Whether both coordinates are finite. MapLibre aborts the app on a NaN
+    /// or infinite one.
+    var isFinite: Bool {
+        return latitude.isFinite && longitude.isFinite
+    }
+}
+
+extension PgLatLngBounds {
+    var coordinateBounds: MLNCoordinateBounds {
+        return MLNCoordinateBounds(sw: southwest.coordinate, ne: northeast.coordinate)
+    }
+}
+
+extension PgLatLngQuad {
+    /// Whether the four corners are finite.
+    var isFinite: Bool {
+        return [topLeft, topRight, bottomRight, bottomLeft].allSatisfy(\.isFinite)
+    }
+
+    var coordinateQuad: MLNCoordinateQuad {
+        return MLNCoordinateQuad(
+            topLeft: topLeft.coordinate,
+            bottomLeft: bottomLeft.coordinate,
+            bottomRight: bottomRight.coordinate,
+            topRight: topRight.coordinate
+        )
+    }
+}
+
+extension PgEdgeInsets {
+    var edgeInsets: UIEdgeInsets {
+        return UIEdgeInsets(
+            top: CGFloat(top),
+            left: CGFloat(left),
+            bottom: CGFloat(bottom),
+            right: CGFloat(right)
+        )
     }
 }
 
 public extension UIColor {
+    /// The color of a CSS hex color: `#rgb`, `#rgba`, `#rrggbb` or `#rrggbbaa`,
+    /// with the alpha last, as MapLibre reads it on Android and web. Nil for
+    /// anything else, such as a digit that is not hex.
     convenience init?(hexString: String) {
-        let r, g, b, a: CGFloat
-
-        if hexString.hasPrefix("#") {
-            let start = hexString.index(hexString.startIndex, offsetBy: 1)
-            let hexColor = hexString[start...]
-
-            let scanner = Scanner(string: String(hexColor))
-            var hexNumber: UInt64 = 0
-
-            if hexColor.count == 6 {
-                if scanner.scanHexInt64(&hexNumber) {
-                    r = CGFloat((hexNumber & 0xFF0000) >> 16) / 255
-                    g = CGFloat((hexNumber & 0x00FF00) >> 8) / 255
-                    b = CGFloat(hexNumber & 0x0000FF) / 255
-                    a = 255
-
-                    self.init(red: r, green: g, blue: b, alpha: a)
-                    return
-                }
-            } else if hexColor.count == 8 {
-                if scanner.scanHexInt64(&hexNumber) {
-                    a = CGFloat((hexNumber & 0xFF00_0000) >> 24) / 255
-                    r = CGFloat((hexNumber & 0x00FF_0000) >> 16) / 255
-                    g = CGFloat((hexNumber & 0x0000_FF00) >> 8) / 255
-                    b = CGFloat(hexNumber & 0x0000_00FF) / 255
-
-                    self.init(red: r, green: g, blue: b, alpha: a)
-                    return
-                }
+        guard hexString.hasPrefix("#") else { return nil }
+        let digits = hexString.dropFirst()
+        guard [3, 4, 6, 8].contains(digits.count),
+              digits.allSatisfy({ $0.isASCII && $0.isHexDigit })
+        else {
+            return nil
+        }
+        let nibbles: [Int] = digits.compactMap { $0.hexDigitValue }
+        var channels: [CGFloat] = []
+        if nibbles.count <= 4 {
+            // A short color repeats each digit: #f80 is #ff8800.
+            for nibble in nibbles {
+                channels.append(CGFloat(nibble * 17) / 255)
+            }
+        } else {
+            for index in stride(from: 0, to: nibbles.count, by: 2) {
+                let byte: Int = nibbles[index] * 16 + nibbles[index + 1]
+                channels.append(CGFloat(byte) / 255)
             }
         }
-
-        return nil
-    }
-}
-
-extension Array {
-    var tail: Array {
-        return Array(dropFirst())
+        self.init(
+            red: channels[0],
+            green: channels[1],
+            blue: channels[2],
+            alpha: channels.count == 4 ? channels[3] : 1
+        )
     }
 }

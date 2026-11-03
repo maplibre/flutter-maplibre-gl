@@ -15,8 +15,31 @@ class VectorSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  ///
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row. With
+  /// `scheme` set to `tms`, the row counts from the bottom.
+  ///
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  ///
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  ///
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  ///
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  ///
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -180,8 +203,31 @@ class RasterSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  ///
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row. With
+  /// `scheme` set to `tms`, the row counts from the bottom.
+  ///
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  ///
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  ///
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  ///
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  ///
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -209,8 +255,7 @@ class RasterSourceProperties implements SourceProperties {
   ///   default: 22
   final double? maxzoom;
 
-  /// The minimum visual size to display tiles for this layer. Only
-  /// configurable for raster layers.
+  /// The minimum visual size to display tiles for this source.
   ///
   /// Type: number
   ///   default: 512
@@ -325,8 +370,30 @@ class RasterDemSourceProperties implements SourceProperties {
   final String? url;
 
   /// An array of one or more tile source URLs, as in the TileJSON spec.
+  /// These tokens in a URL are replaced for each tile:
+  ///
+  /// - `{z}`, `{x}` and `{y}` - The tile's zoom level, column and row.
+  ///
+  /// - `{quadkey}` - The tile's quadkey, as Bing Maps addresses tiles.
+  ///
+  /// - `{bbox-epsg-3857}` - The tile's bounding box in EPSG:3857 meters, as
+  /// `minX,minY,maxX,maxY`, for WMS requests.
+  ///
+  /// - `{bbox}` - Experimental. The tile's bounding box as
+  /// `minX,minY,maxX,maxY` in the units of the map's coordinate system.
+  /// With the `mercator`, `globe` and `vertical-perspective` projections
+  /// this is the same as `{bbox-epsg-3857}`.
+  ///
+  /// - `{prefix}` - Two hexadecimal digits from the tile's column and row,
+  /// to spread requests over host names.
+  ///
+  /// - `{ratio}` - `@2x` where the device pixel ratio is above 1, empty
+  /// otherwise.
   ///
   /// Type: array
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
   final List<String>? tiles;
 
   /// An array containing the longitude and latitude of the southwest and
@@ -354,8 +421,7 @@ class RasterDemSourceProperties implements SourceProperties {
   ///   default: 22
   final double? maxzoom;
 
-  /// The minimum visual size to display tiles for this layer. Only
-  /// configurable for raster layers.
+  /// The minimum visual size to display tiles for this source.
   ///
   /// Type: number
   ///   default: 512
@@ -574,11 +640,15 @@ class GeojsonSourceProperties implements SourceProperties {
   /// If the data is a collection of point features, setting this to true
   /// clusters the points by radius into groups. Cluster groups become new
   /// `Point` features in the source with additional properties:
+  ///
   /// * `cluster` Is `true` if the point is a cluster
+  ///
   /// * `cluster_id` A unique id for the cluster to be used in conjunction
   /// with the [cluster inspection
   /// methods](https://maplibre.org/maplibre-gl-js/docs/API/classes/GeoJSONSource/#getclusterexpansionzoom)
+  ///
   /// * `point_count` Number of original points grouped into this cluster
+  ///
   /// * `point_count_abbreviated` An abbreviated point count
   ///
   /// Type: boolean
@@ -614,17 +684,24 @@ class GeojsonSourceProperties implements SourceProperties {
   /// is any expression function that accepts at least 2 operands (e.g.
   /// `"+"` or `"max"`) - it accumulates the property value from
   /// clusters/points the cluster contains; `map_expression` produces the
-  /// value of a single point.Example: `{"sum": ["+", ["get",
-  /// "scalerank"]]}`.For more advanced use cases, in place of `operator`,
-  /// you can use a custom reduce expression that references a special
-  /// `["accumulated"]` value, e.g.:`{"sum": [["+", ["accumulated"],
-  /// ["get", "sum"]], ["get", "scalerank"]]}`
+  /// value of a single point.
+  ///
+  /// Example: `{"sum": ["+", ["get", "scalerank"]]}`.
+  ///
+  /// For more advanced use cases, in place of `operator`, you can use a
+  /// custom reduce expression that references a special `["accumulated"]`
+  /// value, e.g.:
+  ///
+  /// `{"sum": [["+", ["accumulated"], ["get", "sum"]], ["get",
+  /// "scalerank"]]}`
   ///
   /// Type: *
   final Object? clusterProperties;
 
   /// Whether to calculate line distance metrics. This is required for line
-  /// layers that specify `line-gradient` values.
+  /// layers that specify
+  /// [`line-gradient`](https://maplibre.org/maplibre-style-spec/layers/#line-gradient)
+  /// values.
   ///
   /// Type: boolean
   ///   default: false
@@ -744,6 +821,10 @@ class GeojsonSourceProperties implements SourceProperties {
   }
 }
 
+/// A video drawn over four corners of the map.
+///
+/// **Platform support**: web only. On Android and iOS
+/// `MapLibreMapController.addSource` throws `UNSUPPORTED_SOURCE_TYPE`.
 class VideoSourceProperties implements SourceProperties {
   /// URLs to video content in order of preferred format.
   ///
@@ -794,13 +875,18 @@ class VideoSourceProperties implements SourceProperties {
   }
 }
 
+/// An image drawn from a url over four corners of the map. For image bytes, use
+/// `MapLibreMapController.addImageSource`.
 class ImageSourceProperties implements SourceProperties {
-  /// URL that points to an image.
+  /// URL that points to an image. Required: `addSource` throws
+  /// `INVALID_ARGUMENT` without it.
   ///
   /// Type: string
   final String? url;
 
-  /// Corners of image specified in longitude, latitude pairs.
+  /// Corners of the image as [longitude, latitude]: top left, top right,
+  /// bottom right, bottom left. Required: `addSource` throws
+  /// `INVALID_ARGUMENT` without four valid corners.
   ///
   /// Type: array
   final List<List>? coordinates;

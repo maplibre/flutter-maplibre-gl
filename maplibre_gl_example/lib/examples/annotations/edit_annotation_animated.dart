@@ -50,16 +50,17 @@ class _EditAnnotationAnimatedBodyState
       vsync: this,
     );
 
-    _colorAnimation = ColorTween(
-      begin: Colors.blue,
-      end: Colors.red,
-    ).animate(_colorAnimationController)..addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        unawaited(_colorAnimationController.reverse());
-      } else if (status == AnimationStatus.dismissed) {
-        unawaited(_colorAnimationController.forward());
-      }
-    });
+    _colorAnimation =
+        ColorTween(
+          begin: Colors.blue,
+          end: Colors.red,
+        ).animate(_colorAnimationController)..addStatusListener((status) {
+          if (status == AnimationStatus.completed) {
+            unawaited(_colorAnimationController.reverse());
+          } else if (status == AnimationStatus.dismissed) {
+            unawaited(_colorAnimationController.forward());
+          }
+        });
 
     _colorAnimationController.addListener(() {
       unawaited(_updateAnnotationColors());
@@ -139,8 +140,8 @@ class _EditAnnotationAnimatedBodyState
   ///
   /// The animation listener starts this without awaiting it, so a call is
   /// usually in flight when the page is closed. Resuming after that reaches a
-  /// controller whose map is gone and fails with a `MissingPluginException`,
-  /// so every await below is followed by this check as well.
+  /// controller whose map is gone and fails with `MAP_DISPOSED`, so every
+  /// await below is followed by this check as well.
   bool get _canDrawAnnotations =>
       mounted &&
       _controller != null &&
@@ -401,19 +402,19 @@ class _EditAnnotationAnimatedBodyState
             ExampleButton(
               label: hasAnnotations ? 'Reset Annotations' : 'Add Annotations',
               icon: hasAnnotations ? Icons.refresh : Icons.add,
-              onPressed:
-                  hasController
-                      ? () async {
-                        await _clearAnnotations();
-                        await _addInitialAnnotations();
-                      }
-                      : null,
+              onPressed: hasController
+                  ? () async {
+                      await _clearAnnotations();
+                      await _addInitialAnnotations();
+                    }
+                  : null,
             ),
             ExampleButton(
               label: 'Clear All',
               icon: Icons.clear,
-              onPressed:
-                  hasController && hasAnnotations ? _clearAnnotations : null,
+              onPressed: hasController && hasAnnotations
+                  ? _clearAnnotations
+                  : null,
               style: ExampleButtonStyle.destructive,
             ),
           ],
@@ -424,12 +425,9 @@ class _EditAnnotationAnimatedBodyState
             ExampleButton(
               label: _isAnimating ? 'Stop Movement' : 'Start Movement',
               icon: _isAnimating ? Icons.stop : Icons.play_arrow,
-              onPressed:
-                  hasController && hasAnnotations
-                      ? (_isAnimating
-                          ? _stopAnimation
-                          : _startPositionAnimation)
-                      : null,
+              onPressed: hasController && hasAnnotations
+                  ? (_isAnimating ? _stopAnimation : _startPositionAnimation)
+                  : null,
             ),
           ],
         ),
@@ -444,8 +442,9 @@ class _EditAnnotationAnimatedBodyState
             ExampleButton(
               label: 'Animate Opacity',
               icon: Icons.opacity,
-              onPressed:
-                  hasController && hasAnnotations ? _animateOpacity : null,
+              onPressed: hasController && hasAnnotations
+                  ? _animateOpacity
+                  : null,
             ),
           ],
         ),

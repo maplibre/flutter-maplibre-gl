@@ -2,78 +2,65 @@ part of '../maplibre_gl_platform_interface.dart';
 
 /// Easing curve for [MapLibreMapController.easeCamera] animations.
 ///
-/// Platform support varies — iOS exposes four distinct timing functions via
-/// `CAMediaTimingFunction`, Web implements each value as a cubic Bezier passed
-/// to MapLibre GL JS's `easeTo({easing})`, while MapLibre Android only exposes
-/// a boolean `easingInterpolator` flag (linear vs. the native
-/// ease-in/ease-out). Per-value behavior is documented below.
+/// Web eases along each curve exactly. MapLibre Android offers only linear or
+/// MapLibre Native's own ease out, `(0, 0, 0.25, 1)`, used for every other
+/// value. MapLibre iOS can only ease along curves starting with `(0, 0)`, so
+/// [easeInOut] falls back to that ease out there too.
 ///
-/// When `easeCamera` is called without an interpolation, each platform uses
-/// its historical default (iOS, Android, and Web all default to an ease-in/ease-out curve).
+/// Without an interpolation, `easeCamera` uses [easeInOut], so the ease out
+/// above, on Android and iOS, and MapLibre GL JS's own `(0.25, 0.1, 0.25, 1)`
+/// on web.
 enum CameraAnimationInterpolation {
-  /// Constant velocity throughout the animation (no easing).
+  /// Constant speed throughout the animation, on every platform.
   ///
-  /// Best for continuous tracking scenarios (e.g. following a moving GPS
-  /// target) where velocity discontinuities between successive `easeCamera`
-  /// calls would produce perceptible "animated jumps".
-  ///
-  /// Fully supported on iOS, Android, and Web.
+  /// Best for continuous tracking, such as following a moving GPS target,
+  /// where each new `easeCamera` call would otherwise change speed abruptly.
   linear,
 
-  /// Accelerate at the start and decelerate at the end.
+  /// Accelerate at the start and decelerate at the end, cubic Bezier
+  /// `(0.42, 0, 0.58, 1)`.
   ///
-  /// Produces a smooth, natural-feeling movement. This is the platform
-  /// default on iOS, Android, and Web when no interpolation is specified.
+  /// Android, iOS: MapLibre Native's ease out, `(0, 0, 0.25, 1)`.
   easeInOut,
 
-  /// Decelerate towards the end of the animation.
+  /// Decelerate towards the end, cubic Bezier `(0, 0, 0.58, 1)`.
   ///
-  /// iOS: mapped to `CAMediaTimingFunctionName.easeOut`.
-  ///
-  /// Web: implemented as cubic Bezier `(0, 0, 0.58, 1)`.
-  ///
-  /// Android: MapLibre Android does not expose custom timing curves via
-  /// [easeCamera], so this falls back to the default ease-in/ease-out and
-  /// is indistinguishable from [easeInOut] on Android.
+  /// Android: MapLibre Native's ease out, `(0, 0, 0.25, 1)`.
   easeOut,
 
-  /// Material Design "fast out, linear in" curve — cubic Bezier
-  /// `(0.4, 0.0, 1.0, 1.0)`. Accelerates quickly, then approaches the target
-  /// at constant velocity.
+  /// Material Design "fast out, linear in", cubic Bezier `(0.4, 0, 1, 1)`:
+  /// accelerate and reach the target at full speed.
   ///
-  /// iOS: implemented exactly via `CAMediaTimingFunction(controlPoints:)`.
-  ///
-  /// Web: implemented exactly via MapLibre GL JS `easeTo({easing})`.
-  ///
-  /// Android: MapLibre Android does not expose custom timing curves via
-  /// [easeCamera], so this falls back to the default ease-in/ease-out and
-  /// is indistinguishable from [easeInOut] on Android.
+  /// Android: MapLibre Native's ease out, `(0, 0, 0.25, 1)`. iOS:
+  /// `(0, 0, 0.4, 0)`, within 1% of the way.
   fastOutLinearIn,
 }
 
-/// The default instance of [MapLibrePlatform] to use.
 typedef OnPlatformViewCreatedCallback = void Function(int);
 
 abstract class MapLibrePlatform {
-  static MapLibreMethodChannel? _instance;
+  static const MapLibrePlatform Function() _unregistered =
+      _UnregisteredMapLibrePlatform.new;
 
-  /// The default instance of [MapLibrePlatform] to use.
+  /// Builds the platform of each map.
   ///
-  /// Defaults to [MapLibreMethodChannel].
-  ///
-  /// Platform-specific plugins should set this with their own platform-specific
-  /// class that extends [MapLibrePlatform] when they register themselves.
-  static MapLibrePlatform Function() createInstance =
-      () => _instance ?? MapLibreMethodChannel();
+  /// Platform packages replace it when they register themselves, and tests
+  /// can replace it with a fake. Until then it builds a placeholder that shows
+  /// that the platform is not supported and answers no call.
+  static MapLibrePlatform Function() createInstance = _unregistered;
 
-  final onInfoWindowTappedPlatform = ArgumentCallbacks<String>();
+  /// Whether [createInstance] was replaced, by a platform package or a test.
+  ///
+  /// Assigning back the factory read before any replacement makes this
+  /// `false` again.
+  static bool get isRegistered => !identical(createInstance, _unregistered);
 
   final onFeatureTappedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
   final onFeatureHoverPlatform = ArgumentCallbacks<Map<String, dynamic>>();
   final onFeatureDraggedPlatform = ArgumentCallbacks<Map<String, dynamic>>();
 
-  final onCameraMoveStartedPlatform = ArgumentCallbacks<void>();
+  final onCameraMoveStartedPlatform = ArgumentCallbacks<CameraMoveReason>();
 
   final onCameraMovePlatform = ArgumentCallbacks<CameraPosition>();
 
@@ -121,7 +108,10 @@ abstract class MapLibrePlatform {
   /// Pushes an app-provided location into the map's user-location component.
   ///
   /// Requires the map to be created with
-  /// `locationSource: ManualLocationSource()` and `myLocationEnabled: true`.
+  /// `locationSource: ManualLocationSource()`, or fails with
+  /// `MANUAL_LOCATION_SOURCE_DISABLED`. While `myLocationEnabled` is off the
+  /// last location is kept, hidden and without `onUserLocationUpdated`, and
+  /// the puck shows up there when it turns on.
   ///
   /// Supported on Android, iOS and web.
   Future<void> setManualLocation(ManualLocationUpdate update);
@@ -174,6 +164,9 @@ abstract class MapLibrePlatform {
   Future<bool> editGeoJsonUrl(String id, String url);
 
   /// Sets a filter for a layer.
+  @Deprecated(
+    'Use setFilter instead. MapLibreMapController.setLayerFilter calls it',
+  )
   Future<bool> setLayerFilter(String layerId, String filter);
 
   /// Gets the current map style as JSON string.
@@ -255,7 +248,12 @@ abstract class MapLibrePlatform {
 
   Future<LatLngBounds> getVisibleRegion();
 
-  Future<void> addImage(String name, Uint8List bytes, [bool sdf = false]);
+  Future<void> addImage(
+    String name,
+    Uint8List bytes, [
+    bool sdf = false,
+    double? pixelRatio,
+  ]);
 
   Future<void> addImageSource(
     String imageSourceId,
@@ -285,6 +283,13 @@ abstract class MapLibrePlatform {
   );
 
   Future<void> removeLayer(String imageLayerId);
+
+  /// Moves the layer with [layerId] to a new position in the layer stack.
+  ///
+  /// When viewing the map, the layer will appear beneath [belowLayerId].
+  /// If [belowLayerId] is omitted, the layer is moved to the top of the
+  /// layer stack, appearing above all other layers.
+  Future<void> moveLayer(String layerId, {String? belowLayerId});
 
   Future<List> getLayerIds();
 
@@ -459,6 +464,7 @@ abstract class MapLibrePlatform {
     String? sourceLayer,
     double? minzoom,
     double? maxzoom,
+    dynamic filter,
   });
 
   Future<void> addSource(String sourceId, SourceProperties properties);
@@ -479,7 +485,29 @@ abstract class MapLibrePlatform {
   /// Sets one property of the style's global state.
   Future<void> setGlobalStateProperty(String name, Object? value);
 
+  /// The style's global state: each property with its current value.
+  Future<Map<String, dynamic>> getGlobalState();
+
   Future<void> setLayerVisibility(String layerId, bool visible);
+
+  /// Shows or hides every layer in [layerIds] with one platform call, all in
+  /// the same UI turn so the changes render together.
+  ///
+  /// Ids with no layer in the style are skipped and returned, in the order
+  /// given and without repeats; the other layers are still changed. An empty
+  /// list does nothing.
+  Future<List<String>> setLayersVisibility(
+    List<String> layerIds,
+    bool visible,
+  );
+
+  /// Sets the zoom range, [minzoom] inclusive and [maxzoom] exclusive, in
+  /// which the layer with [layerId] is drawn.
+  Future<void> setLayerZoomRange(
+    String layerId,
+    double minzoom,
+    double maxzoom,
+  );
 
   /// Returns the visibility of a layer.
   /// Returns true if visible, false if hidden, null if layer not found.
@@ -520,7 +548,6 @@ abstract class MapLibrePlatform {
   @mustCallSuper
   void dispose() {
     // clear all callbacks to avoid cyclic refs
-    onInfoWindowTappedPlatform.clear();
     onFeatureTappedPlatform.clear();
     onFeatureHoverPlatform.clear();
     onFeatureDraggedPlatform.clear();
@@ -537,4 +564,21 @@ abstract class MapLibrePlatform {
     onMapIdlePlatform.clear();
     onUserLocationUpdatedPlatform.clear();
   }
+}
+
+/// The platform of a map on a host where no implementation registered, such
+/// as a desktop app. It shows that the platform is not supported, and any
+/// call throws an [UnsupportedError].
+class _UnregisteredMapLibrePlatform extends MapLibrePlatform {
+  @override
+  Widget buildView(
+    Map<String, dynamic> creationParams,
+    OnPlatformViewCreatedCallback onPlatformViewCreated,
+    Set<Factory<OneSequenceGestureRecognizer>>? gestureRecognizers,
+  ) => Text('$defaultTargetPlatform is not yet supported by the maps plugin');
+
+  @override
+  Never noSuchMethod(Invocation invocation) => throw UnsupportedError(
+    'No MapLibre implementation is registered for $defaultTargetPlatform.',
+  );
 }

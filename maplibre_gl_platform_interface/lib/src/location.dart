@@ -15,8 +15,9 @@ class LatLng {
   /// The longitude is normalized to the half-open interval from -180.0
   /// (inclusive) to +180.0 (exclusive)
   const LatLng(double latitude, double longitude)
-    : latitude =
-          (latitude < -90.0 ? -90.0 : (90.0 < latitude ? 90.0 : latitude)),
+    : latitude = (latitude < -90.0
+          ? -90.0
+          : (90.0 < latitude ? 90.0 : latitude)),
       longitude = (longitude + 180.0) % 360.0 - 180.0;
 
   /// The latitude in degrees between -90.0 and 90.0, both inclusive.
@@ -277,10 +278,10 @@ class ManualLocationUpdate {
   /// Time the location was observed. Defaults to [DateTime.now] when omitted.
   final DateTime? timestamp;
 
-  /// Serializes this update for the platform channel.
+  /// This update as a map, which the web implementation reads.
   ///
-  /// Mirrors existing conventions: [LatLng] becomes `[lat, lng]`, the timestamp
-  /// becomes epoch milliseconds, and null fields are omitted.
+  /// [LatLng] becomes `[lat, lng]`, the timestamp becomes epoch milliseconds,
+  /// and null fields are omitted.
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{
       'position': <double>[target.latitude, target.longitude],
