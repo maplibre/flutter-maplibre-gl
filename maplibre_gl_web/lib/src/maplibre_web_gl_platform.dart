@@ -58,6 +58,14 @@ class MapLibreMapController extends MapLibrePlatform
   bool _trackUserLocation = false;
   LatLng? _myLastLocation;
 
+  // Browser location while not tracking. The GeolocateControl cannot show the
+  // user without moving the camera, so in mode none the plugin watches the
+  // position itself and draws the puck with a [ManualLocationPuck].
+  int? _passiveWatchId;
+  ManualLocationPuck? _passivePuck;
+  bool _browserLocationScheduled = false;
+  bool _triggerPending = false;
+
   // Manual (app-provided) location source. When `locationSource` is 'manual'
   // and `myLocationEnabled` is true, web renders its own puck (see
   // [ManualLocationPuck]) instead of the browser GeolocateControl, which cannot
@@ -129,6 +137,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     _idleWaits.clear();
     _removeManualPuck();
+    _stopPassiveLocation();
     _forgetImageUrls();
     for (final sub in _mapSubscriptions) {
       sub.unsubscribe();
@@ -1541,8 +1550,10 @@ class MapLibreMapController extends MapLibrePlatform
           timeout: _timeout > 0 ? _timeout : null,
         ),
         trackUserLocation: _trackUserLocation,
-        showAccuracyCircle: true,
-        showUserLocation: true,
+        // In mode none the passive puck shows the user; a second dot from the
+        // control would sit on top of it.
+        showAccuracyCircle: _trackUserLocation,
+        showUserLocation: _trackUserLocation,
       ),
     );
     _geolocateControl!.on('geolocate', (e) {
@@ -1550,26 +1561,15 @@ class MapLibreMapController extends MapLibrePlatform
         e as GeolocateResultEventJsImpl,
       );
       final coords = event.coords;
-      _myLastLocation = LatLng(
-        coords.latitude.toDouble(),
-        coords.longitude.toDouble(),
-      );
-      onUserLocationUpdatedPlatform(
-        UserLocation(
-          position: LatLng(
-            coords.latitude.toDouble(),
-            coords.longitude.toDouble(),
-          ),
-          altitude: coords.altitude?.toDouble(),
-          bearing: coords.heading?.toDouble(),
-          speed: coords.speed?.toDouble(),
-          horizontalAccuracy: coords.accuracy?.toDouble(),
-          verticalAccuracy: coords.altitudeAccuracy?.toDouble(),
-          heading: null,
-          timestamp: DateTime.fromMillisecondsSinceEpoch(
-            event.timestamp.toInt(),
-          ),
-        ),
+      _reportBrowserFix(
+        latitude: coords.latitude.toDouble(),
+        longitude: coords.longitude.toDouble(),
+        altitude: coords.altitude?.toDouble(),
+        heading: coords.heading?.toDouble(),
+        speed: coords.speed?.toDouble(),
+        accuracy: coords.accuracy?.toDouble(),
+        altitudeAccuracy: coords.altitudeAccuracy?.toDouble(),
+        timestamp: event.timestamp.toInt(),
       );
     });
     _geolocateControl!.on('trackuserlocationstart', (_) {
@@ -1599,6 +1599,130 @@ class MapLibreMapController extends MapLibrePlatform
       _map.removeControl(_geolocateControl);
       _geolocateControl = null;
     }
+  }
+
+  /// Shows the browser location: [_addGeolocateControl] now, and on the next
+  /// microtask either the tracking (when [trigger] is set) or the passive puck.
+  ///
+  /// Waiting a microtask lets the options applied together at creation
+  /// (enabled, tracking mode, source) settle first, so a map with a manual
+  /// source never asks the browser for the location.
+  void _showBrowserLocation({bool trigger = false}) {
+    _addGeolocateControl();
+    _triggerPending |= trigger;
+    if (_browserLocationScheduled) return;
+    _browserLocationScheduled = true;
+    scheduleMicrotask(() {
+      _browserLocationScheduled = false;
+      final trigger = _triggerPending;
+      _triggerPending = false;
+      if (_disposed ||
+          !_myLocationEnabled ||
+          _manualLocationSource ||
+          _geolocateControl == null) {
+        _stopPassiveLocation();
+      } else if (_trackUserLocation) {
+        _stopPassiveLocation();
+        if (trigger) _triggerGeolocateControl();
+      } else {
+        _startPassiveLocation();
+      }
+    });
+  }
+
+  /// Removes everything that shows the browser location.
+  void _hideBrowserLocation() {
+    _removeGeolocateControl();
+    _stopPassiveLocation();
+  }
+
+  /// Watches the browser position for the passive puck, restarting the watch
+  /// so changed engine options apply.
+  void _startPassiveLocation() {
+    final geolocation = web.window.navigator.geolocation;
+    final watchId = _passiveWatchId;
+    if (watchId != null) geolocation.clearWatch(watchId);
+    // Only the options the app set: an explicit null reads as a zero timeout,
+    // which WebKit fails at once without asking for permission.
+    final options = web.PositionOptions(
+      enableHighAccuracy: _enableHighAccuracy,
+    );
+    if (_maximumAge > 0) options.maximumAge = _maximumAge;
+    if (_timeout > 0) options.timeout = _timeout;
+    _passiveWatchId = geolocation.watchPosition(
+      _onPassivePosition.toJS,
+      _onPassiveError.toJS,
+      options,
+    );
+  }
+
+  void _stopPassiveLocation() {
+    final watchId = _passiveWatchId;
+    if (watchId != null) {
+      web.window.navigator.geolocation.clearWatch(watchId);
+      _passiveWatchId = null;
+    }
+    _passivePuck?.dispose();
+    _passivePuck = null;
+  }
+
+  void _onPassivePosition(web.GeolocationPosition position) {
+    if (_disposed || _passiveWatchId == null) return;
+    final coords = position.coords;
+    // Mode none never moves the camera, so the puck never reports tracking.
+    (_passivePuck ??= ManualLocationPuck(
+      _map,
+      onTrackingChanged: (_) {},
+    )).update(
+      LatLng(coords.latitude, coords.longitude),
+      accuracyMeters: coords.accuracy,
+    );
+    _reportBrowserFix(
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      altitude: coords.altitude,
+      heading: coords.heading,
+      speed: coords.speed,
+      accuracy: coords.accuracy,
+      altitudeAccuracy: coords.altitudeAccuracy,
+      timestamp: position.timestamp,
+    );
+  }
+
+  void _onPassiveError(web.GeolocationPositionError error) {
+    // Denied: the browser will not ask again, so stop watching. Other errors
+    // are transient and the watch keeps going.
+    if (error.code == web.GeolocationPositionError.PERMISSION_DENIED) {
+      _stopPassiveLocation();
+    }
+  }
+
+  /// Reports a browser fix through onUserLocationUpdated and keeps it for
+  /// requestMyLocationLatLng.
+  void _reportBrowserFix({
+    required double latitude,
+    required double longitude,
+    required double? altitude,
+    required double? heading,
+    required double? speed,
+    required double? accuracy,
+    required double? altitudeAccuracy,
+    required int timestamp,
+  }) {
+    final position = LatLng(latitude, longitude);
+    _myLastLocation = position;
+    onUserLocationUpdatedPlatform(
+      UserLocation(
+        position: position,
+        altitude: altitude,
+        bearing: heading,
+        speed: speed,
+        horizontalAccuracy: accuracy,
+        verticalAccuracy: altitudeAccuracy,
+        heading: null,
+        timestamp: DateTime.fromMillisecondsSinceEpoch(timestamp),
+      ),
+    );
   }
 
   void _updateNavigationControl({
@@ -1863,16 +1987,17 @@ class MapLibreMapController extends MapLibrePlatform
         // replays the last fix, also one pushed while disabled, so the puck
         // shows up there and reports it, as iOS does; without one it is built
         // on the next fix pushed via setManualLocation.
-        _removeGeolocateControl();
+        _hideBrowserLocation();
         _showManualPuck();
         if (!wasEnabled) {
           if (_lastManualFix case final fix?) _reportManualFix(fix);
         }
-      } else {
-        _addGeolocateControl();
+      } else if (!wasEnabled || _geolocateControl == null) {
+        // Resumes tracking too when the mode was kept while disabled.
+        _showBrowserLocation(trigger: true);
       }
     } else {
-      _removeGeolocateControl();
+      _hideBrowserLocation();
       _removeManualPuck();
     }
   }
@@ -1910,8 +2035,7 @@ class MapLibreMapController extends MapLibrePlatform
     }
     if (shouldTrack != _trackUserLocation) {
       _trackUserLocation = shouldTrack;
-      _addGeolocateControl();
-      _triggerGeolocateControl();
+      _showBrowserLocation(trigger: true);
     }
   }
 
@@ -1929,8 +2053,7 @@ class MapLibreMapController extends MapLibrePlatform
     _maximumAge = maximumAge;
     _timeout = timeout;
     if (changed && _geolocateControl != null) {
-      _addGeolocateControl();
-      _triggerGeolocateControl();
+      _showBrowserLocation(trigger: true);
     }
   }
 
@@ -1941,9 +2064,10 @@ class MapLibreMapController extends MapLibrePlatform
     // GeolocateControl; in 'platform' mode we keep the default control.
     // Applied at activation; either call order (source vs. enabled) is fine
     // because both consult these flags.
+    final wasManual = _manualLocationSource;
     _manualLocationSource = token == 'manual';
     if (_manualLocationSource) {
-      _removeGeolocateControl();
+      _hideBrowserLocation();
       // The puck builds its markers lazily on the first fix; ensuring it here
       // (when enabled) seeds the tracking mode that `Convert` recorded via
       // setMyLocationTrackingMode (called before this).
@@ -1952,7 +2076,9 @@ class MapLibreMapController extends MapLibrePlatform
       }
     } else {
       _removeManualPuck();
-      if (_myLocationEnabled) _addGeolocateControl();
+      if (_myLocationEnabled && (wasManual || _geolocateControl == null)) {
+        _showBrowserLocation(trigger: true);
+      }
     }
   }
 
