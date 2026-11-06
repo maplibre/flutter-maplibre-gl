@@ -94,7 +94,7 @@ android {
         } else {
             implementation 'org.maplibre.gl:android-sdk-opengl:13.7.1'
         }
-        implementation 'com.squareup.okhttp3:okhttp:5.4.0'
+        implementation 'com.squareup.okhttp3:okhttp:5.5.1'
         // Google Play Services location gives high accuracy the fused provider. FOSS builds, such
         // as F-Droid, set maplibre_gl.playServicesLocation=false in the app's gradle.properties:
         // then nothing from Google is downloaded or compiled, and high accuracy uses the platform
