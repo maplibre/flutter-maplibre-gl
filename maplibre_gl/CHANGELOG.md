@@ -1,3 +1,8 @@
+## Unreleased
+
+### Added
+* **Android, iOS**: [`takeSnapshot`](https://maplibre.org/flutter-maplibre-gl/advanced/snapshot/#attribution-and-logo) takes `attributionEnabled` and `logoEnabled`, to leave the attribution text of the style's sources or the MapLibre logo out of the picture. Both are drawn by default, as before, whatever the widget's own settings. Web snapshots never had either.
+
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Highlights

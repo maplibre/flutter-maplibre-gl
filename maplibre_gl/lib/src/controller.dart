@@ -2923,11 +2923,36 @@ class MapLibreMapController extends ChangeNotifier {
   /// The image has the screen's pixel density: a 300 x 300 snapshot is a
   /// 900 x 900 PNG on a 3x screen.
   ///
+  /// On Android and iOS, MapLibre draws the attribution text of the style's
+  /// sources and the MapLibre logo in a corner of the picture. Pass
+  /// `false` for [attributionEnabled] or [logoEnabled] to leave one out.
+  /// The two do not follow [MapLibreMap.attributionEnabled] and
+  /// [MapLibreMap.logoEnabled]: a map that hides its logo still gets the
+  /// logo on its snapshot unless `logoEnabled: false` is passed here.
+  ///
+  /// Most map data licenses require the attribution to be shown. Leave it
+  /// out only when the app shows it another way, for example next to the
+  /// picture.
+  ///
+  /// On web the picture never has either. The attribution and the logo are
+  /// HTML elements beside the map canvas, and the snapshot is the canvas
+  /// alone.
+  ///
   /// A newer call cancels one still running, which then fails with a
   /// [PlatformException] with code `SNAPSHOT_ERROR`. A snapshot the map is
   /// disposed before fails with `MAP_DISPOSED`.
-  Future<Uint8List> takeSnapshot({int? width, int? height}) {
-    return _maplibrePlatform.takeSnapshot(width: width, height: height);
+  Future<Uint8List> takeSnapshot({
+    int? width,
+    int? height,
+    bool attributionEnabled = true,
+    bool logoEnabled = true,
+  }) {
+    return _maplibrePlatform.takeSnapshot(
+      width: width,
+      height: height,
+      attributionEnabled: attributionEnabled,
+      logoEnabled: logoEnabled,
+    );
   }
 
   /// Method to set style string

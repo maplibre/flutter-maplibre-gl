@@ -3704,7 +3704,14 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
-  Future<Uint8List> takeSnapshot({int? width, int? height}) {
+  Future<Uint8List> takeSnapshot({
+    int? width,
+    int? height,
+    // Unused. The attribution and the logo are HTML elements beside the map
+    // canvas, and the snapshot is the canvas alone.
+    bool attributionEnabled = true,
+    bool logoEnabled = true,
+  }) {
     // As on Android and iOS, this leaves a snapshot already running alone.
     if (!_styleReady) {
       return Future.error(

@@ -4707,8 +4707,15 @@ class MapLibreMapHostApi {
   }
 
   /// Answers with a PNG of the map, [width] by [height] logical pixels, or
-  /// the size of the map view for what is null.
-  Future<Uint8List?> mapTakeSnapshot(int? width, int? height) async {
+  /// the size of the map view for what is null. [attributionEnabled] draws
+  /// the attribution text of the style's sources on the picture, and
+  /// [logoEnabled] draws the MapLibre logo.
+  Future<Uint8List?> mapTakeSnapshot(
+    int? width,
+    int? height,
+    bool attributionEnabled,
+    bool logoEnabled,
+  ) async {
     final pigeonVar_channelName =
         'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -4717,7 +4724,7 @@ class MapLibreMapHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[width, height],
+      <Object?>[width, height, attributionEnabled, logoEnabled],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

@@ -3050,9 +3050,11 @@ interface MapLibreMapHostApi {
   fun layerGetVisibility(layerId: String, callback: (Result<Boolean?>) -> Unit)
   /**
    * Answers with a PNG of the map, [width] by [height] logical pixels, or
-   * the size of the map view for what is null.
+   * the size of the map view for what is null. [attributionEnabled] draws
+   * the attribution text of the style's sources on the picture, and
+   * [logoEnabled] draws the MapLibre logo.
    */
-  fun mapTakeSnapshot(width: Long?, height: Long?, callback: (Result<ByteArray?>) -> Unit)
+  fun mapTakeSnapshot(width: Long?, height: Long?, attributionEnabled: Boolean, logoEnabled: Boolean, callback: (Result<ByteArray?>) -> Unit)
   /**
    * Answers with the ids of the layers of the style, in the order of the
    * style.
@@ -4632,7 +4634,9 @@ interface MapLibreMapHostApi {
             val args = message as List<Any?>
             val widthArg = args[0] as Long?
             val heightArg = args[1] as Long?
-            api.mapTakeSnapshot(widthArg, heightArg) { result: Result<ByteArray?> ->
+            val attributionEnabledArg = args[2] as Boolean
+            val logoEnabledArg = args[3] as Boolean
+            api.mapTakeSnapshot(widthArg, heightArg, attributionEnabledArg, logoEnabledArg) { result: Result<ByteArray?> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))

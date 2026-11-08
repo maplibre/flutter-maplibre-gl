@@ -188,10 +188,18 @@ final class MapHostApi: MapLibreMapHostApi {
     func mapTakeSnapshot(
         width: Int64?,
         height: Int64?,
+        attributionEnabled: Bool,
+        logoEnabled: Bool,
         completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void
     ) {
         run(pigeonResult(completion) { $0 as? FlutterStandardTypedData }) {
-            $0.mapTakeSnapshot(width: width, height: height, result: $1)
+            $0.mapTakeSnapshot(
+                width: width,
+                height: height,
+                attributionEnabled: attributionEnabled,
+                logoEnabled: logoEnabled,
+                result: $1
+            )
         }
     }
 
