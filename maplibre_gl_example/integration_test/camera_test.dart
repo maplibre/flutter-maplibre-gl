@@ -22,7 +22,10 @@
 // Run on web (chromedriver on :4444):
 //   flutter drive --driver=test_driver/integration_test.dart \
 //     --target=integration_test/camera_test.dart -d chrome
+import 'dart:convert' show jsonEncode;
 import 'dart:math';
+import 'dart:typed_data' show Uint8List;
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kIsWeb;
@@ -1763,6 +1766,38 @@ void main() {
       );
     }, skip: skip);
 
+    // takeSnapshot draws with the map's camera. Until the view has a size,
+    // initialCameraPosition is still to be applied, so the snapshot has to
+    // wait for it, or it shows the camera the view starts with: the whole
+    // world at zoom 0. The middle pixel tells the two cameras apart.
+    testWidgets('takes a snapshot showing the initial camera once it has one', (
+      tester,
+    ) async {
+      final size = ValueNotifier(Size.zero);
+      addTearDown(size.dispose);
+      // A red square around the initial camera's target. At zoom 2, centred
+      // on the target, it covers the middle of a 64 x 64 snapshot. The camera
+      // the view starts with is zoom 0 centred on (0, 0): there the square
+      // lies outside the snapshot, and the middle is the grey background.
+      const target = LatLng(40, 60);
+      final controller = await pumpMap(
+        tester,
+        resizableSize: size,
+        styleString: _styleWithSquare(target, halfSide: 5, color: '#ff0000'),
+        initialCameraPosition: const CameraPosition(target: target, zoom: 2),
+      );
+
+      final snapshot = controller.takeSnapshot(width: 64, height: 64);
+      await pumpFor(tester, const Duration(milliseconds: 300));
+      size.value = const Size(_mapSize, _mapSize);
+
+      final png = await pumpUntil(tester, snapshot, 'takeSnapshot');
+      final middle = await _middlePixel(png);
+      expect(middle.red, 255, reason: 'middle pixel $middle');
+      expect(middle.green, 0, reason: 'middle pixel $middle');
+      expect(middle.blue, 0, reason: 'middle pixel $middle');
+    }, skip: skip);
+
     testWidgets('fails a waiting call with MAP_DISPOSED when it goes away', (
       tester,
     ) async {
@@ -1782,6 +1817,70 @@ void main() {
       );
     }, skip: skip);
   });
+}
+
+/// A style like [offlineStyle], with a filled square of [color] added:
+/// [halfSide] degrees each way from [center].
+String _styleWithSquare(
+  LatLng center, {
+  required double halfSide,
+  required String color,
+}) {
+  final west = center.longitude - halfSide;
+  final east = center.longitude + halfSide;
+  final south = center.latitude - halfSide;
+  final north = center.latitude + halfSide;
+  return jsonEncode({
+    'version': 8,
+    'sources': {
+      'square': {
+        'type': 'geojson',
+        'data': {
+          'type': 'Feature',
+          'geometry': {
+            'type': 'Polygon',
+            'coordinates': [
+              [
+                [west, south],
+                [east, south],
+                [east, north],
+                [west, north],
+                [west, south],
+              ],
+            ],
+          },
+        },
+      },
+    },
+    'layers': [
+      {
+        'id': backgroundLayerId,
+        'type': 'background',
+        'paint': {'background-color': '#dddddd'},
+      },
+      {
+        'id': 'square',
+        'type': 'fill',
+        'source': 'square',
+        'paint': {'fill-color': color},
+      },
+    ],
+  });
+}
+
+/// The red, green and blue of the pixel in the middle of a PNG, each 0 to 255.
+Future<({int red, int green, int blue})> _middlePixel(Uint8List png) async {
+  final codec = await ui.instantiateImageCodec(png);
+  final image = (await codec.getNextFrame()).image;
+  codec.dispose();
+  final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+  final offset = ((image.height ~/ 2) * image.width + image.width ~/ 2) * 4;
+  image.dispose();
+  return (
+    red: data.getUint8(offset),
+    green: data.getUint8(offset + 1),
+    blue: data.getUint8(offset + 2),
+  );
 }
 
 /// Reads the live camera, failing if the platform has none.
