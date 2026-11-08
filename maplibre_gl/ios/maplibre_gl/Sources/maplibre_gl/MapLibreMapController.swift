@@ -400,8 +400,9 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         /// layout, the projection yields NaN and mbgl::LatLng aborts the app,
         /// so it waits for a real frame (#819).
         case movesCamera
-        /// Reads the camera or the projection. While the initial camera waits
-        /// for a size these calls wait too, or they would report zoom 0.
+        /// Reads the camera or the projection, or draws with the camera, as
+        /// takeSnapshot does. While the initial camera waits for a size these
+        /// calls wait too, or they would see zoom 0.
         case readsCamera
     }
 
