@@ -721,9 +721,19 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   Uint8List snapshotResult = Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]);
 
   @override
-  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
+  Future<Uint8List> takeSnapshot({
+    int? width,
+    int? height,
+    bool attributionEnabled = true,
+    bool logoEnabled = true,
+  }) async {
     calls.add(
-      PlatformCall('takeSnapshot', [], {'width': width, 'height': height}),
+      PlatformCall('takeSnapshot', [], {
+        'width': width,
+        'height': height,
+        'attributionEnabled': attributionEnabled,
+        'logoEnabled': logoEnabled,
+      }),
     );
     return snapshotResult;
   }

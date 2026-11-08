@@ -2730,8 +2730,10 @@ protocol MapLibreMapHostApi {
   /// is no such layer.
   func layerGetVisibility(layerId: String, completion: @escaping (Result<Bool?, Error>) -> Void)
   /// Answers with a PNG of the map, [width] by [height] logical pixels, or
-  /// the size of the map view for what is null.
-  func mapTakeSnapshot(width: Int64?, height: Int64?, completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
+  /// the size of the map view for what is null. [attributionEnabled] draws
+  /// the attribution text of the style's sources on the picture, and
+  /// [logoEnabled] draws the MapLibre logo.
+  func mapTakeSnapshot(width: Int64?, height: Int64?, attributionEnabled: Bool, logoEnabled: Bool, completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
   /// Answers with the ids of the layers of the style, in the order of the
   /// style.
   func styleGetLayerIds(completion: @escaping (Result<[String], Error>) -> Void)
@@ -4260,14 +4262,18 @@ class MapLibreMapHostApiSetup {
       layerGetVisibilityChannel.setMessageHandler(nil)
     }
     /// Answers with a PNG of the map, [width] by [height] logical pixels, or
-    /// the size of the map view for what is null.
+    /// the size of the map view for what is null. [attributionEnabled] draws
+    /// the attribution text of the style's sources on the picture, and
+    /// [logoEnabled] draws the MapLibre logo.
     let mapTakeSnapshotChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.mapTakeSnapshot\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       mapTakeSnapshotChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
         let widthArg: Int64? = nilOrValue(args[0])
         let heightArg: Int64? = nilOrValue(args[1])
-        api.mapTakeSnapshot(width: widthArg, height: heightArg) { result in
+        let attributionEnabledArg = args[2] as! Bool
+        let logoEnabledArg = args[3] as! Bool
+        api.mapTakeSnapshot(width: widthArg, height: heightArg, attributionEnabled: attributionEnabledArg, logoEnabled: logoEnabledArg) { result in
           switch result {
           case .success(let res):
             reply(wrapResult(res))

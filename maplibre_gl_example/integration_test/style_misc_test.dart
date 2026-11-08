@@ -26,6 +26,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -500,6 +501,61 @@ void main() {
     expect(sized.height, closeTo(100 * ratio, ratio), reason: '$sized');
   });
 
+  // Skipped on web: its snapshot is the map canvas alone and never has the
+  // attribution or the logo, so there is nothing to leave out. See the
+  // takeSnapshot doc.
+  testWidgets(
+    'takeSnapshot draws the attribution and logo unless '
+    'attributionEnabled and logoEnabled are false',
+    (tester) async {
+      if (testPlatform == TestPlatform.web) return;
+      // A grey background plus an empty source with an attribution, so there
+      // is attribution text to draw.
+      final controller = await pumpMap(
+        tester,
+        styleString: jsonEncode({
+          'version': 8,
+          'sources': {
+            'attributed': {
+              'type': 'geojson',
+              'attribution': 'Test data',
+              'data': {'type': 'FeatureCollection', 'features': <Object>[]},
+            },
+          },
+          'layers': [
+            {
+              'id': backgroundLayerId,
+              'type': 'background',
+              'paint': {'background-color': '#dddddd'},
+            },
+          ],
+        }),
+      );
+      await pumpFor(tester, const Duration(milliseconds: 500));
+
+      final withBoth = await pumpUntil(
+        tester,
+        controller.takeSnapshot(width: 200, height: 200),
+        'takeSnapshot with attribution and logo',
+      );
+      final withNeither = await pumpUntil(
+        tester,
+        controller.takeSnapshot(
+          width: 200,
+          height: 200,
+          attributionEnabled: false,
+          logoEnabled: false,
+        ),
+        'takeSnapshot without attribution and logo',
+      );
+
+      // Nothing but the background is drawn, so every pixel that is not grey
+      // belongs to the attribution text or the logo.
+      expect(await _pixelsNotGrey(withBoth), greaterThan(0));
+      expect(await _pixelsNotGrey(withNeither), 0);
+    },
+  );
+
   testWidgets('setMaximumFps, pauseMap and resumeMap keep the map usable', (
     tester,
   ) async {
@@ -759,6 +815,24 @@ Future<void> _expectThrows<E extends Object>(
     return;
   }
   fail('$label: expected $E, the call succeeded');
+}
+
+/// How many pixels of a PNG are not the background grey, #dddddd.
+Future<int> _pixelsNotGrey(Uint8List png) async {
+  final codec = await ui.instantiateImageCodec(png);
+  final image = (await codec.getNextFrame()).image;
+  codec.dispose();
+  final data = (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+  image.dispose();
+  var count = 0;
+  for (var offset = 0; offset < data.lengthInBytes; offset += 4) {
+    if (data.getUint8(offset) != 0xdd ||
+        data.getUint8(offset + 1) != 0xdd ||
+        data.getUint8(offset + 2) != 0xdd) {
+      count++;
+    }
+  }
+  return count;
 }
 
 /// Width and height of a PNG in pixels, read from its IHDR chunk.

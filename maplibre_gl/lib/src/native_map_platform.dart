@@ -1920,8 +1920,18 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
-  Future<Uint8List> takeSnapshot({int? width, int? height}) async {
-    final result = await _api.mapTakeSnapshot(width, height);
+  Future<Uint8List> takeSnapshot({
+    int? width,
+    int? height,
+    bool attributionEnabled = true,
+    bool logoEnabled = true,
+  }) async {
+    final result = await _api.mapTakeSnapshot(
+      width,
+      height,
+      attributionEnabled,
+      logoEnabled,
+    );
     if (result == null) {
       throw Exception('Failed to take map snapshot');
     }

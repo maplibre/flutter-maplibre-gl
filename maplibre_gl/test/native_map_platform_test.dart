@@ -1602,16 +1602,19 @@ void main() {
   group('takeSnapshot', () {
     setUp(init);
 
-    test('sends null for an unset size', () async {
-      api.replies['mapTakeSnapshot'] = Uint8List.fromList([1, 2]);
+    test(
+      'sends null for an unset size and true for attribution and logo',
+      () async {
+        api.replies['mapTakeSnapshot'] = Uint8List.fromList([1, 2]);
 
-      final bytes = await platform.takeSnapshot();
+        final bytes = await platform.takeSnapshot();
 
-      expect(bytes, [1, 2]);
-      expect(api.calls, [
-        ['mapTakeSnapshot', null, null],
-      ]);
-    });
+        expect(bytes, [1, 2]);
+        expect(api.calls, [
+          ['mapTakeSnapshot', null, null, true, true],
+        ]);
+      },
+    );
 
     test('sends the size', () async {
       api.replies['mapTakeSnapshot'] = Uint8List(0);
@@ -1619,7 +1622,20 @@ void main() {
       await platform.takeSnapshot(width: 100, height: 50);
 
       expect(api.calls, [
-        ['mapTakeSnapshot', 100, 50],
+        ['mapTakeSnapshot', 100, 50, true, true],
+      ]);
+    });
+
+    test('sends false for attributionEnabled and logoEnabled', () async {
+      api.replies['mapTakeSnapshot'] = Uint8List(0);
+
+      await platform.takeSnapshot(
+        attributionEnabled: false,
+        logoEnabled: false,
+      );
+
+      expect(api.calls, [
+        ['mapTakeSnapshot', null, null, false, false],
       ]);
     });
 
@@ -4416,8 +4432,17 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
       _call('layerGetVisibility', [layerId]);
 
   @override
-  Future<Uint8List?> mapTakeSnapshot(int? width, int? height) =>
-      _call('mapTakeSnapshot', [width, height]);
+  Future<Uint8List?> mapTakeSnapshot(
+    int? width,
+    int? height,
+    bool attributionEnabled,
+    bool logoEnabled,
+  ) => _call('mapTakeSnapshot', [
+    width,
+    height,
+    attributionEnabled,
+    logoEnabled,
+  ]);
 
   @override
   Future<List<String>> styleGetLayerIds() => _call('styleGetLayerIds');
