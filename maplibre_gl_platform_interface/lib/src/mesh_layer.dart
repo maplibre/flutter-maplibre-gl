@@ -4,12 +4,16 @@ part of '../maplibre_gl_platform_interface.dart';
 ///
 /// Every vertex has a position, a unit normal and an sRGB colour; [indices] lists three vertices per
 /// triangle. Faces are drawn from both sides, so the winding does not matter.
+///
+/// An [occluder] is not drawn but hides the meshes behind it: the shape of something the map shows
+/// in 3D on its own, such as a fill extrusion's walls (see [MeshLayer]).
 class MeshLayerMesh {
   MeshLayerMesh({
     required this.positions,
     required this.normals,
     required this.colors,
     required this.indices,
+    this.occluder = false,
   }) : assert(positions.length % 3 == 0, 'positions: three per vertex'),
        assert(normals.length == positions.length, 'normals: three per vertex'),
        assert(
@@ -17,6 +21,18 @@ class MeshLayerMesh {
          'colors: four per vertex (RGBA)',
        ),
        assert(indices.length % 3 == 0, 'indices: three per triangle');
+
+  /// An occluder: triangles in metres that hide the meshes behind them without being drawn
+  factory MeshLayerMesh.occluding({
+    required Float32List positions,
+    required Int32List indices,
+  }) => MeshLayerMesh(
+    positions: positions,
+    normals: Float32List(positions.length),
+    colors: Float32List(positions.length ~/ 3 * 4),
+    indices: indices,
+    occluder: true,
+  );
 
   /// x, y, z of each vertex, in metres
   final Float32List positions;
@@ -30,6 +46,9 @@ class MeshLayerMesh {
   /// Three vertex indices per triangle
   final Int32List indices;
 
+  /// Only hides what is behind it, see [MeshLayerMesh.occluding]
+  final bool occluder;
+
   int get vertexCount => positions.length ~/ 3;
 
   Map<String, Object> toMap() => {
@@ -37,6 +56,7 @@ class MeshLayerMesh {
     'normals': normals,
     'colors': colors,
     'indices': indices,
+    'occluder': occluder,
   };
 }
 
@@ -122,8 +142,13 @@ class MeshLayerLight {
   }
 }
 
-/// Lit 3D meshes drawn natively in the map's 3D scene, depth-tested against fill extrusions: trees,
-/// furniture or any other model at real coordinates, which fill extrusions cannot shape.
+/// Lit 3D meshes drawn natively in the map's 3D scene: trees, furniture or any other model at real
+/// coordinates, which fill extrusions cannot shape.
+///
+/// The layer draws its own 3D scene over the layers below it, so add it last (above everything it
+/// should cover). MapLibre Native does not hand a custom layer the depth range its fill extrusions
+/// use, so the layer starts from a clear depth: the meshes hide each other, and anything else in 3D
+/// that should hide them (a building's walls) is passed as [MeshLayerMesh.occluding] meshes.
 ///
 /// Each mesh is uploaded to the GPU once and drawn for all its [instances] in one instanced draw
 /// call; per frame the renderer only computes one matrix. Positions are kept in metres around the

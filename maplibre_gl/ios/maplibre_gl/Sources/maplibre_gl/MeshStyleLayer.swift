@@ -11,11 +11,19 @@ import MetalKit
 /// and instance offsets are metres around the layer's origin (its first instance), so the large
 /// world coordinates of high zoom levels never reach the GPU's 32-bit floats. Lighting runs per
 /// vertex. The same renderer as Android's src/main/cpp/mesh_layer.cpp.
+///
+/// Depth: MapLibre Native draws its fill extrusions into [0, depthRangeSize] of the depth buffer, a
+/// size it derives from its number of layer groups and does not hand to custom layers, and its 2D
+/// layers just behind that. A custom layer can't match the extrusions' depth exactly, and with the
+/// full range it ends up behind every 2D layer. So the layer draws its own 3D scene on top: it
+/// clears the depth, writes its occluders (the shapes of the map's own 3D content) into it, then
+/// draws its meshes against them.
 final class MeshStyleLayer: MLNCustomStyleLayer {
     private struct Mesh {
         var vertices: [Float] // position (3), normal (3), sRGB colour (4) per vertex
         var indices: [UInt32]
-        var instances: [Float] // offset east, north, up (3), cos and sin of the bearing (2), scale (1)
+        var instances: [Float]
+        var occluder = false // offset east, north, up (3), cos and sin of the bearing (2), scale (1)
         var vertexBuffer: MTLBuffer?
         var indexBuffer: MTLBuffer?
         var instanceBuffer: MTLBuffer?
@@ -44,7 +52,11 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
     private let minZoom: Double
     private let maxZoom: Double
     private var pipeline: MTLRenderPipelineState?
+    private var occluderPipeline: MTLRenderPipelineState?
+    private var clearPipeline: MTLRenderPipelineState?
     private var depthState: MTLDepthStencilState?
+    private var clearDepthState: MTLDepthStencilState?
+    private weak var mapView: MLNMapView?
 
     /// The layer for the "meshLayer#add" arguments: meshes, instances, light, minzoom, maxzoom
     init?(identifier: String, arguments: [String: Any]) {
@@ -77,7 +89,10 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
             }
             let rawIndices: [Int32] = indexData.data.withUnsafeBytes { Array($0.bindMemory(to: Int32.self)) }
             guard rawIndices.allSatisfy({ $0 >= 0 && Int($0) < vertexCount }) else { return nil }
-            meshes.append(Mesh(vertices: vertices, indices: rawIndices.map { UInt32($0) }, instances: []))
+            meshes.append(Mesh(
+                vertices: vertices, indices: rawIndices.map { UInt32($0) }, instances: [],
+                occluder: mesh["occluder"] as? Bool ?? false
+            ))
         }
 
         // The origin is the first instance: every offset stays a few hundred metres at most
@@ -157,16 +172,37 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
             descriptor.depthAttachmentPixelFormat = .depth32Float_stencil8
             descriptor.stencilAttachmentPixelFormat = .depth32Float_stencil8
             pipeline = try device.makeRenderPipelineState(descriptor: descriptor)
+
+            // The occluders: the same vertices, only their depth
+            descriptor.label = "MeshStyleLayer occluders"
+            color.writeMask = []
+            occluderPipeline = try device.makeRenderPipelineState(descriptor: descriptor)
+
+            // Clears the depth: a triangle over the whole screen at the far plane
+            let clear = MTLRenderPipelineDescriptor()
+            clear.label = "MeshStyleLayer depth clear"
+            clear.vertexFunction = library.makeFunction(name: "clearVertex")
+            clear.rasterSampleCount = resource.mtkView.sampleCount
+            clear.colorAttachments[0].pixelFormat = resource.mtkView.colorPixelFormat
+            clear.colorAttachments[0].writeMask = []
+            clear.depthAttachmentPixelFormat = .depth32Float_stencil8
+            clear.stencilAttachmentPixelFormat = .depth32Float_stencil8
+            clearPipeline = try device.makeRenderPipelineState(descriptor: clear)
         } catch {
             NSLog("MeshStyleLayer: \(error)")
             return
         }
 
-        // In the map's 3D scene: tested against and written to the depth the fill extrusions use
+        // The layer's own 3D scene (see the top of the file)
         let depth = MTLDepthStencilDescriptor()
         depth.depthCompareFunction = .lessEqual
         depth.isDepthWriteEnabled = true
         depthState = device.makeDepthStencilState(descriptor: depth)
+        let clearDepth = MTLDepthStencilDescriptor()
+        clearDepth.depthCompareFunction = .always
+        clearDepth.isDepthWriteEnabled = true
+        clearDepthState = device.makeDepthStencilState(descriptor: clearDepth)
+        self.mapView = mapView
 
         for m in meshes.indices where !meshes[m].vertices.isEmpty && !meshes[m].instances.isEmpty {
             meshes[m].vertexBuffer = device.makeBuffer(
@@ -192,7 +228,10 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
 
     override func willMove(from _: MLNMapView) {
         pipeline = nil
+        occluderPipeline = nil
+        clearPipeline = nil
         depthState = nil
+        clearDepthState = nil
         for m in meshes.indices {
             meshes[m].vertexBuffer = nil
             meshes[m].indexBuffer = nil
@@ -201,7 +240,8 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
     }
 
     override func draw(in _: MLNMapView, with context: MLNStyleLayerDrawingContext) {
-        guard let encoder = renderEncoder, let pipeline, let depthState,
+        guard let encoder = renderEncoder, let pipeline, let occluderPipeline, let clearPipeline, let depthState,
+              let clearDepthState, let mapView,
               context.zoomLevel >= minZoom, context.zoomLevel < maxZoom
         else { return }
 
@@ -227,20 +267,34 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
             intensities: SIMD4(light[6], light[10], 0, 0)
         )
 
-        encoder.setRenderPipelineState(pipeline)
-        encoder.setDepthStencilState(depthState)
+        // The full depth range: MapLibre leaves this layer's 2D slot, a single depth, on the encoder
+        let size = mapView.backendResource().mtkView.drawableSize
+        encoder.setViewport(MTLViewport(
+            originX: 0, originY: 0, width: Double(size.width), height: Double(size.height), znear: 0, zfar: 1
+        ))
         encoder.setCullMode(.none)
+
+        // The layer's own 3D scene: a clear depth, the occluders written into it unseen, then the
+        // meshes against them
+        encoder.setRenderPipelineState(clearPipeline)
+        encoder.setDepthStencilState(clearDepthState)
+        encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+
+        encoder.setDepthStencilState(depthState)
         encoder.setVertexBytes(&uniforms, length: MemoryLayout<Uniforms>.stride, index: 2)
-        for mesh in meshes {
-            guard let vertices = mesh.vertexBuffer, let indices = mesh.indexBuffer,
-                  let instances = mesh.instanceBuffer, mesh.instanceCount > 0
-            else { continue }
-            encoder.setVertexBuffer(vertices, offset: 0, index: 0)
-            encoder.setVertexBuffer(instances, offset: 0, index: 1)
-            encoder.drawIndexedPrimitives(
-                type: .triangle, indexCount: mesh.indexCount, indexType: mesh.indexType,
-                indexBuffer: indices, indexBufferOffset: 0, instanceCount: mesh.instanceCount
-            )
+        for (occluders, state) in [(true, occluderPipeline), (false, pipeline)] {
+            encoder.setRenderPipelineState(state)
+            for mesh in meshes where mesh.occluder == occluders {
+                guard let vertices = mesh.vertexBuffer, let indices = mesh.indexBuffer,
+                      let instances = mesh.instanceBuffer, mesh.instanceCount > 0
+                else { continue }
+                encoder.setVertexBuffer(vertices, offset: 0, index: 0)
+                encoder.setVertexBuffer(instances, offset: 0, index: 1)
+                encoder.drawIndexedPrimitives(
+                    type: .triangle, indexCount: mesh.indexCount, indexType: mesh.indexType,
+                    indexBuffer: indices, indexBufferOffset: 0, instanceCount: mesh.instanceCount
+                )
+            }
         }
     }
 
@@ -304,6 +358,12 @@ final class MeshStyleLayer: MLNCustomStyleLayer {
             + u.sunColor.rgb * u.intensities.y * max(dot(n, u.sunDirection.xyz), 0.0);
         out.color = float4(toSrgb(toLinear(in.color.rgb) * irradiance / M_PI_F), in.color.a);
         return out;
+    }
+
+    // A triangle covering the screen at the far plane, to clear the depth
+    vertex float4 clearVertex(uint id [[vertex_id]]) {
+        float2 p = float2(float((id << 1) & 2), float(id & 2));
+        return float4(p * 2.0 - 1.0, 1.0, 1.0);
     }
 
     fragment float4 meshFragment(VertexOut in [[stage_in]]) {

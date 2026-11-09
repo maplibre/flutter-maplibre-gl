@@ -25,12 +25,14 @@ final class MeshLayerHost {
     final float[][] normals = new float[count][];
     final float[][] colors = new float[count][];
     final int[][] indices = new int[count][];
+    final boolean[] occluders = new boolean[count];
     for (int i = 0; i < count; i++) {
       final Map<String, Object> mesh = meshes.get(i);
       positions[i] = (float[]) mesh.get("positions");
       normals[i] = (float[]) mesh.get("normals");
       colors[i] = (float[]) mesh.get("colors");
       indices[i] = (int[]) mesh.get("indices");
+      occluders[i] = Boolean.TRUE.equals(mesh.get("occluder"));
     }
     final double[] instances = (double[]) arguments.get("instances");
     final float[] light = (float[]) arguments.get("light");
@@ -42,6 +44,7 @@ final class MeshLayerHost {
             normals,
             colors,
             indices,
+            occluders,
             instances == null ? new double[0] : instances,
             light,
             minZoom == null ? 0 : minZoom.doubleValue(),
@@ -54,6 +57,7 @@ final class MeshLayerHost {
       float[][] normals,
       float[][] colors,
       int[][] indices,
+      boolean[] occluders,
       double[] instances,
       float[] light,
       double minZoom,

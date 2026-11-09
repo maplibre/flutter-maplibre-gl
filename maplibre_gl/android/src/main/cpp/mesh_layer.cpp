@@ -7,6 +7,13 @@
 // computed in double precision: vertices and instance offsets are metres around the layer's
 // origin (its first instance), so the large world coordinates of high zoom levels never reach
 // the GPU's 32-bit floats. Lighting runs per vertex.
+//
+// Depth: MapLibre Native draws its fill extrusions into [0, depthRangeSize] of the depth buffer, a
+// size it derives from its number of layer groups and does not hand to custom layers, and its 2D
+// layers just behind that. A custom layer can't match the extrusions' depth exactly, and with the
+// full range it ends up behind every 2D layer. So the layer draws its own 3D scene on top: it
+// clears the depth, writes its occluders (the shapes of the map's own 3D content) into it, then
+// draws its meshes against them.
 
 #include "custom_layer_host.hpp"
 
@@ -88,6 +95,7 @@ struct Mesh {
     std::vector<float> vertices;
     std::vector<uint32_t> indices;
     std::vector<float> instances;
+    bool occluder = false;
     GLuint vertexArray = 0;
     GLuint buffers[3] = {0, 0, 0};
     GLenum indexType = GL_UNSIGNED_INT;
@@ -195,26 +203,33 @@ public:
         glUniform1f(uSun_, light_[10]);
         glUniform3fv(uSunDirection_, 1, light_ + 11);
 
-        // In the map's 3D scene: tested against and written to the depth buffer the fill
-        // extrusions use, with their depth range, both sides of every face
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
+        // The layer's own 3D scene (see the top of the file): a clear depth in the full range, the
+        // occluders written into it unseen, then the meshes against them, both sides of every face
+        glDisable(GL_SCISSOR_TEST);
         glDepthMask(GL_TRUE);
         glDepthRangef(0.0f, 1.0f);
+        glClearDepthf(1.0f);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_CULL_FACE);
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-        for (const Mesh& mesh : meshes_) {
-            const auto count = static_cast<GLsizei>(mesh.instances.size() / kInstanceFloats);
-            if (!mesh.vertexArray || count == 0) {
-                continue;
+        for (const bool occluders : {true, false}) {
+            glColorMask(!occluders, !occluders, !occluders, !occluders);
+            for (const Mesh& mesh : meshes_) {
+                const auto count = static_cast<GLsizei>(mesh.instances.size() / kInstanceFloats);
+                if (mesh.occluder != occluders || !mesh.vertexArray || count == 0) {
+                    continue;
+                }
+                glBindVertexArray(mesh.vertexArray);
+                glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), mesh.indexType,
+                                        nullptr, count);
             }
-            glBindVertexArray(mesh.vertexArray);
-            glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(mesh.indices.size()), mesh.indexType,
-                                    nullptr, count);
         }
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glBindVertexArray(0);
     }
 
@@ -314,20 +329,25 @@ std::vector<float> floats(JNIEnv* env, jfloatArray array) {
 } // namespace
 
 // MeshLayerHost.nativeCreate: the host for a CustomLayer, which owns and deletes it. positions,
-// normals and colors hold one float array per mesh, indices one int array; instances is six
-// doubles per instance (mesh, latitude, longitude, altitude, bearing, scale).
+// normals and colors hold one float array per mesh, indices one int array, occluders one flag;
+// instances is six doubles per instance (mesh, latitude, longitude, altitude, bearing, scale).
 extern "C" JNIEXPORT jlong JNICALL Java_org_maplibre_maplibregl_MeshLayerHost_nativeCreate(JNIEnv* env,
                                                                                           jclass,
                                                                                           jobjectArray positions,
                                                                                           jobjectArray normals,
                                                                                           jobjectArray colors,
                                                                                           jobjectArray indices,
+                                                                                          jbooleanArray occluders,
                                                                                           jdoubleArray instances,
                                                                                           jfloatArray light,
                                                                                           jdouble minZoom,
                                                                                           jdouble maxZoom) {
     const jsize meshCount = env->GetArrayLength(positions);
     std::vector<Mesh> meshes(static_cast<size_t>(meshCount));
+    std::vector<jboolean> occluderFlags(static_cast<size_t>(meshCount), JNI_FALSE);
+    if (occluders && env->GetArrayLength(occluders) == meshCount) {
+        env->GetBooleanArrayRegion(occluders, 0, meshCount, occluderFlags.data());
+    }
     for (jsize m = 0; m < meshCount; m++) {
         auto meshPositions = floats(env, static_cast<jfloatArray>(env->GetObjectArrayElement(positions, m)));
         auto meshNormals = floats(env, static_cast<jfloatArray>(env->GetObjectArrayElement(normals, m)));
@@ -338,6 +358,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_org_maplibre_maplibregl_MeshLayerHost_na
             continue;
         }
         Mesh& mesh = meshes[static_cast<size_t>(m)];
+        mesh.occluder = occluderFlags[static_cast<size_t>(m)] == JNI_TRUE;
         mesh.vertices.resize(vertexCount * kVertexFloats);
         for (size_t v = 0; v < vertexCount; v++) {
             float* out = &mesh.vertices[v * kVertexFloats];

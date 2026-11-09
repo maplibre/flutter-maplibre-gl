@@ -9,8 +9,9 @@ import '../../shared/shared.dart';
 
 /// Example demonstrating the mesh layer: lit 3D meshes drawn natively in the
 /// map's 3D scene. One tree mesh is placed hundreds or thousands of times (one
-/// instanced draw call), next to an extruded building that hides the trees
-/// behind it.
+/// instanced draw call), next to an extruded building. The layer goes on top
+/// and gets the building's walls as an occluder, so the building hides the
+/// trees behind it and the trees in front hide the building.
 class MeshLayerExample extends ExamplePage {
   const MeshLayerExample({super.key})
     : super(
@@ -74,6 +75,7 @@ class _MeshLayerBodyState extends State<_MeshLayerBody> {
       ),
     );
     await _showTrees();
+    await controller.animateCamera(CameraUpdate.tiltTo(60));
   }
 
   Future<void> _showTrees() async {
@@ -92,7 +94,7 @@ class _MeshLayerBodyState extends State<_MeshLayerBody> {
     await controller.addMeshLayer(
       _layerId,
       MeshLayer(
-        meshes: [_tree()],
+        meshes: [_tree(), _buildingWalls(metresPerDegree, metresPerDegreeLng)],
         instances: [
           for (var i = 0; i < _count; i++)
             MeshLayerInstance(
@@ -106,6 +108,8 @@ class _MeshLayerBodyState extends State<_MeshLayerBody> {
               bearing: random.nextDouble() * 360,
               scale: 0.7 + random.nextDouble() * 0.6,
             ),
+          // The walls, in metres around the centre
+          const MeshLayerInstance(mesh: 1, position: _center),
         ],
       ),
     );
@@ -121,7 +125,7 @@ class _MeshLayerBodyState extends State<_MeshLayerBody> {
         initialCameraPosition: const CameraPosition(
           target: _center,
           zoom: 17.2,
-          tilt: 60,
+          // Tilted once the style is there: an initial tilt aborts the iOS map on its first style load
           bearing: 20,
         ),
       ),
@@ -146,6 +150,64 @@ class _MeshLayerBodyState extends State<_MeshLayerBody> {
       ],
     );
   }
+}
+
+/// The extruded building's walls as an occluder, in metres around [_center]
+MeshLayerMesh _buildingWalls(
+  double metresPerDegree,
+  double metresPerDegreeLng,
+) {
+  const corners = [
+    (13.3496, 52.5141),
+    (13.3506, 52.5141),
+    (13.3506, 52.5144),
+    (13.3496, 52.5144),
+  ];
+  final positions = <double>[];
+  final indices = <int>[];
+  for (var i = 0; i < corners.length; i++) {
+    final (ax, ay) = corners[i];
+    final (bx, by) = corners[(i + 1) % corners.length];
+    final a = (
+      (ax - _MeshLayerBodyState._center.longitude) * metresPerDegreeLng,
+      (ay - _MeshLayerBodyState._center.latitude) * metresPerDegree,
+    );
+    final b = (
+      (bx - _MeshLayerBodyState._center.longitude) * metresPerDegreeLng,
+      (by - _MeshLayerBodyState._center.latitude) * metresPerDegree,
+    );
+    final first = positions.length ~/ 3;
+    positions.addAll([
+      a.$1,
+      a.$2,
+      0,
+      b.$1,
+      b.$2,
+      0,
+      b.$1,
+      b.$2,
+      18,
+      a.$1,
+      a.$2,
+      18,
+    ]);
+    indices.addAll([first, first + 1, first + 2, first, first + 2, first + 3]);
+  }
+  // The roof
+  positions.addAll([
+    for (final (x, y) in corners) ...[
+      (x - _MeshLayerBodyState._center.longitude) * metresPerDegreeLng,
+      (y - _MeshLayerBodyState._center.latitude) * metresPerDegree,
+      18,
+    ],
+  ]);
+  final roof = positions.length ~/ 3 - 4;
+  indices.addAll([roof, roof + 1, roof + 2, roof, roof + 2, roof + 3]);
+
+  return MeshLayerMesh.occluding(
+    positions: Float32List.fromList(positions),
+    indices: Int32List.fromList(indices),
+  );
 }
 
 /// A low-poly tree in metres (x east, y north, z up): a trunk and a cone
