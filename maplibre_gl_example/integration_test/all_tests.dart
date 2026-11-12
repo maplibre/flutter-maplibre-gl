@@ -24,6 +24,7 @@ import 'camera_test.dart' as camera;
 import 'feature_id_test.dart' as feature_id;
 import 'feature_hit_tolerance_test.dart' as feature_hit_tolerance;
 import 'geojson_query_test.dart' as geojson_query;
+import 'geojson_update_idle_test.dart' as geojson_update_idle;
 import 'haptic_feedback_test.dart' as haptic_feedback;
 import 'map_lifecycle_test.dart' as map_lifecycle;
 import 'my_location_style_test.dart' as my_location_style;
@@ -48,6 +49,7 @@ void main() {
   feature_id.main();
   feature_hit_tolerance.main();
   geojson_query.main();
+  geojson_update_idle.main();
   haptic_feedback.main();
   map_lifecycle.main();
   my_location_style.main();
