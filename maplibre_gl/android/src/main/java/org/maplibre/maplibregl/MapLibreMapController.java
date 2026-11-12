@@ -1127,10 +1127,13 @@ final class MapLibreMapController
     }
 
     try {
-      // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
-      // that silently discards icons registered via addImage() in the same render frame.
-      // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
-      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
+      // With synchronousUpdate, a tile gets the new features of a data change in the frame
+      // that applies it. Without it, the tile stays complete with the old features until they
+      // arrive, so the map can become idle while it still shows the old data
+      // (maplibre-native#4972, flutter-maplibre-gl#1202).
+      // Needs MapLibre Android with maplibre-native#4543: earlier releases discard icons that
+      // addImage() registers in the same frame (maplibre-native#4326).
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(true);
       // The raw JSON goes to the engine, which parses it off the platform
       // thread and keeps numeric ids numeric. A Java FeatureCollection would
       // turn every id into a String, so ["id"] filters on numbers would miss.
