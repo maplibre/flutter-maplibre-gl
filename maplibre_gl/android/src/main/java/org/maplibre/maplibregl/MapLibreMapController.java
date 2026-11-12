@@ -9,6 +9,8 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PointF;
@@ -306,6 +308,15 @@ final class MapLibreMapController
   private Map<String, Object> addedFeaturesByLayer;
 
   private LatLngBounds bounds = null;
+
+  /** How long a GeoJSON data change waits for the engine to apply the data, then replies anyway. */
+  private static final long GEOJSON_APPLY_TIMEOUT_MS = 5000;
+
+  // The replies to GeoJSON data changes, held until the engine applies the data.
+  private final GeoJsonUpdateReplies geoJsonReplies = new GeoJsonUpdateReplies();
+  private final Handler mainHandler = new Handler(Looper.getMainLooper());
+  private final MapView.OnSourceChangedListener sourceChangedListener = geoJsonReplies::applied;
+
   Style.OnStyleLoaded onStyleLoadedCallback =
       new Style.OnStyleLoaded() {
         @Override
@@ -547,6 +558,7 @@ final class MapLibreMapController
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
     layerFilters.clear();
+    geoJsonReplies.releaseAll();
 
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
@@ -648,6 +660,7 @@ final class MapLibreMapController
         });
 
     mapView.addOnDidBecomeIdleListener(this);
+    mapView.addOnSourceChangedListener(sourceChangedListener);
 
     setStyleString(styleStringInitial);
   }
@@ -668,6 +681,8 @@ final class MapLibreMapController
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
     layerFilters.clear();
+    // The old style's sources never apply their data now.
+    geoJsonReplies.releaseAll();
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -1112,10 +1127,13 @@ final class MapLibreMapController
     }
 
     try {
-      // synchronousUpdate causes a texture atlas slot-reuse bug in MapLibre Native Android SDK
-      // that silently discards icons registered via addImage() in the same render frame.
-      // Disabled unconditionally until upstream maplibre-native#4326 is fixed.
-      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(false);
+      // With synchronousUpdate, a tile gets the new features of a data change in the frame
+      // that applies it. Without it, the tile stays complete with the old features until they
+      // arrive, so the map can become idle while it still shows the old data
+      // (maplibre-native#4972, flutter-maplibre-gl#1202).
+      // Needs MapLibre Android with maplibre-native#4543: earlier releases discard icons that
+      // addImage() registers in the same frame (maplibre-native#4326).
+      GeoJsonOptions options = new GeoJsonOptions().withSynchronousUpdate(true);
       // The raw JSON goes to the engine, which parses it off the platform
       // thread and keeps numeric ids numeric. A Java FeatureCollection would
       // turn every id into a String, so ["id"] filters on numbers would miss.
@@ -1173,8 +1191,35 @@ final class MapLibreMapController
       source.setGeoJson(geojson);
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonSource: error updating source '" + sourceName + "'", e);
+      result.success(null);
+      return;
     }
-    result.success(null);
+    replyWhenApplied(sourceName, () -> result.success(null));
+  }
+
+  /**
+   * Runs {@code reply} when the engine applies the data that the caller just gave the GeoJSON
+   * source {@code sourceId}, or after {@link #GEOJSON_APPLY_TIMEOUT_MS}. The engine converts the
+   * data on a background thread, so an earlier reply lets the app see an idle map that still
+   * shows the old data.
+   */
+  private void replyWhenApplied(String sourceId, Runnable reply) {
+    final Runnable once =
+        new Runnable() {
+          private boolean done;
+
+          @Override
+          public void run() {
+            if (done) {
+              return;
+            }
+            done = true;
+            mainHandler.removeCallbacks(this);
+            reply.run();
+          }
+        };
+    geoJsonReplies.add(sourceId, once);
+    mainHandler.postDelayed(once, GEOJSON_APPLY_TIMEOUT_MS);
   }
 
   // The source data as a FeatureCollection, parsed on first use and cached, or
@@ -1226,6 +1271,8 @@ final class MapLibreMapController
       // the ids of the whole source into Strings.
       if (data != null && data.replace(feature)) {
         source.setGeoJson(data.toJson());
+        replyWhenApplied(sourceName, () -> result.success(null));
+        return;
       }
     } catch (Exception e) {
       Log.e(TAG, "setGeoJsonFeature: error updating feature in source '" + sourceName + "'", e);
@@ -2929,7 +2976,8 @@ final class MapLibreMapController
           source.setGeoJson(data);
           // Kept for setGeoJsonFeature.
           addedFeaturesByLayer.put(id, data);
-          ret = true;
+          replyWhenApplied(id, () -> result.success(true));
+          return;
         }
       } catch (Exception e) {
         Log.e(TAG, "editGeoJsonSource: error updating source '" + id + "'", e);
@@ -3203,6 +3251,8 @@ final class MapLibreMapController
     if (style.removeSource(sourceId)) {
       imageSourceCoordinates.remove(sourceId);
       addedFeaturesByLayer.remove(sourceId);
+      // A removed source never applies its data.
+      geoJsonReplies.release(sourceId);
     }
     result.success(null);
   }
@@ -4376,6 +4426,9 @@ final class MapLibreMapController
     }
 
     mapViewContainer.removeView(mapView);
+    // The sources of this map never apply their data now.
+    mapView.removeOnSourceChangedListener(sourceChangedListener);
+    geoJsonReplies.releaseAll();
 
     if (mapViewResumed) {
       mapView.onPause();
