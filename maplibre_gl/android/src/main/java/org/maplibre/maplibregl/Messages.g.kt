@@ -1971,6 +1971,70 @@ data class PgFeatureDrag (
     return "PgFeatureDrag(id=$id, point=$point, origin=$origin, current=$current, delta=$delta, eventType=$eventType)"
   }
 }
+
+/**
+ * One mesh of a mesh layer, in meters around the place of each instance:
+ * x east, y north, z up. Pigeon has no Float32List, so the float arrays are
+ * their bytes, 32-bit floats in the byte order of the device.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class PgMeshLayerMesh (
+  /** x, y, z of each vertex. */
+  val positions: ByteArray,
+  /** The unit normal of each vertex. */
+  val normals: ByteArray,
+  /** The sRGB color of each vertex: r, g, b, a in 0 to 1. */
+  val colors: ByteArray,
+  /** Three vertex indices per triangle. */
+  val indices: IntArray,
+  /** Only written to the depth, never drawn. */
+  val occluder: Boolean
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): PgMeshLayerMesh {
+      val positions = pigeonVar_list[0] as ByteArray
+      val normals = pigeonVar_list[1] as ByteArray
+      val colors = pigeonVar_list[2] as ByteArray
+      val indices = pigeonVar_list[3] as IntArray
+      val occluder = pigeonVar_list[4] as Boolean
+      return PgMeshLayerMesh(positions, normals, colors, indices, occluder)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      positions,
+      normals,
+      colors,
+      indices,
+      occluder,
+    )
+  }
+  override fun equals(other: Any?): Boolean {
+    if (other == null || other.javaClass != javaClass) {
+      return false
+    }
+    if (this === other) {
+      return true
+    }
+    val other = other as PgMeshLayerMesh
+    return MessagesPigeonUtils.deepEquals(this.positions, other.positions) && MessagesPigeonUtils.deepEquals(this.normals, other.normals) && MessagesPigeonUtils.deepEquals(this.colors, other.colors) && MessagesPigeonUtils.deepEquals(this.indices, other.indices) && MessagesPigeonUtils.deepEquals(this.occluder, other.occluder)
+  }
+
+  override fun hashCode(): Int {
+    var result = javaClass.hashCode()
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.positions)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.normals)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.colors)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.indices)
+    result = 31 * result + MessagesPigeonUtils.deepHash(this.occluder)
+    return result
+  }
+  override fun toString(): String {
+    return "PgMeshLayerMesh(positions=${positions.contentToString()}, normals=${normals.contentToString()}, colors=${colors.contentToString()}, indices=${indices.contentToString()}, occluder=$occluder)"
+  }
+}
 private open class MessagesPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -2159,6 +2223,11 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
           PgFeatureDrag.fromList(it)
         }
       }
+      166.toByte() -> {
+        (readValue(buffer) as? List<Any?>)?.let {
+          PgMeshLayerMesh.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -2310,6 +2379,10 @@ private open class MessagesPigeonCodec : StandardMessageCodec() {
       }
       is PgFeatureDrag -> {
         stream.write(165)
+        writeValue(stream, value.toList())
+      }
+      is PgMeshLayerMesh -> {
+        stream.write(166)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -2929,6 +3002,14 @@ interface MapLibreMapHostApi {
    * the others when it is null.
    */
   fun styleMoveLayer(layerId: String, belowLayerId: String?, callback: (Result<Unit>) -> Unit)
+  /**
+   * Adds a layer [layerId] of lit 3D [meshes], below the layer
+   * [belowLayerId] or on top of the others when it is null. [instances]
+   * holds six values per placement: mesh index, latitude, longitude,
+   * altitude in meters, bearing in degrees and scale. [light] holds 14
+   * values, as `MeshLayerLight.toList` gives them.
+   */
+  fun styleAddMeshLayer(layerId: String, meshes: List<PgMeshLayerMesh>, instances: DoubleArray, light: DoubleArray, minzoom: Double, maxzoom: Double, belowLayerId: String?, callback: (Result<Unit>) -> Unit)
   /**
    * Sets [filter] on the layer [layerId], or removes its filter when
    * [filter] is null.
@@ -3948,6 +4029,31 @@ interface MapLibreMapHostApi {
             val layerIdArg = args[0] as String
             val belowLayerIdArg = args[1] as String?
             api.styleMoveLayer(layerIdArg, belowLayerIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(MessagesPigeonUtils.wrapError(error))
+              } else {
+                reply.reply(MessagesPigeonUtils.wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddMeshLayer$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val layerIdArg = args[0] as String
+            val meshesArg = args[1] as List<PgMeshLayerMesh>
+            val instancesArg = args[2] as DoubleArray
+            val lightArg = args[3] as DoubleArray
+            val minzoomArg = args[4] as Double
+            val maxzoomArg = args[5] as Double
+            val belowLayerIdArg = args[6] as String?
+            api.styleAddMeshLayer(layerIdArg, meshesArg, instancesArg, lightArg, minzoomArg, maxzoomArg, belowLayerIdArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(MessagesPigeonUtils.wrapError(error))

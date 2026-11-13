@@ -291,6 +291,17 @@ abstract class MapLibrePlatform {
   /// layer stack, appearing above all other layers.
   Future<void> moveLayer(String layerId, {String? belowLayerId});
 
+  /// Adds a layer of lit 3D meshes, below [belowLayerId] or on top when it is
+  /// null. Remove it with [removeLayer]; to change it, remove it and add it
+  /// again.
+  ///
+  /// Supported on Android and iOS. Web throws an [UnsupportedError].
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  });
+
   Future<List> getLayerIds();
 
   Future<List> getSourceIds();
