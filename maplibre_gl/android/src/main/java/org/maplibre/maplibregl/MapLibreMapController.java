@@ -74,6 +74,7 @@ import org.maplibre.android.maps.UiSettings;
 import org.maplibre.android.offline.OfflineManager;
 import org.maplibre.android.style.expressions.Expression;
 import org.maplibre.android.style.layers.CircleLayer;
+import org.maplibre.android.style.layers.CustomLayer;
 import org.maplibre.android.style.layers.TransitionOptions;
 import org.maplibre.android.style.layers.BackgroundLayer;
 import org.maplibre.android.style.layers.ColorReliefLayer;
@@ -3870,6 +3871,36 @@ final class MapLibreMapController
     interactiveFeatureLayerIds.remove(layerId);
     layerFilters.remove(layerId);
 
+    result.success(null);
+  }
+
+  @Override
+  public void styleAddMeshLayer(
+      String layerId,
+      List<PgMeshLayerMesh> meshes,
+      double[] instances,
+      double[] light,
+      double minzoom,
+      double maxzoom,
+      @Nullable String belowLayerId,
+      MethodChannel.Result result) {
+    if (style == null || !style.isFullyLoaded()) {
+      replyStyleNotReady(result);
+      return;
+    }
+    final CustomLayer layer;
+    try {
+      layer = MeshLayerHost.create(layerId, meshes, instances, light, minzoom, maxzoom);
+    } catch (IllegalArgumentException e) {
+      result.error("INVALID_ARGUMENT", e.getMessage(), null);
+      return;
+    }
+    // Below belowLayerId, or on top when the style has no such layer, as the other layer adds
+    if (belowLayerId != null && style.getLayer(belowLayerId) != null) {
+      style.addLayerBelow(layer, belowLayerId);
+    } else {
+      style.addLayer(layer);
+    }
     result.success(null);
   }
 

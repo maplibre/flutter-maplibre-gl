@@ -625,6 +625,30 @@ final class MapHostApi: MapLibreMapHostApi {
         }
     }
 
+    func styleAddMeshLayer(
+        layerId: String,
+        meshes: [PgMeshLayerMesh],
+        instances: FlutterStandardTypedData,
+        light: FlutterStandardTypedData,
+        minzoom: Double,
+        maxzoom: Double,
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        run(voidResult(completion)) {
+            $0.styleAddMeshLayer(
+                layerId: layerId,
+                meshes: meshes,
+                instances: instances,
+                light: light,
+                minzoom: minzoom,
+                maxzoom: maxzoom,
+                belowLayerId: belowLayerId,
+                result: $1
+            )
+        }
+    }
+
     func styleSetFilter(
         layerId: String,
         filter: String?,

@@ -1592,6 +1592,50 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(nil)
     }
 
+    func styleAddMeshLayer(
+        layerId: String,
+        meshes: [PgMeshLayerMesh],
+        instances: FlutterStandardTypedData,
+        light: FlutterStandardTypedData,
+        minzoom: Double,
+        maxzoom: Double,
+        belowLayerId: String?,
+        result: @escaping FlutterResult
+    ) {
+        guard let style = mapView.style else {
+            result(styleNotReadyError())
+            return
+        }
+        guard style.layer(withIdentifier: layerId) == nil else {
+            result(MethodCallError.layerAlreadyExists(layerId: layerId).flutterError)
+            return
+        }
+        guard let layer = MeshStyleLayer(
+            identifier: layerId,
+            meshes: meshes,
+            instances: instances,
+            light: light,
+            minZoom: minzoom,
+            maxZoom: maxzoom
+        ) else {
+            result(MethodCallError.invalidArgument(
+                message: "Mesh layer '\(layerId)': positions, normals, colors, indices, instances or light do not match"
+            ).flutterError)
+            return
+        }
+        switch finishLayerAdd(
+            layer,
+            style: style,
+            belowLayerId: belowLayerId,
+            minimumZoomLevel: nil,
+            maximumZoomLevel: nil,
+            properties: [:]
+        ) {
+        case .success: result(nil)
+        case let .failure(error): result(error.flutterError)
+        }
+    }
+
     func styleSetFilter(layerId: String, filter: String?, result: @escaping FlutterResult) {
         guard let style = mapView.style else {
             result(MethodCallError.styleNotReady.flutterError)
