@@ -23,7 +23,7 @@ dependencies:
   # Held at 12.x: permission_handler_android 14 requires the app to compile
   # against Android SDK 37, and Flutter stable still sets compileSdk 36, so the
   # build fails at checkReleaseAarMetadata. Lift this once Flutter moves to 37.
-  permission_handler: ^12.0.0
+  permission_handler: ^13.0.2
   share_plus: ^13.3.0
 
 dev_dependencies:
@@ -32,7 +32,7 @@ dev_dependencies:
     sdk: flutter
   integration_test:
     sdk: flutter
-  very_good_analysis: ^10.2.0
+  very_good_analysis: ^11.0.0
   web: ^1.1.1
 
 flutter_launcher_icons:
