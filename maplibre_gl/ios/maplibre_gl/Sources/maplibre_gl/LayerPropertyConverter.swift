@@ -1405,6 +1405,7 @@ class LayerPropertyConverter {
         "raster-contrast": "number",
         "raster-fade-duration": "number",
         "raster-hue-rotate": "number",
+        "raster-layer-blend": "enum:normal|multiply|color|luminosity|plus-lighter|screen|overlay",
         "raster-opacity": "number",
         "raster-resampling": "enum:linear|nearest",
         "raster-saturation": "number",

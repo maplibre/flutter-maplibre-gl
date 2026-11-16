@@ -2358,6 +2358,54 @@ class RasterLayerProperties implements LayerProperties {
   ///   basic functionality with js, android, ios
   final dynamic rasterOpacity;
 
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike [`raster-opacity`](#raster-opacity), which only
+  /// fades the layer, this property determines how its colors interact with
+  /// the existing map contents.
+  ///
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic rasterLayerBlend;
+
   /// Rotates hues around the color wheel.
   ///
   /// Type: number
@@ -2480,6 +2528,7 @@ class RasterLayerProperties implements LayerProperties {
 
   const RasterLayerProperties({
     this.rasterOpacity,
+    this.rasterLayerBlend,
     this.rasterHueRotate,
     this.rasterBrightnessMin,
     this.rasterBrightnessMax,
@@ -2494,6 +2543,7 @@ class RasterLayerProperties implements LayerProperties {
   RasterLayerProperties copyWith(RasterLayerProperties changes) {
     return RasterLayerProperties(
       rasterOpacity: changes.rasterOpacity ?? rasterOpacity,
+      rasterLayerBlend: changes.rasterLayerBlend ?? rasterLayerBlend,
       rasterHueRotate: changes.rasterHueRotate ?? rasterHueRotate,
       rasterBrightnessMin: changes.rasterBrightnessMin ?? rasterBrightnessMin,
       rasterBrightnessMax: changes.rasterBrightnessMax ?? rasterBrightnessMax,
@@ -2516,6 +2566,7 @@ class RasterLayerProperties implements LayerProperties {
     }
 
     addIfPresent('raster-opacity', rasterOpacity);
+    addIfPresent('raster-layer-blend', rasterLayerBlend);
     addIfPresent('raster-hue-rotate', rasterHueRotate);
     addIfPresent('raster-brightness-min', rasterBrightnessMin);
     addIfPresent('raster-brightness-max', rasterBrightnessMax);
@@ -2531,6 +2582,7 @@ class RasterLayerProperties implements LayerProperties {
   factory RasterLayerProperties.fromJson(Map<String, dynamic> json) {
     return RasterLayerProperties(
       rasterOpacity: json['raster-opacity'],
+      rasterLayerBlend: json['raster-layer-blend'],
       rasterHueRotate: json['raster-hue-rotate'],
       rasterBrightnessMin: json['raster-brightness-min'],
       rasterBrightnessMax: json['raster-brightness-max'],
