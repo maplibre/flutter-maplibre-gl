@@ -29,6 +29,8 @@ MapLibreMap(
 
 On web only `none` and `tracking` are meaningful, since the browser exposes no compass heading.
 
+On web the browser asks for the location as soon as `myLocationEnabled` is on, whatever the mode, so turn it on when the map needs the user's position.
+
 ## Style the puck
 
 `myLocationStyle` recolors the puck, for example to match your brand or to make it stand out on a light style. Every field is optional, and a field left out keeps the platform's own look:
