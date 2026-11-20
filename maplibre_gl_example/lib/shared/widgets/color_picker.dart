@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A reusable color picker widget that displays a modal bottom sheet
 /// with a grid of color options

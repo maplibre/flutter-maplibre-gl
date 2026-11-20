@@ -5,7 +5,7 @@
 // checks what can be: on iOS the option is accepted at creation and as an
 // update, and on Android and web, where the platform ignores it, sending it
 // does no harm either.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';

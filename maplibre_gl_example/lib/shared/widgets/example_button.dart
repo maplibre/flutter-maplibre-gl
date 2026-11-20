@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A styled button component for map examples with Material 3 design
 class ExampleButton extends StatelessWidget {

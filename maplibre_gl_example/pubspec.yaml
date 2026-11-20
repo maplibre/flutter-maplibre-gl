@@ -19,6 +19,7 @@ dependencies:
   http: ^1.6.0
   maplibre_gl:
     path: ../maplibre_gl
+  material_ui: ^1.11.1
   path_provider: ^2.1.5
   # Held at 12.x: permission_handler_android 14 requires the app to compile
   # against Android SDK 37, and Flutter stable still sets compileSdk 36, so the
