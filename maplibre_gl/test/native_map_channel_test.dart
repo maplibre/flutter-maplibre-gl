@@ -715,6 +715,7 @@ void main() {
       'styleAddLayerBelow',
       'styleRemoveLayer',
       'styleMoveLayer',
+      'styleAddMeshLayer',
       'styleSetFilter',
       'styleGetFilter',
       'mapToLatLng',

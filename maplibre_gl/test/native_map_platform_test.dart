@@ -539,6 +539,61 @@ void main() {
       ]);
     });
 
+    test('addMeshLayer sends the meshes as bytes and six values per '
+        'instance', () async {
+      final positions = Float32List.fromList([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+      await platform.addMeshLayer(
+        'trees',
+        MeshLayer(
+          meshes: [
+            MeshLayerMesh(
+              positions: positions,
+              normals: Float32List.fromList([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+              colors: Float32List.fromList(List.filled(12, 1)),
+              indices: Int32List.fromList([0, 1, 2]),
+            ),
+            MeshLayerMesh.occluding(
+              positions: positions,
+              indices: Int32List.fromList([0, 1, 2]),
+            ),
+          ],
+          instances: const [
+            MeshLayerInstance(
+              mesh: 0,
+              position: LatLng(52.5, 13.4),
+              altitude: 2,
+              bearing: 90,
+              scale: 1.5,
+            ),
+          ],
+          minzoom: 15,
+        ),
+        belowLayerId: 'labels',
+      );
+
+      final call = api.calls.single;
+      expect(call[0], 'styleAddMeshLayer');
+      expect(call[1], 'trees');
+      final meshes = call[2]! as List<PgMeshLayerMesh>;
+      expect(meshes, hasLength(2));
+      // The bytes of the floats, read back as they were
+      expect(meshes[0].positions.buffer.asFloat32List(), positions);
+      expect(meshes[0].colors, hasLength(12 * 4));
+      expect(meshes[0].indices, [0, 1, 2]);
+      expect(meshes[0].occluder, isFalse);
+      expect(meshes[1].occluder, isTrue);
+      expect(meshes[1].normals, hasLength(9 * 4));
+      // mesh, latitude, longitude, altitude, bearing, scale
+      expect(call[3], [0, 52.5, closeTo(13.4, 1e-9), 2, 90, 1.5]);
+      // The light in linear color, the sun direction normalized
+      final light = call[4]! as Float64List;
+      expect(light, hasLength(14));
+      expect(light[0], closeTo(1, 1e-6));
+      final (x, y, z) = (light[11], light[12], light[13]);
+      expect(x * x + y * y + z * z, closeTo(1, 1e-5));
+      expect(call.sublist(5), [15, 24, 'labels']);
+    });
+
     test('setLayersVisibility returns the missing ids', () async {
       api.replies['layerSetVisibilityBatch'] = <String>['gone'];
 
@@ -4102,6 +4157,25 @@ class _FakeMapHostApi extends MapLibreMapHostApi {
   @override
   Future<void> styleMoveLayer(String layerId, String? belowLayerId) =>
       _call('styleMoveLayer', [layerId, belowLayerId]);
+
+  @override
+  Future<void> styleAddMeshLayer(
+    String layerId,
+    List<PgMeshLayerMesh> meshes,
+    Float64List instances,
+    Float64List light,
+    double minzoom,
+    double maxzoom,
+    String? belowLayerId,
+  ) => _call('styleAddMeshLayer', [
+    layerId,
+    meshes,
+    instances,
+    light,
+    minzoom,
+    maxzoom,
+    belowLayerId,
+  ]);
 
   @override
   Future<void> styleSetFilter(String layerId, String? filter) =>

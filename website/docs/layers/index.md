@@ -12,6 +12,7 @@ for paths, fill for areas, heatmap and cluster for many points at once.
 - [Heatmap](heatmap.md): point density as a heat surface
 - [Color Relief](color-relief.md): terrain coloured by elevation from a raster DEM
 - [Background](background.md): a colour or pattern behind every other layer
+- [Mesh Layer](mesh-layer.md): lit 3D models such as trees or furniture (Android, iOS)
 - [Cluster](cluster.md): cluster many points into grouped circles
 - [GeoJSON Source](geojson-source.md): feed layers from inline data or a URL
 - [Various Sources](various-sources.md): GeoJSON, vector tiles, raster tiles, and more

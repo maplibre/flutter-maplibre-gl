@@ -343,6 +343,16 @@ public interface MapCalls {
 
   void styleMoveLayer(String layerId, @Nullable String belowLayerId, MethodChannel.Result result);
 
+  void styleAddMeshLayer(
+      String layerId,
+      List<PgMeshLayerMesh> meshes,
+      double[] instances,
+      double[] light,
+      double minzoom,
+      double maxzoom,
+      @Nullable String belowLayerId,
+      MethodChannel.Result result);
+
   void styleSetFilter(String layerId, @Nullable String filter, MethodChannel.Result result);
 
   void styleGetFilter(String layerId, MethodChannel.Result result);

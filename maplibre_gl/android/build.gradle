@@ -75,6 +75,13 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+    // The native renderer of mesh layers (src/main/cpp)
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21

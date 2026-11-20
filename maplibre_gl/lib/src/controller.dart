@@ -2378,6 +2378,41 @@ class MapLibreMapController extends ChangeNotifier {
     return _maplibrePlatform.moveLayer(layerId, belowLayerId: belowLayerId);
   }
 
+  /// Adds a layer of lit 3D meshes (trees, furniture, any model) drawn
+  /// natively at real coordinates, which fill extrusions can only shape as
+  /// prisms. See [MeshLayer].
+  ///
+  /// The layer draws its own 3D scene over the layers below it, so add it on
+  /// top, and pass what should hide the meshes, such as the walls of an
+  /// extruded building, as [MeshLayerMesh.occluding] meshes.
+  ///
+  /// Each mesh is uploaded to the GPU once and drawn for all its instances in
+  /// one instanced draw call. Remove the layer with [removeLayer]; to change
+  /// it, remove it and add it again.
+  ///
+  /// Setting [belowLayerId] adds the new layer below the given id, or on top
+  /// when the style has no such layer.
+  ///
+  /// Supported on Android and iOS, where Android needs MapLibre's OpenGL ES
+  /// backend (the default): with Vulkan the layer draws nothing. Web throws
+  /// an [UnsupportedError].
+  ///
+  /// Throws a [PlatformException] with code `INVALID_ARGUMENT` when the
+  /// vertex data, indices or instances of a mesh do not match, or
+  /// `LAYER_ALREADY_EXISTS` or `STYLE_NOT_READY` (see
+  /// [MapLibreMapController]).
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) {
+    return _maplibrePlatform.addMeshLayer(
+      layerId,
+      layer,
+      belowLayerId: belowLayerId,
+    );
+  }
+
   /// Shows only the features of the layer [layerId] that match [filter].
   ///
   /// [filter] is an expression like `['==', ['get', 'type'], 'park']`, or the

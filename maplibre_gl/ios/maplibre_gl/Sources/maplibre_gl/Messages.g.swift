@@ -1879,6 +1879,70 @@ struct PgFeatureDrag: Hashable, CustomStringConvertible {
   }
 }
 
+/// One mesh of a mesh layer, in meters around the place of each instance:
+/// x east, y north, z up. Pigeon has no Float32List, so the float arrays are
+/// their bytes, 32-bit floats in the byte order of the device.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct PgMeshLayerMesh: Hashable, CustomStringConvertible {
+  /// x, y, z of each vertex.
+  var positions: FlutterStandardTypedData
+  /// The unit normal of each vertex.
+  var normals: FlutterStandardTypedData
+  /// The sRGB color of each vertex: r, g, b, a in 0 to 1.
+  var colors: FlutterStandardTypedData
+  /// Three vertex indices per triangle.
+  var indices: FlutterStandardTypedData
+  /// Only written to the depth, never drawn.
+  var occluder: Bool
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> PgMeshLayerMesh? {
+    let positions = pigeonVar_list[0] as! FlutterStandardTypedData
+    let normals = pigeonVar_list[1] as! FlutterStandardTypedData
+    let colors = pigeonVar_list[2] as! FlutterStandardTypedData
+    let indices = pigeonVar_list[3] as! FlutterStandardTypedData
+    let occluder = pigeonVar_list[4] as! Bool
+
+    return PgMeshLayerMesh(
+      positions: positions,
+      normals: normals,
+      colors: colors,
+      indices: indices,
+      occluder: occluder
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      positions,
+      normals,
+      colors,
+      indices,
+      occluder,
+    ]
+  }
+  static func == (lhs: PgMeshLayerMesh, rhs: PgMeshLayerMesh) -> Bool {
+    if Swift.type(of: lhs) != Swift.type(of: rhs) {
+      return false
+    }
+    return MessagesPigeonInternal.deepEquals(lhs.positions, rhs.positions) && MessagesPigeonInternal.deepEquals(lhs.normals, rhs.normals) && MessagesPigeonInternal.deepEquals(lhs.colors, rhs.colors) && MessagesPigeonInternal.deepEquals(lhs.indices, rhs.indices) && MessagesPigeonInternal.deepEquals(lhs.occluder, rhs.occluder)
+  }
+
+  func hash(into hasher: inout Hasher) {
+    hasher.combine("PgMeshLayerMesh")
+    MessagesPigeonInternal.deepHash(value: positions, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: normals, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: colors, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: indices, hasher: &hasher)
+    MessagesPigeonInternal.deepHash(value: occluder, hasher: &hasher)
+  }
+
+  public var description: String {
+    return "PgMeshLayerMesh(positions: \(String(describing: positions)), normals: \(String(describing: normals)), colors: \(String(describing: colors)), indices: \(String(describing: indices)), occluder: \(String(describing: occluder)))"
+  }
+}
+
 private class MessagesPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -1988,6 +2052,8 @@ private class MessagesPigeonCodecReader: FlutterStandardReader {
       return PgFeatureTap.fromList(self.readValue() as! [Any?])
     case 165:
       return PgFeatureDrag.fromList(self.readValue() as! [Any?])
+    case 166:
+      return PgMeshLayerMesh.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -2106,6 +2172,9 @@ private class MessagesPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.toList())
     } else if let value = value as? PgFeatureDrag {
       super.writeByte(165)
+      super.writeValue(value.toList())
+    } else if let value = value as? PgMeshLayerMesh {
+      super.writeByte(166)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -2644,6 +2713,12 @@ protocol MapLibreMapHostApi {
   /// Moves the layer [layerId] below the layer [belowLayerId], or on top of
   /// the others when it is null.
   func styleMoveLayer(layerId: String, belowLayerId: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Adds a layer [layerId] of lit 3D [meshes], below the layer
+  /// [belowLayerId] or on top of the others when it is null. [instances]
+  /// holds six values per placement: mesh index, latitude, longitude,
+  /// altitude in meters, bearing in degrees and scale. [light] holds 14
+  /// values, as `MeshLayerLight.toList` gives them.
+  func styleAddMeshLayer(layerId: String, meshes: [PgMeshLayerMesh], instances: FlutterStandardTypedData, light: FlutterStandardTypedData, minzoom: Double, maxzoom: Double, belowLayerId: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Sets [filter] on the layer [layerId], or removes its filter when
   /// [filter] is null.
   func styleSetFilter(layerId: String, filter: String?, completion: @escaping (Result<Void, Error>) -> Void)
@@ -3605,6 +3680,34 @@ class MapLibreMapHostApiSetup {
       }
     } else {
       styleMoveLayerChannel.setMessageHandler(nil)
+    }
+    /// Adds a layer [layerId] of lit 3D [meshes], below the layer
+    /// [belowLayerId] or on top of the others when it is null. [instances]
+    /// holds six values per placement: mesh index, latitude, longitude,
+    /// altitude in meters, bearing in degrees and scale. [light] holds 14
+    /// values, as `MeshLayerLight.toList` gives them.
+    let styleAddMeshLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddMeshLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      styleAddMeshLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let layerIdArg = args[0] as! String
+        let meshesArg = args[1] as! [PgMeshLayerMesh]
+        let instancesArg = args[2] as! FlutterStandardTypedData
+        let lightArg = args[3] as! FlutterStandardTypedData
+        let minzoomArg = args[4] as! Double
+        let maxzoomArg = args[5] as! Double
+        let belowLayerIdArg: String? = nilOrValue(args[6])
+        api.styleAddMeshLayer(layerId: layerIdArg, meshes: meshesArg, instances: instancesArg, light: lightArg, minzoom: minzoomArg, maxzoom: maxzoomArg, belowLayerId: belowLayerIdArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      styleAddMeshLayerChannel.setMessageHandler(nil)
     }
     /// Sets [filter] on the layer [layerId], or removes its filter when
     /// [filter] is null.

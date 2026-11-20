@@ -289,6 +289,19 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
         callback: (Result<Unit>) -> Unit,
     ) = unit(callback) { map.styleMoveLayer(layerId, belowLayerId, it) }
 
+    override fun styleAddMeshLayer(
+        layerId: String,
+        meshes: List<PgMeshLayerMesh>,
+        instances: DoubleArray,
+        light: DoubleArray,
+        minzoom: Double,
+        maxzoom: Double,
+        belowLayerId: String?,
+        callback: (Result<Unit>) -> Unit,
+    ) = addLayer(layerId, callback) {
+        map.styleAddMeshLayer(layerId, meshes, instances, light, minzoom, maxzoom, belowLayerId, it)
+    }
+
     override fun styleSetFilter(
         layerId: String,
         filter: String?,

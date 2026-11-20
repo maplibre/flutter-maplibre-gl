@@ -972,6 +972,48 @@ class _MapLibreNativePlatform extends MapLibrePlatform
   }
 
   @override
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) async {
+    // Pigeon has no Float32List: the float arrays go as their bytes
+    Uint8List bytes(Float32List values) =>
+        values.buffer.asUint8List(values.offsetInBytes, values.lengthInBytes);
+    await _inOrder(
+      _layerAddKeys(null, layerId, belowLayerId),
+      () => _api.styleAddMeshLayer(
+        layerId,
+        [
+          for (final mesh in layer.meshes)
+            PgMeshLayerMesh(
+              positions: bytes(mesh.positions),
+              normals: bytes(mesh.normals),
+              colors: bytes(mesh.colors),
+              indices: mesh.indices,
+              occluder: mesh.occluder,
+            ),
+        ],
+        // mesh index, latitude, longitude, altitude, bearing, scale per instance
+        Float64List.fromList([
+          for (final e in layer.instances) ...[
+            e.mesh.toDouble(),
+            e.position.latitude,
+            e.position.longitude,
+            e.altitude,
+            e.bearing,
+            e.scale,
+          ],
+        ]),
+        Float64List.fromList(layer.light.toList()),
+        layer.minzoom,
+        layer.maxzoom,
+        belowLayerId,
+      ),
+    );
+  }
+
+  @override
   Future<void> setFilter(String layerId, dynamic filter) async {
     await _inOrder(
       [_layerKey(layerId)],

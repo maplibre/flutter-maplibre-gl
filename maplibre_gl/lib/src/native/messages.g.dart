@@ -2151,6 +2151,84 @@ class PgFeatureDrag {
   }
 }
 
+/// One mesh of a mesh layer, in meters around the place of each instance:
+/// x east, y north, z up. Pigeon has no Float32List, so the float arrays are
+/// their bytes, 32-bit floats in the byte order of the device.
+class PgMeshLayerMesh {
+  PgMeshLayerMesh({
+    required this.positions,
+    required this.normals,
+    required this.colors,
+    required this.indices,
+    required this.occluder,
+  });
+
+  /// x, y, z of each vertex.
+  Uint8List positions;
+
+  /// The unit normal of each vertex.
+  Uint8List normals;
+
+  /// The sRGB color of each vertex: r, g, b, a in 0 to 1.
+  Uint8List colors;
+
+  /// Three vertex indices per triangle.
+  Int32List indices;
+
+  /// Only written to the depth, never drawn.
+  bool occluder;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      positions,
+      normals,
+      colors,
+      indices,
+      occluder,
+    ];
+  }
+
+  Object encode() {
+    return _toList();
+  }
+
+  static PgMeshLayerMesh decode(Object result) {
+    result as List<Object?>;
+    return PgMeshLayerMesh(
+      positions: result[0]! as Uint8List,
+      normals: result[1]! as Uint8List,
+      colors: result[2]! as Uint8List,
+      indices: result[3]! as Int32List,
+      occluder: result[4]! as bool,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! PgMeshLayerMesh || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(positions, other.positions) &&
+        _deepEquals(normals, other.normals) &&
+        _deepEquals(colors, other.colors) &&
+        _deepEquals(indices, other.indices) &&
+        _deepEquals(occluder, other.occluder);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+
+  @override
+  String toString() {
+    return 'PgMeshLayerMesh(positions: $positions, normals: $normals, colors: $colors, indices: $indices, occluder: $occluder)';
+  }
+}
+
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
   @override
@@ -2269,6 +2347,9 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PgFeatureDrag) {
       buffer.putUint8(165);
       writeValue(buffer, value.encode());
+    } else if (value is PgMeshLayerMesh) {
+      buffer.putUint8(166);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -2361,6 +2442,8 @@ class _PigeonCodec extends StandardMessageCodec {
         return PgFeatureTap.decode(readValue(buffer)!);
       case 165:
         return PgFeatureDrag.decode(readValue(buffer)!);
+      case 166:
+        return PgMeshLayerMesh.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -3858,6 +3941,47 @@ class MapLibreMapHostApi {
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
       <Object?>[layerId, belowLayerId],
+    );
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    _extractReplyValueOrThrow(
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: true,
+    );
+  }
+
+  /// Adds a layer [layerId] of lit 3D [meshes], below the layer
+  /// [belowLayerId] or on top of the others when it is null. [instances]
+  /// holds six values per placement: mesh index, latitude, longitude,
+  /// altitude in meters, bearing in degrees and scale. [light] holds 14
+  /// values, as `MeshLayerLight.toList` gives them.
+  Future<void> styleAddMeshLayer(
+    String layerId,
+    List<PgMeshLayerMesh> meshes,
+    Float64List instances,
+    Float64List light,
+    double minzoom,
+    double maxzoom,
+    String? belowLayerId,
+  ) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.maplibre_gl.MapLibreMapHostApi.styleAddMeshLayer$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[
+        layerId,
+        meshes,
+        instances,
+        light,
+        minzoom,
+        maxzoom,
+        belowLayerId,
+      ],
     );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 

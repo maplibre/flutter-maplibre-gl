@@ -8,3 +8,5 @@
 /captures
 gradlew
 gradlew.bat
+# The CMake build of the mesh layer renderer
+.cxx/

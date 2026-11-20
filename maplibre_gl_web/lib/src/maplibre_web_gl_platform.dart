@@ -956,6 +956,20 @@ class MapLibreMapController extends MapLibrePlatform
   }
 
   @override
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) async {
+    // MapLibre GL JS draws 3D models with a custom layer of the app's own,
+    // such as one rendering with three.js.
+    throw UnsupportedError(
+      'addMeshLayer is not available on web. Mesh layers are supported on '
+      'Android and iOS.',
+    );
+  }
+
+  @override
   Future<Map<String, String>> getCustomHeaders() async {
     throw UnsupportedError(
       'getCustomHeaders is not available on web. Custom headers are supported '

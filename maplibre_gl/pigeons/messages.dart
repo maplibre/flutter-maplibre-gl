@@ -679,6 +679,34 @@ class PgFeatureDrag {
   String eventType;
 }
 
+/// One mesh of a mesh layer, in meters around the place of each instance:
+/// x east, y north, z up. Pigeon has no Float32List, so the float arrays are
+/// their bytes, 32-bit floats in the byte order of the device.
+class PgMeshLayerMesh {
+  PgMeshLayerMesh({
+    required this.positions,
+    required this.normals,
+    required this.colors,
+    required this.indices,
+    required this.occluder,
+  });
+
+  /// x, y, z of each vertex.
+  Uint8List positions;
+
+  /// The unit normal of each vertex.
+  Uint8List normals;
+
+  /// The sRGB color of each vertex: r, g, b, a in 0 to 1.
+  Uint8List colors;
+
+  /// Three vertex indices per triangle.
+  Int32List indices;
+
+  /// Only written to the depth, never drawn.
+  bool occluder;
+}
+
 /// The calls of one map, from Dart to native. Each map has its own channels,
 /// told apart by a message channel suffix: the platform view id of the map.
 ///
@@ -957,6 +985,22 @@ abstract class MapLibreMapHostApi {
   /// the others when it is null.
   @asyncCallback
   void styleMoveLayer(String layerId, String? belowLayerId);
+
+  /// Adds a layer [layerId] of lit 3D [meshes], below the layer
+  /// [belowLayerId] or on top of the others when it is null. [instances]
+  /// holds six values per placement: mesh index, latitude, longitude,
+  /// altitude in meters, bearing in degrees and scale. [light] holds 14
+  /// values, as `MeshLayerLight.toList` gives them.
+  @asyncCallback
+  void styleAddMeshLayer(
+    String layerId,
+    List<PgMeshLayerMesh> meshes,
+    Float64List instances,
+    Float64List light,
+    double minzoom,
+    double maxzoom,
+    String? belowLayerId,
+  );
 
   /// Sets [filter] on the layer [layerId], or removes its filter when
   /// [filter] is null.

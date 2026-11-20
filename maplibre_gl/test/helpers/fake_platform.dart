@@ -399,6 +399,23 @@ class FakeMapLibrePlatform extends MapLibrePlatform {
   }
 
   @override
+  Future<void> addMeshLayer(
+    String layerId,
+    MeshLayer layer, {
+    String? belowLayerId,
+  }) async {
+    calls.add(
+      PlatformCall(
+        'addMeshLayer',
+        [layerId, layer],
+        {'belowLayerId': belowLayerId},
+      ),
+    );
+    final below = belowLayerId == null ? -1 : layerStack.indexOf(belowLayerId);
+    layerStack.insert(below < 0 ? layerStack.length : below, layerId);
+  }
+
+  @override
   Future<List> getLayerIds() async => List.of(layerStack);
 
   @override
