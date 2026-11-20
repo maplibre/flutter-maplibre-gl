@@ -569,8 +569,12 @@ internal class MapHostApi(private val map: MapCalls) : MapLibreMapHostApi {
     override fun mapTakeSnapshot(
         width: Long?,
         height: Long?,
+        attributionEnabled: Boolean,
+        logoEnabled: Boolean,
         callback: (Result<ByteArray?>) -> Unit,
-    ) = call(callback, { it as ByteArray? }) { map.mapTakeSnapshot(width, height, it) }
+    ) = call(callback, { it as ByteArray? }) {
+        map.mapTakeSnapshot(width, height, attributionEnabled, logoEnabled, it)
+    }
 
     override fun styleGetLayerIds(callback: (Result<List<String>>) -> Unit) =
         call(callback, ::strings) { map.styleGetLayerIds(it) }

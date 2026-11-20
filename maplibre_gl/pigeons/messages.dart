@@ -1210,9 +1210,16 @@ abstract class MapLibreMapHostApi {
   bool? layerGetVisibility(String layerId);
 
   /// Answers with a PNG of the map, [width] by [height] logical pixels, or
-  /// the size of the map view for what is null.
+  /// the size of the map view for what is null. [attributionEnabled] draws
+  /// the attribution text of the style's sources on the picture, and
+  /// [logoEnabled] draws the MapLibre logo.
   @asyncCallback
-  Uint8List? mapTakeSnapshot(int? width, int? height);
+  Uint8List? mapTakeSnapshot(
+    int? width,
+    int? height,
+    bool attributionEnabled,
+    bool logoEnabled,
+  );
 
   /// Answers with the ids of the layers of the style, in the order of the
   /// style.

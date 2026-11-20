@@ -2364,7 +2364,11 @@ final class MapLibreMapController
 
   @Override
   public void mapTakeSnapshot(
-      @Nullable Long width, @Nullable Long height, MethodChannel.Result result) {
+      @Nullable Long width,
+      @Nullable Long height,
+      boolean attributionEnabled,
+      boolean logoEnabled,
+      MethodChannel.Result result) {
     Style currentStyle = mapLibreMap.getStyle();
     if (currentStyle == null) {
       result.error("STYLE_NOT_READY", "Map style is not loaded", null);
@@ -2387,7 +2391,9 @@ final class MapLibreMapController
     MapSnapshotter.Options options = new MapSnapshotter.Options(snapshotWidth, snapshotHeight)
             .withPixelRatio(density)
             .withStyleBuilder(snapshotStyle)
-            .withCameraPosition(mapLibreMap.getCameraPosition());
+            .withCameraPosition(mapLibreMap.getCameraPosition())
+            .withAttribution(attributionEnabled)
+            .withLogo(logoEnabled);
     cancelSnapshot(SNAPSHOT_ERROR, SNAPSHOT_SUPERSEDED);
     final MapSnapshotter snapshotter = new MapSnapshotter(context, options);
     activeSnapshotter = snapshotter;

@@ -68,7 +68,12 @@ public interface MapCalls {
 
   void mapClearAmbientCache(MethodChannel.Result result);
 
-  void mapTakeSnapshot(@Nullable Long width, @Nullable Long height, MethodChannel.Result result);
+  void mapTakeSnapshot(
+      @Nullable Long width,
+      @Nullable Long height,
+      boolean attributionEnabled,
+      boolean logoEnabled,
+      MethodChannel.Result result);
 
   // Camera
 

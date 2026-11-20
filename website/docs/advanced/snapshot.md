@@ -26,6 +26,24 @@ The snapshot captures the current viewport exactly as rendered, including any ad
 
 Pass `width` and `height` in logical pixels to render at a size other than the current map view, keeping the camera position and style.
 
+## Attribution and logo
+
+On Android and iOS, MapLibre draws the attribution text of the style's sources and the MapLibre logo in a corner of the snapshot. Pass `attributionEnabled: false` or `logoEnabled: false` to leave one out:
+
+```dart
+// The app shows the attribution itself, next to the picture.
+final bytes = await controller.takeSnapshot(
+  attributionEnabled: false,
+  logoEnabled: false,
+);
+```
+
+These two do not follow the widget's `attributionEnabled` and `logoEnabled`. A map that hides its logo still gets the logo on its snapshot unless `logoEnabled: false` is passed to `takeSnapshot`.
+
+Most map data licenses require the attribution to be shown. Leave it out of the snapshot only when the app shows it another way, for example as text beside the picture.
+
+On web the snapshot never has either. The attribution and the logo are HTML elements beside the map canvas, and the snapshot is the canvas alone.
+
 ## Show snapshot in a dialog
 
 ```dart

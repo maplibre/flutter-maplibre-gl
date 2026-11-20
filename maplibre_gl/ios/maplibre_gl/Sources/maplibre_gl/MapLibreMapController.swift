@@ -617,7 +617,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         result(MapLibreCustomHeaders.getCustomHeaders())
     }
 
-    func mapTakeSnapshot(width: Int64?, height: Int64?, result: @escaping FlutterResult) {
+    func mapTakeSnapshot(
+        width: Int64?,
+        height: Int64?,
+        attributionEnabled: Bool,
+        logoEnabled: Bool,
+        result: @escaping FlutterResult
+    ) {
         // styleURL is set before the style loads, so check the style, as
         // Android does.
         guard mapView.style != nil, let styleURL = snapshotStyleURL() else {
@@ -645,6 +651,8 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             size: size
         )
         options.zoomLevel = mapView.zoomLevel
+        options.showsAttribution = attributionEnabled
+        options.showsLogo = logoEnabled
 
         let snapshotter = MLNMapSnapshotter(options: options)
         // Held until it finishes, or it would be deallocated. A JSON style was

@@ -531,7 +531,18 @@ abstract class MapLibrePlatform {
   /// size (in logical pixels) using an offscreen renderer, preserving the
   /// current camera position and style. When omitted the snapshot matches the
   /// current map view size.
-  Future<Uint8List> takeSnapshot({int? width, int? height});
+  ///
+  /// [attributionEnabled] draws the attribution text of the style's sources
+  /// on the picture, and [logoEnabled] draws the MapLibre logo. Both are
+  /// `true` unless passed. On web the attribution and the logo are HTML
+  /// elements beside the map canvas, and the snapshot is the canvas alone,
+  /// so the two values change nothing there.
+  Future<Uint8List> takeSnapshot({
+    int? width,
+    int? height,
+    bool attributionEnabled = true,
+    bool logoEnabled = true,
+  });
 
   /// Method to set style string
   /// A MapLibre GL style document defining the map's appearance.

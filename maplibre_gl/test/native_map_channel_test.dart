@@ -326,7 +326,7 @@ void main() {
       expect(bytes, isA<Uint8List>());
       expect(bytes, [137, 80, 78, 71]);
       expect(calls('mapTakeSnapshot'), [
-        [100, null],
+        [100, null, true, true],
       ]);
     });
 
