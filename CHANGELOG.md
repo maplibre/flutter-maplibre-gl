@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## Unreleased
+
+### Fixed
+* **Android**: `setGeoJsonSource`, `setGeoJsonFeature` and `editGeoJsonSource` complete after MapLibre adds the new data to the source, as the documentation says. GeoJSON sources that `addGeoJsonSource` adds use `synchronousUpdate` again, so the first `onMapIdle` after a data change shows the new data (#1202).
+
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 ### Highlights
