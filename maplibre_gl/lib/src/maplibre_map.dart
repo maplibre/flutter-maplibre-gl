@@ -138,7 +138,7 @@ class MapLibreMap extends StatefulWidget {
       AnnotationType.line,
       AnnotationType.circle,
     ],
-    this.foregroundLoadColor = Colors.transparent,
+    this.foregroundLoadColor = const Color(0x00000000),
     this.androidView,
     @Deprecated(
       'Use androidView: AndroidMapView(surface: '
