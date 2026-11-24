@@ -2134,9 +2134,12 @@ class FillLayerProperties implements LayerProperties {
 
 class FillExtrusionLayerProperties implements LayerProperties {
   // Paint Properties
-  /// The opacity of the entire fill extrusion layer. This is rendered on a
-  /// per-layer, not per-feature, basis, and data-driven styling is not
-  /// available.
+  /// The opacity of each extrusion. Extrusions at `1` show through the
+  /// others. Where several extrusions below `1` overlap on screen, only the
+  /// surface closest to the camera is drawn, so they don't show through
+  /// each other. Use
+  /// [`fill-extrusion-layer-opacity`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-layer-opacity)
+  /// to fade the layer as a whole.
   ///
   /// Type: number
   ///   default: 1
@@ -2145,14 +2148,30 @@ class FillExtrusionLayerProperties implements LayerProperties {
   ///
   /// Sdk Support:
   ///   basic functionality with js, android, ios
+  ///   data-driven styling on no platform yet
   final dynamic fillExtrusionOpacity;
+
+  /// Opacity applied to the layer as a whole, multiplied with
+  /// [`fill-extrusion-opacity`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-opacity).
+  /// The extrusions at a `fill-extrusion-opacity` of `1` appear as a single
+  /// surface at the given opacity and still show through the others. This
+  /// property affects only the layer it is set on.
+  ///
+  /// Type: number
+  ///   default: 1
+  ///   minimum: 0
+  ///   maximum: 1
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic fillExtrusionLayerOpacity;
 
   /// The base color of the extruded fill. The extrusion's surfaces will be
   /// shaded differently based on this color in combination with the root
   /// `light` settings. If this color is specified as `rgba` with an alpha
   /// component, the alpha component will be ignored; use
   /// [`fill-extrusion-opacity`](https://maplibre.org/maplibre-style-spec/layers/#fill-extrusion-opacity)
-  /// to set layer opacity.
+  /// to set the opacity.
   ///
   /// Type: color
   ///   default: #000000
@@ -2263,6 +2282,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
 
   const FillExtrusionLayerProperties({
     this.fillExtrusionOpacity,
+    this.fillExtrusionLayerOpacity,
     this.fillExtrusionColor,
     this.fillExtrusionTranslate,
     this.fillExtrusionTranslateAnchor,
@@ -2278,6 +2298,8 @@ class FillExtrusionLayerProperties implements LayerProperties {
     return FillExtrusionLayerProperties(
       fillExtrusionOpacity:
           changes.fillExtrusionOpacity ?? fillExtrusionOpacity,
+      fillExtrusionLayerOpacity:
+          changes.fillExtrusionLayerOpacity ?? fillExtrusionLayerOpacity,
       fillExtrusionColor: changes.fillExtrusionColor ?? fillExtrusionColor,
       fillExtrusionTranslate:
           changes.fillExtrusionTranslate ?? fillExtrusionTranslate,
@@ -2307,6 +2329,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
     }
 
     addIfPresent('fill-extrusion-opacity', fillExtrusionOpacity);
+    addIfPresent('fill-extrusion-layer-opacity', fillExtrusionLayerOpacity);
     addIfPresent('fill-extrusion-color', fillExtrusionColor);
     addIfPresent('fill-extrusion-translate', fillExtrusionTranslate);
     addIfPresent(
@@ -2331,6 +2354,7 @@ class FillExtrusionLayerProperties implements LayerProperties {
   factory FillExtrusionLayerProperties.fromJson(Map<String, dynamic> json) {
     return FillExtrusionLayerProperties(
       fillExtrusionOpacity: json['fill-extrusion-opacity'],
+      fillExtrusionLayerOpacity: json['fill-extrusion-layer-opacity'],
       fillExtrusionColor: json['fill-extrusion-color'],
       fillExtrusionTranslate: json['fill-extrusion-translate'],
       fillExtrusionTranslateAnchor: json['fill-extrusion-translate-anchor'],
@@ -2357,6 +2381,54 @@ class RasterLayerProperties implements LayerProperties {
   /// Sdk Support:
   ///   basic functionality with js, android, ios
   final dynamic rasterOpacity;
+
+  /// Controls how the layer is composited with the content already rendered
+  /// beneath it. Unlike [`raster-opacity`](#raster-opacity), which only
+  /// fades the layer, this property determines how its colors interact with
+  /// the existing map contents.
+  ///
+  /// Type: enum
+  ///   default: normal
+  /// Options:
+  ///   "normal"
+  ///      [Normal](https://www.w3.org/TR/compositing-1/#blendingnormal)
+  ///      blending. The layer is drawn on top of existing content using
+  ///      standard alpha compositing.
+  ///   "multiply"
+  ///      [Multiply](https://www.w3.org/TR/compositing-1/#blendingmultiply)
+  ///      blending. The layer color is multiplied with the colors
+  ///      underneath, producing darker results. Useful for textures,
+  ///      hillshades, and combining raster and vector content.
+  ///   "color"
+  ///      [Color](https://www.w3.org/TR/compositing-1/#blendingcolor)
+  ///      blending. Creates a color with the hue and saturation of the
+  ///      layer and the luminosity of the content underneath, preserving
+  ///      its gray levels. Useful for tinting monochrome content such as a
+  ///      hillshade.
+  ///   "luminosity"
+  ///      [Luminosity](https://www.w3.org/TR/compositing-1/#blendingluminosity)
+  ///      blending. Creates a color with the luminosity of the layer and
+  ///      the hue and saturation of the content underneath. The inverse of
+  ///      `color`.
+  ///   "plus-lighter"
+  ///      [Plus-lighter](https://www.w3.org/TR/compositing-1/#porterduffcompositingoperators_plus)
+  ///      blending. Additive blending. The layer color is added to the
+  ///      colors underneath, producing brighter results. Useful for glow
+  ///      and heat accumulation effects.
+  ///   "screen"
+  ///      [Screen](https://www.w3.org/TR/compositing-1/#blendingscreen)
+  ///      blending. The inverse of the colors is multiplied, producing
+  ///      lighter results. Useful for glow, heatmap, and light-based
+  ///      effects.
+  ///   "overlay"
+  ///      [Overlay](https://www.w3.org/TR/compositing-1/#blendingoverlay)
+  ///      blending. Multiplies or screens colors depending on the colors
+  ///      underneath, preserving highlights and shadows while adding
+  ///      contrast.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  final dynamic rasterLayerBlend;
 
   /// Rotates hues around the color wheel.
   ///
@@ -2480,6 +2552,7 @@ class RasterLayerProperties implements LayerProperties {
 
   const RasterLayerProperties({
     this.rasterOpacity,
+    this.rasterLayerBlend,
     this.rasterHueRotate,
     this.rasterBrightnessMin,
     this.rasterBrightnessMax,
@@ -2494,6 +2567,7 @@ class RasterLayerProperties implements LayerProperties {
   RasterLayerProperties copyWith(RasterLayerProperties changes) {
     return RasterLayerProperties(
       rasterOpacity: changes.rasterOpacity ?? rasterOpacity,
+      rasterLayerBlend: changes.rasterLayerBlend ?? rasterLayerBlend,
       rasterHueRotate: changes.rasterHueRotate ?? rasterHueRotate,
       rasterBrightnessMin: changes.rasterBrightnessMin ?? rasterBrightnessMin,
       rasterBrightnessMax: changes.rasterBrightnessMax ?? rasterBrightnessMax,
@@ -2516,6 +2590,7 @@ class RasterLayerProperties implements LayerProperties {
     }
 
     addIfPresent('raster-opacity', rasterOpacity);
+    addIfPresent('raster-layer-blend', rasterLayerBlend);
     addIfPresent('raster-hue-rotate', rasterHueRotate);
     addIfPresent('raster-brightness-min', rasterBrightnessMin);
     addIfPresent('raster-brightness-max', rasterBrightnessMax);
@@ -2531,6 +2606,7 @@ class RasterLayerProperties implements LayerProperties {
   factory RasterLayerProperties.fromJson(Map<String, dynamic> json) {
     return RasterLayerProperties(
       rasterOpacity: json['raster-opacity'],
+      rasterLayerBlend: json['raster-layer-blend'],
       rasterHueRotate: json['raster-hue-rotate'],
       rasterBrightnessMin: json['raster-brightness-min'],
       rasterBrightnessMax: json['raster-brightness-max'],

@@ -182,6 +182,33 @@ class Expressions {
   ///   basic functionality with js (not on ios, android)
   static const interpolateLab = "interpolate-lab";
 
+  /// Produces continuous, smooth results by interpolating between pairs of
+  /// input and output values ("stops"). Works like
+  /// [`interpolate`](https://maplibre.org/maplibre-style-spec/expressions/#interpolate),
+  /// but the output type must be `color` or `array<color>`, and the
+  /// interpolation is performed in the OKLCH color space as [CSS Color
+  /// 4](https://www.w3.org/TR/css-color-4/#interpolation) does it: hue
+  /// takes the shorter way around, a gray stop takes the other stop's hue,
+  /// and lightness and chroma are premultiplied by alpha. A result outside
+  /// sRGB is clipped like an `oklch()` color.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  static const interpolateOklch = "interpolate-oklch";
+
+  /// Produces continuous, smooth results by interpolating between pairs of
+  /// input and output values ("stops"). Works like
+  /// [`interpolate`](https://maplibre.org/maplibre-style-spec/expressions/#interpolate),
+  /// but the output type must be `color` or `array<color>`, and the
+  /// interpolation is performed in the OKLAB color space as [CSS Color
+  /// 4](https://www.w3.org/TR/css-color-4/#interpolation) does it:
+  /// lightness, a and b are premultiplied by alpha. A result outside sRGB
+  /// is clipped like an `oklab()` color.
+  ///
+  /// Sdk Support:
+  ///   basic functionality on no platform yet
+  static const interpolateOklab = "interpolate-oklab";
+
   /// Returns the mathematical constant ln(2).
   ///
   /// Sdk Support:
