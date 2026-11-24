@@ -1,6 +1,7 @@
 ## Unreleased
 
 ### Fixed
+* **iOS**: `takeSnapshot` before the map has a size waits for the first layout, as the camera calls do. It returned the whole world at zoom 0.
 * **Android**: CJK labels are drawn with the device font again, as on iOS, instead of downloading their glyph ranges from the style. The map options now use MapLibre's default local ideograph font (`sans-serif`), which a `MapView` built from XML attributes gets but the options built in code did not.
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)

@@ -190,7 +190,11 @@ final class MapHostApi: MapLibreMapHostApi {
         height: Int64?,
         completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void
     ) {
-        run(pigeonResult(completion) { $0 as? FlutterStandardTypedData }) {
+        // The snapshot is drawn with the map view's current camera. Before the
+        // view has a size, initialCameraPosition is not applied yet, so a
+        // snapshot taken then shows the whole world at zoom 0. readsCamera
+        // makes the call wait, as the camera queries do.
+        run(pigeonResult(completion) { $0 as? FlutterStandardTypedData }, kind: .readsCamera) {
             $0.mapTakeSnapshot(width: width, height: height, result: $1)
         }
     }
