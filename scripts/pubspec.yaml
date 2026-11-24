@@ -3,7 +3,7 @@ description: code generation for flutter-maplibre-gl
 publish_to: 'none'
 resolution: workspace
 
-version: 0.28.0
+version: 0.28.1
 
 environment:
   sdk: ">=3.12.0 <4.0.0"
