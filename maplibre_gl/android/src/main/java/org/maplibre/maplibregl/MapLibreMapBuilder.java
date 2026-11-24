@@ -9,6 +9,7 @@ import android.view.Gravity;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import org.maplibre.android.camera.CameraPosition;
+import org.maplibre.android.constants.MapLibreConstants;
 import org.maplibre.android.geometry.LatLngBounds;
 import org.maplibre.android.location.engine.LocationEngineRequest;
 import org.maplibre.android.maps.MapLibreMapOptions;
@@ -16,8 +17,15 @@ import io.flutter.plugin.common.BinaryMessenger;
 
 class MapLibreMapBuilder implements MapLibreMapOptionsSink {
   public final String TAG = getClass().getSimpleName();
+  // MapLibreMapOptions() leaves the local ideograph font unset, unlike the
+  // options MapView builds from XML attributes, so CJK labels would download
+  // their glyphs instead of using the device font. Use the SDK default.
   private final MapLibreMapOptions options =
-      new MapLibreMapOptions().attributionEnabled(true).logoEnabled(false).textureMode(false);
+      new MapLibreMapOptions()
+          .attributionEnabled(true)
+          .logoEnabled(false)
+          .textureMode(false)
+          .localIdeographFontFamily(MapLibreConstants.DEFAULT_FONT);
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean dragEnabled = true;

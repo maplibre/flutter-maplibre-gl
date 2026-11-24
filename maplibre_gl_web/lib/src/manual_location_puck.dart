@@ -18,6 +18,9 @@ import 'package:web/web.dart' as web;
 ///    (from `maplibre-gl.css`, which the plugin loads with the library);
 ///  * the bearing arrow is a small custom element (maplibre ships no arrow).
 ///
+/// The controller also uses it for the browser location in mode none, where
+/// the `GeolocateControl` cannot show the user without moving the camera.
+///
 /// The controller owns the source/enabled flags and creates one instance
 /// lazily; this class owns everything else about the puck.
 class ManualLocationPuck {
