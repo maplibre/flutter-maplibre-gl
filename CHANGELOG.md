@@ -7,6 +7,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ### Fixed
 * **iOS**: `takeSnapshot` before the map has a size waits for the first layout, as the camera calls do. It returned the whole world at zoom 0.
+* **Web**: with `myLocationEnabled` on and `MyLocationTrackingMode.none`, the puck shows the user and `onUserLocationUpdated` reports each fix without moving the camera, as on Android and iOS. Before, nothing showed until the user tapped the location button. The browser now asks for the location as soon as the puck is enabled, in every mode except with `ManualLocationSource`. Turning `myLocationEnabled` back on in a tracking mode resumes tracking, and changing `LocationEnginePlatforms.web` in mode none no longer moves the camera (#1194).
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
