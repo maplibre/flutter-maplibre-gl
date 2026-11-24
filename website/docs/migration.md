@@ -313,7 +313,7 @@ What each release was about, most recent first. Full details live in the [CHANGE
 
 | Version | Highlights |
 |---------|------------|
-| [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.28.1) | Patch: web location puck in tracking mode none, iOS snapshots, Android CJK fonts, pub.dev analysis on Flutter 3.47. No API changes. |
+| [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.28.1) | Patch: web location puck in tracking mode none, iOS snapshots, Android CJK fonts, no more deprecated `material.dart` import. No API changes. |
 | [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.28.0) | Behavioral parity across Android, iOS and web: shared error codes, layer filters, camera updates, queries and feature drag. Newer MapLibre on every platform. Breaking: `setLayerFilter` returns `Future<void>` and iOS error codes are renamed; see [Upgrading to 0.28.0](#upgrading-to-0280). |
 | [0.27.1](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.1) | Patch: fixes the Android build failure on Flutter 3.44 templates, an iOS crash on the custom-header path, and offline regions whose bounds sit on whole degrees. No API changes. |
 | [0.27.0](https://github.com/maplibre/flutter-maplibre-gl/releases/tag/v0.27.0) | Platform gaps closed (feature state on Android, cluster inspection, offline export/import), faster start-up with `preWarm()`, a newer web renderer, documentation site. No breaking API changes; see [Upgrading to 0.27.0](#upgrading-to-0270). |

@@ -4,7 +4,7 @@
 * **Android**: Chinese, Japanese and Korean labels use the device font, as on iOS. The map no longer downloads large glyph files for them, and they show offline too (#1201).
 * **iOS**: `takeSnapshot` called before the map is laid out no longer shows the whole world at zoom 0 (#1196).
 * **Web**: in `MyLocationTrackingMode.none` the location puck shows right away and the camera stays put, as on Android and iOS. The browser now asks for permission when the map loads (#1194).
-* pub.dev static analysis passes again on Flutter 3.47 (#1212).
+* The packages no longer use `package:flutter/material.dart`, deprecated in Flutter 3.47. The example app moved to [`material_ui`](https://pub.dev/packages/material_ui) (#1212).
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 

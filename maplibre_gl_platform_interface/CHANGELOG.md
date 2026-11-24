@@ -3,7 +3,7 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
 ### Fixed
-* pub.dev static analysis passes again on Flutter 3.47 (#1212).
+* No longer uses `package:flutter/material.dart`, deprecated in Flutter 3.47 (#1212).
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
