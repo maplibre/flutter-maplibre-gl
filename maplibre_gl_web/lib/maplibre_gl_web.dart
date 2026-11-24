@@ -15,7 +15,7 @@ import 'package:maplibre_gl_web/src/interop/js.dart';
 import 'package:web/web.dart' as web;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' hide Element;
+import 'package:flutter/widgets.dart' hide Element;
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:maplibre_gl_platform_interface/maplibre_gl_platform_interface.dart';
