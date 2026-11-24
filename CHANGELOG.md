@@ -3,11 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## Unreleased
+## [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.28.0...v0.28.1)
 
 ### Fixed
-* **iOS**: `takeSnapshot` before the map has a size waits for the first layout, as the camera calls do. It returned the whole world at zoom 0.
-* **Web**: with `myLocationEnabled` on and `MyLocationTrackingMode.none`, the puck shows the user and `onUserLocationUpdated` reports each fix without moving the camera, as on Android and iOS. Before, nothing showed until the user tapped the location button. The browser now asks for the location as soon as the puck is enabled, in every mode except with `ManualLocationSource`. Turning `myLocationEnabled` back on in a tracking mode resumes tracking, and changing `LocationEnginePlatforms.web` in mode none no longer moves the camera (#1194).
+* **Android**: Chinese, Japanese and Korean labels use the device font, as on iOS. The map no longer downloads large glyph files for them, and they show offline too (#1201).
+* **iOS**: `takeSnapshot` called before the map is laid out no longer shows the whole world at zoom 0 (#1196).
+* **Web**: in `MyLocationTrackingMode.none` the location puck shows right away and the camera stays put, as on Android and iOS. The browser now asks for permission when the map loads (#1194).
+* The packages no longer use `package:flutter/material.dart`, deprecated in Flutter 3.47. The example app moved to [`material_ui`](https://pub.dev/packages/material_ui) (#1212).
 
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 

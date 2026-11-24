@@ -95,7 +95,7 @@ hide:
 
 ```yaml
 dependencies:
-  maplibre_gl: ^0.28.0
+  maplibre_gl: ^0.28.1
 ```
 
 **2. Add the map widget**
