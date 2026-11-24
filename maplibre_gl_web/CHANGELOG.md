@@ -1,5 +1,11 @@
 See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
 
+## [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.28.0...v0.28.1)
+
+### Fixed
+* In `MyLocationTrackingMode.none` the location puck shows right away and the camera stays put, as on Android and iOS. The browser now asks for permission when the map loads (#1194).
+* pub.dev static analysis passes again on Flutter 3.47 (#1212).
+
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 The web implementation of [`maplibre_gl`](https://pub.dev/packages/maplibre_gl): apps depend on `maplibre_gl`, whose [changelog](https://pub.dev/packages/maplibre_gl/changelog) covers every platform.

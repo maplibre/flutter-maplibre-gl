@@ -29,7 +29,7 @@ MapLibreMap(
 
 On web only `none` and `tracking` are meaningful, since the browser exposes no compass heading.
 
-On web the browser asks for the location as soon as `myLocationEnabled` is on, whatever the mode, so turn it on when the map needs the user's position.
+On web the browser asks for permission as soon as `myLocationEnabled` is on, unless you use a `ManualLocationSource`. Turn it on only when the map needs the user's position.
 
 ## Style the puck
 

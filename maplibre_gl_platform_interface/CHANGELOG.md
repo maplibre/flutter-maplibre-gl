@@ -1,3 +1,10 @@
+## [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.28.0...v0.28.1)
+
+See the [top-level CHANGELOG](https://github.com/maplibre/flutter-maplibre-gl/blob/main/CHANGELOG.md) for full details.
+
+### Fixed
+* pub.dev static analysis passes again on Flutter 3.47 (#1212).
+
 ## [0.28.0](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.27.1...v0.28.0)
 
 The interface shared by the platform packages of [`maplibre_gl`](https://pub.dev/packages/maplibre_gl). Apps depend on `maplibre_gl`, whose [changelog](https://pub.dev/packages/maplibre_gl/changelog) covers every platform; this one matters to platform packages and tests with fakes.
