@@ -137,6 +137,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: maplibre_gl_example
@@ -181,6 +182,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - name: Enable KVM
@@ -302,6 +304,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.ios == 'true'
     runs-on: macos-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
