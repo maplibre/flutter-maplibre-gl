@@ -8,7 +8,7 @@ environment:
 
 dev_dependencies:
   melos: ^7.4.0
-  very_good_analysis: ^10.0.0
+  very_good_analysis: ^11.0.0
 
 workspace:
   - scripts
