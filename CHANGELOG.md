@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [Unreleased]
+
+### Fixed
+* **Android, iOS**: Keep images supplied through `addImage` for the lifetime of the current style, so generated symbol icons remain available after panning or zooming.
+
 ## [0.28.1](https://github.com/maplibre/flutter-maplibre-gl/compare/v0.28.0...v0.28.1)
 
 ### Fixed

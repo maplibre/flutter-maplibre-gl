@@ -222,6 +222,7 @@ final class MapLibreMapController
   private FrameLayout mapViewContainer;
   private MapView mapView;
   private MapLibreMap mapLibreMap;
+  private final DartStyleImages dartStyleImages = new DartStyleImages();
   private boolean trackCameraPosition = false;
   private boolean myLocationEnabled = false;
   private boolean manualLocationSource = false;
@@ -547,6 +548,7 @@ final class MapLibreMapController
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
     layerFilters.clear();
+    dartStyleImages.clear();
 
     mapViewContainer.removeAllViews();
     mapView = new MapView(mapContext, mapLibreMapOptions);
@@ -634,6 +636,7 @@ final class MapLibreMapController
           }
         });
 
+    mapView.addOnCanRemoveUnusedStyleImageListener(dartStyleImages::canRemoveUnused);
     mapView.addOnStyleImageMissingListener(
         (id) -> {
           DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -668,6 +671,7 @@ final class MapLibreMapController
     addedFeaturesByLayer.clear();
     imageSourceCoordinates.clear();
     layerFilters.clear();
+    dartStyleImages.clear();
 
     // Check if json, url, absolute path or asset path:
     if (styleString == null || styleString.isEmpty()) {
@@ -4054,7 +4058,17 @@ final class MapLibreMapController
       bitmap.setDensity(
           Math.max(1, (int) Math.round(pixelRatio * DisplayMetrics.DENSITY_DEFAULT)));
     }
-    style.addImage(name, bitmap, sdf);
+    // Register before entering native code: its unused-image callback may run during addImage.
+    // Assets loaded by the missing-image listener remain eligible for native eviction.
+    final boolean newlyRegistered = dartStyleImages.register(name);
+    try {
+      style.addImage(name, bitmap, sdf);
+    } catch (RuntimeException error) {
+      if (newlyRegistered) {
+        dartStyleImages.unregister(name);
+      }
+      throw error;
+    }
     result.success(null);
   }
 
@@ -4348,6 +4362,7 @@ final class MapLibreMapController
    * MapLibre tracking issue</a>.
    */
   private void destroyMapViewIfNecessary() {
+    dartStyleImages.clear();
     if (mapView == null) {
       return;
     }

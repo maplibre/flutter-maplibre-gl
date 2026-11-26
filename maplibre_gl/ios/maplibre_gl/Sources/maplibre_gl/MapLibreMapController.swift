@@ -25,6 +25,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
     }
 
     private var mapView: MLNMapView
+    private let dartStyleImages = DartStyleImages()
     /// The snapshot being taken, if any.
     private var activeSnapshot: Snapshot?
     private var isMapReady = false
@@ -177,6 +178,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
         // already took the channels over, as after a hot restart.
         hostApi.unregister(binaryMessenger: binaryMessenger, messageChannelSuffix: channelSuffix)
         mapView.delegate = nil
+        dartStyleImages.clear()
         if let recognizers = mapView.gestureRecognizers {
             for recognizer in recognizers {
                 mapView.removeGestureRecognizer(recognizer)
@@ -1411,10 +1413,19 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
             ))
             return
         }
-        if sdf {
-            style.setImage(image.withRenderingMode(.alwaysTemplate), forName: name)
-        } else {
-            style.setImage(image, forName: name)
+        // Register first: native image insertion may trigger an eviction callback.
+        let introduced = dartStyleImages.register(name)
+        let exception = MapLibreGLCatchException {
+            style.setImage(sdf ? image.withRenderingMode(.alwaysTemplate) : image, forName: name)
+        }
+        if let exception = exception {
+            if introduced { dartStyleImages.unregister(name) }
+            result(FlutterError(
+                code: "IMAGE_ADD_FAILED",
+                message: exception.reason ?? "Failed to add style image.",
+                details: nil
+            ))
+            return
         }
         result(nil)
     }
@@ -2701,6 +2712,7 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
      *  MLNMapViewDelegate
      */
     func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
+        dartStyleImages.clear()
         isMapReady = true
         style.performsPlacementTransitions = symbolPlacementTransitionsEnabled
         updateMyLocationEnabled()
@@ -2732,6 +2744,10 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
                 api?.mapOnStyleLoaded { _ in }
             }
         }
+    }
+
+    func mapView(_: MLNMapView, shouldRemoveStyleImage name: String) -> Bool {
+        return dartStyleImages.canRemoveUnused(name)
     }
 
     // An image the style does not have may name a Flutter asset.
@@ -4259,11 +4275,13 @@ class MapLibreMapController: NSObject, FlutterPlatformView, MLNMapViewDelegate, 
 
         styleIsJSON = Self.styleStringIsJSON(styleString)
         if styleIsJSON {
+            dartStyleImages.clear()
             mapView.styleJSON = styleString
         } else if let url = Self.styleStringAsURL(
             styleString,
             registrar: registrar
         ) {
+            dartStyleImages.clear()
             mapView.styleURL = url;
         }
     }

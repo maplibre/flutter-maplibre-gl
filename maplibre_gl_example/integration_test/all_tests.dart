@@ -32,6 +32,7 @@ import 'pan_inertia_test.dart' as pan_inertia;
 import 'placement_transitions_test.dart' as placement_transitions;
 import 'platform_parity_test.dart' as platform_parity;
 import 'polygon_hole_test.dart' as polygon_hole;
+import 'style_image_retention_test.dart' as style_image_retention;
 import 'style_layers_test.dart' as style_layers;
 import 'style_misc_test.dart' as style_misc;
 import 'web_feature_state_test.dart' as web_feature_state;
@@ -56,6 +57,7 @@ void main() {
   placement_transitions.main();
   platform_parity.main();
   polygon_hole.main();
+  style_image_retention.main();
   style_layers.main();
   style_misc.main();
   web_feature_state.main();
